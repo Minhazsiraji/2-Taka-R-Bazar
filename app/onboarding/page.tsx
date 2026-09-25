@@ -1,4 +1,4 @@
-import { completeOnboarding } from '@/app/actions/auth'
+import { completeOnboarding, restartSignupWithAnotherPhone } from '@/app/actions/auth'
 import { PublicHeader } from '@/components/public-header'
 import { SubmitButton } from '@/components/submit-button'
 import { requireUser } from '@/lib/auth'
@@ -18,12 +18,18 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         {notice && <div className="success mt-4">{notice}</div>}{error && <div className="error mt-4">{error}</div>}
         <form action={completeOnboarding} className="mt-6 grid gap-4">
           <label><span className="label">Full name</span><input className="input" name="full_name" required /></label>
-          <label><span className="label">Verified mobile</span><input className="input bg-slate-100" value={user.phone ?? ''} readOnly aria-readonly="true" /></label>
+          <div>
+            <label><span className="label">Verified mobile</span><input className="input bg-slate-100" value={user.phone ?? ''} readOnly aria-readonly="true" /></label>
+            <p className="mt-1.5 text-xs leading-5 text-slate-500">This number is locked because it has already been OTP verified.</p>
+          </div>
           <label><span className="label">Household label</span><input className="input" name="household_name" placeholder="e.g. Siraji Family" required /></label>
           <label><span className="label">Community</span><select className="input" name="community_id" required><option value="">Choose community</option>{communities?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
           <label><span className="label">Building / road / landmark (optional)</span><input className="input" name="address_hint" /></label>
           <label><span className="label">Google Maps share URL (optional)</span><input className="input" name="google_maps_url" type="url" placeholder="https://maps.app.goo.gl/..." /></label>
           <SubmitButton>Finish setup</SubmitButton>
+        </form>
+        <form action={restartSignupWithAnotherPhone} className="mt-3">
+          <SubmitButton className="btn-secondary w-full">Use a different mobile number</SubmitButton>
         </form>
       </section>
     </div>
