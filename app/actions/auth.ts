@@ -6,21 +6,21 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { requireUser } from '@/lib/auth'
+import { toBdE164Phone } from '@/lib/bd-phone.mjs'
 
 function getText(formData: FormData, key: string) {
   return String(formData.get(key) ?? '').trim()
 }
 
-function normalizeBdPhone(raw: string) {
-  const compact = raw.replace(/[\s()-]/g, '')
-  if (/^01[3-9]\d{8}$/.test(compact)) return `+88${compact}`
-  if (/^8801[3-9]\d{8}$/.test(compact)) return `+${compact}`
-  if (/^\+8801[3-9]\d{8}$/.test(compact)) return compact
-  return null
+function phoneOtpErrorMessage(error: { message: string; code?: string }) {
+  if (error.code === 'otp_disabled' || /signups not allowed for otp|otp disabled/i.test(error.message)) {
+    return 'Mobile OTP is not enabled yet. Please try again after phone verification is activated.'
+  }
+  return error.message
 }
 
 async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
-  const phone = normalizeBdPhone(getText(formData, 'phone'))
+  const phone = toBdE164Phone(getText(formData, 'phone'))
   const back = mode === 'signup' ? '/signup' : '/login'
   if (!phone) redirect(`${back}?error=Enter+a+valid+Bangladesh+mobile+number`)
 
@@ -29,7 +29,7 @@ async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
     phone,
     options: { shouldCreateUser: mode === 'signup' },
   })
-  if (error) redirect(`${back}?error=${encodeURIComponent(error.message)}`)
+  if (error) redirect(`${back}?error=${encodeURIComponent(phoneOtpErrorMessage(error))}`)
 
   const cookieStore = await cookies()
   cookieStore.set('bp_otp_phone', phone, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 600, path: '/' })

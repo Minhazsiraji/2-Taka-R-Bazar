@@ -1,0 +1,82 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Fresh everyday groceries</title>
+  <desc id="desc">A grocery basket with rice, cooking oil, milk, eggs, bread, vegetables and fruit.</desc>
+  <defs>
+    <linearGradient id="bg" x1="120" y1="70" x2="1060" y2="860" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#E2E8F0"/>
+    </linearGradient>
+    <linearGradient id="basket" x1="314" y1="522" x2="890" y2="822" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B7793D"/>
+      <stop offset="1" stop-color="#7C4A23"/>
+    </linearGradient>
+    <filter id="shadow" x="120" y="86" width="960" height="758" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="28" flood-color="#0F172A" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="900" rx="48" fill="url(#bg)"/>
+  <circle cx="996" cy="150" r="124" fill="#DCFCE7"/>
+  <circle cx="167" cy="724" r="110" fill="#FEF3C7"/>
+  <path d="M92 230C243 99 387 117 512 181C624 238 734 241 862 178C949 135 1045 148 1110 221" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round" stroke-dasharray="12 14"/>
+
+  <g filter="url(#shadow)">
+    <path d="M342 483C349 447 379 421 416 421H798C836 421 868 449 873 487L921 737C929 781 895 822 850 822H363C318 822 285 781 293 737L342 483Z" fill="url(#basket)"/>
+    <path d="M372 516H844" stroke="#D9A465" stroke-width="22" stroke-linecap="round"/>
+    <path d="M343 611H873M325 700H890" stroke="#D9A465" stroke-width="18" opacity="0.78"/>
+    <path d="M439 432C461 327 526 276 604 276C684 276 751 329 773 432" stroke="#6B3F20" stroke-width="30" stroke-linecap="round"/>
+
+    <g>
+      <path d="M392 429C386 343 395 254 449 197C496 245 511 338 499 429H392Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="6"/>
+      <path d="M412 259H482L476 306H417L412 259Z" fill="#F59E0B"/>
+      <text x="447" y="349" text-anchor="middle" font-family="Arial, sans-serif" font-size="35" font-weight="700" fill="#111827">RICE</text>
+      <path d="M409 383H481" stroke="#CBD5E1" stroke-width="5" stroke-linecap="round"/>
+    </g>
+
+    <g>
+      <rect x="711" y="249" width="92" height="183" rx="26" fill="#FBBF24" stroke="#D97706" stroke-width="6"/>
+      <rect x="733" y="206" width="48" height="52" rx="12" fill="#111827"/>
+      <rect x="726" y="312" width="62" height="58" rx="12" fill="#FFFBEB"/>
+      <path d="M742 341H773" stroke="#D97706" stroke-width="5" stroke-linecap="round"/>
+    </g>
+
+    <g>
+      <path d="M569 263H677L665 433H581L569 263Z" fill="#EFF6FF" stroke="#93C5FD" stroke-width="6"/>
+      <path d="M569 263L598 219H650L677 263" fill="#DBEAFE" stroke="#93C5FD" stroke-width="6"/>
+      <circle cx="623" cy="334" r="29" fill="#FFFFFF"/>
+      <path d="M610 338C620 319 632 319 640 338" stroke="#60A5FA" stroke-width="6" stroke-linecap="round"/>
+    </g>
+
+    <g>
+      <ellipse cx="831" cy="445" rx="88" ry="38" fill="#FDE68A" stroke="#D1A44C" stroke-width="6"/>
+      <ellipse cx="783" cy="435" rx="22" ry="30" fill="#FFFBEB"/>
+      <ellipse cx="829" cy="442" rx="22" ry="30" fill="#FFF7D6"/>
+      <ellipse cx="873" cy="435" rx="22" ry="30" fill="#FFFBEB"/>
+    </g>
+
+    <g>
+      <path d="M254 449C271 378 323 340 392 351C382 423 336 461 254 449Z" fill="#22C55E"/>
+      <path d="M305 421C334 380 352 365 386 354" stroke="#15803D" stroke-width="7" stroke-linecap="round"/>
+      <path d="M267 486C281 426 334 397 395 415C374 477 326 503 267 486Z" fill="#16A34A"/>
+    </g>
+
+    <g>
+      <circle cx="858" cy="503" r="49" fill="#EF4444"/>
+      <circle cx="930" cy="493" r="46" fill="#F97316"/>
+      <circle cx="786" cy="510" r="43" fill="#EAB308"/>
+      <path d="M852 452L867 431" stroke="#166534" stroke-width="9" stroke-linecap="round"/>
+      <path d="M925 447L942 427" stroke="#166534" stroke-width="9" stroke-linecap="round"/>
+    </g>
+
+    <g>
+      <path d="M501 437C501 386 542 347 593 347H645C696 347 737 386 737 437V474H501V437Z" fill="#D6A665" stroke="#A56B31" stroke-width="6"/>
+      <path d="M531 409C558 383 588 379 620 397C649 378 683 383 706 410" stroke="#F5D39F" stroke-width="8" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <g transform="translate(91 81)">
+    <rect width="222" height="72" rx="36" fill="#111827"/>
+    <circle cx="39" cy="36" r="18" fill="#FFFFFF"/>
+    <path d="M29 36L36 43L49 29" stroke="#111827" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="68" y="44" font-family="Arial, sans-serif" font-size="23" font-weight="700" fill="#FFFFFF">Daily essentials</text>
+  </g>
+</svg>
