@@ -2,35 +2,36 @@
 
 :root { color-scheme: light; }
 * { box-sizing: border-box; min-width: 0; }
-html { background: #f8fafc; overflow-x: hidden; }
-body { margin: 0; max-width: 100vw; overflow-x: hidden; font-family: Arial, Helvetica, sans-serif; }
+html { width: 100%; max-width: 100%; background: #f8fafc; overflow-x: hidden; }
+body { width: 100%; max-width: 100%; margin: 0; overflow-x: hidden; font-family: Arial, Helvetica, sans-serif; }
 img, svg, video, canvas { max-width: 100%; height: auto; }
-button, input, select, textarea { font: inherit; }
+button, input, select, textarea { max-width: 100%; font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 
-.card { @apply min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm; }
-.card-title { @apply text-sm font-bold uppercase tracking-wide text-slate-500; }
-.metric { @apply mt-1 text-3xl font-black tracking-tight text-slate-950; }
-.btn-primary { @apply inline-flex min-h-11 min-w-0 items-center justify-center whitespace-normal rounded-xl bg-black px-4 py-2 text-center font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50; }
-.btn-secondary { @apply inline-flex min-h-11 min-w-0 items-center justify-center whitespace-normal rounded-xl border border-slate-300 bg-white px-4 py-2 text-center font-bold text-slate-900 transition hover:bg-slate-50 disabled:opacity-50; }
-.btn-danger { @apply inline-flex min-h-11 min-w-0 items-center justify-center whitespace-normal rounded-xl bg-rose-700 px-4 py-2 text-center font-bold text-white; }
-.input { @apply min-h-11 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none focus:border-black focus:ring-2 focus:ring-slate-200; }
+.card { @apply min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm; max-width: 100%; overflow-wrap: anywhere; }
+.card-title { @apply text-sm font-bold uppercase tracking-wide text-slate-500; overflow-wrap: anywhere; }
+.metric { @apply mt-1 text-3xl font-black tracking-tight text-slate-950; overflow-wrap: anywhere; }
+.btn-primary { @apply inline-flex min-h-11 min-w-0 items-center justify-center whitespace-normal rounded-xl bg-black px-4 py-2 text-center font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50; max-width: 100%; overflow-wrap: anywhere; }
+.btn-secondary { @apply inline-flex min-h-11 min-w-0 items-center justify-center whitespace-normal rounded-xl border border-slate-300 bg-white px-4 py-2 text-center font-bold text-slate-900 transition hover:bg-slate-50 disabled:opacity-50; max-width: 100%; overflow-wrap: anywhere; }
+.btn-danger { @apply inline-flex min-h-11 min-w-0 items-center justify-center whitespace-normal rounded-xl bg-rose-700 px-4 py-2 text-center font-bold text-white; max-width: 100%; overflow-wrap: anywhere; }
+.input { @apply min-h-11 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none focus:border-black focus:ring-2 focus:ring-slate-200; max-width: 100%; }
 .label { @apply mb-1 block text-sm font-bold text-slate-700; }
-.chip { @apply inline-flex min-h-9 min-w-0 items-center rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700; }
+.chip { @apply inline-flex min-h-9 min-w-0 items-center rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700; max-width: 100%; }
 .status-pill { @apply inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold capitalize text-slate-700; }
-.section-title { @apply text-xl font-black tracking-tight; }
-.muted { @apply text-sm text-slate-500; }
-.table-wrap { @apply w-full max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white; overscroll-behavior-x: contain; }
+.section-title { @apply text-xl font-black tracking-tight; overflow-wrap: anywhere; }
+.muted { @apply text-sm text-slate-500; overflow-wrap: anywhere; }
+.table-wrap { @apply w-full max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
 table { @apply w-full min-w-[680px] text-left text-sm; }
 th { @apply bg-slate-50 px-3 py-3 text-xs font-bold uppercase tracking-wide text-slate-500; }
 td { @apply border-t border-slate-100 px-3 py-3 align-top; }
-.form-grid { @apply grid gap-3 md:grid-cols-2; }
-.notice { @apply min-w-0 break-words rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900; }
-.success { @apply min-w-0 break-words rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900; }
-.error { @apply min-w-0 break-words rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900; }
+.form-grid { @apply grid min-w-0 gap-3 md:grid-cols-2; }
+.notice { @apply min-w-0 break-words rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900; max-width: 100%; }
+.success { @apply min-w-0 break-words rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900; max-width: 100%; }
+.error { @apply min-w-0 break-words rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900; max-width: 100%; }
 
 @media (max-width: 639px) {
-  .card { padding: 0.875rem; }
-  .section-title { font-size: 1.125rem; }
+  .card { padding: 0.875rem; border-radius: 0.875rem; }
+  .metric { font-size: 1.65rem; line-height: 2rem; }
+  .section-title { font-size: 1.125rem; line-height: 1.5rem; }
   table { min-width: 620px; }
 }
