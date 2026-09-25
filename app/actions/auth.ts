@@ -65,6 +65,16 @@ export async function verifyPhoneOtp(formData: FormData) {
   redirect('/home')
 }
 
+export async function restartSignupWithAnotherPhone() {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  const cookieStore = await cookies()
+  cookieStore.delete('bp_otp_phone')
+  cookieStore.delete('bp_otp_mode')
+  revalidatePath('/', 'layout')
+  redirect('/signup?notice=Enter+the+mobile+number+you+want+to+verify')
+}
+
 export async function signOut() {
   const supabase = await createClient()
   await supabase.auth.signOut()
