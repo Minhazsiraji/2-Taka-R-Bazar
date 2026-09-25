@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+html { background: #f8fafc; }
+body { margin: 0; font-family: Arial, Helvetica, sans-serif; }
+button, input, select, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+
+.card { @apply rounded-2xl border border-slate-200 bg-white p-4 shadow-sm; }
+.card-title { @apply text-sm font-bold uppercase tracking-wide text-slate-500; }
+.metric { @apply mt-1 text-3xl font-black tracking-tight text-slate-950; }
+.btn-primary { @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-700 px-4 py-2 font-bold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50; }
+.btn-secondary { @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 font-bold text-slate-800 transition hover:bg-slate-50 disabled:opacity-50; }
+.btn-danger { @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-rose-700 px-4 py-2 font-bold text-white; }
+.input { @apply min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100; }
+.label { @apply mb-1 block text-sm font-bold text-slate-700; }
+.chip { @apply inline-flex min-h-9 items-center rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700; }
+.status-pill { @apply inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold capitalize text-slate-700; }
+.section-title { @apply text-xl font-black tracking-tight; }
+.muted { @apply text-sm text-slate-500; }
+.table-wrap { @apply overflow-x-auto rounded-2xl border border-slate-200 bg-white; }
+table { @apply w-full min-w-[680px] text-left text-sm; }
+th { @apply bg-slate-50 px-3 py-3 text-xs font-bold uppercase tracking-wide text-slate-500; }
+td { @apply border-t border-slate-100 px-3 py-3 align-top; }
+.form-grid { @apply grid gap-3 md:grid-cols-2; }
+.notice { @apply rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900; }
+.success { @apply rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900; }
+.error { @apply rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900; }
