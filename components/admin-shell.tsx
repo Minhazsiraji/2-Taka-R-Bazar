@@ -4,7 +4,7 @@ const links = [['/admin','Dashboard'],['/admin/communities','Communities'],['/ad
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   return <div className="min-h-screen bg-slate-50">
-    <header className="border-b bg-black text-white"><div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3"><Link href="/admin" className="font-black">2-TAKA-R-BAZAR · Operations</Link><Link href="/home" className="text-sm font-bold text-white/75">Customer app →</Link></div></header>
+    <header className="border-b bg-black text-white"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3"><Link href="/admin" className="font-black">2-TAKA-R-BAZAR · Operations</Link><div className="flex gap-3 text-sm font-bold"><Link href="/super-admin" className="text-white">Executive →</Link><Link href="/home" className="text-white/75">Customer app →</Link></div></div></header>
     <div className="mx-auto grid max-w-7xl gap-4 px-4 py-5 lg:grid-cols-[220px_1fr]"><aside className="card h-fit overflow-x-auto lg:sticky lg:top-4"><nav className="flex gap-2 lg:grid">{links.map(([href,label])=><Link className="chip whitespace-nowrap lg:justify-start" href={href} key={href}>{label}</Link>)}</nav></aside><main className="min-w-0">{children}</main></div>
   </div>
 }
