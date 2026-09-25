@@ -12,9 +12,12 @@ function getText(formData: FormData, key: string) {
   return String(formData.get(key) ?? '').trim()
 }
 
-function phoneOtpErrorMessage(error: { message: string; code?: string }) {
+function phoneOtpErrorMessage(error: { message: string; code?: string }, mode: 'signup' | 'login') {
   if (error.code === 'otp_disabled' || /signups not allowed for otp|otp disabled/i.test(error.message)) {
-    return 'Mobile OTP is not enabled yet. Please try again after phone verification is activated.'
+    if (mode === 'login') {
+      return 'No account was found for this mobile number. Please use Join the community pool first.'
+    }
+    return 'This mobile number is not enabled for development OTP yet. Add it as a Supabase test phone number, or connect a real SMS provider.'
   }
   return error.message
 }
@@ -29,7 +32,7 @@ async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
     phone,
     options: { shouldCreateUser: mode === 'signup' },
   })
-  if (error) redirect(`${back}?error=${encodeURIComponent(phoneOtpErrorMessage(error))}`)
+  if (error) redirect(`${back}?error=${encodeURIComponent(phoneOtpErrorMessage(error, mode))}`)
 
   const cookieStore = await cookies()
   cookieStore.set('bp_otp_phone', phone, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 600, path: '/' })
