@@ -6,14 +6,17 @@ const customerNav = [
 ]
 
 export function AppShell({ children, roles = new Set<AppRole>() }: { children: React.ReactNode; roles?: Set<AppRole> }) {
+  const isSuperAdmin = roles.has('super_admin')
+  const isAdmin = roles.has('admin') || isSuperAdmin
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <header className="sticky top-0 z-40 border-b bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <Link href="/home" className="font-black tracking-tight text-black">2-TAKA-R-BAZAR</Link>
-          <div className="flex gap-2 text-sm">
-            {roles.has('pickup_operator') && <Link className="chip" href="/pickup-ops">Pickup Ops</Link>}
-            {roles.has('admin') && <Link className="chip" href="/admin">Admin</Link>}
+          <div className="flex flex-wrap justify-end gap-2 text-sm">
+            {(roles.has('pickup_operator') || isSuperAdmin) && <Link className="chip" href="/pickup-ops">Pickup Ops</Link>}
+            {isAdmin && <Link className="chip" href="/admin">Operations</Link>}
+            {isSuperAdmin && <Link className="chip bg-black text-white" href="/super-admin">Super Admin</Link>}
           </div>
         </div>
       </header>
