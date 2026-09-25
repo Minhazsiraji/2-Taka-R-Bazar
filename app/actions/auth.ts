@@ -21,12 +21,13 @@ export async function signUp(formData: FormData) {
 
   const supabase = await createClient()
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: { emailRedirectTo: `${siteUrl}/auth/callback` },
   })
   if (error) redirect(`/signup?error=${encodeURIComponent(error.message)}`)
+  if (!data.session) redirect('/login?notice=Account+created.+Check+your+email+to+confirm+the+account.')
   redirect('/onboarding?notice=Account+created.+Complete+your+pilot+profile.')
 }
 

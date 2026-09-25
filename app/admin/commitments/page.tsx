@@ -1,12 +1,10 @@
 import { AdminShell } from '@/components/admin-shell'
 import { requireAdmin } from '@/lib/auth'
-import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Page() {
-  await requireAdmin()
-  const db = createAdminClient()
+  const { supabase: db } = await requireAdmin()
   const { data: rows } = await db
     .from('commitments')
     .select('*,pool_items(products(name,package_size),pools(title,status,communities(name)))')

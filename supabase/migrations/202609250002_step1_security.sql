@@ -4,7 +4,7 @@ create or replace function private.validate_profile_scope()
 returns trigger
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 declare
   v_actor uuid := auth.uid();
@@ -49,7 +49,7 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
   select exists(select 1 from public.user_roles r where r.user_id = p_user_id and r.role = p_role);
 $$;
@@ -61,7 +61,7 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
   select private.has_role(p_user_id, 'admin') or exists(
     select 1 from public.pickup_operator_assignments a
@@ -75,7 +75,7 @@ create or replace function private.handle_new_user()
 returns trigger
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 begin
   insert into public.profiles(id, email) values(new.id, new.email)

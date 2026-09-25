@@ -2,7 +2,7 @@ create or replace function public.admin_set_pool_status(p_pool_id uuid, p_status
 returns void
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 declare v_user uuid := auth.uid(); v_old text; v_allowed boolean := false;
 begin
@@ -52,7 +52,7 @@ create or replace function public.admin_update_payment(
 returns void
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 declare v_user uuid := auth.uid();
 begin
@@ -74,7 +74,7 @@ create or replace function public.admin_cancel_order(p_order_id uuid, p_reason t
 returns void
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 declare v_user uuid := auth.uid(); v_status text;
 begin
@@ -97,7 +97,7 @@ create or replace function public.mark_order_collected(p_order_id uuid, p_notes 
 returns numeric
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 declare
   v_user uuid := auth.uid();

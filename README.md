@@ -25,7 +25,7 @@ A commitment is never silently converted into an order.
 - **Auth:** Supabase email/password with cookie-based SSR sessions. Phone is a profile field; phone OTP can be added later without changing customer identity.
 - **Database:** Supabase Postgres with normalized relational tables, foreign keys, checks, RLS, transactional RPCs and audit events.
 - **Hosting:** Vercel.
-- **Privileged reads:** `SUPABASE_SERVICE_ROLE_KEY` is used only in server components after an authenticated role check for safe aggregate/operations views. It is never exposed in `NEXT_PUBLIC_*` variables.
+- **Authorization:** browser/server requests use only the Supabase publishable key plus the signed-in user's session. Admin access is enforced by RLS/roles; customer community statistics and pickup contact access use narrowly scoped database RPCs. No service-role/secret key is required by the app runtime.
 
 ### Main modules
 
@@ -56,6 +56,10 @@ Operations:
 
 Pickup operator:
 - `/pickup-ops`
+
+### Admin CRUD and historical integrity
+
+Communities, products, suppliers and pickup points support create/read/update plus **soft deactivation**. Records already referenced by pools, quotations, orders or savings are intentionally not hard-deleted so the pilot audit trail remains intact.
 
 ## Database model
 
@@ -100,7 +104,7 @@ Every public table has RLS enabled.
 
 - **Customer:** own private profile, commitments, orders, fulfilment state, savings, payment records and feedback; local safe Pool/benchmark information.
 - **Admin:** operational access through admin role policies and guarded admin RPCs.
-- **Pickup operator:** only assigned pickup orders. Customer profile rows are not opened through RLS for pickup staff; the server returns only the name/phone needed for assigned pickup operations.
+- **Pickup operator:** only assigned pickup orders. Customer profile rows are not opened through RLS for pickup staff; a guarded RPC returns only the name/phone attached to assigned pickup orders.
 - **Supplier commercial data:** admin only.
 - **Community public views:** application returns aggregate counts/savings only; individual household purchases are never exposed.
 
@@ -121,20 +125,19 @@ Environment variables:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
-SUPABASE_SERVICE_ROLE_KEY=server-only-secret
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-Never commit `.env*` secrets.
+Never commit `.env*` values. The publishable key is safe for browser use when RLS is correctly enabled; no privileged database key is required by this app.
 
 ## Supabase setup
 
 1. Create a dedicated Supabase project.
-2. Apply the four SQL migrations in `supabase/migrations/` in filename order.
+2. Apply all SQL migrations in `supabase/migrations/` in filename order.
 3. Apply `supabase/seed.sql`.
 4. Run `supabase/step1_validation.sql` to inspect RLS and core constraints.
 5. Configure Auth Site URL and redirect URL to the deployed Vercel origin plus `/auth/callback`.
-6. Use a **publishable key** in `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; keep the service-role key server-only.
+6. Use a **publishable key** in `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. The Step-1 web app does not require a service-role/secret key.
 
 The seed contains the three pilot communities and clearly labeled demo products. It deliberately does **not** invent supplier prices, benchmarks, orders, savings or production KPIs.
 
@@ -226,7 +229,7 @@ Responsive/browser QA targets: 360px, 768px, and 1440px with no horizontal page 
 
 1. Import the GitHub repository into Vercel.
 2. Framework preset: Next.js.
-3. Add all four environment variables for Preview and Production as appropriate.
+3. Add all three environment variables for Preview and Production as appropriate.
 4. Set `NEXT_PUBLIC_SITE_URL` to the final deployed HTTPS origin.
 5. Deploy Preview first.
 6. Execute the full critical-flow and security QA against Preview.

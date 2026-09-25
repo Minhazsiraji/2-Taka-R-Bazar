@@ -2,7 +2,7 @@ create or replace function public.commit_to_pool(p_pool_item_id uuid, p_quantity
 returns uuid
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 declare
   v_user uuid := auth.uid();
@@ -43,7 +43,7 @@ create or replace function public.confirm_commitment_order(p_commitment_id uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 declare
   v_user uuid := auth.uid();
@@ -104,7 +104,7 @@ create or replace function public.admin_approve_benchmark(p_product_id uuid, p_c
 returns uuid
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 declare v_user uuid := auth.uid(); v_id uuid;
 begin
@@ -124,7 +124,7 @@ create or replace function public.admin_finalize_pool_item(p_pool_item_id uuid, 
 returns void
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 declare v_user uuid := auth.uid(); v_quote_item uuid;
 begin

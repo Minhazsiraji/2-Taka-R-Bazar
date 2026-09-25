@@ -3,16 +3,16 @@ import { StatusPill } from '@/components/status-pill'
 import { SubmitButton } from '@/components/submit-button'
 import { confirmCommitment, reportCustomerIssue } from '@/app/actions/customer'
 import { requireOnboardedUser } from '@/lib/auth'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { taka, dateTime } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
 export default async function OrdersPage({ searchParams }: { searchParams: Promise<{error?:string;notice?:string}> }) {
-  const { user, roles } = await requireOnboardedUser(); const admin=createAdminClient(); const {error,notice}=await searchParams
+  const { user, roles, supabase } = await requireOnboardedUser()
+  const {error,notice}=await searchParams
   const [{data:commitments},{data:orders}] = await Promise.all([
-    admin.from('commitments').select('*,pool_items(*,products(name,package_size),pools(id,title,status))').eq('customer_id',user.id).order('committed_at',{ascending:false}),
-    admin.from('orders').select('*,pickup_points(name,address,google_maps_url),order_items(*,products(name,package_size))').eq('customer_id',user.id).order('created_at',{ascending:false}),
+    supabase.from('commitments').select('*,pool_items(*,products(name,package_size),pools(id,title,status))').eq('customer_id',user.id).order('committed_at',{ascending:false}),
+    supabase.from('orders').select('*,pickup_points(name,address,google_maps_url),order_items(*,products(name,package_size))').eq('customer_id',user.id).order('created_at',{ascending:false}),
   ])
   const confirmable=(commitments??[]).filter((c:any)=>c.status==='active' && c.pool_items?.pools?.status==='confirmation')
   return <AppShell roles={roles}><div className="grid gap-5"><section><h1 className="text-3xl font-black">My commitments & orders</h1><p className="muted">A commitment stays separate from a confirmed purchase.</p></section>{error&&<div className="error">{error}</div>}{notice&&<div className="success">{notice}</div>}

@@ -3,7 +3,6 @@ import { StatusPill } from '@/components/status-pill'
 import { SubmitButton } from '@/components/submit-button'
 import { commitToPool } from '@/app/actions/customer'
 import { requireOnboardedUser } from '@/lib/auth'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { taka } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
@@ -11,18 +10,19 @@ export const dynamic = 'force-dynamic'
 export default async function PoolPage({ searchParams }: { searchParams: Promise<{error?:string;notice?:string}> }) {
   const { user, profile, roles, supabase } = await requireOnboardedUser()
   const { error, notice } = await searchParams
-  const admin = createAdminClient()
   const { data: pool } = await supabase.from('pools').select('*').eq('community_id',profile.community_id).in('status',['open','pricing','final_price','confirmation','ordered','ready_for_pickup']).order('created_at',{ascending:false}).limit(1).maybeSingle()
-  let items: any[] = []; const commitments = new Map<string, any>(); const demand = new Map<string, number>()
+  let items: any[] = []
+  const commitments = new Map<string, any>()
+  const demand = new Map<string, number>()
   if (pool) {
-    const [{ data: itemRows }, { data: ownCommitments }] = await Promise.all([
-      admin.from('pool_items').select('*,products(id,name,brand,category,package_size,unit,image_url)').eq('pool_id',pool.id).eq('active',true).order('created_at'),
+    const [{ data: itemRows }, { data: ownCommitments }, { data: demandRows }] = await Promise.all([
+      supabase.from('pool_items').select('*,products(id,name,brand,category,package_size,unit,image_url)').eq('pool_id',pool.id).eq('active',true).order('created_at'),
       supabase.from('commitments').select('*').eq('customer_id',user.id),
+      supabase.rpc('get_pool_demand',{p_pool_id:pool.id}),
     ])
     items = itemRows ?? []
     ;(ownCommitments ?? []).forEach((c:any)=>commitments.set(c.pool_item_id,c))
-    const { data: allCommitments } = await admin.from('commitments').select('pool_item_id,quantity,status').in('pool_item_id',items.map(i=>i.id)).in('status',['active','confirmed'])
-    ;(allCommitments ?? []).forEach((c:any)=>demand.set(c.pool_item_id,(demand.get(c.pool_item_id)??0)+Number(c.quantity)))
+    ;(demandRows ?? []).forEach((c:any)=>demand.set(c.pool_item_id,Number(c.total_quantity)))
   }
   return <AppShell roles={roles}><div className="grid gap-5">
     <section><h1 className="text-3xl font-black">This week&apos;s pool</h1><p className="muted mt-1">Local demand for {profile.household_name} in your community.</p></section>
