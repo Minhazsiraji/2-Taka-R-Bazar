@@ -20,10 +20,12 @@ export async function commitToPool(formData: FormData) {
 export async function confirmCommitment(formData: FormData) {
   const { supabase } = await requireOnboardedUser()
   const commitmentId = text(formData, 'commitment_id')
-  const { error } = await supabase.rpc('confirm_commitment_order', { p_commitment_id: commitmentId })
+  const pickupPointId = text(formData, 'pickup_point_id')
+  if (!commitmentId || !pickupPointId) redirect('/orders?error=Choose+a+pickup+point+before+confirming+your+purchase')
+  const { error } = await supabase.rpc('confirm_commitment_order', { p_commitment_id: commitmentId, p_pickup_point_id: pickupPointId })
   if (error) redirect(`/orders?error=${encodeURIComponent(error.message)}`)
   revalidatePath('/orders'); revalidatePath('/home'); revalidatePath('/pool')
-  redirect('/orders?notice=Purchase+confirmed+at+the+published+final+price.')
+  redirect('/orders?notice=Purchase+confirmed+with+your+selected+pickup+point.')
 }
 
 export async function submitFeedback(formData: FormData) {
