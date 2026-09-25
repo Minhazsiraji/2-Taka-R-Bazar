@@ -1,44 +1,67 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { requireUser } from '@/lib/auth'
 
-const authSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8).max(128),
-})
-
 function getText(formData: FormData, key: string) {
   return String(formData.get(key) ?? '').trim()
 }
 
-export async function signUp(formData: FormData) {
-  const parsed = authSchema.safeParse({ email: getText(formData, 'email'), password: getText(formData, 'password') })
-  if (!parsed.success) redirect('/signup?error=Use+a+valid+email+and+8%2B+character+password')
-
-  const supabase = await createClient()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: { emailRedirectTo: `${siteUrl}/auth/callback` },
-  })
-  if (error) redirect(`/signup?error=${encodeURIComponent(error.message)}`)
-  if (!data.session) redirect('/login?notice=Account+created.+Check+your+email+to+confirm+the+account.')
-  redirect('/onboarding?notice=Account+created.+Complete+your+pilot+profile.')
+function normalizeBdPhone(raw: string) {
+  const compact = raw.replace(/[\s()-]/g, '')
+  if (/^01[3-9]\d{8}$/.test(compact)) return `+88${compact}`
+  if (/^8801[3-9]\d{8}$/.test(compact)) return `+${compact}`
+  if (/^\+8801[3-9]\d{8}$/.test(compact)) return compact
+  return null
 }
 
-export async function signIn(formData: FormData) {
-  const parsed = authSchema.safeParse({ email: getText(formData, 'email'), password: getText(formData, 'password') })
-  if (!parsed.success) redirect('/login?error=Check+your+email+and+password')
+async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
+  const phone = normalizeBdPhone(getText(formData, 'phone'))
+  const back = mode === 'signup' ? '/signup' : '/login'
+  if (!phone) redirect(`${back}?error=Enter+a+valid+Bangladesh+mobile+number`)
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword(parsed.data)
-  if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`)
+  const { error } = await supabase.auth.signInWithOtp({
+    phone,
+    options: { shouldCreateUser: mode === 'signup' },
+  })
+  if (error) redirect(`${back}?error=${encodeURIComponent(error.message)}`)
+
+  const cookieStore = await cookies()
+  cookieStore.set('bp_otp_phone', phone, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 600, path: '/' })
+  cookieStore.set('bp_otp_mode', mode, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 600, path: '/' })
+  redirect('/verify-otp')
+}
+
+export async function requestSignupOtp(formData: FormData) {
+  return requestPhoneOtp(formData, 'signup')
+}
+
+export async function requestLoginOtp(formData: FormData) {
+  return requestPhoneOtp(formData, 'login')
+}
+
+export async function verifyPhoneOtp(formData: FormData) {
+  const token = getText(formData, 'token')
+  if (!/^\d{6}$/.test(token)) redirect('/verify-otp?error=Enter+the+6-digit+OTP')
+
+  const cookieStore = await cookies()
+  const phone = cookieStore.get('bp_otp_phone')?.value
+  const mode = cookieStore.get('bp_otp_mode')?.value === 'signup' ? 'signup' : 'login'
+  if (!phone) redirect('/login?error=OTP+session+expired.+Enter+your+mobile+again')
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
+  if (error) redirect(`/verify-otp?error=${encodeURIComponent(error.message)}`)
+
+  cookieStore.delete('bp_otp_phone')
+  cookieStore.delete('bp_otp_mode')
   revalidatePath('/', 'layout')
+  if (mode === 'signup') redirect('/onboarding?notice=Mobile+verified.+Complete+your+household+profile')
   redirect('/home')
 }
 
@@ -51,7 +74,6 @@ export async function signOut() {
 
 const onboardingSchema = z.object({
   full_name: z.string().min(2).max(100),
-  phone: z.string().regex(/^(?:\+?88)?01[3-9]\d{8}$/),
   household_name: z.string().min(2).max(120),
   community_id: z.string().uuid(),
   pickup_point_id: z.string().uuid(),
@@ -61,9 +83,10 @@ const onboardingSchema = z.object({
 
 export async function completeOnboarding(formData: FormData) {
   const { supabase, user } = await requireUser()
+  const phone = user.phone
+  if (!phone) redirect('/onboarding?error=Verified+mobile+number+is+required')
   const payload = {
     full_name: getText(formData, 'full_name'),
-    phone: getText(formData, 'phone').replaceAll(' ', ''),
     household_name: getText(formData, 'household_name'),
     community_id: getText(formData, 'community_id'),
     pickup_point_id: getText(formData, 'pickup_point_id'),
@@ -78,7 +101,7 @@ export async function completeOnboarding(formData: FormData) {
 
   const { error } = await supabase.from('profiles').update({
     full_name: parsed.data.full_name,
-    phone: parsed.data.phone,
+    phone,
     household_name: parsed.data.household_name,
     community_id: parsed.data.community_id,
     pickup_point_id: parsed.data.pickup_point_id,
@@ -102,7 +125,6 @@ export async function updateProfile(formData: FormData) {
   if (!pickup) redirect('/profile?error=Choose+an+active+pickup+point+inside+your+community')
   const { error } = await supabase.from('profiles').update({
     full_name: getText(formData, 'full_name'),
-    phone: getText(formData, 'phone').replaceAll(' ', ''),
     household_name: getText(formData, 'household_name'),
     address_hint: getText(formData, 'address_hint') || null,
     google_maps_url: getText(formData, 'google_maps_url') || null,

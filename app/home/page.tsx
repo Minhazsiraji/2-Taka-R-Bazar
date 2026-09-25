@@ -28,7 +28,7 @@ export default async function HomePage() {
   const summary = summaryRows?.[0] as any
 
   return <AppShell roles={roles}><div className="grid gap-5">
-    <section><p className="muted">Hello, {profile.full_name}</p><h1 className="text-3xl font-black">Your BazarPool</h1></section>
+    <section><p className="muted">Hello, {profile.full_name}</p><h1 className="text-3xl font-black">Your community pool</h1></section>
     <section className="grid gap-3 sm:grid-cols-3">
       <div className="card sm:col-span-2"><div className="card-title">My savings · this month</div><div className="metric text-emerald-700">{taka(thisMonth)} saved</div><p className="muted mt-2">Lifetime: <b>{taka(lifetime)}</b>. Only collected orders count.</p><Link className="mt-4 inline-flex font-bold text-emerald-700" href="/savings">See savings history →</Link></div>
       <div className="card"><div className="card-title">My community</div><div className="mt-2 text-xl font-black">{community?.name}</div><p className="muted mt-2">{summary?.household_count ?? 0} participating households</p><p className="muted">{taka(summary?.month_verified_saving ?? 0)} verified saving this month</p></div>

@@ -3,13 +3,13 @@ import './globals.css'
 import { PwaRegister } from '@/components/pwa-register'
 
 export const metadata: Metadata = {
-  title: { default: '1TAKA BazarPool', template: '%s · 1TAKA BazarPool' },
-  description: 'Local community purchasing pools with transparent verified savings.',
-  applicationName: '1TAKA BazarPool',
-  appleWebApp: { capable: true, title: '1TAKA BazarPool', statusBarStyle: 'default' },
+  title: { default: '2-TAKA-R-BAZAR', template: '%s · 2-TAKA-R-BAZAR' },
+  description: 'Smart community shopping with transparent local price comparison and verified savings.',
+  applicationName: '2-TAKA-R-BAZAR',
+  appleWebApp: { capable: true, title: '2-TAKA-R-BAZAR', statusBarStyle: 'default' },
 }
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#047857' }
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#111111' }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="en"><body><PwaRegister />{children}</body></html>

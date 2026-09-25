@@ -1,4 +1,4 @@
-const CACHE = '1taka-shell-v1'
+const CACHE = '2-taka-r-bazar-shell-v1'
 const SHELL = ['/','/login','/manifest.webmanifest','/icon-192.png']
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting())))
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()))

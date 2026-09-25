@@ -1,6 +1,6 @@
-# 1TAKA BazarPool — Step 1 Pilot MVP
+# 2-TAKA-R-BAZAR — Step 1 Community Pool MVP
 
-Mobile-first PWA for operating the first 30–200 BazarPool households in Savar. Step 1 intentionally stops before supplier self-service, online payment gateways, paid membership/1TAKA Pass, advanced Maps APIs, AI, and delivery-fleet functionality.
+Mobile-first PWA for operating the first 30–200 community-pool households, starting in Savar. Step 1 intentionally stops before supplier self-service, online payment gateways, paid membership/1TAKA Pass, advanced Maps APIs, AI, and delivery-fleet functionality.
 
 ## Pilot business flow
 
@@ -22,7 +22,7 @@ A commitment is never silently converted into an order.
 
 - **Frontend:** Next.js App Router, React, TypeScript, Tailwind CSS.
 - **PWA:** Next metadata manifest, 192/512 icons, maskable icon, lightweight service-worker shell cache. Transactional writes always require the live server.
-- **Auth:** Supabase email/password with cookie-based SSR sessions. Phone is a profile field; phone OTP can be added later without changing customer identity.
+- **Auth:** Supabase passwordless Bangladesh mobile authentication with 6-digit SMS OTP and cookie-based SSR sessions. Email is not required for customer signup or sign-in. A configured Supabase SMS provider is required for live OTP delivery.
 - **Database:** Supabase Postgres with normalized relational tables, foreign keys, checks, RLS, transactional RPCs and audit events.
 - **Hosting:** Vercel.
 - **Authorization:** browser/server requests use only the Supabase publishable key plus the signed-in user's session. Admin access is enforced by RLS/roles; customer community statistics and pickup contact access use narrowly scoped database RPCs. No service-role/secret key is required by the app runtime.
@@ -136,7 +136,7 @@ Never commit `.env*` values. The publishable key is safe for browser use when RL
 2. Apply all SQL migrations in `supabase/migrations/` in filename order.
 3. Apply `supabase/seed.sql`.
 4. Run `supabase/step1_validation.sql` to inspect RLS and core constraints.
-5. Configure Auth Site URL and redirect URL to the deployed Vercel origin plus `/auth/callback`.
+5. Enable Supabase Phone Auth and configure an SMS provider for live OTP delivery. Customer phone OTP does not use an email callback.
 6. Use a **publishable key** in `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. The Step-1 web app does not require a service-role/secret key.
 
 The seed contains the three pilot communities and clearly labeled demo products. It deliberately does **not** invent supplier prices, benchmarks, orders, savings or production KPIs.
@@ -149,11 +149,11 @@ Create the owner account through normal `/signup`, then use the Supabase SQL edi
 insert into public.user_roles(user_id, role)
 select id, 'admin'
 from auth.users
-where email = 'OWNER_EMAIL_HERE'
+where phone = '+8801XXXXXXXXX'
 on conflict do nothing;
 ```
 
-No production password or user ID is stored in source control.
+No production OTP, password, or user ID is stored in source control.
 
 ### Pickup operator bootstrap
 
@@ -163,7 +163,7 @@ Have the operator create a normal account, then grant the role:
 insert into public.user_roles(user_id, role)
 select id, 'pickup_operator'
 from auth.users
-where email = 'PICKUP_OPERATOR_EMAIL_HERE'
+where phone = '+8801XXXXXXXXX'
 on conflict do nothing;
 ```
 
@@ -243,7 +243,7 @@ Responsive/browser QA targets: 360px, 768px, and 1440px with no horizontal page 
 
 ## Known Step-1 limitations by design
 
-- Email/password rather than paid SMS/phone OTP.
+- Phone OTP requires a configured SMS provider; provider charges/limits are external to this repository.
 - Manual supplier outreach and quotation entry.
 - Manual payment states; no bKash/payment-gateway integration.
 - Local pickup only; no owned delivery fleet.

@@ -10,7 +10,7 @@ export function AppShell({ children, roles = new Set<AppRole>() }: { children: R
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <header className="sticky top-0 z-40 border-b bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link href="/home" className="flex items-baseline gap-2 font-black tracking-tight"><span className="text-xl text-emerald-700">1TAKA</span><span className="text-sm text-slate-500">BazarPool</span></Link>
+          <Link href="/home" className="font-black tracking-tight text-black">2-TAKA-R-BAZAR</Link>
           <div className="flex gap-2 text-sm">
             {roles.has('pickup_operator') && <Link className="chip" href="/pickup-ops">Pickup Ops</Link>}
             {roles.has('admin') && <Link className="chip" href="/admin">Admin</Link>}
