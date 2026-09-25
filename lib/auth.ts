@@ -2,7 +2,7 @@ import 'server-only'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
-export type AppRole = 'customer' | 'admin' | 'pickup_operator'
+export type AppRole = 'customer' | 'admin' | 'pickup_operator' | 'super_admin'
 
 export async function requireUser() {
   const supabase = await createClient()
@@ -35,12 +35,18 @@ export async function requireOnboardedUser() {
 
 export async function requireAdmin() {
   const viewer = await getViewer()
-  if (!viewer.roles.has('admin')) redirect('/home')
+  if (!viewer.roles.has('admin') && !viewer.roles.has('super_admin')) redirect('/home')
+  return viewer
+}
+
+export async function requireSuperAdmin() {
+  const viewer = await getViewer()
+  if (!viewer.roles.has('super_admin')) redirect('/home')
   return viewer
 }
 
 export async function requirePickupOperator() {
   const viewer = await getViewer()
-  if (!viewer.roles.has('pickup_operator') && !viewer.roles.has('admin')) redirect('/home')
+  if (!viewer.roles.has('pickup_operator') && !viewer.roles.has('admin') && !viewer.roles.has('super_admin')) redirect('/home')
   return viewer
 }
