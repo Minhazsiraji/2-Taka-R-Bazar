@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { BrandLogo } from '@/components/brand-logo'
 
 const executiveLinks = [
   ['/super-admin', 'Executive dashboard'],
@@ -38,29 +39,29 @@ function Navigation({ mobile = false }: { mobile?: boolean }) {
 }
 
 export function SuperAdminShell({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen max-w-full overflow-x-hidden bg-slate-100 text-slate-950">
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 text-slate-950 backdrop-blur">
-      <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-3">
-        <Link href="/super-admin" className="flex min-w-0 shrink-0 items-center gap-3" aria-label="2-TAKA-R-BAZAR Super Admin">
-          <img src="/brand-logo-header.png" alt="2-TAKA-R-BAZAR - Smart Shopping. Real Savings." className="h-12 w-auto shrink-0 object-contain sm:h-16" />
+  return <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-100 text-slate-950">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 text-slate-950 backdrop-blur">
+      <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-2 px-3 py-2 sm:px-4">
+        <Link href="/super-admin" className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3" aria-label="2-TAKA-R-BAZAR Super Admin">
+          <BrandLogo size={56} />
           <div className="hidden min-w-0 md:block"><p className="font-black tracking-tight">SUPER ADMIN</p><p className="text-xs text-slate-500">Owner command center · live operational data</p></div>
         </Link>
-        <div className="flex min-w-0 shrink items-center justify-end gap-1 text-[11px] sm:gap-2 sm:text-sm">
-          <Link href="/admin" className="shrink-0 rounded-lg border border-slate-300 bg-white px-2.5 py-2 font-bold text-slate-900 sm:px-3">Operations</Link>
-          <Link href="/home" className="shrink-0 rounded-lg bg-black px-2.5 py-2 font-bold text-white sm:px-3">Customer app</Link>
+        <div className="flex min-w-0 items-center justify-end gap-1 text-[10px] sm:gap-2 sm:text-sm">
+          <Link href="/admin" className="shrink-0 rounded-lg border border-slate-300 bg-white px-2 py-2 font-bold text-slate-900 sm:px-3">Operations</Link>
+          <Link href="/home" className="shrink-0 rounded-lg bg-black px-2 py-2 font-bold text-white sm:px-3">Customer app</Link>
         </div>
       </div>
     </header>
 
-    <div className="mx-auto w-full max-w-[1500px] px-3 py-4 sm:px-4 sm:py-5">
-      <details className="mb-4 max-w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm xl:hidden">
+    <div className="mx-auto w-full max-w-[1500px] min-w-0 px-3 py-4 sm:px-4 sm:py-5">
+      <details className="mb-4 w-full max-w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm xl:hidden">
         <summary className="cursor-pointer list-none rounded-xl bg-slate-100 px-3 py-3 text-sm font-black text-slate-800">☰ Super Admin sections</summary>
         <div className="mt-4 min-w-0"><Navigation mobile /></div>
       </details>
 
       <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[245px_minmax(0,1fr)]">
-        <aside className="hidden h-fit rounded-2xl border border-slate-200 bg-white p-3 shadow-sm xl:sticky xl:top-24 xl:block"><Navigation /></aside>
-        <main className="w-full max-w-full min-w-0 overflow-hidden">{children}</main>
+        <aside className="hidden h-fit rounded-2xl border border-slate-200 bg-white p-3 shadow-sm xl:sticky xl:top-20 xl:block"><Navigation /></aside>
+        <main className="w-full max-w-full min-w-0 overflow-x-hidden">{children}</main>
       </div>
     </div>
   </div>
