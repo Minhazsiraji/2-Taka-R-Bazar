@@ -1,11 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import { sanitizeBdPhoneInput } from '@/lib/bd-phone.mjs'
 
 export function BdPhoneInput() {
-  const [phone, setPhone] = useState('')
-
   return (
     <label>
       <span className="label">Mobile number</span>
@@ -14,8 +11,11 @@ export function BdPhoneInput() {
         <input
           className="input rounded-l-none"
           name="phone"
-          value={phone}
-          onChange={(event) => setPhone(sanitizeBdPhoneInput(event.target.value))}
+          onInput={(event) => {
+            const input = event.currentTarget
+            const cleaned = sanitizeBdPhoneInput(input.value)
+            if (input.value !== cleaned) input.value = cleaned
+          }}
           inputMode="numeric"
           autoComplete="tel-national"
           placeholder="01404385101"
