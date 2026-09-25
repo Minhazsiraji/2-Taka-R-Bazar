@@ -76,7 +76,6 @@ const onboardingSchema = z.object({
   full_name: z.string().min(2).max(100),
   household_name: z.string().min(2).max(120),
   community_id: z.string().uuid(),
-  pickup_point_id: z.string().uuid(),
   address_hint: z.string().max(240).optional(),
   google_maps_url: z.string().url().optional().or(z.literal('')),
 })
@@ -89,22 +88,18 @@ export async function completeOnboarding(formData: FormData) {
     full_name: getText(formData, 'full_name'),
     household_name: getText(formData, 'household_name'),
     community_id: getText(formData, 'community_id'),
-    pickup_point_id: getText(formData, 'pickup_point_id'),
     address_hint: getText(formData, 'address_hint'),
     google_maps_url: getText(formData, 'google_maps_url'),
   }
   const parsed = onboardingSchema.safeParse(payload)
   if (!parsed.success) redirect('/onboarding?error=Please+check+the+required+profile+fields')
 
-  const { data: pickup } = await supabase.from('pickup_points').select('id').eq('id', parsed.data.pickup_point_id).eq('community_id', parsed.data.community_id).eq('active', true).maybeSingle()
-  if (!pickup) redirect('/onboarding?error=Choose+an+active+pickup+point+inside+your+community')
-
   const { error } = await supabase.from('profiles').update({
     full_name: parsed.data.full_name,
     phone,
     household_name: parsed.data.household_name,
     community_id: parsed.data.community_id,
-    pickup_point_id: parsed.data.pickup_point_id,
+    pickup_point_id: null,
     address_hint: parsed.data.address_hint || null,
     google_maps_url: parsed.data.google_maps_url || null,
     onboarding_completed_at: new Date().toISOString(),
@@ -117,12 +112,15 @@ export async function completeOnboarding(formData: FormData) {
 
 export async function updateProfile(formData: FormData) {
   const { supabase, user } = await requireUser()
-  const pickupPointId = getText(formData, 'pickup_point_id')
-  if (!pickupPointId) redirect('/profile?error=Choose+a+pickup+point')
+  const pickupPointId = getText(formData, 'pickup_point_id') || null
   const { data: current } = await supabase.from('profiles').select('community_id').eq('id', user.id).single()
   if (!current?.community_id) redirect('/onboarding')
-  const { data: pickup } = await supabase.from('pickup_points').select('id').eq('id', pickupPointId).eq('community_id', current.community_id).eq('active', true).maybeSingle()
-  if (!pickup) redirect('/profile?error=Choose+an+active+pickup+point+inside+your+community')
+
+  if (pickupPointId) {
+    const { data: pickup } = await supabase.from('pickup_points').select('id').eq('id', pickupPointId).eq('community_id', current.community_id).eq('active', true).maybeSingle()
+    if (!pickup) redirect('/profile?error=Choose+an+active+pickup+point+inside+your+community')
+  }
+
   const { error } = await supabase.from('profiles').update({
     full_name: getText(formData, 'full_name'),
     household_name: getText(formData, 'household_name'),
