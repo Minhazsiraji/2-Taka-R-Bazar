@@ -21,10 +21,12 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       <label><span className="label">Verified mobile</span><input className="input bg-slate-100" value={user.phone ?? profile.phone ?? ''} readOnly aria-readonly="true" /></label>
       <p className="-mt-2 text-xs text-slate-500">Mobile changes require a new OTP verification flow.</p>
       <label><span className="label">Household label</span><input className="input" name="household_name" defaultValue={profile.household_name ?? ''} required /></label>
-      <label><span className="label">Pickup point</span><select className="input" name="pickup_point_id" defaultValue={profile.pickup_point_id ?? ''} required><option value="">Choose pickup point</option>{points?.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+      <label><span className="label">Default pickup point (optional)</span><select className="input" name="pickup_point_id" defaultValue={profile.pickup_point_id ?? ''}><option value="">No default — choose when confirming an order</option>{points?.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+      <p className="-mt-2 text-xs text-slate-500">You can choose a different active pickup point each time you confirm a purchase.</p>
       <label><span className="label">Building / road / landmark</span><input className="input" name="address_hint" defaultValue={profile.address_hint ?? ''} /></label>
       <label><span className="label">Google Maps share URL</span><input className="input" type="url" name="google_maps_url" defaultValue={profile.google_maps_url ?? ''} /></label>
       <SubmitButton>Save profile</SubmitButton>
-    </form>    <form action={signOut}><SubmitButton className="btn-secondary">Sign out</SubmitButton></form>
+    </form>
+    <form action={signOut}><SubmitButton className="btn-secondary">Sign out</SubmitButton></form>
   </div></AppShell>
 }
