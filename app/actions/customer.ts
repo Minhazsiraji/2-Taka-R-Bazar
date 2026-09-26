@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation'
 import { requireOnboardedUser } from '@/lib/auth'
 
 function text(fd: FormData, key: string) { return String(fd.get(key) ?? '').trim() }
+function poolNotice(message:string):never{revalidatePath('/pool');revalidatePath('/home');redirect(`/pool?notice=${encodeURIComponent(message)}`)}
+function poolError(message:string):never{redirect(`/pool?error=${encodeURIComponent(message)}`)}
 
 export async function commitToPool(formData: FormData) {
   const { supabase } = await requireOnboardedUser()
@@ -15,6 +17,34 @@ export async function commitToPool(formData: FormData) {
   if (error) redirect(`/pool?error=${encodeURIComponent(error.message)}`)
   revalidatePath('/pool'); revalidatePath('/home'); revalidatePath('/orders')
   redirect('/pool?notice=Commitment+saved.+This+is+not+a+purchase+until+you+confirm+the+final+price.')
+}
+
+export async function togglePoolLove(formData:FormData){
+  const {supabase,user}=await requireOnboardedUser(); const poolId=text(formData,'pool_id'); if(!poolId)poolError('Pool not found')
+  const {data}=await supabase.from('pool_loves').select('pool_id').eq('pool_id',poolId).eq('user_id',user.id).maybeSingle()
+  if(data){const {error}=await supabase.from('pool_loves').delete().eq('pool_id',poolId).eq('user_id',user.id);if(error)poolError(error.message);poolNotice('Pool removed from your loves')}
+  const {error}=await supabase.from('pool_loves').insert({pool_id:poolId,user_id:user.id});if(error)poolError(error.message);poolNotice('You loved this pool')
+}
+
+export async function togglePoolItemLove(formData:FormData){
+  const {supabase,user}=await requireOnboardedUser(); const poolItemId=text(formData,'pool_item_id'); if(!poolItemId)poolError('Item not found')
+  const {data}=await supabase.from('pool_item_loves').select('pool_item_id').eq('pool_item_id',poolItemId).eq('user_id',user.id).maybeSingle()
+  if(data){const {error}=await supabase.from('pool_item_loves').delete().eq('pool_item_id',poolItemId).eq('user_id',user.id);if(error)poolError(error.message);poolNotice('Item removed from your loves')}
+  const {error}=await supabase.from('pool_item_loves').insert({pool_item_id:poolItemId,user_id:user.id});if(error)poolError(error.message);poolNotice('You loved this item')
+}
+
+export async function submitPoolReview(formData:FormData){
+  const {supabase,user}=await requireOnboardedUser(); const poolId=text(formData,'pool_id'); const rating=Number(text(formData,'rating')); const comment=text(formData,'comment')
+  if(!poolId||!Number.isInteger(rating)||rating<1||rating>5)poolError('Choose a rating from 1 to 5'); if(comment.length>800)poolError('Review must be 800 characters or less')
+  const {error}=await supabase.from('pool_reviews').upsert({pool_id:poolId,user_id:user.id,rating,comment:comment||null,updated_at:new Date().toISOString()},{onConflict:'pool_id,user_id'})
+  if(error)poolError(error.message);poolNotice('Pool review saved')
+}
+
+export async function submitPoolItemReview(formData:FormData){
+  const {supabase,user}=await requireOnboardedUser(); const poolItemId=text(formData,'pool_item_id'); const rating=Number(text(formData,'rating')); const comment=text(formData,'comment')
+  if(!poolItemId||!Number.isInteger(rating)||rating<1||rating>5)poolError('Choose a rating from 1 to 5'); if(comment.length>800)poolError('Review must be 800 characters or less')
+  const {error}=await supabase.from('pool_item_reviews').upsert({pool_item_id:poolItemId,user_id:user.id,rating,comment:comment||null,updated_at:new Date().toISOString()},{onConflict:'pool_item_id,user_id'})
+  if(error)poolError(error.message);poolNotice('Item review saved')
 }
 
 export async function confirmCommitment(formData: FormData) {
