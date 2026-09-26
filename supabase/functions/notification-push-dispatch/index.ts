@@ -37,7 +37,7 @@ Deno.serve(async (req: Request) => {
   if (notificationError) return json({ error: notificationError.message }, 500);
   if (!notifications?.length) return json({ sent: 0, skipped: 0 });
 
-  const userIds = [...new Set(notifications.map((note) => note.user_id))];
+  const userIds = [...new Set(notifications.map((note: any) => note.user_id))];
   const { data: subscriptions, error: subscriptionError } = await supabase
     .from("push_subscriptions")
     .select("id,user_id,endpoint,p256dh,auth")
@@ -58,6 +58,10 @@ Deno.serve(async (req: Request) => {
     const userSubscriptions = byUser.get(note.user_id) ?? [];
     if (!userSubscriptions.length) {
       skipped += 1;
+      await supabase.from("notifications").update({
+        push_attempts: Number(note.push_attempts || 0) + 1,
+        push_error: "No active push subscription",
+      }).eq("id", note.id);
       continue;
     }
 
