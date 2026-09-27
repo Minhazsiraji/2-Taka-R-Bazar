@@ -20,15 +20,20 @@ export default async function SubscriptionAdminPage({searchParams}:{searchParams
   const profileById=new Map(((profiles??[]) as any[]).map(p=>[p.id,p]))
   const now=Date.now(),activeMembers=(memberships??[]).filter((m:any)=>m.valid_until&&new Date(m.valid_until).getTime()>now).length
   const pending=(invoices??[]).filter((i:any)=>i.status==='payment_pending'),unpaid=(invoices??[]).filter((i:any)=>i.status==='unpaid')
+  const paid=(invoices??[]).filter((i:any)=>i.status==='paid')
+  const paidAccounts=new Set(paid.map((i:any)=>i.customer_id)).size
+  const collectedAmount=paid.reduce((sum:any,i:any)=>sum+num(i.amount),0)
   const unpaidAmount=[...pending,...unpaid].reduce((s:any,i:any)=>s+num(i.amount),0)
 
   return <SuperAdminShell><div className="grid gap-5">
     <section><p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Membership revenue</p><h1 className="mt-1 text-3xl font-black">Subscriptions & free coupons</h1><p className="muted mt-1">Set the monthly fee, control the pool-access gate, create 1/2/3-month promotions, and verify customer payments.</p></section>
     {error&&<div className="error">{error}</div>}{notice&&<div className="success">{notice}</div>}
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       <div className="card"><div className="card-title">Gate status</div><div className="metric text-2xl">{settings?.enforcement_enabled?'Enforced':'Off'}</div><p className="muted mt-2">{settings?.enforcement_enabled?'Only active members can join/confirm pools.':'Customers are not blocked yet.'}</p></div>
       <div className="card"><div className="card-title">Monthly fee</div><div className="metric text-2xl">{settings?.monthly_price?taka(settings.monthly_price):'Not set'}</div><p className="muted mt-2">{settings?.currency??'BDT'}</p></div>
       <div className="card"><div className="card-title">Active memberships</div><div className="metric text-2xl">{activeMembers}</div><p className="muted mt-2">Paid or coupon entitlement still valid.</p></div>
+      <div className="card"><div className="card-title">Paid customer accounts</div><div className="metric text-2xl">{paidAccounts}</div><p className="muted mt-2">Unique customers with at least one confirmed subscription payment.</p></div>
+      <div className="card"><div className="card-title">Subscription revenue collected</div><div className="metric text-2xl">{taka(collectedAmount)}</div><p className="muted mt-2">{paid.length} paid invoice{paid.length===1?'':'s'} confirmed to date.</p></div>
       <div className="card"><div className="card-title">Open billing exposure</div><div className="metric text-2xl">{taka(unpaidAmount)}</div><p className="muted mt-2">{unpaid.length} unpaid · {pending.length} awaiting verification</p></div>
     </section>
 
