@@ -1,5 +1,6 @@
-const CACHE = '2-taka-r-bazar-shell-v4'
-const SHELL = ['/','/login','/manifest.webmanifest','/icon-192.png']
+const CACHE = '2-taka-r-bazar-shell-v5'
+const BRAND_ICON = '/notification-icon-v2.png?v=20260927'
+const SHELL = ['/','/login','/manifest.webmanifest',BRAND_ICON]
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()))
@@ -31,8 +32,8 @@ self.addEventListener('push', event => {
   const title = data.title || '2-TAKA-R-BAZAR'
   const options = {
     body: data.body || 'You have a new update.',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: BRAND_ICON,
+    badge: BRAND_ICON,
     tag: data.notificationId || undefined,
     renotify: data.priority === 'high',
     data: { href: data.href || '/notifications', notificationId: data.notificationId || null },
