@@ -29,7 +29,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   background: linear-gradient(145deg,rgba(255,255,255,.88),rgba(255,255,255,.62));
   box-shadow: var(--surface-shadow), inset 0 1px 0 rgba(255,255,255,.92);
   -webkit-backdrop-filter: blur(18px) saturate(1.16); backdrop-filter: blur(18px) saturate(1.16);
-  transform: translateZ(0); transform-style: preserve-3d;
   transition: transform .24s cubic-bezier(.2,.8,.2,1), box-shadow .24s ease, border-color .24s ease;
 }
 .card::before {
@@ -105,22 +104,22 @@ main :is(div,section,article,form,blockquote,details)[class*="rounded-"][class*=
 main :is(div,section,article,form,blockquote,details)[class*="rounded-"][class*="bg-white"] { background: linear-gradient(145deg,rgba(255,255,255,.88),rgba(255,255,255,.62)) !important; }
 
 @media (hover: hover) and (pointer: fine) {
-  .card:hover { transform: perspective(1000px) translateY(-5px) rotateX(.35deg) scale(1.008); box-shadow: var(--surface-shadow-hover), inset 0 1px 0 rgba(255,255,255,.96); border-color: rgba(255,255,255,.96); }
+  .card:hover { transform: none; box-shadow: var(--surface-shadow-hover), inset 0 1px 0 rgba(255,255,255,.96); border-color: rgba(255,255,255,.96); }
   .card:hover::before { opacity: .94; }
-  .table-wrap:hover { transform: translateY(-2px); box-shadow: 0 16px 38px rgba(15,23,42,.1), inset 0 1px 0 rgba(255,255,255,.92); }
+  .table-wrap:hover { transform: none; box-shadow: 0 16px 38px rgba(15,23,42,.1), inset 0 1px 0 rgba(255,255,255,.92); }
   main :is(div,section,article,form,blockquote,details)[class*="rounded-xl"]:not(.card):not(.table-wrap):hover,
   main :is(div,section,article,form,blockquote,details)[class*="rounded-2xl"]:not(.card):not(.table-wrap):hover {
-    transform: translateY(-3px) scale(1.005); box-shadow: 0 14px 32px rgba(15,23,42,.1), inset 0 1px 0 rgba(255,255,255,.68);
+    transform: none; box-shadow: 0 14px 32px rgba(15,23,42,.1), inset 0 1px 0 rgba(255,255,255,.68);
   }
-  .btn-primary:hover { transform: translateY(-2px); background: #0f172a; box-shadow: 0 15px 28px rgba(2,6,23,.25); }
-  .btn-secondary:hover { transform: translateY(-2px); background: rgba(255,255,255,.94); box-shadow: 0 13px 26px rgba(15,23,42,.12); }
-  .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 14px 26px rgba(190,18,60,.24); }
-  .chip:hover, .status-pill:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(15,23,42,.09); }
+  .btn-primary:hover { transform: none; background: #0f172a; box-shadow: 0 15px 28px rgba(2,6,23,.25); }
+  .btn-secondary:hover { transform: none; background: rgba(255,255,255,.94); box-shadow: 0 13px 26px rgba(15,23,42,.12); }
+  .btn-danger:hover { transform: none; box-shadow: 0 14px 26px rgba(190,18,60,.24); }
+  .chip:hover, .status-pill:hover { transform: none; box-shadow: 0 8px 18px rgba(15,23,42,.09); }
   .input:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 7px 16px rgba(15,23,42,.06); }
 }
 
 .input:focus { box-shadow: 0 0 0 3px rgba(148,163,184,.2), 0 10px 22px rgba(15,23,42,.08); }
-.btn-primary:active, .btn-secondary:active, .btn-danger:active, .card:active { transform: translateY(0) scale(.995); }
+.btn-primary:active, .btn-secondary:active, .btn-danger:active, .card:active { transform: none; }
 
 @media (max-width: 639px) {
   body { background-attachment: scroll; }
