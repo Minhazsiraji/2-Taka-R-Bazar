@@ -4,6 +4,7 @@ import { BrandLogo } from '@/components/brand-logo'
 const executiveLinks = [
   ['/super-admin', 'Executive dashboard'],
   ['/super-admin/payments', 'Payments & cash'],
+  ['/super-admin/subscriptions', 'Subscriptions & coupons'],
   ['/super-admin/access', 'Users & access'],
   ['/super-admin/audit', 'Audit trail'],
 ]

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { StatusPill } from '@/components/status-pill'
 import { SubmitButton } from '@/components/submit-button'
@@ -20,7 +21,12 @@ function Stars({value}:{value:number}){
 export default async function PoolPage({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}) {
   const {user,profile,roles,supabase}=await requireOnboardedUser()
   const {error,notice}=await searchParams
-  const {data:pools}=await supabase.from('pools').select('*').eq('community_id',profile.community_id).in('status',activeStatuses).order('created_at',{ascending:false})
+  const [{data:pools},{data:subscriptionRows}]=await Promise.all([
+    supabase.from('pools').select('*').eq('community_id',profile.community_id).in('status',activeStatuses).order('created_at',{ascending:false}),
+    supabase.rpc('get_my_subscription_status'),
+  ])
+  const membership=(subscriptionRows??[])[0] as any
+  const membershipBlocked=Boolean(membership?.enforcement_enabled)&&!Boolean(membership?.active)
   const poolIds=(pools??[]).map((p:any)=>p.id)
   let items:any[]=[]
   const commitments=new Map<string,any>()
@@ -79,6 +85,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
       </section>
 
       {error&&<div className="error">{error}</div>}{notice&&<div className="success">{notice}</div>}
+      {membershipBlocked&&<div className="notice flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><b>Membership required to join pools.</b><p className="mt-1">Pay the monthly bill or redeem a valid 1/2/3-month coupon. You can still browse pool prices and demand.</p></div><Link href="/subscription" className="btn-primary shrink-0">Activate membership</Link></div>}
 
       {!pools?.length?<div className="card p-5"><div className="card-title">Pool status</div><h2 className="mt-2 text-xl font-black">No active pool right now</h2><p className="muted mt-2">The next community buying pool will appear here as soon as it opens.</p></div>:(pools??[]).map((pool:any)=>{
         const poolItems=items.filter((item:any)=>item.pool_id===pool.id)
@@ -133,7 +140,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
 
                     {completedItemIds.has(item.id)&&<form action={submitPoolItemReview} className="mt-4 grid gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3"><input type="hidden" name="pool_item_id" value={item.id}/><div className="grid gap-2 sm:grid-cols-[140px_1fr]"><select className="input" name="rating" defaultValue={ownItemReview?.rating??5} required>{[5,4,3,2,1].map(n=><option key={n} value={n}>{n} star{n===1?'':'s'}</option>)}</select><input className="input" name="comment" maxLength={800} defaultValue={ownItemReview?.comment??''} placeholder="Review this item"/></div><SubmitButton className="btn-secondary">{ownItemReview?'Update item review':'Review item'}</SubmitButton></form>}
 
-                    {pool.status==='open'?<form action={commitToPool} className="mt-4 grid gap-2 border-t border-slate-200 pt-4 sm:grid-cols-[minmax(0,180px)_auto] sm:items-end"><input type="hidden" name="pool_item_id" value={item.id}/><label><span className="label">Quantity</span><input className="input" type="number" name="quantity" min={item.min_quantity} max={item.max_quantity} defaultValue={own?.quantity??1} required/></label><SubmitButton className="w-full sm:w-auto">{own?'Update commitment':'I want this'}</SubmitButton></form>:<p className="muted mt-4 border-t border-slate-200 pt-4">Commitments are closed while this pool is in {String(pool.status).replaceAll('_',' ')}.</p>}
+                    {pool.status==='open'?(membershipBlocked?<div className="mt-4 border-t border-slate-200 pt-4"><p className="text-sm font-semibold text-amber-800">Activate membership before committing to this item.</p><Link href="/subscription" className="btn-primary mt-3">Membership & billing</Link></div>:<form action={commitToPool} className="mt-4 grid gap-2 border-t border-slate-200 pt-4 sm:grid-cols-[minmax(0,180px)_auto] sm:items-end"><input type="hidden" name="pool_item_id" value={item.id}/><label><span className="label">Quantity</span><input className="input" type="number" name="quantity" min={item.min_quantity} max={item.max_quantity} defaultValue={own?.quantity??1} required/></label><SubmitButton className="w-full sm:w-auto">{own?'Update commitment':'I want this'}</SubmitButton></form>):<p className="muted mt-4 border-t border-slate-200 pt-4">Commitments are closed while this pool is in {String(pool.status).replaceAll('_',' ')}.</p>}
                   </div>
                 </div>
               </article>

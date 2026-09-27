@@ -4,11 +4,11 @@ import { BrandLogo } from '@/components/brand-logo'
 import { NotificationBell } from '@/components/notification-bell'
 
 const customerNav = [
-  ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'],
+  ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'], ['/subscription', 'Membership'],
   ['/community', 'Community'], ['/pickup', 'Pickup'], ['/profile', 'Profile'], ['/notifications', 'Notifications'],
 ]
 const mobileNav = [
-  ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'], ['/profile', 'Profile'],
+  ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'], ['/subscription', 'Membership'],
 ]
 
 export function AppShell({ children, roles = new Set<AppRole>() }: { children: React.ReactNode; roles?: Set<AppRole> }) {
@@ -49,8 +49,8 @@ export function AppShell({ children, roles = new Set<AppRole>() }: { children: R
             <div className="flex items-center gap-3"><BrandLogo size={48} /><div><div className="font-black">2-TAKA-R-BAZAR</div><div className="text-xs text-slate-400">Smart Shopping. Real Savings.</div></div></div>
             <p className="mt-4 max-w-sm text-sm leading-6 text-slate-400">Community-powered grocery pooling with transparent local price benchmarks, flexible pickup choices, and verified savings.</p>
           </div>
-          <div><div className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Shop</div><div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-2 text-sm">{customerNav.slice(0,4).map(([href,label])=><Link key={href} href={href} className="text-slate-300 hover:text-white">{label}</Link>)}</div></div>
-          <div><div className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Account & community</div><div className="mt-3 grid grid-cols-2 gap-2 text-sm">{customerNav.slice(4).map(([href,label])=><Link key={href} href={href} className="text-slate-300 hover:text-white">{label}</Link>)}</div></div>
+          <div><div className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Shop</div><div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-2 text-sm">{customerNav.slice(0,5).map(([href,label])=><Link key={href} href={href} className="text-slate-300 hover:text-white">{label}</Link>)}</div></div>
+          <div><div className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Account & community</div><div className="mt-3 grid grid-cols-2 gap-2 text-sm">{customerNav.slice(5).map(([href,label])=><Link key={href} href={href} className="text-slate-300 hover:text-white">{label}</Link>)}</div></div>
         </div>
         <div className="border-t border-slate-800"><div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 text-xs text-slate-500"><span>© 2026 2-TAKA-R-BAZAR</span><span>Community first · transparent savings</span></div></div>
       </footer>
