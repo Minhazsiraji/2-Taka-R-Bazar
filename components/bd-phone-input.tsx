@@ -6,10 +6,10 @@ export function BdPhoneInput() {
   return (
     <label>
       <span className="label">Mobile number</span>
-      <div className="flex">
-        <span className="flex min-h-11 items-center rounded-l-xl border border-r-0 border-slate-300 bg-slate-100 px-3 font-bold text-slate-700">+88</span>
+      <div className="flex w-full min-w-0 overflow-hidden rounded-xl">
+        <span className="flex min-h-11 w-[3.75rem] shrink-0 items-center justify-center whitespace-nowrap rounded-l-xl border border-r-0 border-slate-300 bg-slate-100 px-2 font-bold text-slate-700">+88</span>
         <input
-          className="input rounded-l-none"
+          className="input min-w-0 flex-1 rounded-l-none"
           name="phone"
           onInput={(event) => {
             const input = event.currentTarget
