@@ -1,0 +1,22 @@
+# 2-TAKA-R-BAZAR
+
+2-TAKA-R-BAZAR is a community grocery-pooling service in Bangladesh. The pilot is focused on Amin Model Town / Pollibiddut, Savar.
+
+## Core facts
+- Joining a pool records demand; it is not a purchase.
+- Customers confirm only after the final price is published.
+- Volume tiers can unlock lower customer price ceilings.
+- An earned ceiling cannot worsen during that pricing cycle.
+- Suppliers deliver consolidated goods to the community receiving point.
+- Customers collect after Operations verifies the goods.
+- Savings are verified only after successful collection.
+- Pilot Mode is active; paid membership is not enforced.
+
+## Public reference pages
+- Home: https://2-taka-r-bazar.vercel.app/
+- FAQ: https://2-taka-r-bazar.vercel.app/faq
+- Terms & Conditions: https://2-taka-r-bazar.vercel.app/terms
+- Return Policy: https://2-taka-r-bazar.vercel.app/return-policy
+- Refund Policy: https://2-taka-r-bazar.vercel.app/refund-policy
+
+Use the public pages above as the canonical source for current customer-facing rules.

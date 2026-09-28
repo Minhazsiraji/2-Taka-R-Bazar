@@ -1,0 +1,22 @@
+import type { Metadata } from 'next'
+import { PublicHeader } from '@/components/public-header'
+import { PublicFooter } from '@/components/public-footer'
+import { SITE_NAME, SITE_URL } from '@/lib/site'
+
+export const metadata: Metadata = {title:'FAQ | প্রশ্নোত্তর',description:'Answers about 2-TAKA-R-BAZAR community grocery pools, final pricing, pickup, verified savings, returns and refunds.',alternates:{canonical:`${SITE_URL}/faq`}}
+
+const faqs=[
+  ['What is 2-TAKA-R-BAZAR?','2-TAKA-R-BAZAR is a community grocery-pooling service. Households combine demand, suppliers quote against the pooled volume, customers see the final price, then choose whether to confirm.','2-TAKA-R-BAZAR কী?','2-TAKA-R-BAZAR একটি কমিউনিটি গ্রোসারি পুলিং সেবা। পরিবারের চাহিদা একত্র হয়, মোট পরিমাণ অনুযায়ী সরবরাহকারীর দর নেওয়া হয়, গ্রাহক চূড়ান্ত দাম দেখে তারপর ক্রয় নিশ্চিত করেন।'],
+  ['Does joining a pool mean I have bought the item?','No. A commitment records demand only. It becomes a purchase only after the final price is published and you explicitly confirm the purchase and pickup point.','পুলে যোগ দিলেই কি অর্ডার হয়ে যায়?','না। কমিটমেন্ট শুধু চাহিদা রেকর্ড করে। চূড়ান্ত দাম প্রকাশের পর আপনি ক্রয় ও পিকআপ পয়েন্ট নিশ্চিত করলেই অর্ডার হয়।'],
+  ['How does the price unlock work?','Higher confirmed community demand can unlock a lower customer price ceiling. Once a tier is earned for that pricing cycle, final supplier negotiation may keep or improve the price but cannot worsen the earned ceiling.','প্রাইস আনলক কীভাবে কাজ করে?','কমিউনিটির নিশ্চিত চাহিদা বাড়লে কম দাম আনলক হতে পারে। একটি টিয়ার অর্জিত হলে চূড়ান্ত দরদামে দাম একই থাকতে বা আরও কমতে পারে, কিন্তু অর্জিত সীমার চেয়ে খারাপ হবে না।'],
+  ['How are savings calculated?','The app compares the approved local-market benchmark captured for the pool with the final customer price. Savings become verified only after successful collection.','সাশ্রয় কীভাবে হিসাব হয়?','অ্যাপ পুলের জন্য অনুমোদিত স্থানীয় বাজার বেঞ্চমার্কের সাথে চূড়ান্ত গ্রাহক মূল্য তুলনা করে। সফল পিকআপের পরই সাশ্রয় যাচাইকৃত হয়।'],
+  ['Where is the pilot running?','The first controlled pilot is focused on Amin Model Town / Pollibiddut in Savar, Bangladesh, with expansion only after the operating model is proven.','পাইলট কোথায় চলছে?','প্রথম নিয়ন্ত্রিত পাইলট Savar-এর Amin Model Town / Pollibiddut এলাকায় কেন্দ্রীভূত। অপারেশন প্রমাণিত হওয়ার পরই অন্য এলাকায় সম্প্রসারণ হবে।'],
+  ['How does pickup work?','The supplier delivers consolidated goods to the designated community receiving point first. After Operations verifies receipt and marks the pool ready, customers collect from the enabled pickup point.','পিকআপ কীভাবে হয়?','সরবরাহকারী প্রথমে নির্ধারিত কমিউনিটি receiving point-এ একত্রিত পণ্য দেয়। Operations পণ্য যাচাই করে Ready করলে গ্রাহক নির্ধারিত পিকআপ পয়েন্ট থেকে সংগ্রহ করেন।'],
+  ['What if an item is wrong, missing or damaged?','Report it at pickup where practical or through the in-app issue flow promptly. The Return and Refund Policies explain the available remedy and timing.','পণ্য ভুল, কম বা ক্ষতিগ্রস্ত হলে কী করব?','সম্ভব হলে পিকআপের সময় জানান অথবা দ্রুত অ্যাপের issue flow ব্যবহার করুন। Return এবং Refund Policy-তে সমাধান ও সময়সীমা দেওয়া আছে।'],
+]
+
+export default function FaqPage(){
+  const schema={"@context":"https://schema.org","@type":"FAQPage",mainEntity:faqs.map(([q,a])=>({"@type":"Question",name:q,acceptedAnswer:{"@type":"Answer",text:a}}))}
+  return <main className="min-h-screen bg-slate-50 text-slate-950"><PublicHeader actionHref="/" actionLabel="Home"/><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12"><p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{SITE_NAME}</p><h1 className="mt-2 text-3xl font-black sm:text-4xl">Frequently asked questions</h1><p className="mt-1 text-xl font-bold text-slate-700" lang="bn">সাধারণ প্রশ্নোত্তর</p><div className="mt-6 grid gap-4">{faqs.map(([q,a,qb,ab])=><article key={q} className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-black">{q}</h2><p className="mt-2 leading-7 text-slate-700">{a}</p><h3 className="mt-4 font-bold" lang="bn">{qb}</h3><p className="mt-2 leading-7 text-slate-700" lang="bn">{ab}</p></article>)}</div></div><PublicFooter/></main>
+}

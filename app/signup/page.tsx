@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requestSignupOtp } from '@/app/actions/auth'
 import { BdPhoneInput } from '@/components/bd-phone-input'
 import { PublicHeader } from '@/components/public-header'
+import { PublicFooter } from '@/components/public-footer'
 import { SubmitButton } from '@/components/submit-button'
 
 export default async function SignupPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; ref?: string }> }) {
@@ -21,5 +22,6 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
         <p className="mt-5 text-center text-sm text-slate-600">Already a member? <Link className="font-bold text-black underline underline-offset-4" href="/login">Sign in</Link></p>
       </section>
     </div>
+    <PublicFooter />
   </main>
 }

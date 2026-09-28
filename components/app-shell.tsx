@@ -3,6 +3,7 @@ import type { AppRole } from '@/lib/auth'
 import { BrandLogo } from '@/components/brand-logo'
 import { NotificationBell } from '@/components/notification-bell'
 import { PILOT_MODE } from '@/lib/pilot-mode'
+import { LEGAL_LINKS } from '@/lib/legal'
 
 const customerNav = [
   ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'],
@@ -46,6 +47,8 @@ export function AppShell({ children, roles = new Set<AppRole>() }: { children: R
         <div className="mx-auto grid max-w-lg grid-cols-5 text-center text-[11px]">{mobileNav.map(([href,label])=><Link key={href} href={href} className="flex min-h-16 min-w-0 items-center justify-center px-1 py-3 font-bold text-slate-700 hover:bg-slate-50">{label}</Link>)}</div>
       </nav>
 
+      <div className="border-t border-slate-800 bg-slate-950 px-3 pb-20 pt-4 text-xs text-slate-300 md:hidden"><nav className="mx-auto flex max-w-lg flex-wrap justify-center gap-x-4 gap-y-2" aria-label="Legal and help">{LEGAL_LINKS.map(([href,label])=><Link key={href} href={href} className="hover:text-white">{label}</Link>)}</nav></div>
+
       <footer className="hidden border-t border-slate-800 bg-slate-950 text-white md:block">
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-8 lg:grid-cols-[1.2fr_1fr_1fr]">
           <div>
@@ -55,7 +58,7 @@ export function AppShell({ children, roles = new Set<AppRole>() }: { children: R
           <div><div className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Shop</div><div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-2 text-sm">{customerNav.slice(0,5).map(([href,label])=><Link key={href} href={href} className="text-slate-300 hover:text-white">{label}</Link>)}</div></div>
           <div><div className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Account & community</div><div className="mt-3 grid grid-cols-2 gap-2 text-sm">{customerNav.slice(5).map(([href,label])=><Link key={href} href={href} className="text-slate-300 hover:text-white">{label}</Link>)}</div></div>
         </div>
-        <div className="border-t border-slate-800"><div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 text-xs text-slate-500"><span>© 2026 2-TAKA-R-BAZAR</span><span>Community first · transparent savings</span></div></div>
+        <div className="border-t border-slate-800"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 text-xs text-slate-500"><span>© 2026 2-TAKA-R-BAZAR</span><nav className="flex flex-wrap gap-x-4 gap-y-2" aria-label="Legal and help">{LEGAL_LINKS.map(([href,label])=><Link key={href} href={href} className="hover:text-white">{label}</Link>)}</nav></div></div>
       </footer>
     </div>
   )
