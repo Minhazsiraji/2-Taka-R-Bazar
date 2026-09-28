@@ -3,11 +3,7 @@
   min-height: 100vh;
   isolation: isolate;
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at 12% 12%, rgba(56, 189, 248, .34), transparent 29rem),
-    radial-gradient(circle at 86% 18%, rgba(125, 211, 252, .30), transparent 31rem),
-    radial-gradient(circle at 52% 68%, rgba(186, 230, 253, .42), transparent 34rem),
-    linear-gradient(145deg, #f4fdff 0%, #daf5ff 42%, #edfaff 72%, #f8fdff 100%);
+  background: #ffffff;
 }
 
 .home-liquid-route::before,
@@ -122,10 +118,7 @@
 
 @media (max-width: 639px) {
   .home-liquid-route {
-    background:
-      radial-gradient(circle at 10% 8%, rgba(56,189,248,.27), transparent 17rem),
-      radial-gradient(circle at 92% 30%, rgba(125,211,252,.24), transparent 19rem),
-      linear-gradient(145deg, #f4fdff 0%, #e1f7ff 48%, #f7fdff 100%);
+    background: #ffffff;
   }
 
   .home-liquid-route::before { width: 14rem; height: 14rem; right: -8rem; top: 8rem; }
