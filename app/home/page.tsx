@@ -6,7 +6,7 @@ import { taka, shortDate } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
-const Icon = ({children}:{children:React.ReactNode}) => <span className="glass-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/55 text-xl shadow-[inset_0_1px_0_rgba(255,255,255,.95),0_8px_25px_rgba(14,165,233,.12)] backdrop-blur">{children}</span>
+const Icon = ({children}:{children:React.ReactNode}) => <span className="glass-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl">{children}</span>
 
 export default async function HomePage() {
   const { user, profile, roles, supabase } = await requireOnboardedUser()
@@ -23,12 +23,12 @@ export default async function HomePage() {
   const thisMonth=(savings??[]).filter((row:any)=>row.verified_at>=monthStart).reduce((sum:number,row:any)=>sum+Number(row.amount),0)
   const summary=summaryRows?.[0] as any
   const pools=activePools??[]
-  const glass='glass-panel border border-sky-200/80 bg-white/58 shadow-[inset_0_1px_0_rgba(255,255,255,.95),0_12px_40px_rgba(14,165,233,.09)] backdrop-blur-xl'
+  const glass='glass-panel'
 
   return <AppShell roles={roles}>
-    <div className="relative grid min-w-0 gap-4 sm:gap-5 before:pointer-events-none before:fixed before:inset-0 before:-z-10 before:bg-[radial-gradient(circle_at_10%_35%,rgba(56,189,248,.20),transparent_24%),radial-gradient(circle_at_90%_20%,rgba(186,230,253,.65),transparent_25%),linear-gradient(135deg,#f8fdff_0%,#e8f8ff_48%,#f8fdff_100%)]">
+    <div className="relative grid min-w-0 gap-4 sm:gap-5">
       <section className={`${glass} relative overflow-hidden rounded-[28px] p-5 sm:p-7 lg:p-8`}>
-        <div className="pointer-events-none absolute -bottom-20 left-[42%] h-72 w-72 rounded-full bg-sky-300/35 blur-3xl" />
+        <div className="hidden" />
         <div className="relative grid gap-6 lg:grid-cols-[1.35fr_.65fr] lg:items-center">
           <div className="grid gap-5 md:grid-cols-[1fr_230px] md:items-center lg:grid-cols-[1fr_250px]">
             <div>
@@ -39,8 +39,8 @@ export default async function HomePage() {
             </div>
             <div className="hidden md:flex items-center justify-center"><img src="/grocery-hero.svg" alt="Grocery basket" className="h-44 w-full object-contain drop-shadow-[0_16px_18px_rgba(14,165,233,.18)]" /></div>
           </div>
-          <div className="glass-subpanel rounded-[24px] border border-white/90 bg-white/48 p-5 shadow-[inset_0_1px_0_white,0_12px_32px_rgba(14,165,233,.10)] backdrop-blur-xl">
-            <div className="text-xs font-black uppercase tracking-[0.18em] text-sky-700">My verified savings</div><div className="mt-3 text-4xl font-black text-slate-950">🪙 {taka(thisMonth)}</div><div className="mt-1 text-sm font-medium text-slate-600">this month · {taka(lifetime)} lifetime</div><Link className="glass-inset mt-5 flex min-h-11 items-center justify-between rounded-xl border border-white bg-white/55 px-4 text-sm font-black text-slate-900 shadow-sm" href="/savings">View savings history <span>→</span></Link>
+          <div className="glass-subpanel rounded-[24px] p-5">
+            <div className="text-xs font-black uppercase tracking-[0.18em] text-sky-700">My verified savings</div><div className="mt-3 text-4xl font-black text-slate-950">🪙 {taka(thisMonth)}</div><div className="mt-1 text-sm font-medium text-slate-600">this month · {taka(lifetime)} lifetime</div><Link className="glass-inset mt-5 flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-slate-900" href="/savings">View savings history <span>→</span></Link>
           </div>
         </div>
       </section>
@@ -58,7 +58,7 @@ export default async function HomePage() {
           return <article key={pool.id} className={`${glass} group relative overflow-hidden rounded-[26px] p-5 transition hover:-translate-y-0.5 hover:shadow-xl`}>
             <div className="grid gap-5 md:grid-cols-[170px_1fr_230px] md:items-center">
               <div className="hidden h-28 items-center justify-center md:flex"><img src="/grocery-hero.svg" alt="Grocery pool" className="h-full w-full object-contain" /></div>
-              <div><div className="flex flex-wrap gap-2"><span className="rounded-full bg-cyan-50/20 px-3 py-1 text-xs font-black capitalize text-cyan-800">{pool.cadence??'weekly'} Pool</span><StatusPill status={pool.status}/></div><h3 className="mt-3 text-xl font-black sm:text-2xl">{pool.title}</h3><div className="mt-4 grid grid-cols-2 gap-2 text-sm"><div className="glass-inset rounded-xl border border-white bg-white/45 p-3"><span className="block text-[10px] font-black uppercase text-sky-700">▣　Commit by</span><b>{shortDate(pool.commitment_closes_at)}</b></div><div className="glass-inset rounded-xl border border-white bg-white/45 p-3"><span className="block text-[10px] font-black uppercase text-sky-700">🚚　Pickup target</span><b>{shortDate(pool.pickup_at)}</b></div></div></div>
+              <div><div className="flex flex-wrap gap-2"><span className="rounded-full bg-cyan-50/20 px-3 py-1 text-xs font-black capitalize text-cyan-800">{pool.cadence??'weekly'} Pool</span><StatusPill status={pool.status}/></div><h3 className="mt-3 text-xl font-black sm:text-2xl">{pool.title}</h3><div className="mt-4 grid grid-cols-2 gap-2 text-sm"><div className="glass-inset rounded-xl p-3"><span className="block text-[10px] font-black uppercase text-sky-700">▣　Commit by</span><b>{shortDate(pool.commitment_closes_at)}</b></div><div className="glass-inset rounded-xl p-3"><span className="block text-[10px] font-black uppercase text-sky-700">🚚　Pickup target</span><b>{shortDate(pool.pickup_at)}</b></div></div></div>
               <div className="flex flex-col gap-4 md:items-end"><span className="text-sm font-bold text-slate-600">♙　{itemCount} item{itemCount===1?'':'s'}</span><Link href="/pool" className="glass-primary inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-sky-400 bg-gradient-to-b from-sky-400 to-blue-600 px-6 font-black text-white shadow-[0_8px_18px_rgba(37,99,235,.22)]"><span>Open pool</span></Link></div>
             </div>
           </article>
@@ -66,8 +66,8 @@ export default async function HomePage() {
       </section>
 
       <section className="grid gap-3 lg:grid-cols-[.9fr_1.1fr]">
-        <div className={`${glass} relative overflow-hidden rounded-[24px] p-5`}><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">◷　Next pickup</div>{readyOrder?<><h2 className="mt-2 text-xl font-black">{readyOrder.order_code}</h2><p className="mt-2 text-sm text-slate-600">{(readyOrder.pickup_points as any)?.name}<br/>{(readyOrder.pickup_points as any)?.address}</p><Link className="glass-secondary mt-4 inline-flex rounded-xl border border-white bg-white/60 px-4 py-2 font-bold" href="/pickup">Pickup details</Link></>:<><h2 className="mt-2 text-xl font-black">Nothing ready yet</h2><p className="mt-2 max-w-sm text-sm text-slate-600">When an order is ready for collection, the selected pickup point will appear here.</p><div className="pointer-events-none absolute bottom-2 right-8 text-6xl opacity-25">🧊</div></>}</div>
-        <div className={`${glass} rounded-[24px] p-5`}><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">⚙　How 2-TAKA-R-BAZAR works</div><div className="mt-4 grid gap-3 sm:grid-cols-3">{[['1','Commit','Choose items and quantities while the pool is open.'],['2','Confirm','After the final price is published, confirm only what you want to buy.'],['3','Collect & save','Choose an available pickup point, collect the order, then savings are verified.']].map(([n,title,text])=><div key={n} className="glass-inset rounded-2xl border border-white bg-white/45 p-4 shadow-sm"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-b from-sky-400 to-blue-600 text-sm font-black text-white">{n}</div><div className="mt-3 font-black">{title}</div><p className="mt-1 text-xs leading-5 text-slate-600">{text}</p></div>)}</div></div>
+        <div className={`${glass} relative overflow-hidden rounded-[24px] p-5`}><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">◷　Next pickup</div>{readyOrder?<><h2 className="mt-2 text-xl font-black">{readyOrder.order_code}</h2><p className="mt-2 text-sm text-slate-600">{(readyOrder.pickup_points as any)?.name}<br/>{(readyOrder.pickup_points as any)?.address}</p><Link className="glass-secondary mt-4 inline-flex rounded-xl px-4 py-2 font-bold" href="/pickup">Pickup details</Link></>:<><h2 className="mt-2 text-xl font-black">Nothing ready yet</h2><p className="mt-2 max-w-sm text-sm text-slate-600">When an order is ready for collection, the selected pickup point will appear here.</p><div className="pointer-events-none absolute bottom-2 right-8 text-6xl opacity-25">🧊</div></>}</div>
+        <div className={`${glass} rounded-[24px] p-5`}><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">⚙　How 2-TAKA-R-BAZAR works</div><div className="mt-4 grid gap-3 sm:grid-cols-3">{[['1','Commit','Choose items and quantities while the pool is open.'],['2','Confirm','After the final price is published, confirm only what you want to buy.'],['3','Collect & save','Choose an available pickup point, collect the order, then savings are verified.']].map(([n,title,text])=><div key={n} className="glass-inset rounded-2xl p-4"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-b from-sky-400 to-blue-600 text-sm font-black text-white">{n}</div><div className="mt-3 font-black">{title}</div><p className="mt-1 text-xs leading-5 text-slate-600">{text}</p></div>)}</div></div>
       </section>
     </div>
   </AppShell>
