@@ -1,187 +1,252 @@
 .home-liquid-route {
+  --pearl: rgba(248, 247, 255, .34);
+  --ice: rgba(231, 250, 255, .18);
+  --violet: rgba(139, 92, 246, .22);
+  --cyan: rgba(34, 211, 238, .22);
   position: relative;
   min-height: 100vh;
   isolation: isolate;
   overflow-x: hidden;
-  background: #ffffff;
+  background: #fff;
 }
 
-/* Keep the page itself white. The reference depth comes from the material, not a blue canvas. */
-.home-liquid-route::before,
-.home-liquid-route::after {
-  display: none;
+.home-liquid-route::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 20% 8%, rgba(139,92,246,.035), transparent 32%),
+    radial-gradient(ellipse at 82% 76%, rgba(34,211,238,.032), transparent 34%),
+    #fff;
 }
 
-.home-liquid-route > div {
-  background: transparent !important;
-}
+.home-liquid-route::after { display: none; }
+.home-liquid-route > div { background: transparent !important; }
+.home-liquid-route main > div::before { background: transparent !important; }
+.home-liquid-route header { background: transparent !important; }
 
-.home-liquid-route main > div::before {
-  background: transparent !important;
-}
-
-/*
- * PEARL LIQUID GLASS
- * The reference uses a lightly tinted physical material: a milky/lilac body,
- * bright specular rim, cyan/violet light spill and a deeper neutral shadow.
- */
-.home-liquid-route header > div,
-.home-liquid-route main section[class*="border-sky-200"],
-.home-liquid-route main article[class*="border-sky-200"] {
+.home-liquid-route .glass-panel,
+.home-liquid-route header > div {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
-  border-color: rgba(215, 210, 229, .72) !important;
+  border: 1.5px solid rgba(255,255,255,.96) !important;
   background:
-    radial-gradient(circle at 12% 0%, rgba(255,255,255,.70), transparent 31%),
-    radial-gradient(circle at 98% 104%, rgba(34,211,238,.075), transparent 24%),
-    radial-gradient(circle at 2% 102%, rgba(139,92,246,.055), transparent 23%),
-    linear-gradient(145deg, rgba(238,235,244,.23), rgba(255,255,255,.075) 46%, rgba(236,244,252,.15)) !important;
+    linear-gradient(145deg, rgba(255,255,255,.56), rgba(249,247,255,.30) 44%, rgba(238,249,255,.20) 100%) !important;
   box-shadow:
-    inset 0 1.5px 0 rgba(255,255,255,1),
-    inset 0 -1.5px 1px rgba(105,184,236,.18),
-    inset 1.5px 0 1px rgba(255,255,255,.70),
-    inset -1px 0 1px rgba(147,112,219,.12),
-    0 2px 4px rgba(49,38,72,.07),
-    0 11px 24px rgba(53,43,78,.105),
-    0 25px 54px rgba(53,43,78,.085),
-    16px 20px 40px rgba(34,211,238,.035),
-    -12px 18px 38px rgba(139,92,246,.035) !important;
-  backdrop-filter: blur(22px) saturate(1.14) contrast(1.015) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(1.14) contrast(1.015) !important;
+    inset 0 1.5px 1px rgba(255,255,255,1),
+    inset 0 -1.5px 1px rgba(87,76,148,.17),
+    inset 1px 0 1px rgba(255,255,255,.72),
+    inset -1px 0 1px rgba(34,211,238,.13),
+    0 1px 0 rgba(255,255,255,.92),
+    0 10px 24px rgba(45,44,68,.13),
+    0 26px 58px rgba(88,72,140,.11),
+    0 0 22px rgba(34,211,238,.055) !important;
+  backdrop-filter: blur(28px) saturate(1.32) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.32) !important;
 }
 
-/* Broad specular sheen that makes the panel look rounded instead of flat. */
-.home-liquid-route main section[class*="border-sky-200"]::before,
-.home-liquid-route main article[class*="border-sky-200"]::before {
+.home-liquid-route .glass-panel::before {
   content: "";
   position: absolute;
-  z-index: 0;
+  inset: 2px;
+  z-index: 1;
   pointer-events: none;
-  inset: 1px;
   border-radius: inherit;
   background:
-    linear-gradient(116deg, rgba(255,255,255,.52), transparent 23%, transparent 70%, rgba(255,255,255,.15)),
-    radial-gradient(ellipse at 50% -10%, rgba(255,255,255,.76), transparent 42%);
-  opacity: .72;
+    linear-gradient(125deg, rgba(255,255,255,.68), transparent 29%),
+    radial-gradient(circle at 92% 88%, rgba(34,211,238,.11), transparent 24%),
+    radial-gradient(circle at 8% 92%, rgba(139,92,246,.10), transparent 25%);
 }
 
-/* Chromatic rim: white on the light-facing edge, cyan/violet on the far edge. */
-.home-liquid-route main section[class*="border-sky-200"]::after,
-.home-liquid-route main article[class*="border-sky-200"]::after {
+.home-liquid-route .glass-panel::after {
   content: "";
   position: absolute;
-  z-index: 0;
-  pointer-events: none;
   inset: 0;
+  z-index: 3;
+  pointer-events: none;
   border-radius: inherit;
-  padding: 1.25px;
-  background: linear-gradient(
-    128deg,
+  padding: 1.5px;
+  background: linear-gradient(132deg,
     rgba(255,255,255,1) 0%,
-    rgba(255,255,255,.55) 22%,
-    rgba(209,213,230,.28) 48%,
-    rgba(92,207,239,.42) 76%,
-    rgba(146,108,232,.34) 100%
-  );
+    rgba(255,255,255,.42) 30%,
+    rgba(139,92,246,.22) 67%,
+    rgba(34,211,238,.34) 86%,
+    rgba(255,255,255,.92) 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  opacity: .78;
 }
 
-.home-liquid-route main section[class*="border-sky-200"] > *,
-.home-liquid-route main article[class*="border-sky-200"] > * {
+.home-liquid-route .glass-panel > :not([class*="absolute"]) {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
-/* Inner glass pieces: slightly denser than the parent so they stay legible. */
-.home-liquid-route main [class*="bg-white/"][class*="rounded-"],
-.home-liquid-route header [class*="bg-white/"] {
-  border-color: rgba(219,214,232,.70) !important;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(255,255,255,.64), transparent 34%),
-    linear-gradient(145deg, rgba(239,236,245,.19), rgba(255,255,255,.07) 54%, rgba(238,247,252,.12)) !important;
-  box-shadow:
-    inset 0 1.25px 0 rgba(255,255,255,.98),
-    inset 0 -1px 0 rgba(103,190,236,.15),
-    inset -1px 0 0 rgba(139,92,246,.08),
-    0 3px 7px rgba(52,42,76,.055),
-    0 10px 22px rgba(52,42,76,.065),
-    10px 13px 25px rgba(34,211,238,.025) !important;
-  backdrop-filter: blur(17px) saturate(1.10) !important;
-  -webkit-backdrop-filter: blur(17px) saturate(1.10) !important;
+.home-liquid-route .glass-panel > [class*="-bottom-20"] {
+  opacity: .07 !important;
+  background: rgba(139,92,246,.20) !important;
 }
 
-.home-liquid-route main [class*="bg-white/45"],
-.home-liquid-route main [class*="bg-white/48"],
-.home-liquid-route main [class*="bg-white/55"],
-.home-liquid-route main [class*="bg-white/60"] {
-  background:
-    linear-gradient(145deg, rgba(238,235,244,.16), rgba(255,255,255,.055) 55%, rgba(238,247,252,.09)) !important;
-}
-
-/* Header is a thinner glass platter like the reference navigation strip. */
 .home-liquid-route header > div {
-  background:
-    linear-gradient(145deg, rgba(242,239,247,.18), rgba(255,255,255,.065) 55%, rgba(238,247,252,.11)) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,.70), rgba(247,245,255,.36)) !important;
   box-shadow:
-    inset 0 1.5px 0 rgba(255,255,255,1),
-    inset 0 -1px 0 rgba(94,196,240,.16),
-    0 4px 10px rgba(54,43,79,.07),
-    0 14px 30px rgba(54,43,79,.075),
-    15px 16px 30px rgba(34,211,238,.025),
-    -10px 15px 28px rgba(139,92,246,.025) !important;
+    inset 0 1.5px 1px #fff,
+    inset 0 -1px 1px rgba(94,80,150,.15),
+    0 8px 18px rgba(45,44,68,.12),
+    0 18px 40px rgba(139,92,246,.07),
+    0 0 14px rgba(34,211,238,.06) !important;
+}
+
+.home-liquid-route .glass-subpanel,
+.home-liquid-route .glass-inset,
+.home-liquid-route .glass-icon,
+.home-liquid-route main [class*="rounded-full"] {
+  border-color: rgba(255,255,255,.92) !important;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.66), rgba(248,246,255,.34) 58%, rgba(235,249,255,.26)) !important;
+  box-shadow:
+    inset 0 1.2px 1px rgba(255,255,255,1),
+    inset 0 -1px 1px rgba(83,75,135,.14),
+    0 6px 14px rgba(49,48,70,.10),
+    0 14px 26px rgba(93,78,145,.07),
+    0 0 12px rgba(34,211,238,.04) !important;
+  backdrop-filter: blur(20px) saturate(1.22) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.22) !important;
+}
+
+.home-liquid-route .glass-subpanel {
+  box-shadow:
+    inset 0 1.4px 1px #fff,
+    inset 0 -1.2px 1px rgba(74,66,123,.17),
+    0 9px 19px rgba(44,43,63,.13),
+    0 21px 38px rgba(111,87,164,.08),
+    0 0 16px rgba(34,211,238,.055) !important;
+}
+
+.home-liquid-route .glass-inset {
+  background: linear-gradient(145deg, rgba(255,255,255,.52), rgba(246,244,252,.27)) !important;
+  box-shadow:
+    inset 0 1px 1px #fff,
+    inset 0 -1px 1px rgba(86,76,133,.13),
+    0 4px 9px rgba(50,49,67,.085) !important;
+}
+
+.home-liquid-route .glass-icon {
+  border-radius: 16px !important;
+  box-shadow:
+    inset 0 1px 1px #fff,
+    inset 0 -1px 1px rgba(94,77,151,.16),
+    0 5px 12px rgba(56,52,82,.11),
+    0 0 10px rgba(125,211,252,.09) !important;
+}
+
+.home-liquid-route .glass-primary {
+  border-color: rgba(255,255,255,.82) !important;
+  background:
+    linear-gradient(180deg, #8e6cff 0%, #765cf3 46%, #4f7cf7 100%) !important;
+  box-shadow:
+    inset 0 1.5px 1px rgba(255,255,255,.78),
+    inset 0 -1.5px 1px rgba(65,46,158,.45),
+    0 6px 12px rgba(91,69,193,.28),
+    0 12px 24px rgba(94,75,203,.18),
+    0 0 14px rgba(34,211,238,.28) !important;
+}
+
+.home-liquid-route .glass-secondary {
+  border-color: rgba(255,255,255,.96) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,.76), rgba(245,242,252,.38)) !important;
+  box-shadow:
+    inset 0 1.2px 1px #fff,
+    inset 0 -1px 1px rgba(87,76,135,.15),
+    0 5px 12px rgba(49,47,68,.11),
+    0 0 10px rgba(125,211,252,.06) !important;
 }
 
 .home-liquid-route main img {
-  filter: drop-shadow(0 13px 18px rgba(61,48,91,.14));
-}
-
-.home-liquid-route header {
-  background: transparent;
+  filter: drop-shadow(0 12px 18px rgba(47,45,65,.16));
 }
 
 .home-liquid-route footer {
   position: relative;
-  z-index: 1;
+  z-index: 4;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .home-liquid-route main section[class*="border-sky-200"]:hover,
-  .home-liquid-route main article[class*="border-sky-200"]:hover {
-    border-color: rgba(207,201,225,.82) !important;
-    background:
-      radial-gradient(circle at 12% 0%, rgba(255,255,255,.76), transparent 31%),
-      radial-gradient(circle at 98% 104%, rgba(34,211,238,.09), transparent 24%),
-      linear-gradient(145deg, rgba(238,235,244,.27), rgba(255,255,255,.085) 46%, rgba(236,244,252,.17)) !important;
+@media (hover:hover) and (pointer:fine) {
+  .home-liquid-route .glass-panel:hover {
+    transform: translateY(-1px);
     box-shadow:
-      inset 0 1.5px 0 rgba(255,255,255,1),
-      inset 0 -1.5px 1px rgba(105,184,236,.22),
-      inset -1px 0 1px rgba(147,112,219,.14),
-      0 3px 6px rgba(49,38,72,.08),
-      0 15px 30px rgba(53,43,78,.12),
-      0 32px 68px rgba(53,43,78,.105),
-      20px 24px 44px rgba(34,211,238,.045),
-      -15px 22px 42px rgba(139,92,246,.045) !important;
+      inset 0 1.5px 1px #fff,
+      inset 0 -1.5px 1px rgba(87,76,148,.19),
+      0 13px 28px rgba(44,43,62,.15),
+      0 31px 68px rgba(95,76,148,.13),
+      0 0 25px rgba(34,211,238,.07) !important;
+  }
+  .home-liquid-route .glass-primary:hover { filter: brightness(1.05) saturate(1.05); }
+}
+
+.home-liquid-route header [class*="bg-white/"] {
+  border-color: rgba(255,255,255,.94) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,.70), rgba(247,245,255,.35)) !important;
+  box-shadow:
+    inset 0 1px 1px #fff,
+    inset 0 -1px 1px rgba(91,78,143,.13),
+    0 4px 10px rgba(48,47,65,.09) !important;
+  backdrop-filter: blur(18px) saturate(1.2) !important;
+}
+
+.home-liquid-route main [class*="rounded-full"][class*="bg-gradient"] {
+  color: #fff !important;
+  background: linear-gradient(180deg, #8e6cff, #5a72f7) !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.75),
+    0 4px 9px rgba(91,69,193,.24),
+    0 0 9px rgba(34,211,238,.18) !important;
+}
+
+@media (max-width:639px) {
+  .home-liquid-route .glass-panel,
+  .home-liquid-route header > div {
+    backdrop-filter: blur(22px) saturate(1.25) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(1.25) !important;
+    box-shadow:
+      inset 0 1.2px 1px #fff,
+      inset 0 -1px 1px rgba(87,76,148,.15),
+      0 8px 18px rgba(45,44,68,.12),
+      0 18px 38px rgba(88,72,140,.09) !important;
   }
 }
 
-@media (max-width: 639px) {
-  .home-liquid-route {
-    background: #ffffff;
-  }
+@media (prefers-reduced-motion:reduce) {
+  .home-liquid-route .glass-panel,
+  .home-liquid-route .glass-primary,
+  .home-liquid-route .glass-secondary { transition: none !important; transform: none !important; }
+}
 
-  .home-liquid-route header > div,
-  .home-liquid-route main section[class*="border-sky-200"],
-  .home-liquid-route main article[class*="border-sky-200"] {
-    backdrop-filter: blur(17px) saturate(1.10) !important;
-    -webkit-backdrop-filter: blur(17px) saturate(1.10) !important;
-    box-shadow:
-      inset 0 1.25px 0 rgba(255,255,255,1),
-      inset 0 -1px 0 rgba(105,184,236,.17),
-      0 7px 16px rgba(53,43,78,.09),
-      0 18px 34px rgba(53,43,78,.07) !important;
-  }
+.home-liquid-route footer {
+  margin: 18px auto 22px;
+  width: min(96%, 1450px);
+  overflow: hidden;
+  border: 1.5px solid rgba(255,255,255,.96) !important;
+  border-radius: 26px;
+  color: #27233f !important;
+  background: linear-gradient(145deg, rgba(255,255,255,.70), rgba(246,243,252,.38) 64%, rgba(235,249,255,.27)) !important;
+  box-shadow:
+    inset 0 1.5px 1px #fff,
+    inset 0 -1px 1px rgba(91,78,143,.16),
+    0 9px 20px rgba(46,44,66,.12),
+    0 22px 44px rgba(111,87,164,.08),
+    0 0 16px rgba(34,211,238,.06) !important;
+  backdrop-filter: blur(24px) saturate(1.22) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.22) !important;
+}
+
+.home-liquid-route footer [class*="text-slate-"] { color: #66617c !important; }
+.home-liquid-route footer [class*="text-sky-"] { color: #6358b7 !important; }
+.home-liquid-route footer [class*="border-white"] { border-color: rgba(104,92,145,.12) !important; }
+.home-liquid-route footer a:hover { color: #4f46e5 !important; }
+
+@media (max-width:767px) {
+  .home-liquid-route footer { display: none !important; }
 }
