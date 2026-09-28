@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { verifyPhoneOtp } from '@/app/actions/auth'
 import { PublicHeader } from '@/components/public-header'
+import { PublicFooter } from '@/components/public-footer'
 import { SubmitButton } from '@/components/submit-button'
 
 export default async function VerifyOtpPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
@@ -24,5 +25,6 @@ export default async function VerifyOtpPage({ searchParams }: { searchParams: Pr
         <p className="mt-5 text-center text-sm text-slate-600">Wrong number? <Link className="font-bold text-black underline underline-offset-4" href={changeNumberHref}>Change mobile number</Link></p>
       </section>
     </div>
+    <PublicFooter />
   </main>
 }

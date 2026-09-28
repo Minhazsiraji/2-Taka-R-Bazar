@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireOnboardedUser } from '@/lib/auth'
+import { CURRENT_POLICY_VERSION } from '@/lib/legal'
 
 function text(fd: FormData, key: string) { return String(fd.get(key) ?? '').trim() }
 function poolNotice(message:string):never{revalidatePath('/pool');revalidatePath('/home');redirect(`/pool?notice=${encodeURIComponent(message)}`)}
@@ -51,7 +52,10 @@ export async function confirmCommitment(formData: FormData) {
   const { supabase } = await requireOnboardedUser()
   const commitmentId = text(formData, 'commitment_id')
   const pickupPointId = text(formData, 'pickup_point_id')
+  const policyAccepted = formData.get('policy_accepted') === 'on'
+  const policyVersion = text(formData, 'policy_version')
   if (!commitmentId || !pickupPointId) redirect('/orders?error=Choose+a+pickup+point+before+confirming+your+purchase')
+  if (!policyAccepted || policyVersion !== CURRENT_POLICY_VERSION) redirect('/orders?error=Please+review+and+accept+the+current+Terms,+Return+Policy+and+Refund+Policy+before+confirming.')
   const { error } = await supabase.rpc('confirm_commitment_order', { p_commitment_id: commitmentId, p_pickup_point_id: pickupPointId })
   if (error) redirect(`/orders?error=${encodeURIComponent(error.message)}`)
   revalidatePath('/orders'); revalidatePath('/home'); revalidatePath('/pool')

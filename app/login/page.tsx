@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requestLoginOtp } from '@/app/actions/auth'
 import { BdPhoneInput } from '@/components/bd-phone-input'
 import { PublicHeader } from '@/components/public-header'
+import { PublicFooter } from '@/components/public-footer'
 import { SubmitButton } from '@/components/submit-button'
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
@@ -19,5 +20,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <p className="mt-5 text-center text-sm text-slate-600">New here? <Link className="font-bold text-black underline underline-offset-4" href="/signup">Join the community pool</Link></p>
       </section>
     </div>
+    <PublicFooter />
   </main>
 }

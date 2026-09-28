@@ -1,5 +1,6 @@
 import { completeOnboarding, restartSignupWithAnotherPhone } from '@/app/actions/auth'
 import { PublicHeader } from '@/components/public-header'
+import { PublicFooter } from '@/components/public-footer'
 import { SubmitButton } from '@/components/submit-button'
 import { requireUser } from '@/lib/auth'
 
@@ -33,5 +34,6 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         </form>
       </section>
     </div>
+    <PublicFooter />
   </main>
 }
