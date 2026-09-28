@@ -4,8 +4,9 @@ import { BdPhoneInput } from '@/components/bd-phone-input'
 import { PublicHeader } from '@/components/public-header'
 import { SubmitButton } from '@/components/submit-button'
 
-export default async function SignupPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
-  const { error, notice } = await searchParams
+export default async function SignupPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; ref?: string }> }) {
+  const { error, notice, ref } = await searchParams
+  const referralCode=String(ref??'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12)
   return <main className="min-h-screen bg-slate-50 text-black">
     <PublicHeader actionHref="/login" actionLabel="Sign in" />
     <div className="mx-auto flex min-h-[calc(100vh-81px)] max-w-6xl items-center justify-center px-4 py-10">
@@ -14,6 +15,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
         {notice && <div className="success mb-4">{notice}</div>}{error && <div className="error mb-4">{error}</div>}
         <form action={requestSignupOtp} className="grid gap-4">
           <BdPhoneInput />
+          <label><span className="label">Referral code (optional)</span><input className="input uppercase" name="referral_code" defaultValue={referralCode} maxLength={12} placeholder="e.g. MZ8K2Q"/><p className="mt-1 text-xs text-slate-500">If a neighbour invited you, their code will be carried safely through OTP. An invalid code never blocks signup.</p></label>
           <SubmitButton>Send OTP</SubmitButton>
         </form>
         <p className="mt-5 text-center text-sm text-slate-600">Already a member? <Link className="font-bold text-black underline underline-offset-4" href="/login">Sign in</Link></p>

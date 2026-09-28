@@ -24,6 +24,7 @@ function phoneOtpErrorMessage(error: { message: string; code?: string }, mode: '
 
 async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
   const phone = toBdE164Phone(getText(formData, 'phone'))
+  const referralCode = mode === 'signup' ? getText(formData, 'referral_code').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12) : ''
   const back = mode === 'signup' ? '/signup' : '/login'
   if (!phone) redirect(`${back}?error=Enter+a+valid+Bangladesh+mobile+number`)
 
@@ -37,6 +38,10 @@ async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
   const cookieStore = await cookies()
   cookieStore.set('bp_otp_phone', phone, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 600, path: '/' })
   cookieStore.set('bp_otp_mode', mode, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 600, path: '/' })
+  if (mode === 'signup') {
+    if (referralCode) cookieStore.set('bp_ref_code', referralCode, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 1800, path: '/' })
+    else cookieStore.delete('bp_ref_code')
+  }
   redirect('/verify-otp')
 }
 
@@ -74,6 +79,7 @@ export async function restartSignupWithAnotherPhone() {
   const cookieStore = await cookies()
   cookieStore.delete('bp_otp_phone')
   cookieStore.delete('bp_otp_mode')
+  cookieStore.delete('bp_ref_code')
   revalidatePath('/', 'layout')
   redirect('/signup?notice=Enter+the+mobile+number+you+want+to+verify')
 }
@@ -119,6 +125,10 @@ export async function completeOnboarding(formData: FormData) {
   }).eq('id', user.id)
 
   if (error) redirect(`/onboarding?error=${encodeURIComponent(error.message)}`)
+  const cookieStore = await cookies()
+  const referralCode = cookieStore.get('bp_ref_code')?.value
+  if (referralCode) await supabase.rpc('apply_referral_code', { p_code: referralCode })
+  cookieStore.delete('bp_ref_code')
   revalidatePath('/', 'layout')
   redirect('/home')
 }
