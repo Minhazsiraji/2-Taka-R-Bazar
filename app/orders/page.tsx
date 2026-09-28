@@ -5,6 +5,7 @@ import { SubmitButton } from '@/components/submit-button'
 import { confirmCommitment, reportCustomerIssue } from '@/app/actions/customer'
 import { requireOnboardedUser } from '@/lib/auth'
 import { taka, dateTime } from '@/lib/format'
+import { PILOT_MODE } from '@/lib/pilot-mode'
 
 export const dynamic='force-dynamic'
 
@@ -16,7 +17,7 @@ export default async function OrdersPage({searchParams}:{searchParams:Promise<{e
     supabase.rpc('get_my_subscription_status'),
   ])
   const membership=(subscriptionRows??[])[0] as any
-  const membershipBlocked=Boolean(membership?.enforcement_enabled)&&!Boolean(membership?.active)
+  const membershipBlocked=!PILOT_MODE&&Boolean(membership?.enforcement_enabled)&&!Boolean(membership?.active)
   const confirmable=(commitments??[]).filter((c:any)=>c.status==='active'&&c.pool_items?.pools?.status==='confirmation')
   const poolIds=[...new Set(confirmable.map((c:any)=>c.pool_items?.pools?.id).filter(Boolean))] as string[]
   const {data:poolPickupRows}=poolIds.length?await supabase.from('pool_pickup_points').select('pool_id,pickup_points(id,name,address)').in('pool_id',poolIds):{data:[] as any[]}

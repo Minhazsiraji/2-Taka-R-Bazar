@@ -9,12 +9,13 @@ const isoOrNull=(v:string)=>v?new Date(v).toISOString():null
 function fail(message:string):never{redirect(`/admin/pools?error=${encodeURIComponent(message)}`)}
 function done(message:string):never{revalidatePath('/admin','layout');redirect(`/admin/pools?notice=${encodeURIComponent(message)}`)}
 
-function validateTimeline(opensAt:string|null,commitmentCloses:string|null,confirmationCloses:string|null,pickupAt:string|null){
+function validateTimeline(opensAt:string|null,commitmentCloses:string|null,confirmationCloses:string|null,supplierDeliveryAt:string|null,pickupAt:string|null){
   const ts=(v:string|null)=>v?new Date(v).getTime():null
-  const open=ts(opensAt),commit=ts(commitmentCloses),confirm=ts(confirmationCloses),pickup=ts(pickupAt)
+  const open=ts(opensAt),commit=ts(commitmentCloses),confirm=ts(confirmationCloses),delivery=ts(supplierDeliveryAt),pickup=ts(pickupAt)
   if(open!==null&&commit!==null&&commit<=open) fail('Commitment close must be after pool open time')
   if(commit!==null&&confirm!==null&&confirm<=commit) fail('Confirmation close must be after commitment close')
-  if(confirm!==null&&pickup!==null&&pickup<=confirm) fail('Pickup target must be after confirmation close')
+  if(confirm!==null&&delivery!==null&&delivery<=confirm) fail('Supplier delivery must be after customer confirmation closes')
+  if(delivery!==null&&pickup!==null&&pickup<=delivery) fail('Customer pickup must start after supplier delivery')
 }
 
 export async function createPoolV2(fd:FormData){
@@ -23,11 +24,12 @@ export async function createPoolV2(fd:FormData){
   const payload={
     community_id:t(fd,'community_id'),title:t(fd,'title'),cadence,status:'draft',
     opens_at:isoOrNull(t(fd,'opens_at')),commitment_closes_at:isoOrNull(t(fd,'commitment_closes_at')),
-    confirmation_closes_at:isoOrNull(t(fd,'confirmation_closes_at')),pickup_at:isoOrNull(t(fd,'pickup_at')),
-    notes:t(fd,'notes')||null,created_by:user.id,
+    confirmation_closes_at:isoOrNull(t(fd,'confirmation_closes_at')),supplier_delivery_at:isoOrNull(t(fd,'supplier_delivery_at')),pickup_at:isoOrNull(t(fd,'pickup_at')),
+    receiving_pickup_point_id:t(fd,'receiving_pickup_point_id')||null,notes:t(fd,'notes')||null,created_by:user.id,
   }
   if(!payload.community_id||!payload.title)fail('Community and title required')
-  validateTimeline(payload.opens_at,payload.commitment_closes_at,payload.confirmation_closes_at,payload.pickup_at)
+  validateTimeline(payload.opens_at,payload.commitment_closes_at,payload.confirmation_closes_at,payload.supplier_delivery_at,payload.pickup_at)
+  if(payload.receiving_pickup_point_id){const {data:point}=await supabase.from('pickup_points').select('id').eq('id',payload.receiving_pickup_point_id).eq('community_id',payload.community_id).eq('active',true).maybeSingle();if(!point)fail('Receiving point must be active and belong to the selected community')}
   const {error}=await supabase.from('pools').insert(payload)
   if(error)fail(error.message)
   done(`${cadence==='weekly'?'Weekly':'Monthly'} draft pool created`)
@@ -36,17 +38,18 @@ export async function createPoolV2(fd:FormData){
 export async function updateDraftPool(fd:FormData){
   const {supabase}=await requireAdmin()
   const poolId=t(fd,'pool_id')
-  const {data:pool,error:lookupError}=await supabase.from('pools').select('id,status').eq('id',poolId).single()
+  const {data:pool,error:lookupError}=await supabase.from('pools').select('id,status,community_id').eq('id',poolId).single()
   if(lookupError||!pool)fail('Pool not found')
   if(pool.status!=='draft')fail('Return the pool to Draft before editing its setup')
   const payload={
     title:t(fd,'title'),cadence:t(fd,'cadence')==='monthly'?'monthly':'weekly',
     opens_at:isoOrNull(t(fd,'opens_at')),commitment_closes_at:isoOrNull(t(fd,'commitment_closes_at')),
-    confirmation_closes_at:isoOrNull(t(fd,'confirmation_closes_at')),pickup_at:isoOrNull(t(fd,'pickup_at')),
-    notes:t(fd,'notes')||null,
+    confirmation_closes_at:isoOrNull(t(fd,'confirmation_closes_at')),supplier_delivery_at:isoOrNull(t(fd,'supplier_delivery_at')),pickup_at:isoOrNull(t(fd,'pickup_at')),
+    receiving_pickup_point_id:t(fd,'receiving_pickup_point_id')||null,notes:t(fd,'notes')||null,
   }
   if(!payload.title)fail('Pool title is required')
-  validateTimeline(payload.opens_at,payload.commitment_closes_at,payload.confirmation_closes_at,payload.pickup_at)
+  validateTimeline(payload.opens_at,payload.commitment_closes_at,payload.confirmation_closes_at,payload.supplier_delivery_at,payload.pickup_at)
+  if(payload.receiving_pickup_point_id){const {data:point}=await supabase.from('pickup_points').select('id').eq('id',payload.receiving_pickup_point_id).eq('community_id',pool.community_id).eq('active',true).maybeSingle();if(!point)fail('Receiving point must be active and belong to this community')}
   const {error}=await supabase.from('pools').update(payload).eq('id',poolId)
   if(error)fail(error.message)
   done('Draft pool details updated')

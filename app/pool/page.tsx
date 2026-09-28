@@ -5,6 +5,7 @@ import { SubmitButton } from '@/components/submit-button'
 import { commitToPool, submitPoolItemReview, submitPoolReview, togglePoolItemLove, togglePoolLove } from '@/app/actions/customer'
 import { requireOnboardedUser } from '@/lib/auth'
 import { taka, shortDate } from '@/lib/format'
+import { PILOT_MODE } from '@/lib/pilot-mode'
 
 export const dynamic = 'force-dynamic'
 const activeStatuses=['open','pricing','final_price','confirmation','ordered','ready_for_pickup']
@@ -26,13 +27,14 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
     supabase.rpc('get_my_subscription_status'),
   ])
   const membership=(subscriptionRows??[])[0] as any
-  const membershipBlocked=Boolean(membership?.enforcement_enabled)&&!Boolean(membership?.active)
+  const membershipBlocked=!PILOT_MODE&&Boolean(membership?.enforcement_enabled)&&!Boolean(membership?.active)
   const poolIds=(pools??[]).map((p:any)=>p.id)
   let items:any[]=[]
   const commitments=new Map<string,any>()
   const demand=new Map<string,number>()
   const itemHouseholds=new Map<string,number>()
   const participation=new Map<string,{joined:number;units:number}>()
+  const unlockByItem=new Map<string,any>()
 
   if(poolIds.length){
     const [itemResult,commitmentResult,...statsResults]=await Promise.all([
@@ -52,6 +54,8 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
       const pr=participationResult?.data?.[0]
       participation.set(poolId,{joined:Number(pr?.joined_households??0),units:Number(pr?.total_committed_units??0)})
     })
+    const unlockResults=await Promise.all(poolIds.map(poolId=>supabase.rpc('get_pool_price_unlocks',{p_pool_id:poolId})))
+    unlockResults.forEach(result=>(result.data??[]).forEach((row:any)=>unlockByItem.set(row.pool_item_id,row)))
   }
 
   const itemIds=items.map((i:any)=>i.id)
@@ -93,9 +97,10 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
         const likes=poolLoves.filter((x:any)=>x.pool_id===pool.id);const loved=likes.some((x:any)=>x.user_id===user.id)
         const reviews=poolReviews.filter((x:any)=>x.pool_id===pool.id);const rs=ratingSummary(reviews);const ownReview=reviews.find((x:any)=>x.user_id===user.id)
         const benchmarkBasket=poolItems.reduce((s:number,i:any)=>s+Number(i.benchmark_price_snapshot||0),0)
-        const targetBasket=poolItems.reduce((s:number,i:any)=>s+Number(i.expected_pool_price||i.final_customer_price||0),0)
-        const potentialBasket=poolItems.reduce((s:number,i:any)=>{const b=Number(i.benchmark_price_snapshot||0),t=Number(i.expected_pool_price||0);return s+(t>0?Math.max(0,b-t):0)},0)
-        const communityPotential=poolItems.reduce((s:number,i:any)=>{const b=Number(i.benchmark_price_snapshot||0),t=Number(i.expected_pool_price||0);return s+(t>0?Math.max(0,b-t)*(demand.get(i.id)??0):0)},0)
+        const allUnlocked=poolItems.length>0&&poolItems.every((i:any)=>Number(unlockByItem.get(i.id)?.unlocked_price||0)>0)
+        const unlockedBasket=poolItems.reduce((s:number,i:any)=>s+Number(unlockByItem.get(i.id)?.unlocked_price||0),0)
+        const potentialBasket=allUnlocked?Math.max(0,benchmarkBasket-unlockedBasket):0
+        const communityPotential=poolItems.reduce((s:number,i:any)=>{const b=Number(i.benchmark_price_snapshot||0),u=Number(unlockByItem.get(i.id)?.unlocked_price||0);return s+(u>0?Math.max(0,b-u)*(demand.get(i.id)??0):0)},0)
         return <section key={pool.id} className="grid min-w-0 gap-4 border-t border-slate-200 pt-5 first:border-t-0 first:pt-0 sm:gap-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div><div className="flex flex-wrap gap-2"><span className="chip capitalize">{pool.cadence??'weekly'} pool</span><StatusPill status={pool.status}/></div><h2 className="mt-2 text-xl font-black sm:text-2xl">{pool.title}</h2><p className="muted mt-1">Pickup target · {shortDate(pool.pickup_at)}</p></div>
@@ -105,9 +110,9 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {[
               ['Market basket',taka(benchmarkBasket),'1 of each SKU'],
-              ['Target basket',targetBasket?taka(targetBasket):'Pending','Planning target · 1 each'],
-              ['Potential basket saving',taka(potentialBasket),'vs approved benchmark'],
-              ['Pool-wide potential',taka(communityPotential),'based on current commitments'],
+              ['Current unlocked basket',allUnlocked?taka(unlockedBasket):'Building demand','Maximum price at current unlocked tiers'],
+              ['Potential basket saving',allUnlocked?taka(potentialBasket):'Pending','vs approved benchmark at current unlock'],
+              ['Pool-wide potential',taka(communityPotential),'based on current commitments and unlocked prices'],
               ['Joined',`${joined.joined} household${joined.joined===1?'':'s'}`,`${joined.units} committed units`],
             ].map(([label,value,sub])=><div className="card p-4" key={String(label)}><div className="card-title">{label}</div><div className="metric text-2xl">{value}</div><p className="muted mt-2">{sub}</p></div>)}
             <div className="card p-4"><div className="card-title">Pool rating</div><div className="mt-2 text-2xl font-black"><Stars value={rs.avg}/></div><p className="muted mt-2">{rs.count} verified review{rs.count===1?'':'s'}</p></div>
@@ -119,7 +124,9 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
           <div>
             <div className="mb-3"><div className="card-title">Pool items</div><h3 className="section-title">Choose what you need</h3></div>
             <div className="grid gap-4">{poolItems.map((item:any)=>{
-              const product=item.products;const own=commitments.get(item.id);const final=Number(item.final_customer_price||0);const bench=Number(item.benchmark_price_snapshot||0);const target=Number(item.expected_pool_price||0);const targetSaving=target>0?Math.max(0,bench-target):null;const finalSaving=final>0?Math.max(0,bench-final):null
+              const product=item.products;const own=commitments.get(item.id);const final=Number(item.final_customer_price||0);const bench=Number(item.benchmark_price_snapshot||0)
+              const unlock=unlockByItem.get(item.id)??{};const currentQty=Number(unlock.current_quantity??demand.get(item.id)??0);const unlocked=Number(unlock.unlocked_price||0);const nextThreshold=Number(unlock.next_threshold||0);const nextPrice=Number(unlock.next_price||0);const unitsNeeded=Number(unlock.units_needed||0)
+              const unlockedSaving=unlocked>0?Math.max(0,bench-unlocked):null;const finalSaving=final>0?Math.max(0,bench-final):null
               const ilikes=itemLoves.filter((x:any)=>x.pool_item_id===item.id);const iloved=ilikes.some((x:any)=>x.user_id===user.id);const irevs=itemReviews.filter((x:any)=>x.pool_item_id===item.id);const irs=ratingSummary(irevs);const ownItemReview=irevs.find((x:any)=>x.user_id===user.id)
               return <article className="card min-w-0 p-0" key={item.id}>
                 <div className="grid lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.55fr)]">
@@ -131,11 +138,12 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
 
                   <div className="p-4 sm:p-5">
                     <div className="grid overflow-hidden rounded-xl border border-slate-200 bg-white/60 sm:grid-cols-2 xl:grid-cols-4">
-                      <div className="p-3"><div className="card-title">Market benchmark</div><div className="mt-1 text-xl font-black">{taka(bench)}</div></div>
-                      <div className="border-t border-slate-200 p-3 sm:border-l sm:border-t-0"><div className="card-title">Target pool price</div><div className="mt-1 text-xl font-black">{target?taka(target):'Pending'}</div><p className="mt-1 text-xs text-slate-500">Planning target</p></div>
-                      <div className="border-t border-slate-200 p-3 xl:border-l xl:border-t-0"><div className="card-title">Potential saving</div><div className="mt-1 text-xl font-black text-emerald-700">{targetSaving===null?'Pending':taka(targetSaving)}</div>{targetSaving!==null&&<p className="mt-1 text-xs font-bold text-emerald-700">per unit</p>}</div>
-                      <div className="border-t border-slate-200 p-3 sm:border-l xl:border-t-0"><div className="card-title">Final pool price</div><div className="mt-1 text-xl font-black text-emerald-700">{final?taka(final):'Pending'}</div>{finalSaving!==null&&<p className="mt-1 text-xs font-bold text-emerald-700">Save {taka(finalSaving)}/unit</p>}</div>
+                      <div className="p-3"><div className="card-title">Normal market price</div><div className="mt-1 text-xl font-black">{taka(bench)}</div><p className="mt-1 text-xs text-slate-500">Approved local benchmark</p></div>
+                      <div className="border-t border-slate-200 p-3 sm:border-l sm:border-t-0"><div className="card-title">Current unlocked price</div><div className="mt-1 text-xl font-black text-emerald-800">{unlocked?taka(unlocked):'Not unlocked yet'}</div><p className="mt-1 text-xs text-slate-500">Current demand · {currentQty} unit{currentQty===1?'':'s'}</p></div>
+                      <div className="border-t border-slate-200 p-3 xl:border-l xl:border-t-0"><div className="card-title">Next price unlock</div><div className="mt-1 text-xl font-black">{nextThreshold?`${nextThreshold} units → ${taka(nextPrice)}`:'Best tier reached'}</div><p className="mt-1 text-xs font-bold text-slate-600">{nextThreshold?`${unitsNeeded} more unit${unitsNeeded===1?'':'s'} needed`:'No lower planning tier remaining'}</p></div>
+                      <div className="border-t border-slate-200 p-3 sm:border-l xl:border-t-0"><div className="card-title">{final?'Final price':'Potential saving'}</div><div className="mt-1 text-xl font-black text-emerald-700">{final?taka(final):(unlockedSaving===null?'Pending':taka(unlockedSaving))}</div><p className="mt-1 text-xs font-bold text-emerald-700">{finalSaving!==null?`Save ${taka(finalSaving)}/unit`:(unlockedSaving!==null?`Up to ${taka(unlockedSaving)}/unit at current unlock`:'First price unlock is still ahead')}</p></div>
                     </div>
+                    <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-sm text-emerald-950">{unlocked?<><b>Your unlocked maximum price is {taka(unlocked)}.</b> It can stay the same or improve after final supplier negotiation. It will not increase.</>:nextThreshold?<><b>First price unlocks at {nextThreshold} units.</b> {unitsNeeded} more unit{unitsNeeded===1?'':'s'} needed.</>:<><b>No planning price tier is available yet.</b> Operations will publish a tier before accepting demand.</>}</div>
                     {irevs.filter((r:any)=>r.comment).slice(0,2).map((r:any,index:number)=><blockquote key={`${r.user_id}-${index}`} className="mt-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm"><b className="text-amber-700">★ {r.rating}/5</b> <span className="text-slate-700">“{r.comment}”</span></blockquote>)}
 
                     {completedItemIds.has(item.id)&&<form action={submitPoolItemReview} className="mt-4 grid gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3"><input type="hidden" name="pool_item_id" value={item.id}/><div className="grid gap-2 sm:grid-cols-[140px_1fr]"><select className="input" name="rating" defaultValue={ownItemReview?.rating??5} required>{[5,4,3,2,1].map(n=><option key={n} value={n}>{n} star{n===1?'':'s'}</option>)}</select><input className="input" name="comment" maxLength={800} defaultValue={ownItemReview?.comment??''} placeholder="Review this item"/></div><SubmitButton className="btn-secondary">{ownItemReview?'Update item review':'Review item'}</SubmitButton></form>}
@@ -149,7 +157,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
         </section>
       })}
 
-      <div className="card border-slate-200 p-4"><div className="card-title">Pricing guide</div><p className="mt-2 text-sm leading-6 text-slate-600"><b className="text-slate-900">Target vs final:</b> target prices are the admin&apos;s planning goal and may change after supplier sourcing. Potential savings compare the target with the approved market benchmark. Verified savings use the final customer price and are credited only after collection.</p></div>
+      <div className="card border-slate-200 p-4"><div className="card-title">Price promise</div><p className="mt-2 text-sm leading-6 text-slate-600"><b className="text-slate-900">Demand unlocks a maximum price.</b> When your community reaches a tier, that unlocked price can stay the same or improve after final supplier negotiation—it cannot increase. Final savings use the final customer price; verified savings are credited only after successful collection.</p></div>
     </div>
   </AppShell>
 }

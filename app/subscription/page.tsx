@@ -3,12 +3,14 @@ import { SubmitButton } from '@/components/submit-button'
 import { requireOnboardedUser } from '@/lib/auth'
 import { dateTime, shortDate, taka } from '@/lib/format'
 import { createMembershipInvoice, redeemMembershipCoupon, submitMembershipPayment } from '@/app/actions/subscription'
+import { PILOT_MODE } from '@/lib/pilot-mode'
 
 export const dynamic='force-dynamic'
 
 export default async function SubscriptionPage({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}){
   const {supabase,roles,user}=await requireOnboardedUser()
   const {error,notice}=await searchParams
+  if(PILOT_MODE) return <AppShell roles={roles}><div className="grid gap-5"><section><p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Pilot access</p><h1 className="mt-1 text-3xl font-black">Membership is not charging customers yet</h1><p className="muted mt-1">During the first 3–4 month pilot, every onboarded household may join community pools without a subscription payment.</p></section><div className="card"><div className="card-title">Pilot rule</div><h2 className="mt-1 text-xl font-black">No membership payment required</h2><p className="muted mt-2">The subscription engine remains preserved for the future launch, but billing CTAs and enforcement are intentionally dormant during pilot. Referral Coins accumulate now and are not automatically redeemed.</p></div></div></AppShell>
   const [{data:statusRows},{data:settings},{data:invoices},{data:redemptions}]=await Promise.all([
     supabase.rpc('get_my_subscription_status'),
     supabase.from('subscription_settings').select('*').eq('singleton',true).maybeSingle(),

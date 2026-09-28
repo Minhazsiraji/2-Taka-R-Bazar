@@ -2,13 +2,16 @@ import Link from 'next/link'
 import type { AppRole } from '@/lib/auth'
 import { BrandLogo } from '@/components/brand-logo'
 import { NotificationBell } from '@/components/notification-bell'
+import { PILOT_MODE } from '@/lib/pilot-mode'
 
 const customerNav = [
-  ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'], ['/subscription', 'Membership'],
+  ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'],
+  ...(!PILOT_MODE ? [['/subscription', 'Membership']] : []),
   ['/community', 'Community'], ['/pickup', 'Pickup'], ['/profile', 'Profile'], ['/notifications', 'Notifications'],
 ]
 const mobileNav = [
-  ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'], ['/subscription', 'Membership'],
+  ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'],
+  ...(!PILOT_MODE ? [['/subscription', 'Membership']] : [['/community','Community']]),
 ]
 
 export function AppShell({ children, roles = new Set<AppRole>() }: { children: React.ReactNode; roles?: Set<AppRole> }) {
