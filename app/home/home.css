@@ -527,3 +527,50 @@
   .home-liquid-route main .glass-panel:hover { transform: translateY(-1px); }
   .home-liquid-route .glass-primary:hover { filter: brightness(1.03) saturate(1.03); }
 }
+
+/* TRUE CLEAR GLASS — no pseudo fill, rim only */
+.home-liquid-route main .glass-panel,
+.home-liquid-route main .glass-subpanel,
+.home-liquid-route main .glass-inset,
+.home-liquid-route main .glass-icon {
+  background: rgba(255,255,255,.006) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.home-liquid-route main .glass-panel::before,
+.home-liquid-route main .glass-panel::after,
+.home-liquid-route main .glass-subpanel::after,
+.home-liquid-route main .glass-inset::after,
+.home-liquid-route main .glass-icon::after {
+  content: none !important;
+  display: none !important;
+}
+
+.home-liquid-route main .glass-panel {
+  border: 1.5px solid rgba(255,255,255,.96) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,1),
+    inset 1px 0 0 rgba(255,255,255,.72),
+    inset 0 -1px 0 rgba(80,226,235,.32),
+    inset -1px 0 0 rgba(152,124,230,.20),
+    0 0 0 1px rgba(139,107,219,.07),
+    0 1px 2px rgba(51,46,67,.035),
+    0 0 8px rgba(87,228,236,.13),
+    0 0 7px rgba(170,137,239,.08) !important;
+}
+
+.home-liquid-route main .glass-subpanel,
+.home-liquid-route main .glass-inset,
+.home-liquid-route main .glass-icon {
+  border: 1.25px solid rgba(255,255,255,.95) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.98),
+    inset 1px 0 0 rgba(255,255,255,.62),
+    inset 0 -1px 0 rgba(77,222,231,.27),
+    inset -1px 0 0 rgba(152,124,230,.15),
+    0 0 0 1px rgba(139,107,219,.05),
+    0 1px 2px rgba(50,45,65,.025),
+    0 0 6px rgba(87,228,236,.10) !important;
+}
