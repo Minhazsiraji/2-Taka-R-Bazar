@@ -31,18 +31,22 @@
 .home-liquid-route header > div {
   position: relative;
   isolation: isolate;
-  border: 1.5px solid rgba(255,255,255,.96) !important;
+  border: 2px solid rgba(255,255,255,.98) !important;
+  outline: 1px solid rgba(133,116,181,.14);
+  outline-offset: -4px;
   background:
-    linear-gradient(145deg, rgba(255,255,255,.56), rgba(249,247,255,.30) 44%, rgba(238,249,255,.20) 100%) !important;
+    linear-gradient(145deg, rgba(255,255,255,.54), rgba(242,238,250,.34) 46%, rgba(236,249,255,.22) 100%) !important;
   box-shadow:
     inset 0 1.5px 1px rgba(255,255,255,1),
     inset 0 -1.5px 1px rgba(87,76,148,.17),
     inset 1px 0 1px rgba(255,255,255,.72),
     inset -1px 0 1px rgba(34,211,238,.13),
     0 1px 0 rgba(255,255,255,.92),
-    0 10px 24px rgba(45,44,68,.13),
-    0 26px 58px rgba(88,72,140,.11),
-    0 0 22px rgba(34,211,238,.055) !important;
+    0 3px 7px rgba(44,42,61,.08),
+    0 13px 28px rgba(45,42,64,.16),
+    0 31px 66px rgba(86,70,132,.13),
+    12px 17px 30px rgba(34,211,238,.075),
+    -10px 16px 28px rgba(139,92,246,.065) !important;
   backdrop-filter: blur(28px) saturate(1.32) !important;
   -webkit-backdrop-filter: blur(28px) saturate(1.32) !important;
 }
@@ -55,9 +59,9 @@
   pointer-events: none;
   border-radius: inherit;
   background:
-    linear-gradient(125deg, rgba(255,255,255,.68), transparent 29%),
-    radial-gradient(circle at 92% 88%, rgba(34,211,238,.11), transparent 24%),
-    radial-gradient(circle at 8% 92%, rgba(139,92,246,.10), transparent 25%);
+    linear-gradient(125deg, rgba(255,255,255,.80), transparent 31%),
+    radial-gradient(circle at 92% 88%, rgba(34,211,238,.18), transparent 27%),
+    radial-gradient(circle at 8% 92%, rgba(139,92,246,.15), transparent 27%);
 }
 
 .home-liquid-route .glass-panel::after {
@@ -67,12 +71,12 @@
   z-index: 3;
   pointer-events: none;
   border-radius: inherit;
-  padding: 1.5px;
+  padding: 2px;
   background: linear-gradient(132deg,
     rgba(255,255,255,1) 0%,
     rgba(255,255,255,.42) 30%,
-    rgba(139,92,246,.22) 67%,
-    rgba(34,211,238,.34) 86%,
+    rgba(139,92,246,.30) 67%,
+    rgba(34,211,238,.42) 86%,
     rgba(255,255,255,.92) 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
@@ -103,14 +107,17 @@
 .home-liquid-route .glass-inset,
 .home-liquid-route .glass-icon,
 .home-liquid-route main [class*="rounded-full"] {
-  border-color: rgba(255,255,255,.92) !important;
+  border-color: rgba(255,255,255,.96) !important;
+  border-width: 1.5px !important;
+  outline: 1px solid rgba(133,116,181,.10);
+  outline-offset: -3px;
   background:
     linear-gradient(145deg, rgba(255,255,255,.66), rgba(248,246,255,.34) 58%, rgba(235,249,255,.26)) !important;
   box-shadow:
     inset 0 1.2px 1px rgba(255,255,255,1),
     inset 0 -1px 1px rgba(83,75,135,.14),
-    0 6px 14px rgba(49,48,70,.10),
-    0 14px 26px rgba(93,78,145,.07),
+    0 6px 14px rgba(49,48,70,.12),
+    0 16px 32px rgba(93,78,145,.10),
     0 0 12px rgba(34,211,238,.04) !important;
   backdrop-filter: blur(20px) saturate(1.22) !important;
   -webkit-backdrop-filter: blur(20px) saturate(1.22) !important;
@@ -228,7 +235,9 @@
   margin: 18px auto 22px;
   width: min(96%, 1450px);
   overflow: hidden;
-  border: 1.5px solid rgba(255,255,255,.96) !important;
+  border: 2px solid rgba(255,255,255,.98) !important;
+  outline: 1px solid rgba(133,116,181,.14);
+  outline-offset: -4px;
   border-radius: 26px;
   color: #27233f !important;
   background: linear-gradient(145deg, rgba(255,255,255,.70), rgba(246,243,252,.38) 64%, rgba(235,249,255,.27)) !important;
