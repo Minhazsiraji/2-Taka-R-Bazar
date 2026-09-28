@@ -318,3 +318,100 @@
 .home-liquid-route main [class*="rounded-full"] {
   background: rgba(255,255,255,.025) !important;
 }
+
+/* BODY CARD TRANSPARENCY + BORDER TINT PASS */
+.home-liquid-route main .glass-panel {
+  background: rgba(255,255,255,.007) !important;
+  border-color: rgba(255,255,255,.98) !important;
+  outline-color: rgba(120,94,188,.16) !important;
+  box-shadow:
+    inset 1px 1px 0 rgba(255,255,255,.98),
+    inset -1px -1px 0 rgba(59,214,238,.22),
+    inset 1px -1px 0 rgba(142,91,238,.16),
+    0 2px 5px rgba(45,39,62,.08),
+    0 14px 32px rgba(54,45,78,.16),
+    0 28px 58px rgba(75,58,111,.10),
+    9px 13px 25px rgba(43,211,235,.07),
+    -8px 12px 22px rgba(137,93,239,.06) !important;
+}
+
+.home-liquid-route main .glass-panel::before {
+  inset: 4px;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(130deg,
+    rgba(255,255,255,.78) 0%,
+    rgba(255,255,255,.12) 28%,
+    rgba(140,91,238,.19) 66%,
+    rgba(45,213,238,.25) 88%,
+    rgba(255,255,255,.58) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: .82;
+}
+
+.home-liquid-route main .glass-panel::after {
+  padding: 2px;
+  background: linear-gradient(132deg,
+    rgba(255,255,255,1) 0%,
+    rgba(255,255,255,.48) 25%,
+    rgba(151,97,240,.30) 65%,
+    rgba(47,215,239,.46) 87%,
+    rgba(255,255,255,.96) 100%);
+}
+
+.home-liquid-route main .glass-subpanel,
+.home-liquid-route main .glass-inset,
+.home-liquid-route main .glass-icon {
+  position: relative;
+  isolation: isolate;
+  background: rgba(255,255,255,.006) !important;
+  border-color: rgba(255,255,255,.96) !important;
+  outline-color: rgba(127,101,186,.12) !important;
+  box-shadow:
+    inset 1px 1px 0 rgba(255,255,255,.94),
+    inset -1px -1px 0 rgba(49,210,235,.16),
+    inset 1px -1px 0 rgba(142,91,238,.11),
+    0 5px 13px rgba(49,44,67,.10),
+    0 12px 26px rgba(81,63,116,.075),
+    6px 8px 16px rgba(43,211,235,.04),
+    -5px 8px 15px rgba(137,93,239,.035) !important;
+}
+
+.home-liquid-route main .glass-inset {
+  background: rgba(255,255,255,.004) !important;
+  box-shadow:
+    inset 1px 1px 0 rgba(255,255,255,.92),
+    inset -1px -1px 0 rgba(49,210,235,.13),
+    inset 1px -1px 0 rgba(142,91,238,.09),
+    0 3px 8px rgba(50,45,67,.075) !important;
+}
+
+.home-liquid-route main .glass-subpanel::after,
+.home-liquid-route main .glass-inset::after,
+.home-liquid-route main .glass-icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,.96) 0%,
+    rgba(255,255,255,.34) 34%,
+    rgba(151,97,240,.20) 72%,
+    rgba(47,215,239,.30) 90%,
+    rgba(255,255,255,.82) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: .82;
+}
+
+.home-liquid-route main .glass-subpanel > *,
+.home-liquid-route main .glass-inset > *,
+.home-liquid-route main .glass-icon > * {
+  position: relative;
+  z-index: 1;
+}
