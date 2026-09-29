@@ -12,13 +12,18 @@ export function PwaRegister() {
         .catch(() => undefined)
     }
 
-    if ('requestIdleCallback' in window) {
-      const idleId = window.requestIdleCallback(register, { timeout: 2000 })
-      return () => window.cancelIdleCallback(idleId)
+    const idleApi = window as unknown as {
+      requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number
+      cancelIdleCallback?: (handle: number) => void
     }
 
-    const timeoutId = window.setTimeout(register, 800)
-    return () => window.clearTimeout(timeoutId)
+    if (typeof idleApi.requestIdleCallback === 'function') {
+      const idleId = idleApi.requestIdleCallback(register, { timeout: 2000 })
+      return () => idleApi.cancelIdleCallback?.(idleId)
+    }
+
+    const timeoutId = setTimeout(register, 800)
+    return () => clearTimeout(timeoutId)
   }, [])
 
   return null
