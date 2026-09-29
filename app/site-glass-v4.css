@@ -1,0 +1,47 @@
+/* Final polish: footer readability and commitment-action parity. */
+
+/* Footer section labels and links must remain readable on the pearl glass surface. */
+.site-glass-root .app-desktop-footer [class*="text-sky-200"] {
+  color: #0b7285 !important;
+  text-shadow: 0 0 8px rgba(19,207,200,.10);
+}
+
+.site-glass-root .app-desktop-footer a,
+.site-glass-root .app-desktop-footer [class*="text-slate-3"],
+.site-glass-root .app-desktop-footer [class*="text-slate-4"],
+.site-glass-root .app-desktop-footer p,
+.site-glass-root .app-desktop-footer span {
+  color: #4e5d76 !important;
+}
+
+.site-glass-root .app-desktop-footer nav a:hover,
+.site-glass-root .app-desktop-footer nav a:focus-visible {
+  color: #087f8d !important;
+  text-shadow: 0 0 8px rgba(19,207,200,.18);
+}
+
+/* Quantity commitment forms use the same aqua molded action style as primary CTAs. */
+.site-glass-root main form:has(input[name="quantity"]) button {
+  min-height: 46px !important;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255,255,255,.92) !important;
+  color: #064852 !important;
+  font-weight: 700 !important;
+  background: linear-gradient(180deg,rgba(134,248,241,.92),rgba(46,214,211,.90) 55%,rgba(19,173,187,.92)) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.86),
+    inset 0 -2px 0 rgba(28,153,167,.12),
+    0 8px 18px rgba(38,47,77,.09) !important;
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .site-glass-root main form:has(input[name="quantity"]) button:hover {
+    transform: translateY(-1px) !important;
+    filter: brightness(1.03) saturate(1.03);
+    box-shadow:
+      inset 0 2px 0 rgba(255,255,255,.96),
+      inset 0 -2px 0 rgba(28,153,167,.13),
+      0 10px 22px rgba(38,47,77,.11),
+      0 0 10px rgba(48,222,228,.08) !important;
+  }
+}
