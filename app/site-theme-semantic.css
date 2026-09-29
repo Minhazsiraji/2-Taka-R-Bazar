@@ -22,19 +22,13 @@ html[data-theme="dark"] .site-glass-root :is(.bg-emerald-50,.bg-sky-50,.bg-viole
   background-color: rgba(20,30,44,.72) !important;
 }
 
-/* Keep native controls readable in dark mode. */
 html[data-theme="dark"] .site-glass-root input[type="checkbox"],
-html[data-theme="dark"] .site-glass-root input[type="radio"] {
-  accent-color: #35cfcf;
-}
+html[data-theme="dark"] .site-glass-root input[type="radio"] { accent-color: #35cfcf; }
 
 html[data-theme="dark"] .site-glass-root hr,
 html[data-theme="dark"] .site-glass-root [class*="border-t"],
-html[data-theme="dark"] .site-glass-root [class*="border-b"] {
-  border-color: rgba(193,211,233,.12) !important;
-}
+html[data-theme="dark"] .site-glass-root [class*="border-b"] { border-color: rgba(193,211,233,.12) !important; }
 
-/* Executive/Operations plain links that use black buttons stay visible. */
 html[data-theme="dark"] .site-glass-root a.bg-black,
 html[data-theme="dark"] .site-glass-root button.bg-black {
   background: #2dd4d0 !important;
@@ -42,15 +36,10 @@ html[data-theme="dark"] .site-glass-root button.bg-black {
   border-color: rgba(176,255,250,.38) !important;
 }
 
-/* Ensure white text utility remains white when used on destructive/brand controls. */
 html[data-theme="dark"] .site-glass-root .text-white { color: #ffffff !important; }
 
-/* The brand artwork is black; lift it to a soft white in dark mode. */
-html[data-theme="dark"] .site-glass-root .brand-logo {
-  filter: invert(1) brightness(1.08) contrast(.92);
-}
+html[data-theme="dark"] .site-glass-root .brand-logo { filter: invert(1) brightness(1.08) contrast(.92); }
 
-/* The action cluster is layout-only, not a second glass panel. */
 .site-glass-root .public-glass-header > .public-header-actions,
 html[data-theme="dark"] .site-glass-root .public-glass-header > .public-header-actions {
   border: 0 !important;
@@ -61,13 +50,38 @@ html[data-theme="dark"] .site-glass-root .public-glass-header > .public-header-a
   -webkit-backdrop-filter: none !important;
 }
 
-/* Public/legal links need stronger contrast in dark mode. */
 html[data-theme="dark"] .site-glass-root .public-glass-footer nav a,
 html[data-theme="dark"] .site-glass-root .public-glass-footer > div:last-child,
-html[data-theme="dark"] .site-glass-root .public-glass-footer > div:last-child a {
-  color: #aebdd1 !important;
-}
+html[data-theme="dark"] .site-glass-root .public-glass-footer > div:last-child a { color: #aebdd1 !important; }
 html[data-theme="dark"] .site-glass-root .public-glass-footer a:hover,
-html[data-theme="dark"] .site-glass-root .public-glass-footer a:focus-visible {
-  color: #7cecf0 !important;
+html[data-theme="dark"] .site-glass-root .public-glass-footer a:focus-visible { color: #7cecf0 !important; }
+
+/* Final shared contrast contract: readable hierarchy without flattening semantic color. */
+html[data-theme="dark"] .site-glass-root :is(p,span,li,dt,dd,label,small) { text-shadow: none; }
+html[data-theme="dark"] .site-glass-root :is(.text-gray-950,.text-gray-900,.text-neutral-950,.text-neutral-900) { color: #eef4ff !important; }
+html[data-theme="dark"] .site-glass-root :is(.text-gray-800,.text-gray-700,.text-neutral-800,.text-neutral-700) { color: #c6d2e3 !important; }
+html[data-theme="dark"] .site-glass-root :is(.text-gray-600,.text-gray-500,.text-neutral-600,.text-neutral-500) { color: #9fb0c8 !important; }
+html[data-theme="dark"] .site-glass-root .text-white\/65 { color: rgba(238,244,255,.78) !important; }
+
+/* Public rule is intentionally a deeper inset plane, not a generic darkened card. */
+html[data-theme="dark"] .site-glass-root .public-rule {
+  color: #f4f8ff !important;
+  border: 1px solid rgba(113,231,236,.20) !important;
+  background: linear-gradient(145deg,rgba(7,15,25,.94),rgba(15,29,43,.90)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset -1px -1px 0 rgba(78,226,232,.09), 0 10px 24px rgba(0,0,0,.22) !important;
+}
+html[data-theme="dark"] .site-glass-root .public-rule p { color: #f4f8ff !important; }
+html[data-theme="dark"] .site-glass-root .public-rule p:first-child { color: #b7c6da !important; }
+
+/* Keep the public hero caption clean on common desktop widths while wrapping safely on phones. */
+.public-essentials-heading { text-wrap: balance; overflow-wrap: normal; word-break: normal; }
+@media (min-width: 640px) { .public-essentials-heading { white-space: nowrap; } }
+
+/* Focus treatment must remain visible against both glass themes. */
+.site-glass-root :is(a,button,input,select,textarea):focus-visible {
+  outline: 2px solid #0ea5b7;
+  outline-offset: 3px;
+}
+html[data-theme="dark"] .site-glass-root :is(a,button,input,select,textarea):focus-visible {
+  outline-color: #71e7ec;
 }
