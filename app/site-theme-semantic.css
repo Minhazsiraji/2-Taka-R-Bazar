@@ -44,3 +44,8 @@ html[data-theme="dark"] .site-glass-root button.bg-black {
 
 /* Ensure white text utility remains white when used on destructive/brand controls. */
 html[data-theme="dark"] .site-glass-root .text-white { color: #ffffff !important; }
+
+/* The brand artwork is black; lift it to a soft white in dark mode. */
+html[data-theme="dark"] .site-glass-root .brand-logo {
+  filter: invert(1) brightness(1.08) contrast(.92);
+}
