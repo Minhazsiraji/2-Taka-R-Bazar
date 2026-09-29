@@ -17,6 +17,6 @@ test('active pool editor permits only operational fields',()=>{
 
 test('focused pool details expose the safe active pool editor',()=>{
   const details=readFileSync(new URL('../app/admin/pools/[id]/page.tsx',import.meta.url),'utf8')
-  assert.match(details,/\/admin\/pools\/edit\?pool=/)
+  assert.equal(details.includes('/admin/pools/edit?pool=${pool.id}'),true)
   assert.match(details,/Edit pool details/)
 })
