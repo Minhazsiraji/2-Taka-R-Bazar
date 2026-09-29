@@ -36,3 +36,22 @@
 .home-liquid-route .font-bold{font-weight:650!important}
 .home-liquid-route h1,.home-liquid-route h2,.home-liquid-route h3{letter-spacing:-.025em}
 .home-liquid-route main p,.home-liquid-route main a,.home-liquid-route main span{letter-spacing:-.006em}
+
+/* Single-card DD liquid-glass reference test: hero only */
+.home-liquid-route .dd-glass-reference-test{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(255,255,255,.48),rgba(242,240,250,.34))!important;
+  border:1px solid rgba(255,255,255,.78)!important;
+  border-radius:28px!important;
+  outline:none!important;
+  box-shadow:0 18px 50px rgba(38,47,77,.12),inset 0 1px 0 rgba(255,255,255,.88),inset 0 -1px 0 rgba(255,255,255,.24)!important;
+  backdrop-filter:blur(24px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%)!important;
+}
+.home-liquid-route .dd-glass-reference-test::before{
+  content:""!important;position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;
+  background:radial-gradient(circle at 78% 24%,rgba(26,211,190,.16),transparent 18%),radial-gradient(circle at 22% 38%,rgba(111,82,238,.12),transparent 20%),radial-gradient(circle at 70% 72%,rgba(49,174,235,.10),transparent 24%)!important;
+  mix-blend-mode:normal!important;filter:none!important;
+}
+.home-liquid-route .dd-glass-reference-test::after{content:none!important;display:none!important;}
+.home-liquid-route .dd-glass-reference-test>*{position:relative;z-index:1;}

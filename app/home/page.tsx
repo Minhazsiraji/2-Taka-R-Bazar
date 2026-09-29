@@ -27,7 +27,7 @@ export default async function HomePage() {
 
   return <AppShell roles={roles}>
     <div className="relative grid min-w-0 gap-4 sm:gap-5">
-      <section className={`${glass} relative overflow-hidden rounded-[28px] p-5 sm:p-7 lg:p-8`}>
+      <section className={`${glass} dd-glass-reference-test relative overflow-hidden rounded-[28px] p-5 sm:p-7 lg:p-8`}>
         <div className="hidden" />
         <div className="relative grid gap-6 lg:grid-cols-[1.35fr_.65fr] lg:items-center">
           <div className="grid gap-5 md:grid-cols-[1fr_230px] md:items-center lg:grid-cols-[1fr_250px]">
