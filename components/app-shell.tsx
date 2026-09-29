@@ -46,7 +46,12 @@ export function AppShell({ children, roles = new Set<AppRole>() }: { children: R
         <div className="mx-auto grid max-w-lg grid-cols-5 text-center text-[11px]">{mobileNav.map(([href,label])=><Link key={href} href={href} className="flex min-h-16 min-w-0 items-center justify-center px-1 py-3 font-bold text-slate-700 hover:bg-sky-50">{label}</Link>)}</div>
       </nav>
 
-      <div className="app-mobile-legal border-t border-slate-800 bg-[#062747] px-3 pb-20 pt-4 text-xs text-slate-300 md:hidden"><nav className="mx-auto flex max-w-lg flex-wrap justify-center gap-x-4 gap-y-2" aria-label="Legal and help">{LEGAL_LINKS.map(([href,label])=><Link key={href} href={href} className="hover:text-white">{label}</Link>)}</nav></div>
+      <div className="app-mobile-legal border-t border-slate-800 bg-[#062747] px-3 pb-20 pt-4 text-xs text-slate-300 md:hidden">
+        <nav className="mx-auto flex max-w-lg flex-wrap justify-center gap-x-4 gap-y-2" aria-label="Legal and help">{LEGAL_LINKS.map(([href,label])=><Link key={href} href={href} className="hover:text-white">{label}</Link>)}</nav>
+        <div className="mx-auto mt-3 max-w-lg text-center text-[11px] text-slate-400">
+          © 2026 2-TAKA-R-BAZAR · Developed by: <a href="https://agentsiraji.com" target="_blank" rel="noreferrer" className="hover:text-white">agentsiraji.com</a> · Contact: <a href="mailto:business@agentsiraji.com" className="hover:text-white">business@agentsiraji.com</a>
+        </div>
+      </div>
 
       <footer className="app-desktop-footer hidden bg-[#062747] text-white md:block">
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-6 lg:grid-cols-[1.2fr_1fr_1fr]">
@@ -54,7 +59,17 @@ export function AppShell({ children, roles = new Set<AppRole>() }: { children: R
           <div><div className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-200">Shop</div><div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-1.5 text-xs">{customerNav.slice(0,5).map(([href,label])=><Link key={href} href={href} className="text-slate-300 hover:text-white">{label}</Link>)}</div></div>
           <div><div className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-200">Account & community</div><div className="mt-3 grid grid-cols-2 gap-1.5 text-xs">{customerNav.slice(5).map(([href,label])=><Link key={href} href={href} className="text-slate-300 hover:text-white">{label}</Link>)}</div></div>
         </div>
-        <div className="border-t border-white/10"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-3 text-[11px] text-slate-400"><span>© 2026 2-TAKA-R-BAZAR</span><nav className="flex flex-wrap gap-x-4 gap-y-2" aria-label="Legal and help">{LEGAL_LINKS.map(([href,label])=><Link key={href} href={href} className="hover:text-white">{label}</Link>)}</nav></div></div>
+        <div className="border-t border-white/10">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-3 text-[11px] text-slate-400">
+            <div>
+              <span>© 2026 2-TAKA-R-BAZAR · Developed by: </span>
+              <a href="https://agentsiraji.com" target="_blank" rel="noreferrer" className="hover:text-white">agentsiraji.com</a>
+              <span> · Contact: </span>
+              <a href="mailto:business@agentsiraji.com" className="hover:text-white">business@agentsiraji.com</a>
+            </div>
+            <nav className="flex flex-wrap gap-x-4 gap-y-2" aria-label="Legal and help">{LEGAL_LINKS.map(([href,label])=><Link key={href} href={href} className="hover:text-white">{label}</Link>)}</nav>
+          </div>
+        </div>
       </footer>
     </div>
   )
