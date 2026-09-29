@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import './site-glass.css'
 import { PwaRegister } from '@/components/pwa-register'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 
@@ -17,8 +18,8 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: 'default' },
 }
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#111111' }
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#e7e2e8' }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><PwaRegister />{children}</body></html>
+  return <html lang="en"><body className="site-glass-root"><PwaRegister />{children}</body></html>
 }
