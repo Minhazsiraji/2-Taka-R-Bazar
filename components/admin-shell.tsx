@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { BrandLogo } from '@/components/brand-logo'
 
-const links = [['/admin','Dashboard'],['/admin/communities','Communities'],['/admin/customers','Customers'],['/admin/products','Products'],['/admin/market-prices','Market prices'],['/admin/suppliers','Suppliers'],['/admin/pools','Pools'],['/admin/commitments','Commitments'],['/admin/orders','Orders'],['/admin/pickup-points','Pickup points'],['/admin/savings','Savings'],['/admin/feedback','Feedback'],['/admin/issues','Issues']]
+const links = [['/admin','Dashboard'],['/admin/communities','Communities'],['/admin/customers','Customers'],['/admin/products','Products'],['/admin/market-prices','Market prices'],['/admin/suppliers','Suppliers'],['/admin/pools','Pools'],['/admin/pools/edit','Edit pool details'],['/admin/commitments','Commitments'],['/admin/orders','Orders'],['/admin/pickup-points','Pickup points'],['/admin/savings','Savings'],['/admin/feedback','Feedback'],['/admin/issues','Issues']]
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   return <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50">
