@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import type { AppRole } from '@/lib/auth'
 import { BrandLogo } from '@/components/brand-logo'
 import { NotificationBell } from '@/components/notification-bell'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { PILOT_MODE } from '@/lib/pilot-mode'
 import { LEGAL_LINKS } from '@/lib/legal'
 
@@ -36,6 +37,7 @@ export function AppShell({ children, roles = new Set<AppRole>() }: { children: R
             </div>
           </Link>
           <div className="app-role-actions flex min-w-0 flex-1 items-center justify-end gap-1 overflow-x-auto text-[10px] sm:gap-2 sm:text-xs">
+            <ThemeToggle className="shrink-0" />
             <Suspense fallback={<NotificationBellFallback />}><NotificationBell /></Suspense>
             {(roles.has('pickup_operator') || isSuperAdmin) && <Link className="app-role-link shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm" href="/pickup-ops" aria-label="Pickup Ops"><span aria-hidden="true">▣</span><span className="role-label">Pickup Ops</span></Link>}
             {isAdmin && <Link className="app-role-link shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm" href="/admin" aria-label="Operations"><span aria-hidden="true">⚙</span><span className="role-label">Operations</span></Link>}
