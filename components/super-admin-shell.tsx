@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { BrandLogo } from '@/components/brand-logo'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const executiveLinks = [
   ['/super-admin', 'Executive dashboard'],
@@ -48,6 +49,7 @@ export function SuperAdminShell({ children }: { children: React.ReactNode }) {
           <div className="hidden min-w-0 md:block"><p className="font-black tracking-tight">SUPER ADMIN</p><p className="text-xs text-slate-500">Owner command center · live operational data</p></div>
         </Link>
         <div className="flex min-w-0 items-center justify-end gap-1 text-[10px] sm:gap-2 sm:text-sm">
+          <ThemeToggle />
           <Link href="/admin" className="shrink-0 rounded-lg border border-slate-300 bg-white px-2 py-2 font-bold text-slate-900 sm:px-3">Operations</Link>
           <Link href="/home" className="shrink-0 rounded-lg bg-black px-2 py-2 font-bold text-white sm:px-3">Customer app</Link>
         </div>
