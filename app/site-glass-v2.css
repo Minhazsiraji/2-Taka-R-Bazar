@@ -1,0 +1,159 @@
+/* Site-wide liquid-glass refinement: restrained Home-style rim lighting. */
+.site-glass-root {
+  --rim-white: rgba(255,255,255,.94);
+  --rim-aqua: rgba(66,226,232,.18);
+  --rim-violet: rgba(145,116,232,.10);
+  --depth-shadow: rgba(36,43,70,.10);
+}
+
+/* Major glass surfaces: neutral body, bright rim, tiny edge refraction only. */
+.site-glass-root :is(.card,.table-wrap,.public-glass-header,.public-glass-footer,
+  .app-shell-header-bar,aside[class*="rounded-"],details[class*="rounded-"]) {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--rim-white) !important;
+  background: linear-gradient(135deg,rgba(255,255,255,.46),rgba(242,240,250,.31)) !important;
+  box-shadow:
+    0 16px 38px var(--depth-shadow),
+    inset 0 1.5px 0 rgba(255,255,255,.97),
+    inset 1px 0 0 rgba(255,255,255,.58),
+    inset -1px -1px 0 rgba(68,220,228,.10),
+    inset 0 -2px 0 rgba(145,116,232,.035) !important;
+  backdrop-filter: blur(24px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
+}
+
+/* Kill the old full-surface ambient wash from the first global theme. */
+.site-glass-root :is(.card,.table-wrap,.public-glass-header,.public-glass-footer,
+  .app-shell-header-bar,aside[class*="rounded-"],details[class*="rounded-"])::before {
+  background: linear-gradient(180deg,rgba(255,255,255,.13),transparent 22%,transparent 100%) !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+}
+
+/* Edge-only light: no radial tint across the card face. */
+.site-glass-root :is(.card,.table-wrap,.public-glass-header,.public-glass-footer,
+  .app-shell-header-bar,aside[class*="rounded-"],details[class*="rounded-"])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(90deg,transparent 0%,rgba(149,116,232,.08) 24%,transparent 43%,transparent 64%,rgba(66,226,232,.12) 84%,transparent 100%) bottom/100% 2px no-repeat,
+    linear-gradient(180deg,transparent 0%,transparent 48%,rgba(66,226,232,.10) 78%,transparent 100%) right/2px 100% no-repeat,
+    linear-gradient(90deg,rgba(255,255,255,.66),rgba(255,255,255,.16) 55%,transparent 100%) top/100% 1px no-repeat;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.24),
+    inset -1px -1px 0 rgba(66,226,232,.055) !important;
+}
+
+.site-glass-root :is(.card,.table-wrap,.public-glass-header,.public-glass-footer,
+  .app-shell-header-bar,aside[class*="rounded-"],details[class*="rounded-"]) > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Inner glass surfaces: same restrained material, no colored surface wash. */
+.site-glass-root main :is(section,article,form,div)[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap) {
+  border-color: rgba(255,255,255,.78) !important;
+  background: linear-gradient(135deg,rgba(255,255,255,.28),rgba(242,240,250,.16)) !important;
+  box-shadow:
+    0 8px 22px rgba(38,47,77,.055),
+    inset 0 1px 0 rgba(255,255,255,.86),
+    inset -1px -1px 0 rgba(66,226,232,.075),
+    inset 0 -2px 0 rgba(145,116,232,.025) !important;
+}
+
+/* Public auth header should use the same rounded Home bar geometry. */
+.site-glass-root .public-glass-header {
+  width: calc(100% - 24px) !important;
+  max-width: 72rem !important;
+  margin: .5rem auto 0 !important;
+  padding: .65rem .9rem !important;
+  border-radius: 20px !important;
+}
+
+/* 3D / debossed glass controls. */
+.site-glass-root :is(.btn-primary,.btn-secondary,.public-header-action,.app-role-link,
+  button,a[class*="rounded-full"],a[class*="rounded-xl"],a[class*="rounded-2xl"]) {
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255,255,255,.90) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.86),
+    inset 0 -2px 0 rgba(63,109,128,.10),
+    0 7px 18px rgba(38,47,77,.09) !important;
+}
+
+.site-glass-root .btn-primary {
+  color: #064852 !important;
+  background: linear-gradient(180deg,rgba(134,248,241,.92),rgba(46,214,211,.90) 55%,rgba(19,173,187,.92)) !important;
+}
+.site-glass-root :is(.btn-secondary,.public-header-action,.app-role-link) {
+  color: #17213b !important;
+  background: linear-gradient(180deg,rgba(255,255,255,.50),rgba(241,239,248,.24)) !important;
+}
+
+/* Auth cards: same neutral glass, no broad cyan/violet shadow spread. */
+.site-glass-root main[class*="min-h-screen"] section.card {
+  border-radius: 28px !important;
+  box-shadow:
+    0 20px 48px rgba(38,47,77,.11),
+    inset 0 1.5px 0 rgba(255,255,255,.96),
+    inset -1px -1px 0 rgba(65,225,232,.08),
+    inset 0 -2px 0 rgba(145,116,232,.03) !important;
+}
+
+/* Inputs become inset/debossed neutral glass wells. */
+.site-glass-root :is(.input,input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  border: 1px solid rgba(255,255,255,.86) !important;
+  background: linear-gradient(180deg,rgba(255,255,255,.42),rgba(242,240,250,.20)) !important;
+  box-shadow:
+    inset 0 2px 5px rgba(40,50,77,.055),
+    inset 0 1px 0 rgba(255,255,255,.88),
+    0 5px 14px rgba(38,47,77,.045) !important;
+}
+
+/* Footer links: clear aqua hover without tinting the footer surface. */
+.site-glass-root footer a,
+.site-glass-root .app-mobile-legal a {
+  transition: color 180ms ease,text-shadow 180ms ease,transform 180ms ease !important;
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .site-glass-root footer a:hover,
+  .site-glass-root .app-mobile-legal a:hover {
+    color: #009dac !important;
+    transform: translateY(-1px);
+    text-shadow: 0 0 8px rgba(36,220,225,.24);
+  }
+
+  .site-glass-root :is(.btn-primary,.btn-secondary,.public-header-action,.app-role-link,
+    button,a[class*="rounded-full"],a[class*="rounded-xl"],a[class*="rounded-2xl"]):hover {
+    transform: translateY(-1px) !important;
+    border-color: rgba(255,255,255,.98) !important;
+    box-shadow:
+      inset 0 2px 0 rgba(255,255,255,.96),
+      inset 0 -2px 0 rgba(28,153,167,.11),
+      0 10px 22px rgba(38,47,77,.11),
+      0 0 10px rgba(48,222,228,.08) !important;
+  }
+
+  .site-glass-root :is(.card,.table-wrap,aside[class*="rounded-"],details[class*="rounded-"]):hover {
+    border-color: rgba(255,255,255,.98) !important;
+    box-shadow:
+      0 20px 46px rgba(38,47,77,.115),
+      inset 0 1.5px 0 rgba(255,255,255,.98),
+      inset -1px -1px 0 rgba(56,229,235,.10),
+      inset 0 -2px 0 rgba(145,116,232,.035) !important;
+  }
+}
+
+@media (max-width:640px) {
+  .site-glass-root .public-glass-header {
+    width: calc(100% - 16px) !important;
+    padding: .55rem .65rem !important;
+    border-radius: 18px !important;
+  }
+}

@@ -1,0 +1,258 @@
+/* 2-TAKA-R-BAZAR — site-wide liquid glass theme
+   Built from the approved Doctor's Diary glass reference. */
+
+.site-glass-root {
+  --glass-ink: #17213b;
+  --glass-muted: #53617c;
+  --glass-teal: #087f8d;
+  --glass-aqua: #13cfc8;
+  --glass-panel: linear-gradient(135deg, rgba(255,255,255,.48), rgba(242,240,250,.34));
+  --glass-inner: linear-gradient(135deg, rgba(255,255,255,.30), rgba(242,240,250,.18));
+  --glass-border: rgba(255,255,255,.78);
+  --glass-shadow: 0 18px 50px rgba(38,47,77,.12), inset 0 1px 0 rgba(255,255,255,.88), inset 0 -1px 0 rgba(255,255,255,.24);
+  color: var(--glass-ink);
+  font-family: "Segoe UI Variable Text", "Segoe UI", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  background:
+    radial-gradient(ellipse at 12% 4%, rgba(255,255,255,.60), transparent 30%),
+    radial-gradient(ellipse at 88% 16%, rgba(125,229,235,.12), transparent 28%),
+    radial-gradient(ellipse at 70% 82%, rgba(154,118,228,.11), transparent 32%),
+    linear-gradient(145deg, #eee9eb 0%, #ded8df 48%, #e9e5e8 100%);
+  background-attachment: fixed;
+}
+
+.site-glass-root .font-black { font-weight: 700 !important; }
+.site-glass-root .font-bold { font-weight: 650 !important; }
+.site-glass-root h1,
+.site-glass-root h2,
+.site-glass-root h3 { letter-spacing: -.025em; color: var(--glass-ink); }
+.site-glass-root p { color: var(--glass-muted); }
+
+/* Remove legacy page canvases so the pearl field stays continuous. */
+.site-glass-root [class*="min-h-screen"][class*="bg-"],
+.site-glass-root main[class*="bg-"],
+.site-glass-root [class~="bg-slate-50"],
+.site-glass-root [class~="bg-slate-100"] {
+  background: transparent !important;
+}
+
+/* Shared main glass surfaces. */
+.site-glass-root .card,
+.site-glass-root .table-wrap,
+.site-glass-root aside[class*="rounded-"],
+.site-glass-root details[class*="rounded-"],
+.site-glass-root header[class*="mx-auto"],
+.site-glass-root header > div,
+.site-glass-root footer {
+  position: relative;
+  border: 1px solid var(--glass-border) !important;
+  background: var(--glass-panel) !important;
+  box-shadow: var(--glass-shadow) !important;
+  backdrop-filter: blur(24px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
+}
+
+/* Keep shell wrapper headers clear; the inner bar is the actual glass surface. */
+.site-glass-root header:not([class*="mx-auto"]) {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+/* Ambient light inside major surfaces. */
+.site-glass-root .card::before,
+.site-glass-root .table-wrap::before,
+.site-glass-root aside[class*="rounded-"]::before,
+.site-glass-root details[class*="rounded-"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 78% 24%, rgba(26,211,190,.13), transparent 18%),
+    radial-gradient(circle at 22% 38%, rgba(111,82,238,.10), transparent 20%),
+    radial-gradient(circle at 70% 72%, rgba(49,174,235,.08), transparent 24%);
+}
+.site-glass-root .card > *,
+.site-glass-root .table-wrap > *,
+.site-glass-root aside[class*="rounded-"] > *,
+.site-glass-root details[class*="rounded-"] > * { position: relative; z-index: 1; }
+
+/* Inner panels: same material, lighter depth. */
+.site-glass-root main :is(section,article,form,div,details,aside)[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap),
+.site-glass-root .notice,
+.site-glass-root .success,
+.site-glass-root .error {
+  border-color: rgba(255,255,255,.68) !important;
+  background: var(--glass-inner) !important;
+  box-shadow: 0 10px 30px rgba(40,53,90,.07), inset 0 1px 0 rgba(255,255,255,.68) !important;
+  backdrop-filter: blur(18px) saturate(132%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(132%) !important;
+}
+
+/* Inputs and form controls. */
+.site-glass-root .input,
+.site-glass-root input:not([type="checkbox"]):not([type="radio"]),
+.site-glass-root select,
+.site-glass-root textarea {
+  color: var(--glass-ink) !important;
+  border-color: rgba(255,255,255,.72) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,.38), rgba(245,243,250,.24)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.82), 0 6px 18px rgba(38,47,77,.06) !important;
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+}
+.site-glass-root .input:focus,
+.site-glass-root input:focus,
+.site-glass-root select:focus,
+.site-glass-root textarea:focus {
+  border-color: rgba(18,186,190,.62) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(19,207,200,.12), inset 0 1px 0 rgba(255,255,255,.92), 0 10px 24px rgba(38,47,77,.08) !important;
+}
+.site-glass-root [class~="bg-slate-100"]:has(+ input),
+.site-glass-root label [class~="bg-slate-100"] {
+  background: rgba(255,255,255,.26) !important;
+  border-color: rgba(255,255,255,.72) !important;
+}
+
+/* Buttons and action controls. */
+.site-glass-root .btn-primary,
+.site-glass-root :is(a,button)[class~="bg-black"] {
+  color: #073f4a !important;
+  border: 1px solid rgba(255,255,255,.84) !important;
+  background: linear-gradient(180deg, rgba(111,244,237,.90), rgba(31,206,203,.90) 54%, rgba(15,168,182,.92)) !important;
+  box-shadow: inset 0 1.5px 0 rgba(255,255,255,.74), inset 0 -1px 0 rgba(4,103,122,.22), 0 8px 20px rgba(15,168,182,.18) !important;
+}
+.site-glass-root .btn-secondary,
+.site-glass-root .chip,
+.site-glass-root .status-pill,
+.site-glass-root :is(a,button)[class*="bg-white"] {
+  color: var(--glass-ink) !important;
+  border-color: rgba(255,255,255,.76) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,.34), rgba(242,240,250,.20)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.76), 0 6px 18px rgba(38,47,77,.06) !important;
+  backdrop-filter: blur(14px) saturate(132%);
+  -webkit-backdrop-filter: blur(14px) saturate(132%);
+}
+.site-glass-root .btn-primary,
+.site-glass-root .btn-secondary,
+.site-glass-root .chip,
+.site-glass-root .status-pill,
+.site-glass-root button,
+.site-glass-root a[class*="rounded-"] {
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease, color 180ms ease, background 180ms ease !important;
+}
+
+/* Tables stay readable while matching the glass language. */
+.site-glass-root table { color: var(--glass-ink); }
+.site-glass-root th {
+  color: #64708a !important;
+  background: rgba(255,255,255,.20) !important;
+  border-color: rgba(255,255,255,.38) !important;
+}
+.site-glass-root td {
+  background: rgba(255,255,255,.08) !important;
+  border-color: rgba(255,255,255,.32) !important;
+}
+
+/* Public and authenticated footers become light glass everywhere. */
+.site-glass-root footer,
+.site-glass-root [class*="app-mobile-legal"] {
+  color: var(--glass-ink) !important;
+  background: var(--glass-panel) !important;
+  border-color: rgba(255,255,255,.78) !important;
+}
+.site-glass-root footer [class*="text-white"],
+.site-glass-root footer [class*="text-slate-"],
+.site-glass-root [class*="app-mobile-legal"] { color: var(--glass-muted) !important; }
+.site-glass-root footer [class*="border-slate-"],
+.site-glass-root footer [class*="border-white"] { border-color: rgba(255,255,255,.42) !important; }
+
+/* Footer/legal links: explicit color-change + glow on hover/focus. */
+.site-glass-root footer nav a,
+.site-glass-root [class*="app-mobile-legal"] a {
+  display: inline-flex;
+  color: #5b6175 !important;
+  text-decoration-color: transparent;
+  transition: color 180ms ease, transform 180ms ease, text-shadow 180ms ease, text-decoration-color 180ms ease !important;
+}
+.site-glass-root footer nav a:hover,
+.site-glass-root footer nav a:focus-visible,
+.site-glass-root [class*="app-mobile-legal"] a:hover,
+.site-glass-root [class*="app-mobile-legal"] a:focus-visible,
+.site-glass-root .home-liquid-route footer a:hover,
+.site-glass-root .home-liquid-route footer a:focus-visible {
+  color: #078b98 !important;
+  transform: translateY(-1px);
+  text-decoration-color: rgba(7,139,152,.55);
+  text-shadow: 0 0 12px rgba(19,207,200,.28), 0 0 20px rgba(111,82,238,.10);
+}
+
+/* Side navigation and shell links. */
+.site-glass-root aside a,
+.site-glass-root details nav a {
+  color: #4d5872 !important;
+  border-color: rgba(255,255,255,.56) !important;
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .site-glass-root .card:hover,
+  .site-glass-root aside[class*="rounded-"]:hover,
+  .site-glass-root details[class*="rounded-"]:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255,255,255,.90) !important;
+    box-shadow: 0 22px 54px rgba(38,47,77,.14), inset 0 1px 0 rgba(255,255,255,.94), inset 0 -1px 0 rgba(255,255,255,.28) !important;
+  }
+  .site-glass-root .btn-primary:hover,
+  .site-glass-root .btn-secondary:hover,
+  .site-glass-root .chip:hover,
+  .site-glass-root .status-pill:hover,
+  .site-glass-root button:hover,
+  .site-glass-root a[class*="rounded-"]:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.035) saturate(1.04);
+  }
+  .site-glass-root .btn-primary:hover,
+  .site-glass-root :is(a,button)[class~="bg-black"]:hover {
+    box-shadow: inset 0 1.5px 0 rgba(255,255,255,.82), 0 10px 24px rgba(15,168,182,.24), 0 0 18px rgba(19,207,200,.16) !important;
+  }
+  .site-glass-root aside a:hover,
+  .site-glass-root details nav a:hover {
+    color: #087f8d !important;
+    background: rgba(19,207,200,.08) !important;
+  }
+}
+
+/* Login/signup/public pages inherit the same continuous glass canvas. */
+.site-glass-root main.min-h-screen,
+.site-glass-root main[class*="min-h-screen"] { background: transparent !important; }
+.site-glass-root main.min-h-screen > div > section.card,
+.site-glass-root main[class*="min-h-screen"] section.card {
+  border-radius: 28px;
+}
+
+/* Mobile footer/nav remain light glass. */
+.site-glass-root [class*="app-mobile-nav"] {
+  color: var(--glass-ink) !important;
+  border-color: rgba(255,255,255,.72) !important;
+  background: rgba(244,242,248,.72) !important;
+  box-shadow: 0 -8px 24px rgba(38,47,77,.08), inset 0 1px 0 rgba(255,255,255,.78) !important;
+  backdrop-filter: blur(20px) saturate(138%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(138%) !important;
+}
+
+@media (max-width:640px) {
+  .site-glass-root { background-attachment: scroll; }
+  .site-glass-root .card,
+  .site-glass-root .table-wrap,
+  .site-glass-root aside[class*="rounded-"],
+  .site-glass-root details[class*="rounded-"] { border-radius: 24px; }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .site-glass-root *, .site-glass-root *::before, .site-glass-root *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}

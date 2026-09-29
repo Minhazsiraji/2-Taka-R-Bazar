@@ -1,0 +1,57 @@
+/* Home-only correction pass 3: refractive liquid glass */
+.home-liquid-route .glass-panel,.home-liquid-route header>div,.home-liquid-route footer{background:rgba(255,255,255,.008)!important;border:1.5px solid rgba(255,255,255,.96)!important;outline:1px solid rgba(255,255,255,.42);outline-offset:-3px;box-shadow:inset 0 1px 0 rgba(255,255,255,1),inset -1px -1px 0 rgba(56,215,221,.16),inset 1px 0 0 rgba(181,125,255,.10),0 3px 8px rgba(51,54,73,.055),8px 11px 18px rgba(38,220,225,.065),-7px 10px 17px rgba(175,116,255,.055)!important;backdrop-filter:blur(18px) saturate(1.18)!important;-webkit-backdrop-filter:blur(18px) saturate(1.18)!important}
+.home-liquid-route .glass-panel::before{inset:0!important;background:linear-gradient(115deg,rgba(255,255,255,.22),transparent 22%,transparent 68%,rgba(67,231,229,.055)),radial-gradient(ellipse at 96% 92%,rgba(34,211,238,.22),transparent 20%),radial-gradient(ellipse at 12% 100%,rgba(168,85,247,.15),transparent 22%)!important;mix-blend-mode:screen}
+.home-liquid-route .glass-panel::after{padding:1.5px!important;background:linear-gradient(132deg,#fff 0%,rgba(255,255,255,.54) 30%,rgba(190,130,255,.34) 69%,rgba(50,232,229,.62) 88%,rgba(255,255,255,.95) 100%)!important;filter:drop-shadow(5px 7px 5px rgba(45,225,225,.12)) drop-shadow(-4px 6px 5px rgba(178,105,255,.09))}
+
+.home-liquid-route .glass-subpanel,.home-liquid-route .glass-inset,.home-liquid-route .glass-icon,.home-liquid-route main [class*="rounded-full"]{position:relative;background:rgba(255,255,255,.006)!important;border:1px solid rgba(255,255,255,.94)!important;outline:1px solid rgba(255,255,255,.28);outline-offset:-2px;box-shadow:inset 0 1px 0 #fff,inset -1px -1px 0 rgba(37,211,218,.15),0 3px 7px rgba(45,49,66,.045),4px 6px 10px rgba(34,211,238,.06),-3px 5px 9px rgba(168,85,247,.045)!important;backdrop-filter:blur(14px) saturate(1.16)!important;-webkit-backdrop-filter:blur(14px) saturate(1.16)!important;transition:transform 210ms ease,box-shadow 210ms ease,filter 210ms ease,border-color 210ms ease}
+.home-liquid-route .glass-subpanel::after,.home-liquid-route .glass-inset::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;padding:1px;background:linear-gradient(140deg,rgba(255,255,255,.94),rgba(255,255,255,.16) 42%,rgba(176,104,255,.23) 72%,rgba(38,226,224,.44) 94%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+
+.home-liquid-route .glass-primary{border-radius:999px!important;border:1px solid rgba(255,255,255,.86)!important;background:linear-gradient(180deg,rgba(35,224,211,.94),rgba(8,184,185,.95) 52%,rgba(0,145,166,.96))!important;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.75),inset 0 -1px 0 rgba(0,91,115,.34),0 5px 12px rgba(5,168,177,.18),5px 7px 14px rgba(38,222,222,.14),-3px 5px 12px rgba(160,94,255,.06)!important;transition:transform 210ms ease,filter 210ms ease,box-shadow 210ms ease}
+.home-liquid-route .glass-secondary{background:rgba(255,255,255,.008)!important;border:1px solid rgba(255,255,255,.95)!important;box-shadow:inset 0 1px 0 #fff,inset -1px -1px 0 rgba(34,211,238,.14),0 4px 9px rgba(49,52,67,.05),4px 5px 11px rgba(34,211,238,.055)!important;transition:transform 210ms ease,box-shadow 210ms ease,filter 210ms ease}
+.home-liquid-route main [class*="rounded-full"][class*="bg-gradient"]{background:linear-gradient(180deg,#39ddd4,#079eaa)!important}
+.home-liquid-route [class*="text-blue-"],.home-liquid-route [class*="text-sky-700"]{color:#087f8d!important}
+
+/* Header role controls: real liquid-glass hover/focus */
+.home-liquid-route .app-role-link,.home-liquid-route .app-profile-link,.home-liquid-route header button,.home-liquid-route header a[class*="rounded-full"]{background:rgba(255,255,255,.012)!important;border:1px solid rgba(255,255,255,.94)!important;box-shadow:inset 0 1px 0 #fff,inset -1px -1px 0 rgba(32,211,218,.13),0 4px 9px rgba(49,52,68,.05),4px 5px 10px rgba(34,211,238,.055),-3px 4px 9px rgba(168,85,247,.04)!important;transition:transform 210ms ease,box-shadow 210ms ease,filter 210ms ease!important}
+@media(hover:hover) and (pointer:fine){.home-liquid-route .app-role-link:hover,.home-liquid-route .app-profile-link:hover,.home-liquid-route header button:hover,.home-liquid-route header a[class*="rounded-full"]:hover{transform:translateY(-2px);filter:brightness(1.035);box-shadow:inset 0 1.5px 0 #fff,inset -1px -1px 0 rgba(34,211,238,.26),0 5px 10px rgba(45,49,67,.06),6px 7px 14px rgba(34,211,238,.13),-4px 6px 12px rgba(168,85,247,.085)!important}.home-liquid-route .glass-subpanel:hover,.home-liquid-route .glass-inset:hover,.home-liquid-route .glass-icon:hover{transform:translateY(-1px);box-shadow:inset 0 1.5px 0 #fff,inset -1px -1px 0 rgba(34,211,238,.25),0 5px 10px rgba(45,49,67,.055),6px 7px 13px rgba(34,211,238,.105),-4px 6px 12px rgba(168,85,247,.07)!important}.home-liquid-route .glass-primary:hover,.home-liquid-route .glass-secondary:hover,.home-liquid-route main a:hover{transform:translateY(-1px);filter:brightness(1.045) saturate(1.03)}}
+.home-liquid-route .app-role-link:focus-visible,.home-liquid-route .app-profile-link:focus-visible,.home-liquid-route header button:focus-visible{outline:2px solid rgba(19,180,190,.55);outline-offset:2px}
+
+/* Broken decorative cube from empty pickup state */
+.home-liquid-route .glass-panel [class~="bottom-2"][class~="right-8"]{display:none!important}
+
+/* Hero/pool grocery art remains transparent and unboxed */
+.home-liquid-route main img[src="/grocery-hero-glass.svg"]{filter:drop-shadow(0 12px 14px rgba(14,116,144,.10));background:transparent!important}
+
+/* Home-only light footer/nav overrides */
+.home-liquid-route .app-mobile-legal,.home-liquid-route .app-mobile-nav,.home-liquid-route .app-desktop-footer{color:#334155!important;background:rgba(255,255,255,.018)!important;border-color:rgba(255,255,255,.82)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 -5px 16px rgba(66,67,90,.045),0 -3px 12px rgba(34,211,238,.045)!important;backdrop-filter:blur(20px) saturate(1.16)!important;-webkit-backdrop-filter:blur(20px) saturate(1.16)!important}
+.home-liquid-route .app-mobile-legal a,.home-liquid-route .app-mobile-nav a,.home-liquid-route .app-desktop-footer a,.home-liquid-route .app-desktop-footer [class*="text-slate-"]{color:#475569!important}
+.home-liquid-route .app-mobile-nav a:hover{background:rgba(34,211,238,.055)!important;color:#087f8d!important}
+@media(max-width:767px){.home-liquid-route footer{display:none!important}.home-liquid-route .app-mobile-legal{display:block!important}.home-liquid-route .app-shell-header-bar{padding:.42rem .55rem!important;gap:.35rem!important}.home-liquid-route .app-role-actions{gap:.2rem!important;overflow:hidden!important}.home-liquid-route .app-role-link{width:2.25rem;height:2.25rem;padding:0!important;display:inline-flex;align-items:center;justify-content:center}.home-liquid-route .app-role-link .role-label{display:none!important}.home-liquid-route .app-profile-link{width:2.25rem!important;height:2.25rem!important}.home-liquid-route main{padding-left:.7rem!important;padding-right:.7rem!important}}
+@media(max-width:380px){.home-liquid-route .app-shell-header{padding-left:.35rem!important;padding-right:.35rem!important}.home-liquid-route .app-shell-header-bar>a:first-child{max-width:3rem}.home-liquid-route .app-shell-header-bar>a:first-child img{max-width:2.45rem!important;height:auto!important}}
+@media(prefers-reduced-motion:reduce){.home-liquid-route *{scroll-behavior:auto!important}.home-liquid-route .app-role-link,.home-liquid-route .app-profile-link,.home-liquid-route .glass-subpanel,.home-liquid-route .glass-inset,.home-liquid-route .glass-primary,.home-liquid-route .glass-secondary{transition:none!important;transform:none!important}}
+
+/* Home typography refinement: modern, lighter system sans */
+.home-liquid-route{font-family:"Segoe UI Variable Text","Segoe UI",Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+.home-liquid-route .font-black{font-weight:700!important}
+.home-liquid-route .font-bold{font-weight:650!important}
+.home-liquid-route h1,.home-liquid-route h2,.home-liquid-route h3{letter-spacing:-.025em}
+.home-liquid-route main p,.home-liquid-route main a,.home-liquid-route main span{letter-spacing:-.006em}
+
+/* Single-card DD liquid-glass reference test: hero only */
+.home-liquid-route .dd-glass-reference-test{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(255,255,255,.48),rgba(242,240,250,.34))!important;
+  border:1px solid rgba(255,255,255,.78)!important;
+  border-radius:28px!important;
+  outline:none!important;
+  box-shadow:0 18px 50px rgba(38,47,77,.12),inset 0 1px 0 rgba(255,255,255,.88),inset 0 -1px 0 rgba(255,255,255,.24)!important;
+  backdrop-filter:blur(24px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%)!important;
+}
+.home-liquid-route .dd-glass-reference-test::before{
+  content:""!important;position:absolute!important;inset:0!important;z-index:0!important;pointer-events:none!important;
+  background:radial-gradient(circle at 78% 24%,rgba(26,211,190,.16),transparent 18%),radial-gradient(circle at 22% 38%,rgba(111,82,238,.12),transparent 20%),radial-gradient(circle at 70% 72%,rgba(49,174,235,.10),transparent 24%)!important;
+  mix-blend-mode:normal!important;filter:none!important;
+}
+.home-liquid-route .dd-glass-reference-test::after{content:none!important;display:none!important;}
+.home-liquid-route .dd-glass-reference-test>*{position:relative;z-index:1;}

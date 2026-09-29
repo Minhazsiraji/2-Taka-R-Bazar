@@ -1,0 +1,113 @@
+/* Final polish: footer readability, commitment-action parity, and site-wide modern typography. */
+
+/* =========================================================
+   TYPOGRAPHY — modern, lighter, consistent across the app
+   ========================================================= */
+.site-glass-root,
+.site-glass-root *:not(code):not(pre):not(kbd):not(samp) {
+  font-family: "Segoe UI Variable Text", "Segoe UI Variable", Aptos, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-synthesis-weight: none;
+}
+
+.site-glass-root {
+  font-weight: 400;
+  letter-spacing: -0.006em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Override Tailwind weight utilities at the final cascade layer. */
+.site-glass-root .font-thin { font-weight: 250 !important; }
+.site-glass-root .font-extralight { font-weight: 300 !important; }
+.site-glass-root .font-light { font-weight: 350 !important; }
+.site-glass-root .font-normal { font-weight: 400 !important; }
+.site-glass-root .font-medium { font-weight: 450 !important; }
+.site-glass-root .font-semibold { font-weight: 500 !important; }
+.site-glass-root .font-bold { font-weight: 560 !important; }
+.site-glass-root .font-extrabold { font-weight: 610 !important; }
+.site-glass-root .font-black { font-weight: 650 !important; }
+
+.site-glass-root h1,
+.site-glass-root h2,
+.site-glass-root h3,
+.site-glass-root h4,
+.site-glass-root h5,
+.site-glass-root h6 {
+  font-weight: 560 !important;
+  letter-spacing: -0.022em;
+}
+
+.site-glass-root h1 { font-weight: 610 !important; }
+.site-glass-root strong,
+.site-glass-root b { font-weight: 560 !important; }
+
+.site-glass-root .card-title,
+.site-glass-root .label,
+.site-glass-root th,
+.site-glass-root .status-pill,
+.site-glass-root .chip {
+  font-weight: 500 !important;
+}
+
+.site-glass-root .metric,
+.site-glass-root .section-title {
+  font-weight: 590 !important;
+}
+
+.site-glass-root button,
+.site-glass-root .btn-primary,
+.site-glass-root .btn-secondary,
+.site-glass-root .btn-danger,
+.site-glass-root a[class*="btn-"] {
+  font-weight: 520 !important;
+  letter-spacing: -0.01em;
+}
+
+/* Footer section labels and links must remain readable on the pearl glass surface. */
+.site-glass-root .app-desktop-footer [class*="text-sky-200"] {
+  color: #0b7285 !important;
+  text-shadow: 0 0 8px rgba(19,207,200,.10);
+  font-weight: 500 !important;
+}
+
+.site-glass-root .app-desktop-footer a,
+.site-glass-root .app-desktop-footer [class*="text-slate-3"],
+.site-glass-root .app-desktop-footer [class*="text-slate-4"],
+.site-glass-root .app-desktop-footer p,
+.site-glass-root .app-desktop-footer span {
+  color: #4e5d76 !important;
+  font-weight: 400 !important;
+}
+
+.site-glass-root .app-desktop-footer nav a:hover,
+.site-glass-root .app-desktop-footer nav a:focus-visible {
+  color: #087f8d !important;
+  text-shadow: 0 0 8px rgba(19,207,200,.18);
+}
+
+/* Quantity commitment forms use the same aqua molded action style as primary CTAs. */
+.site-glass-root main form:has(input[name="quantity"]) button {
+  min-height: 46px !important;
+  border-radius: 9999px !important;
+  border: 1px solid rgba(255,255,255,.92) !important;
+  color: #064852 !important;
+  font-weight: 520 !important;
+  background: linear-gradient(180deg,rgba(134,248,241,.92),rgba(46,214,211,.90) 55%,rgba(19,173,187,.92)) !important;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.86),
+    inset 0 -2px 0 rgba(28,153,167,.12),
+    0 8px 18px rgba(38,47,77,.09) !important;
+}
+
+@media (hover:hover) and (pointer:fine) {
+  .site-glass-root main form:has(input[name="quantity"]) button:hover {
+    transform: translateY(-1px) !important;
+    filter: brightness(1.03) saturate(1.03);
+    box-shadow:
+      inset 0 2px 0 rgba(255,255,255,.96),
+      inset 0 -2px 0 rgba(28,153,167,.13),
+      0 10px 22px rgba(38,47,77,.11),
+      0 0 10px rgba(48,222,228,.08) !important;
+  }
+}
