@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { BrandLogo } from '@/components/brand-logo'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export function PublicHeader({ actionHref = '/login', actionLabel = 'Sign in' }: { actionHref?: string; actionLabel?: string }) {
   return (
@@ -11,7 +12,10 @@ export function PublicHeader({ actionHref = '/login', actionLabel = 'Sign in' }:
           <div className="truncate text-[10px] font-semibold tracking-wide text-slate-500">Smart Shopping. Real Savings.</div>
         </div>
       </Link>
-      <Link href={actionHref} className="public-header-action btn-secondary shrink-0 px-4 text-xs sm:px-5 sm:text-sm">{actionLabel}</Link>
+      <div className="flex shrink-0 items-center gap-2">
+        <ThemeToggle />
+        <Link href={actionHref} className="public-header-action btn-secondary shrink-0 px-4 text-xs sm:px-5 sm:text-sm">{actionLabel}</Link>
+      </div>
     </header>
   )
 }
