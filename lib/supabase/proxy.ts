@@ -8,6 +8,14 @@ export async function updateSession(request: NextRequest) {
 
   if (!url || !key) return response
 
+  // Anonymous requests have no Supabase session to validate or refresh. Avoid
+  // constructing a client and doing auth work for login, signup, policy and
+  // first-visit traffic. Chunked SSR cookies still contain "-auth-token".
+  const hasAuthSession = request.cookies
+    .getAll()
+    .some(({ name }) => name.startsWith('sb-') && name.includes('-auth-token'))
+  if (!hasAuthSession) return response
+
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll() {
