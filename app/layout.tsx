@@ -5,8 +5,26 @@ import './site-glass-v2.css'
 import './site-glass-v3.css'
 import './site-glass-v4.css'
 import './site-pool-kpi.css'
+import './site-theme.css'
 import { PwaRegister } from '@/components/pwa-register'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
+
+const themeInitScript = `
+(function(){
+  try {
+    var saved = localStorage.getItem('2taka-theme');
+    var theme = saved === 'dark' || saved === 'light'
+      ? saved
+      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#0b1018' : '#e7e2e8');
+  } catch (_) {
+    document.documentElement.dataset.theme = 'light';
+    document.documentElement.style.colorScheme = 'light';
+  }
+})();`
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -22,8 +40,14 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: 'default' },
 }
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#e7e2e8' }
+export const viewport: Viewport = { width: 'device-width', initialScale: 1 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body className="site-glass-root"><PwaRegister />{children}</body></html>
+  return <html lang="en" suppressHydrationWarning>
+    <head>
+      <meta name="theme-color" content="#e7e2e8" />
+      <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+    </head>
+    <body className="site-glass-root"><PwaRegister />{children}</body>
+  </html>
 }
