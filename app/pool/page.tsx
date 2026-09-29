@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { StatusPill } from '@/components/status-pill'
 import { SubmitButton } from '@/components/submit-button'
+import { PriceTargetProgress } from '@/components/price-target-progress'
 import { commitToPool, submitPoolItemReview, submitPoolReview, togglePoolItemLove, togglePoolLove } from '@/app/actions/customer'
 import { requireOnboardedUser } from '@/lib/auth'
 import { taka, shortDate } from '@/lib/format'
@@ -126,12 +127,13 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
             <div className="grid gap-4">{poolItems.map((item:any)=>{
               const product=item.products;const own=commitments.get(item.id);const final=Number(item.final_customer_price||0);const bench=Number(item.benchmark_price_snapshot||0)
               const unlock=unlockByItem.get(item.id)??{};const currentQty=Number(unlock.current_quantity??demand.get(item.id)??0);const unlocked=Number(unlock.unlocked_price||0);const nextThreshold=Number(unlock.next_threshold||0);const nextPrice=Number(unlock.next_price||0);const unitsNeeded=Number(unlock.units_needed||0)
+              const householdCount=Number(itemHouseholds.get(item.id)??0)
               const unlockedSaving=unlocked>0?Math.max(0,bench-unlocked):null;const finalSaving=final>0?Math.max(0,bench-final):null
               const ilikes=itemLoves.filter((x:any)=>x.pool_item_id===item.id);const iloved=ilikes.some((x:any)=>x.user_id===user.id);const irevs=itemReviews.filter((x:any)=>x.pool_item_id===item.id);const irs=ratingSummary(irevs);const ownItemReview=irevs.find((x:any)=>x.user_id===user.id)
               return <article className="card min-w-0 p-0" key={item.id}>
                 <div className="grid lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.55fr)]">
                   <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between lg:flex-col"><div><p className="text-xs font-black uppercase tracking-wide text-slate-500">{product?.category}</p><h4 className="mt-1 text-xl font-black">{product?.name}</h4><p className="muted mt-1">{product?.brand} · {product?.package_size}</p></div><div className="flex flex-wrap gap-2"><span className="chip">{itemHouseholds.get(item.id)??0} household{(itemHouseholds.get(item.id)??0)===1?'':'s'}</span><span className="chip">{demand.get(item.id)??0} units</span></div></div>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between lg:flex-col"><div><p className="text-xs font-black uppercase tracking-wide text-slate-500">{product?.category}</p><h4 className="mt-1 text-xl font-black">{product?.name}</h4><p className="muted mt-1">{product?.brand} · {product?.package_size}</p></div><div className="flex flex-wrap gap-2"><span className="chip">{householdCount} household{householdCount===1?'':'s'}</span><span className="chip">{demand.get(item.id)??0} units</span></div></div>
                     <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4"><div><Stars value={irs.avg}/> <span className="text-xs font-semibold text-slate-500">({irs.count})</span></div><form action={togglePoolItemLove}><input type="hidden" name="pool_item_id" value={item.id}/><button className={`btn-secondary min-h-9 px-3 py-1.5 text-sm ${iloved?'border-rose-200 text-rose-700':''}`}>{iloved?'♥ Loved':'♡ Love'} · {ilikes.length}</button></form></div>
                     {own&&<div className="mt-4"><div className="card-title">Your commitment</div><div className="mt-1 flex items-center gap-2 text-sm font-black"><span>{own.quantity} unit{Number(own.quantity)===1?'':'s'}</span><StatusPill status={own.status}/></div></div>}
                   </div>
@@ -143,6 +145,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
                       <div className="border-t border-slate-200 p-3 xl:border-l xl:border-t-0"><div className="card-title">Next price unlock</div><div className="mt-1 text-xl font-black">{nextThreshold?`${nextThreshold} units → ${taka(nextPrice)}`:'Best tier reached'}</div><p className="mt-1 text-xs font-bold text-slate-600">{nextThreshold?`${unitsNeeded} more unit${unitsNeeded===1?'':'s'} needed`:'No lower planning tier remaining'}</p></div>
                       <div className="border-t border-slate-200 p-3 sm:border-l xl:border-t-0"><div className="card-title">{final?'Final price':'Potential saving'}</div><div className="mt-1 text-xl font-black text-emerald-700">{final?taka(final):(unlockedSaving===null?'Pending':taka(unlockedSaving))}</div><p className="mt-1 text-xs font-bold text-emerald-700">{finalSaving!==null?`Save ${taka(finalSaving)}/unit`:(unlockedSaving!==null?`Up to ${taka(unlockedSaving)}/unit at current unlock`:'First price unlock is still ahead')}</p></div>
                     </div>
+                    <PriceTargetProgress currentQuantity={currentQty} households={householdCount} nextThreshold={nextThreshold} nextPrice={nextPrice} benchmarkPrice={bench}/>
                     <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-sm text-emerald-950">{unlocked?<><b>Your unlocked maximum price is {taka(unlocked)}.</b> It can stay the same or improve after final supplier negotiation. It will not increase.</>:nextThreshold?<><b>First price unlocks at {nextThreshold} units.</b> {unitsNeeded} more unit{unitsNeeded===1?'':'s'} needed.</>:<><b>No planning price tier is available yet.</b> Operations will publish a tier before accepting demand.</>}</div>
                     {irevs.filter((r:any)=>r.comment).slice(0,2).map((r:any,index:number)=><blockquote key={`${r.user_id}-${index}`} className="mt-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm"><b className="text-amber-700">★ {r.rating}/5</b> <span className="text-slate-700">“{r.comment}”</span></blockquote>)}
 
