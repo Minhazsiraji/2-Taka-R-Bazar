@@ -26,29 +26,8 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
       - name: Domain tests
-        run: npm test 2>&1 | tee /tmp/domain-tests.log
-      - name: Upload domain test diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: domain-test-log
-          path: /tmp/domain-tests.log
-          if-no-files-found: ignore
+        run: npm test
       - name: Typecheck
-        run: npm run typecheck 2>&1 | tee /tmp/typecheck.log
-      - name: Upload typecheck diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: typecheck-log
-          path: /tmp/typecheck.log
-          if-no-files-found: ignore
+        run: npm run typecheck
       - name: Production build
-        run: npm run build 2>&1 | tee /tmp/production-build.log
-      - name: Upload production build diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-build-log
-          path: /tmp/production-build.log
-          if-no-files-found: ignore
+        run: npm run build
