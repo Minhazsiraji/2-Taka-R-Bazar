@@ -1,0 +1,46 @@
+/* Dark-mode semantic contrast fixes loaded after the main theme. */
+html[data-theme="dark"] .site-glass-root main :is(div,section,article,form,blockquote,details)[class*="rounded-"][class*="bg-sky-50"],
+html[data-theme="dark"] .site-glass-root main :is(div,section,article,form,blockquote,details)[class*="rounded-"][class*="bg-emerald-50"],
+html[data-theme="dark"] .site-glass-root main :is(div,section,article,form,blockquote,details)[class*="rounded-"][class*="bg-violet-50"],
+html[data-theme="dark"] .site-glass-root main :is(div,section,article,form,blockquote,details)[class*="rounded-"][class*="bg-amber-50"],
+html[data-theme="dark"] .site-glass-root main :is(div,section,article,form,blockquote,details)[class*="rounded-"][class*="bg-rose-50"] {
+  background: linear-gradient(145deg,rgba(25,36,52,.78),rgba(13,21,33,.60)) !important;
+}
+
+html[data-theme="dark"] .site-glass-root :is(.text-emerald-950,.text-emerald-900,.text-emerald-800,.text-emerald-700) { color: #7ee8b7 !important; }
+html[data-theme="dark"] .site-glass-root :is(.text-sky-950,.text-sky-900,.text-sky-800,.text-sky-700,.text-cyan-900,.text-cyan-800,.text-cyan-700) { color: #7ddbea !important; }
+html[data-theme="dark"] .site-glass-root :is(.text-blue-900,.text-blue-800,.text-blue-700) { color: #9ac3ff !important; }
+html[data-theme="dark"] .site-glass-root :is(.text-violet-900,.text-violet-800,.text-violet-700) { color: #c4b5fd !important; }
+html[data-theme="dark"] .site-glass-root :is(.text-amber-950,.text-amber-900,.text-amber-800,.text-amber-700) { color: #f6cf7a !important; }
+html[data-theme="dark"] .site-glass-root :is(.text-rose-950,.text-rose-900,.text-rose-800,.text-rose-700) { color: #fda4af !important; }
+
+html[data-theme="dark"] .site-glass-root :is(.border-emerald-200,.border-sky-200,.border-violet-200,.border-amber-200,.border-rose-200,.border-blue-200) {
+  border-color: rgba(186,214,237,.16) !important;
+}
+
+html[data-theme="dark"] .site-glass-root :is(.bg-emerald-50,.bg-sky-50,.bg-violet-50,.bg-amber-50,.bg-rose-50,.bg-blue-50) {
+  background-color: rgba(20,30,44,.72) !important;
+}
+
+/* Keep native controls readable in dark mode. */
+html[data-theme="dark"] .site-glass-root input[type="checkbox"],
+html[data-theme="dark"] .site-glass-root input[type="radio"] {
+  accent-color: #35cfcf;
+}
+
+html[data-theme="dark"] .site-glass-root hr,
+html[data-theme="dark"] .site-glass-root [class*="border-t"],
+html[data-theme="dark"] .site-glass-root [class*="border-b"] {
+  border-color: rgba(193,211,233,.12) !important;
+}
+
+/* Executive/Operations plain links that use black buttons stay visible. */
+html[data-theme="dark"] .site-glass-root a.bg-black,
+html[data-theme="dark"] .site-glass-root button.bg-black {
+  background: #2dd4d0 !important;
+  color: #07262a !important;
+  border-color: rgba(176,255,250,.38) !important;
+}
+
+/* Ensure white text utility remains white when used on destructive/brand controls. */
+html[data-theme="dark"] .site-glass-root .text-white { color: #ffffff !important; }
