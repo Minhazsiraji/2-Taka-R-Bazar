@@ -49,3 +49,25 @@ html[data-theme="dark"] .site-glass-root .text-white { color: #ffffff !important
 html[data-theme="dark"] .site-glass-root .brand-logo {
   filter: invert(1) brightness(1.08) contrast(.92);
 }
+
+/* The action cluster is layout-only, not a second glass panel. */
+.site-glass-root .public-glass-header > .public-header-actions,
+html[data-theme="dark"] .site-glass-root .public-glass-header > .public-header-actions {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Public/legal links need stronger contrast in dark mode. */
+html[data-theme="dark"] .site-glass-root .public-glass-footer nav a,
+html[data-theme="dark"] .site-glass-root .public-glass-footer > div:last-child,
+html[data-theme="dark"] .site-glass-root .public-glass-footer > div:last-child a {
+  color: #aebdd1 !important;
+}
+html[data-theme="dark"] .site-glass-root .public-glass-footer a:hover,
+html[data-theme="dark"] .site-glass-root .public-glass-footer a:focus-visible {
+  color: #7cecf0 !important;
+}
