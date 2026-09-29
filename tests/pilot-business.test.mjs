@@ -22,6 +22,14 @@ test('next improving tier and units needed are deterministic',()=>{
   assert.equal(next.threshold_quantity,100)
   assert.equal(next.threshold_quantity-72,28)
 })
+test('38 of 50 units leaves 12 to unlock a 955 target against 1000 market retail',()=>{
+  const oilTiers=[{threshold_quantity:50,customer_ceiling_price:955}]
+  const next=nextImprovingTier(oilTiers,38,null)
+  assert.equal(next.threshold_quantity,50)
+  assert.equal(next.customer_ceiling_price,955)
+  assert.equal(next.threshold_quantity-38,12)
+  assert.equal(1000-next.customer_ceiling_price,45)
+})
 test('final price can fall but cannot exceed frozen ceiling or go below delivered cost',()=>{
   assert.equal(validateFinalPrice({landedCost:119.5,finalPrice:121,frozenCeiling:125}),true)
   assert.equal(validateFinalPrice({landedCost:119.5,finalPrice:127,frozenCeiling:125}),false)
