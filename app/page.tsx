@@ -7,8 +7,8 @@ import { PILOT_AREA, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 
 export default async function LandingPage() {
   const supabase = await createClient()
-  const { data: { claims } } = await supabase.auth.getClaims()
-  if (claims?.sub) redirect('/home')
+  const { data: claimsResult } = await supabase.auth.getClaims()
+  if (claimsResult?.claims?.sub) redirect('/home')
   const schema={"@context":"https://schema.org","@graph":[
     {"@type":"Organization","@id":`${SITE_URL}/#organization`,name:SITE_NAME,url:SITE_URL,description:SITE_DESCRIPTION},
     {"@type":"WebSite","@id":`${SITE_URL}/#website`,url:SITE_URL,name:SITE_NAME,publisher:{"@id":`${SITE_URL}/#organization`},inLanguage:['en-BD','bn-BD']},
