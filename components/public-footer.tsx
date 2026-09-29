@@ -14,7 +14,12 @@ export function PublicFooter() {
           {LEGAL_LINKS.map(([href,label])=><Link key={href} href={href}>{label}</Link>)}
         </nav>
       </div>
-      <div className="border-t border-white/40 px-5 py-3 text-center text-xs text-slate-500">© 2026 2-TAKA-R-BAZAR · Community first · Transparent savings</div>
+      <div className="border-t border-white/40 px-5 py-3 text-center text-xs text-slate-500">
+        <span>© 2026 2-TAKA-R-BAZAR · Developed by: </span>
+        <a href="https://agentsiraji.com" target="_blank" rel="noreferrer" className="hover:text-teal-700">agentsiraji.com</a>
+        <span> · Contact: </span>
+        <a href="mailto:business@agentsiraji.com" className="hover:text-teal-700">business@agentsiraji.com</a>
+      </div>
     </footer>
   )
 }
