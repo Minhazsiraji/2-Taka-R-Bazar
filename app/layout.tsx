@@ -6,6 +6,7 @@ import './site-glass-v3.css'
 import './site-glass-v4.css'
 import './site-pool-kpi.css'
 import './site-theme.css'
+import './site-theme-semantic.css'
 import { PwaRegister } from '@/components/pwa-register'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 
