@@ -44,4 +44,11 @@ jobs:
           path: /tmp/typecheck.log
           if-no-files-found: ignore
       - name: Production build
-        run: npm run build
+        run: npm run build 2>&1 | tee /tmp/production-build.log
+      - name: Upload production build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build-log
+          path: /tmp/production-build.log
+          if-no-files-found: ignore
