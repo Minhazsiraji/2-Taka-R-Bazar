@@ -7,8 +7,8 @@ import { PILOT_AREA, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 
 export default async function LandingPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) redirect('/home')
+  const { data: claimsResult } = await supabase.auth.getClaims()
+  if (claimsResult?.claims?.sub) redirect('/home')
   const schema={"@context":"https://schema.org","@graph":[
     {"@type":"Organization","@id":`${SITE_URL}/#organization`,name:SITE_NAME,url:SITE_URL,description:SITE_DESCRIPTION},
     {"@type":"WebSite","@id":`${SITE_URL}/#website`,url:SITE_URL,name:SITE_NAME,publisher:{"@id":`${SITE_URL}/#organization`},inLanguage:['en-BD','bn-BD']},
@@ -28,7 +28,7 @@ export default async function LandingPage() {
             <div className="mt-8 rounded-2xl bg-black p-5 text-white"><p className="text-sm text-white/65">Our rule</p><p className="mt-1 text-xl font-black">No hidden order. No fake saving.</p></div>
           </section>
           <section className="flex min-w-0 flex-col overflow-hidden rounded-[28px] border border-black/10 bg-slate-50 lg:min-h-[540px]">
-            <div className="flex flex-1 items-center justify-center p-4 sm:p-6"><img src="/grocery-hero.svg" alt="Fresh grocery essentials including rice, cooking oil, milk, eggs, bread, fruit and vegetables" className="h-full max-h-[460px] w-full rounded-2xl object-contain" /></div>
+            <div className="flex flex-1 items-center justify-center p-4 sm:p-6"><img src="/grocery-hero.svg" alt="Fresh grocery essentials including rice, cooking oil, milk, eggs, bread, fruit and vegetables" decoding="async" fetchPriority="high" className="h-full max-h-[460px] w-full rounded-2xl object-contain" /></div>
             <div className="border-t border-black/10 bg-white px-6 py-5 sm:px-8"><p className="font-black">Everyday essentials, pooled locally.</p><p className="muted mt-1">Start small with the products your community already buys every week.</p></div>
           </section>
         </div>

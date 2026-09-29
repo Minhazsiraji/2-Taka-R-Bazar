@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next'
 
+const assetCache = 'public, max-age=86400, stale-while-revalidate=2592000'
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -12,6 +14,22 @@ const nextConfig: NextConfig = {
         { key: 'X-Frame-Options', value: 'DENY' },
         { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' }
       ]
+    },
+    {
+      source: '/grocery-hero-glass.svg',
+      headers: [{ key: 'Cache-Control', value: assetCache }]
+    },
+    {
+      source: '/grocery-hero.svg',
+      headers: [{ key: 'Cache-Control', value: assetCache }]
+    },
+    {
+      source: '/brand-mark-transparent.png',
+      headers: [{ key: 'Cache-Control', value: assetCache }]
+    },
+    {
+      source: '/sw.js',
+      headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }]
     }
   ]
 }

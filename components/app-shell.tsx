@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import type { AppRole } from '@/lib/auth'
 import { BrandLogo } from '@/components/brand-logo'
 import { NotificationBell } from '@/components/notification-bell'
@@ -14,6 +15,10 @@ const mobileNav = [
   ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'],
   ...(!PILOT_MODE ? [['/subscription', 'Membership']] : [['/community','Community']]),
 ]
+
+function NotificationBellFallback() {
+  return <Link href="/notifications" className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm" aria-label="Notifications"><span aria-hidden="true" className="text-base">🔔</span></Link>
+}
 
 export function AppShell({ children, roles = new Set<AppRole>() }: { children: React.ReactNode; roles?: Set<AppRole> }) {
   const isSuperAdmin = roles.has('super_admin')
@@ -31,7 +36,7 @@ export function AppShell({ children, roles = new Set<AppRole>() }: { children: R
             </div>
           </Link>
           <div className="app-role-actions flex min-w-0 flex-1 items-center justify-end gap-1 overflow-x-auto text-[10px] sm:gap-2 sm:text-xs">
-            <NotificationBell />
+            <Suspense fallback={<NotificationBellFallback />}><NotificationBell /></Suspense>
             {(roles.has('pickup_operator') || isSuperAdmin) && <Link className="app-role-link shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm" href="/pickup-ops" aria-label="Pickup Ops"><span aria-hidden="true">▣</span><span className="role-label">Pickup Ops</span></Link>}
             {isAdmin && <Link className="app-role-link shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm" href="/admin" aria-label="Operations"><span aria-hidden="true">⚙</span><span className="role-label">Operations</span></Link>}
             {isSuperAdmin && <Link className="app-role-link shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm" href="/super-admin" aria-label="Super Admin"><span aria-hidden="true">♛</span><span className="role-label">Super Admin</span></Link>}

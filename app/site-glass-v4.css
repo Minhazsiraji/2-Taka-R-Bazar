@@ -111,3 +111,44 @@
       0 0 10px rgba(48,222,228,.08) !important;
   }
 }
+
+/* =========================================================
+   PERFORMANCE — keep the glass appearance without creating a
+   compositor layer for every nested rounded box/control.
+   ========================================================= */
+.site-glass-root {
+  background-attachment: scroll !important;
+  text-rendering: auto;
+}
+
+/* The rim/gradient provides almost all of the approved inner-glass appearance.
+   Removing backdrop blur from nested boxes dramatically lowers paint/GPU cost. */
+.site-glass-root main :is(section,article,form,div)[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap),
+.site-glass-root :is(.input,input:not([type="checkbox"]):not([type="radio"]),select,textarea,.btn-primary,.btn-secondary,.btn-danger,.chip,.status-pill) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Keep true backdrop blur only on the major glass planes, at a restrained cost. */
+.site-glass-root :is(.card,.table-wrap,.public-glass-header,.public-glass-footer,.app-shell-header-bar,.app-desktop-footer,.app-mobile-legal,.app-mobile-nav,aside[class*="rounded-"],details[class*="rounded-"]) {
+  backdrop-filter: blur(14px) saturate(128%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(128%) !important;
+}
+
+/* Long product/pool feeds only paint off-screen cards when they approach view. */
+.site-glass-root main article.card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
+}
+
+@media (max-width: 768px) {
+  .site-glass-root :is(.card,.table-wrap,aside[class*="rounded-"],details[class*="rounded-"]) {
+    backdrop-filter: blur(6px) saturate(112%) !important;
+    -webkit-backdrop-filter: blur(6px) saturate(112%) !important;
+  }
+
+  .site-glass-root :is(.public-glass-header,.public-glass-footer,.app-shell-header-bar,.app-mobile-legal,.app-mobile-nav) {
+    backdrop-filter: blur(10px) saturate(118%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(118%) !important;
+  }
+}

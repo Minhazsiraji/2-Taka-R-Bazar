@@ -102,7 +102,7 @@ test('pilot blocks direct invoice creation and rejects old-customer referral att
 
 test('planning tiers do not by themselves prevent a safe return to Draft',()=>{
   const sql=readFileSync(new URL('../supabase/migrations/202609280001_pilot_business_mechanism.sql',import.meta.url),'utf8')
-  const page=readFileSync(new URL('../app/admin/pools/page.tsx',import.meta.url),'utf8')
+  const workflow=readFileSync(new URL('../app/admin/pools/workflow/page.tsx',import.meta.url),'utf8')
   assert.match(sql,/q\.quote_phase='final'/)
-  assert.match(page,/hasFinalQuotes=poolQuotes\.some/)
+  assert.match(workflow,/hasFinalQuotes=poolQuotes\.some/)
 })

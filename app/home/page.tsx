@@ -10,17 +10,16 @@ const Icon = ({children}:{children:React.ReactNode}) => <span className="glass-i
 
 export default async function HomePage() {
   const { user, profile, roles, supabase } = await requireOnboardedUser()
-  const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const [{data:savings},{data:activePools},{data:readyOrder},{data:community},{data:summaryRows}] = await Promise.all([
-    supabase.from('savings_ledger').select('amount,verified_at').eq('customer_id',user.id).order('verified_at',{ascending:false}),
+  const [{data:savingsSummaryRows},{data:activePools},{data:readyOrder},{data:community},{data:summaryRows}] = await Promise.all([
+    supabase.rpc('get_my_savings_summary'),
     supabase.from('pools').select('id,title,status,pickup_at,commitment_closes_at,cadence,pool_items(id)').eq('community_id',profile.community_id).in('status',['open','pricing','final_price','confirmation','ordered','ready_for_pickup']).order('created_at',{ascending:false}).limit(6),
     supabase.from('orders').select('id,order_code,status,pickup_points(name,address,google_maps_url)').eq('customer_id',user.id).eq('status','ready_for_pickup').order('ready_at',{ascending:false}).limit(1).maybeSingle(),
     supabase.from('communities').select('id,name').eq('id',profile.community_id).maybeSingle(),
     supabase.rpc('get_my_community_summary'),
   ])
-  const lifetime=(savings??[]).reduce((sum:number,row:any)=>sum+Number(row.amount),0)
-  const thisMonth=(savings??[]).filter((row:any)=>row.verified_at>=monthStart).reduce((sum:number,row:any)=>sum+Number(row.amount),0)
+  const savingsSummary=savingsSummaryRows?.[0] as any
+  const lifetime=Number(savingsSummary?.lifetime_verified_saving??0)
+  const thisMonth=Number(savingsSummary?.month_verified_saving??0)
   const summary=summaryRows?.[0] as any
   const pools=activePools??[]
   const glass='glass-panel'
@@ -37,7 +36,7 @@ export default async function HomePage() {
               <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-slate-700">Join a weekly or monthly pool, commit only what you need, and confirm only after the final pooled price is published.</p>
               <div className="mt-5 flex flex-col gap-2 sm:flex-row"><Link href="/pool" className="glass-primary inline-flex min-h-12 items-center justify-center rounded-2xl border border-sky-400 bg-gradient-to-b from-sky-400 to-blue-600 px-6 font-black text-white shadow-[0_8px_18px_rgba(37,99,235,.25),inset_0_1px_0_rgba(255,255,255,.65)]"><span>Browse pools</span></Link><Link href="/orders" className="glass-secondary inline-flex min-h-12 items-center justify-center rounded-2xl border border-white bg-white/55 px-6 font-black text-slate-900 shadow-sm backdrop-blur">▣　My orders</Link></div>
             </div>
-            <div className="hidden md:flex items-center justify-center"><img src="/grocery-hero-glass.svg" alt="Grocery basket" className="h-44 w-full object-contain drop-shadow-[0_16px_18px_rgba(14,165,233,.18)]" /></div>
+            <div className="hidden md:flex items-center justify-center"><img src="/grocery-hero-glass.svg" alt="Grocery basket" decoding="async" fetchPriority="high" className="h-44 w-full object-contain drop-shadow-[0_16px_18px_rgba(14,165,233,.18)]" /></div>
           </div>
           <div className="glass-subpanel rounded-[24px] p-5">
             <div className="text-xs font-black uppercase tracking-[0.18em] text-sky-700">My verified savings</div><div className="mt-3 text-4xl font-black text-slate-950">🪙 {taka(thisMonth)}</div><div className="mt-1 text-sm font-medium text-slate-600">this month · {taka(lifetime)} lifetime</div><Link className="glass-inset mt-5 flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black text-slate-900" href="/savings">View savings history <span>→</span></Link>
@@ -57,7 +56,7 @@ export default async function HomePage() {
           const itemCount=(pool.pool_items??[]).length
           return <article key={pool.id} className={`${glass} group relative overflow-hidden rounded-[26px] p-5 transition hover:-translate-y-0.5 `}>
             <div className="grid gap-5 md:grid-cols-[170px_1fr_230px] md:items-center">
-              <div className="hidden h-28 items-center justify-center md:flex"><img src="/grocery-hero-glass.svg" alt="Grocery pool" className="h-full w-full object-contain" /></div>
+              <div className="hidden h-28 items-center justify-center md:flex"><img src="/grocery-hero-glass.svg" alt="Grocery pool" loading="lazy" decoding="async" className="h-full w-full object-contain" /></div>
               <div><div className="flex flex-wrap gap-2"><span className="rounded-full bg-cyan-50/20 px-3 py-1 text-xs font-black capitalize text-cyan-800">{pool.cadence??'weekly'} Pool</span><StatusPill status={pool.status}/></div><h3 className="mt-3 text-xl font-black sm:text-2xl">{pool.title}</h3><div className="mt-4 grid grid-cols-2 gap-2 text-sm"><div className="glass-inset rounded-xl p-3"><span className="block text-[10px] font-black uppercase text-sky-700">▣　Commit by</span><b>{shortDate(pool.commitment_closes_at)}</b></div><div className="glass-inset rounded-xl p-3"><span className="block text-[10px] font-black uppercase text-sky-700">🚚　Pickup target</span><b>{shortDate(pool.pickup_at)}</b></div></div></div>
               <div className="flex flex-col gap-4 md:items-end"><span className="text-sm font-bold text-slate-600">♙　{itemCount} item{itemCount===1?'':'s'}</span><Link href="/pool" className="glass-primary inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-sky-400 bg-gradient-to-b from-sky-400 to-blue-600 px-6 font-black text-white shadow-[0_8px_18px_rgba(37,99,235,.22)]"><span>Open pool</span></Link></div>
             </div>

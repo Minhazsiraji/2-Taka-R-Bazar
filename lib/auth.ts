@@ -1,17 +1,21 @@
 import 'server-only'
+import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 export type AppRole = 'customer' | 'admin' | 'pickup_operator' | 'super_admin'
 
-export async function requireUser() {
+// React cache is request-scoped for Server Components. Pages, layouts and shared
+// components (for example the notification bell) can safely reuse the same
+// authenticated viewer without repeating Supabase auth/profile/role round trips.
+export const requireUser = cache(async function requireUser() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
   return { supabase, user }
-}
+})
 
-export async function getViewer() {
+export const getViewer = cache(async function getViewer() {
   const { supabase, user } = await requireUser()
   const [{ data: profile }, { data: roles }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
@@ -23,7 +27,7 @@ export async function getViewer() {
     profile,
     roles: new Set<AppRole>((roles ?? []).map((r: { role: AppRole }) => r.role)),
   }
-}
+})
 
 export async function requireOnboardedUser() {
   const viewer = await getViewer()

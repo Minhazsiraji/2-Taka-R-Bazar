@@ -15,7 +15,8 @@ test('active pool editor permits only operational fields',()=>{
   assert.doesNotMatch(action,/customer_ceiling_price/)
 })
 
-test('operations navigation exposes active pool editor',()=>{
-  const shell=readFileSync(new URL('../components/admin-shell.tsx',import.meta.url),'utf8')
-  assert.match(shell,/\/admin\/pools\/edit/)
+test('focused pool details expose the safe active pool editor',()=>{
+  const details=readFileSync(new URL('../app/admin/pools/[id]/page.tsx',import.meta.url),'utf8')
+  assert.equal(details.includes('/admin/pools/edit?pool=${pool.id}'),true)
+  assert.match(details,/Edit pool details/)
 })
