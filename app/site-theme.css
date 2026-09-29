@@ -1,0 +1,245 @@
+/* =========================================================
+   2-TAKA-R-BAZAR — LIGHT / DARK THEME
+   Loaded last so it can safely theme the existing glass system.
+   ========================================================= */
+
+:root {
+  --theme-bg: #e7e2e8;
+  --theme-bg-2: #f7f5f8;
+  --theme-text: #17213b;
+  --theme-muted: #60708d;
+  --theme-card: rgba(255,255,255,.30);
+  --theme-card-strong: rgba(255,255,255,.44);
+  --theme-line: rgba(255,255,255,.82);
+  --theme-input: rgba(255,255,255,.46);
+  --theme-shadow: rgba(36,43,70,.10);
+  --theme-accent: #0b8995;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --theme-bg: #080d15;
+  --theme-bg-2: #0d1420;
+  --theme-text: #eef4ff;
+  --theme-muted: #9baac2;
+  --theme-card: rgba(18,26,39,.68);
+  --theme-card-strong: rgba(23,33,49,.78);
+  --theme-line: rgba(226,239,255,.17);
+  --theme-input: rgba(12,20,32,.78);
+  --theme-shadow: rgba(0,0,0,.36);
+  --theme-accent: #6fe7ec;
+  background: #080d15;
+}
+
+html[data-theme="dark"] body.site-glass-root {
+  color: var(--theme-text);
+  background:
+    radial-gradient(circle at 8% 7%, rgba(43,109,132,.15), transparent 31rem),
+    radial-gradient(circle at 91% 11%, rgba(49,126,113,.12), transparent 29rem),
+    radial-gradient(circle at 49% 84%, rgba(91,71,138,.13), transparent 36rem),
+    linear-gradient(180deg,#080d15 0%,#0b111b 52%,#080d15 100%) !important;
+}
+
+html[data-theme="dark"] .site-glass-root > div[class*="min-h-screen"],
+html[data-theme="dark"] .site-glass-root [class*="bg-[linear-gradient"] {
+  background: transparent !important;
+}
+
+/* Text hierarchy */
+html[data-theme="dark"] .site-glass-root :is(h1,h2,h3,h4,h5,h6),
+html[data-theme="dark"] .site-glass-root .text-slate-950,
+html[data-theme="dark"] .site-glass-root .text-slate-900,
+html[data-theme="dark"] .site-glass-root .text-slate-800,
+html[data-theme="dark"] .site-glass-root .text-black {
+  color: #eef4ff !important;
+}
+html[data-theme="dark"] .site-glass-root .text-slate-700,
+html[data-theme="dark"] .site-glass-root .text-slate-600 {
+  color: #c2ccdc !important;
+}
+html[data-theme="dark"] .site-glass-root .text-slate-500,
+html[data-theme="dark"] .site-glass-root .text-slate-400,
+html[data-theme="dark"] .site-glass-root .muted,
+html[data-theme="dark"] .site-glass-root .card-title {
+  color: #96a6bf !important;
+}
+
+/* Main glass planes */
+html[data-theme="dark"] .site-glass-root :is(
+  .card,
+  .table-wrap,
+  .public-glass-header,
+  .public-glass-footer,
+  .app-shell-header-bar,
+  aside[class*="rounded-"],
+  details[class*="rounded-"]
+) {
+  border-color: rgba(226,239,255,.16) !important;
+  background: linear-gradient(145deg,rgba(24,34,50,.78),rgba(12,20,31,.60)) !important;
+  box-shadow:
+    0 18px 44px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset -1px -1px 0 rgba(79,222,228,.09),
+    3px 4px 10px rgba(66,211,220,.035),
+    -2px 4px 8px rgba(143,111,225,.028) !important;
+}
+
+html[data-theme="dark"] .site-glass-root :is(
+  .card,
+  .table-wrap,
+  .public-glass-header,
+  .public-glass-footer,
+  .app-shell-header-bar,
+  aside[class*="rounded-"],
+  details[class*="rounded-"]
+)::after {
+  background:
+    linear-gradient(90deg,transparent 0%,rgba(148,116,232,.11) 18%,transparent 38%,transparent 69%,rgba(69,226,232,.17) 89%,transparent 100%) bottom/100% 2px no-repeat,
+    linear-gradient(180deg,transparent 0%,transparent 58%,rgba(69,226,232,.13) 84%,transparent 100%) right/2px 100% no-repeat,
+    linear-gradient(90deg,rgba(255,255,255,.15),rgba(255,255,255,.04) 54%,transparent 100%) top/100% 1px no-repeat !important;
+}
+
+/* Nested boxes */
+html[data-theme="dark"] .site-glass-root main :is(section,article,form,div,blockquote)[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap) {
+  border-color: rgba(214,230,248,.13) !important;
+  background-color: rgba(15,24,37,.48) !important;
+  box-shadow:
+    0 8px 20px rgba(0,0,0,.18),
+    inset 0 1px 0 rgba(255,255,255,.07),
+    inset -1px -1px 0 rgba(65,226,232,.07) !important;
+}
+
+html[data-theme="dark"] .site-glass-root main :is(div,section,article,form,blockquote,details)[class*="rounded-"][class*="bg-slate-50"],
+html[data-theme="dark"] .site-glass-root main :is(div,section,article,form,blockquote,details)[class*="rounded-"][class*="bg-white"] {
+  background: linear-gradient(145deg,rgba(23,33,49,.74),rgba(13,21,33,.58)) !important;
+}
+
+/* Inputs / selects / textareas */
+html[data-theme="dark"] .site-glass-root :is(.input,input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  color: #eef4ff !important;
+  border-color: rgba(203,220,241,.16) !important;
+  background: rgba(10,17,27,.76) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 5px 14px rgba(0,0,0,.16) !important;
+}
+html[data-theme="dark"] .site-glass-root :is(input,textarea)::placeholder { color: #71819a !important; }
+html[data-theme="dark"] .site-glass-root option { background: #111a27; color: #eef4ff; }
+html[data-theme="dark"] .site-glass-root .label { color: #b7c3d6 !important; }
+
+/* Buttons / chips */
+html[data-theme="dark"] .site-glass-root .btn-secondary,
+html[data-theme="dark"] .site-glass-root .chip,
+html[data-theme="dark"] .site-glass-root .status-pill,
+html[data-theme="dark"] .site-glass-root .app-role-link,
+html[data-theme="dark"] .site-glass-root .app-profile-link,
+html[data-theme="dark"] .site-glass-root .theme-toggle {
+  color: #dce7f7 !important;
+  border-color: rgba(218,232,248,.16) !important;
+  background: linear-gradient(180deg,rgba(35,47,65,.80),rgba(18,27,40,.76)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 7px 18px rgba(0,0,0,.20) !important;
+}
+html[data-theme="dark"] .site-glass-root .btn-primary {
+  color: #06292d !important;
+  border-color: rgba(169,251,247,.44) !important;
+  background: linear-gradient(180deg,#73eee8,#35cfcf 56%,#1aa4b1) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.62), 0 9px 22px rgba(0,170,181,.18) !important;
+}
+html[data-theme="dark"] .site-glass-root .btn-danger {
+  color: #fff !important;
+  background: linear-gradient(180deg,#e14b68,#b91c44) !important;
+}
+
+/* Preserve the molded commitment CTA in dark mode. */
+html[data-theme="dark"] .site-glass-root main form:has(input[name="quantity"]) button {
+  color: #06292d !important;
+  border-color: rgba(190,255,251,.48) !important;
+  background: linear-gradient(180deg,rgba(121,241,235,.96),rgba(45,207,207,.94) 55%,rgba(20,161,175,.96)) !important;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.52), 0 8px 20px rgba(0,0,0,.22) !important;
+}
+
+/* Tables */
+html[data-theme="dark"] .site-glass-root .table-wrap { background: rgba(13,21,33,.72) !important; }
+html[data-theme="dark"] .site-glass-root th { color: #98a9c2 !important; background: rgba(25,36,52,.72) !important; }
+html[data-theme="dark"] .site-glass-root td { color: #d9e3f2 !important; border-color: rgba(195,216,239,.10) !important; background: rgba(12,20,31,.28) !important; }
+
+/* Common Tailwind light surfaces used by Operations / Super Admin. */
+html[data-theme="dark"] .site-glass-root .bg-slate-50,
+html[data-theme="dark"] .site-glass-root .bg-slate-100,
+html[data-theme="dark"] .site-glass-root .bg-white,
+html[data-theme="dark"] .site-glass-root .bg-white\/95,
+html[data-theme="dark"] .site-glass-root .bg-white\/90,
+html[data-theme="dark"] .site-glass-root .bg-white\/70,
+html[data-theme="dark"] .site-glass-root .bg-white\/65,
+html[data-theme="dark"] .site-glass-root .bg-white\/60 {
+  background-color: rgba(15,24,37,.82) !important;
+}
+html[data-theme="dark"] .site-glass-root [class*="border-slate-"] { border-color: rgba(193,211,233,.14) !important; }
+html[data-theme="dark"] .site-glass-root [class*="hover:bg-slate-"]:hover { background-color: rgba(45,60,82,.56) !important; }
+
+/* Notices keep semantic color while remaining dark. */
+html[data-theme="dark"] .site-glass-root .notice { color: #fde7a7 !important; border-color: rgba(245,183,67,.24) !important; background: rgba(99,66,12,.28) !important; }
+html[data-theme="dark"] .site-glass-root .success { color: #a7f3d0 !important; border-color: rgba(52,211,153,.23) !important; background: rgba(6,78,59,.28) !important; }
+html[data-theme="dark"] .site-glass-root .error { color: #fecdd3 !important; border-color: rgba(251,113,133,.24) !important; background: rgba(127,29,29,.26) !important; }
+
+/* Header, nav and footers */
+html[data-theme="dark"] .site-glass-root header { color: #eef4ff; }
+html[data-theme="dark"] .site-glass-root .app-mobile-nav,
+html[data-theme="dark"] .site-glass-root .app-mobile-legal,
+html[data-theme="dark"] .site-glass-root .app-desktop-footer,
+html[data-theme="dark"] .site-glass-root .public-glass-footer {
+  color: #dce7f7 !important;
+  border-color: rgba(201,220,242,.12) !important;
+  background: rgba(7,13,22,.90) !important;
+}
+html[data-theme="dark"] .site-glass-root .app-mobile-nav a { color: #c8d4e6 !important; }
+html[data-theme="dark"] .site-glass-root .app-mobile-nav a:hover { background: rgba(49,67,91,.44) !important; }
+html[data-theme="dark"] .site-glass-root .app-desktop-footer [class*="text-sky-200"] { color: #78e4ea !important; }
+html[data-theme="dark"] .site-glass-root .app-desktop-footer :is(a,p,span,[class*="text-slate-"]) { color: #a9b8cc !important; }
+html[data-theme="dark"] .site-glass-root .app-desktop-footer a:hover { color: #7cecf0 !important; }
+
+/* Brand mark is black artwork; invert only in dark mode for contrast. */
+html[data-theme="dark"] .site-glass-root img[src="/brand-mark-transparent.png"] {
+  filter: invert(1) brightness(1.08) contrast(.92);
+}
+
+/* Theme control */
+.theme-toggle {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: .42rem;
+  border: 1px solid rgba(255,255,255,.84);
+  border-radius: 9999px;
+  padding: .45rem .75rem;
+  color: #36506b;
+  background: linear-gradient(180deg,rgba(255,255,255,.68),rgba(242,240,250,.48));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.92), 0 6px 16px rgba(38,47,77,.08);
+  cursor: pointer;
+  font-size: .75rem;
+  font-weight: 520;
+  line-height: 1;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+}
+.theme-toggle-icon { font-size: 1rem; line-height: 1; }
+@media (hover:hover) and (pointer:fine) {
+  .theme-toggle:hover {
+    transform: translateY(-1px);
+    border-color: rgba(79,222,228,.58);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.96), 0 9px 20px rgba(38,47,77,.11), 0 0 10px rgba(79,222,228,.08);
+  }
+}
+
+@media (max-width:640px) {
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0;
+  }
+  .theme-toggle-label { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle { transition: none; }
+}
