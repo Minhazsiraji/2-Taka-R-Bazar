@@ -14,7 +14,7 @@
     min-width: 0 !important;
   }
 
-  .site-glass-root .public-glass-header > div:last-child {
+  .site-glass-root .public-header-actions {
     flex: 1 1 auto !important;
     min-width: 0 !important;
     justify-content: flex-end !important;
