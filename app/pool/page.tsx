@@ -102,7 +102,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
         const unlockedBasket=poolItems.reduce((s:number,i:any)=>s+Number(unlockByItem.get(i.id)?.unlocked_price||0),0)
         const potentialBasket=allUnlocked?Math.max(0,benchmarkBasket-unlockedBasket):0
         const communityPotential=poolItems.reduce((s:number,i:any)=>{const b=Number(i.benchmark_price_snapshot||0),u=Number(unlockByItem.get(i.id)?.unlocked_price||0);return s+(u>0?Math.max(0,b-u)*(demand.get(i.id)??0):0)},0)
-        return <section key={pool.id} className="grid min-w-0 gap-4 border-t border-slate-200 pt-5 first:border-t-0 first:pt-0 sm:gap-5">
+        return <section id={`pool-${pool.id}`} key={pool.id} className="grid min-w-0 gap-4 border-t border-slate-200 pt-5 first:border-t-0 first:pt-0 sm:gap-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div><div className="flex flex-wrap gap-2"><span className="chip capitalize">{pool.cadence??'weekly'} pool</span><StatusPill status={pool.status}/></div><h2 className="mt-2 text-xl font-black sm:text-2xl">{pool.title}</h2><p className="muted mt-1">Pickup target · {shortDate(pool.pickup_at)}</p></div>
             <form action={togglePoolLove}><input type="hidden" name="pool_id" value={pool.id}/><button className={`btn-secondary min-h-10 px-3 text-sm ${loved?'border-rose-200 text-rose-700':''}`}>{loved?'♥ Loved':'♡ Love'} · {likes.length}</button></form>
