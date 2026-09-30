@@ -1,5 +1,6 @@
 import { AdminShell } from '@/components/admin-shell'
 import { requireAdmin } from '@/lib/auth'
+import { NotificationPreviewButton } from '@/components/notification-preview-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +34,7 @@ export default async function AdminNotificationsPage() {
           <label className="flex items-center gap-3 rounded-xl border border-slate-200 p-4"><input type="checkbox" defaultChecked/><span><b className="block">Browser / PWA push</b><span className="text-xs text-slate-500">Sent to devices that have enabled push.</span></span></label>
         </div>
         <div className="notice"><b>Preview safety gate:</b> broadcast execution is disabled in this branch. No customer will receive a message while you review the UI.</div>
-        <div className="flex flex-wrap justify-end gap-2"><button className="btn-secondary" type="button">Preview message</button><button className="btn-primary opacity-60" type="button" disabled>Review & send</button></div>
+        <div className="flex flex-wrap justify-end gap-2"><NotificationPreviewButton /><button className="btn-primary opacity-60" type="button" disabled>Review & send</button></div>
       </section>
 
       <section className="card">
