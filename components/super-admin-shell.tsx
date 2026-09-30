@@ -13,10 +13,17 @@ function Navigation({ mobile=false }:{mobile?:boolean}) {
 
 export function SuperAdminShell({children}:{children:React.ReactNode}) {
   return <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-100 text-slate-950">
-    <header className="app-shell-header sticky top-0 z-50 w-full px-3 pt-2 sm:px-5">
-      <div className="app-shell-header-bar mx-auto flex w-full max-w-6xl items-center justify-between gap-3 rounded-[20px] border border-sky-200/80 bg-white/65 px-3 py-2 shadow-[inset_0_1px_0_white,0_10px_30px_rgba(14,165,233,.08)] backdrop-blur-xl sm:px-5">
-        <Link href="/super-admin" className="flex min-w-0 shrink-0 items-center gap-2.5" aria-label="2-TAKA-R-BAZAR Super Admin"><BrandLogo size={46}/><div className="hidden min-w-0 sm:block"><div className="text-sm font-black tracking-tight">SUPER ADMIN</div><div className="text-[10px] font-semibold tracking-wide text-slate-500">Owner command center · live operational data</div></div></Link>
-        <div className="app-role-actions flex min-w-0 flex-1 items-center justify-end gap-1 text-[10px] sm:gap-2 sm:text-xs"><ThemeToggle className="shrink-0"/><Link href="/admin" className="app-role-link shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm">Operations</Link><Link href="/home" className="btn-primary shrink-0 rounded-full px-3 py-2">Customer app</Link></div>
+    <header className="app-shell-header sticky top-0 z-50 w-full px-2 pt-2 sm:px-5">
+      <div className="app-shell-header-bar mx-auto flex w-full max-w-6xl items-center justify-between gap-1.5 rounded-[20px] border border-sky-200/80 bg-white/65 px-2 py-2 shadow-[inset_0_1px_0_white,0_10px_30px_rgba(14,165,233,.08)] backdrop-blur-xl sm:gap-3 sm:px-5">
+        <Link href="/super-admin" className="flex min-w-0 shrink-0 items-center gap-2.5" aria-label="2-TAKA-R-BAZAR Super Admin">
+          <span className="sm:hidden"><BrandLogo size={36}/></span><span className="hidden sm:block"><BrandLogo size={46}/></span>
+          <div className="hidden min-w-0 sm:block"><div className="text-sm font-black tracking-tight">SUPER ADMIN</div><div className="text-[10px] font-semibold tracking-wide text-slate-500">Owner command center · live operational data</div></div>
+        </Link>
+        <div className="app-role-actions flex min-w-0 flex-1 items-center justify-end gap-1 text-[10px] sm:gap-2 sm:text-xs">
+          <ThemeToggle className="shrink-0 px-2 [&_.theme-toggle-label]:hidden min-[430px]:[&_.theme-toggle-label]:inline"/>
+          <Link href="/admin" aria-label="Operations" title="Operations" className="app-role-link shrink-0 rounded-full border border-white bg-white/60 px-2.5 py-2 font-bold text-blue-700 shadow-sm sm:px-3"><span className="sm:hidden">Ops</span><span className="hidden sm:inline">Operations</span></Link>
+          <Link href="/home" aria-label="Customer app" title="Customer app" className="btn-primary min-h-9 shrink-0 rounded-full px-2.5 py-2 sm:min-h-11 sm:px-3"><span className="sm:hidden">App</span><span className="hidden sm:inline">Customer app</span></Link>
+        </div>
       </div>
     </header>
     <div className="mx-auto w-full max-w-6xl min-w-0 px-3 py-4 sm:px-5 sm:py-5">
