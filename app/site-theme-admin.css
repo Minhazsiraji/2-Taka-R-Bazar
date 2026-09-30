@@ -1,0 +1,47 @@
+/* Admin/Super Admin dark-theme contrast corrections. Loaded after shared theme files. */
+html[data-theme="dark"] .site-glass-root .metric {
+  color: #f4f8ff !important;
+}
+
+/* The admin shells use utility backgrounds directly; make the shell and sticky
+   header intentional dark glass instead of leaving a light/grey plane. */
+html[data-theme="dark"] .site-glass-root > div.min-h-screen.bg-slate-100 {
+  color: #eef4ff !important;
+  background: transparent !important;
+}
+html[data-theme="dark"] .site-glass-root > div.min-h-screen.bg-slate-100 > header {
+  color: #eef4ff !important;
+  border-color: rgba(199,220,241,.15) !important;
+  background: linear-gradient(180deg,rgba(20,30,44,.94),rgba(11,19,30,.90)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 10px 28px rgba(0,0,0,.24), 0 1px 0 rgba(83,225,231,.10) !important;
+}
+html[data-theme="dark"] .site-glass-root > div.min-h-screen.bg-slate-100 > header > div {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+html[data-theme="dark"] .site-glass-root > div.min-h-screen.bg-slate-100 > header p.font-black {
+  color: #f2f7ff !important;
+}
+html[data-theme="dark"] .site-glass-root > div.min-h-screen.bg-slate-100 > header p.text-slate-500 {
+  color: #a8b8ce !important;
+}
+
+/* Navigation controls in Super Admin. */
+html[data-theme="dark"] .site-glass-root aside nav a,
+html[data-theme="dark"] .site-glass-root details nav a {
+  color: #dbe6f5 !important;
+}
+html[data-theme="dark"] .site-glass-root aside nav a:hover,
+html[data-theme="dark"] .site-glass-root details nav a:hover {
+  color: #f6fbff !important;
+  background: rgba(45,65,87,.58) !important;
+}
+
+/* Metric numbers are semantic primary data. Never inherit the light-mode
+   .metric @apply color on dark cards. */
+html[data-theme="dark"] .site-glass-root main .card .metric,
+html[data-theme="dark"] .site-glass-root main .metric.text-2xl,
+html[data-theme="dark"] .site-glass-root main .metric.text-3xl {
+  color: #f4f8ff !important;
+  text-shadow: 0 1px 0 rgba(255,255,255,.03);
+}

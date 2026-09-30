@@ -1,0 +1,58 @@
+/* Mobile width guards for public/auth screens and compact theme controls. */
+@media (max-width: 640px) {
+  .site-glass-root .public-glass-header {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    gap: .4rem !important;
+    padding: .5rem .55rem !important;
+  }
+
+  .site-glass-root .public-glass-header > a:first-child {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+  }
+
+  .site-glass-root .public-header-actions {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    justify-content: flex-end !important;
+    gap: .35rem !important;
+  }
+
+  .site-glass-root .public-header-action {
+    min-width: 0 !important;
+    max-width: min(11.5rem, calc(100vw - 110px)) !important;
+    padding-inline: .7rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: .72rem !important;
+  }
+
+  .site-glass-root main[class*="min-h-screen"] > div {
+    width: 100% !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    padding-left: .5rem !important;
+    padding-right: .5rem !important;
+  }
+
+  .site-glass-root main[class*="min-h-screen"] section.card {
+    width: 100% !important;
+    max-width: calc(100vw - 16px) !important;
+    min-width: 0 !important;
+    padding: 1rem !important;
+    border-radius: 22px !important;
+  }
+
+  .site-glass-root main[class*="min-h-screen"] section.card :is(p,label,span,a,input,button) {
+    max-width: 100%;
+  }
+
+  .site-glass-root main[class*="min-h-screen"] section.card p,
+  .site-glass-root main[class*="min-h-screen"] section.card .muted {
+    overflow-wrap: anywhere;
+  }
+}

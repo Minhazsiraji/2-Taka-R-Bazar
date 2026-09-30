@@ -3,6 +3,7 @@ import Image from 'next/image'
 export function BrandLogo({ size = 56, alt = '2-TAKA-R-BAZAR - Smart Shopping. Real Savings.' }: { size?: number; alt?: string }) {
   return (
     <Image
+      className="brand-logo"
       src="/brand-mark-transparent.png"
       alt={alt}
       width={size}
