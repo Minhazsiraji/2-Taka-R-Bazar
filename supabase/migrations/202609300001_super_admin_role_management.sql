@@ -18,5 +18,5 @@ begin
  insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
  values(v_actor,case when p_enabled then 'role_granted' else 'role_revoked' end,'user',p_user_id,jsonb_build_object('role',p_role));
 end; $$;
-revoke all on function public.super_admin_set_role(uuid,text,boolean) from public;
+revoke all on function public.super_admin_set_role(uuid,text,boolean) from public;\nrevoke execute on function public.super_admin_set_role(uuid,text,boolean) from anon;
 grant execute on function public.super_admin_set_role(uuid,text,boolean) to authenticated;
