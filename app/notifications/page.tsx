@@ -39,7 +39,7 @@ export default async function NotificationsPage() {
               {(notifications ?? []).map((note) => (
                 <form action={openNotification} key={note.id} className={note.read_at ? 'bg-white' : 'bg-amber-50/55'}>
                   <input type="hidden" name="notification_id" value={note.id} />
-                  <button className="block w-full px-5 py-4 text-left hover:bg-slate-50">
+                  <button className="block w-full rounded-none border-0 px-5 py-4 text-left shadow-none hover:bg-slate-50">
                     <div className="flex items-start gap-3">
                       <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${note.read_at ? 'bg-slate-200' : note.priority === 'high' ? 'bg-rose-500' : 'bg-amber-400'}`} />
                       <div className="min-w-0 flex-1">
