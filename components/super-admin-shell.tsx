@@ -2,70 +2,26 @@ import Link from 'next/link'
 import { BrandLogo } from '@/components/brand-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 
-const executiveLinks = [
-  ['/super-admin', 'Executive dashboard'],
-  ['/super-admin/payments', 'Payments & cash'],
-  ['/super-admin/subscriptions', 'Subscriptions & coupons'],
-  ['/super-admin/access', 'Users & access'],
-  ['/super-admin/audit', 'Audit trail'],
-]
+const executiveLinks = [['/super-admin','Executive dashboard'],['/super-admin/payments','Payments & cash'],['/super-admin/subscriptions','Subscriptions & coupons'],['/super-admin/access','Users & access'],['/super-admin/audit','Audit trail']]
+const operationsLinks = [['/admin','Operations dashboard'],['/admin/communities','Communities'],['/admin/customers','Customers'],['/admin/products','Products'],['/admin/market-prices','Market prices'],['/admin/suppliers','Suppliers'],['/admin/pools','Pools'],['/admin/commitments','Commitments'],['/admin/orders','Orders'],['/admin/pickup-points','Pickup points'],['/admin/savings','Savings'],['/admin/feedback','Feedback'],['/admin/issues','Issues']]
 
-const operationsLinks = [
-  ['/admin', 'Operations dashboard'],
-  ['/admin/communities', 'Communities'],
-  ['/admin/customers', 'Customers'],
-  ['/admin/products', 'Products'],
-  ['/admin/market-prices', 'Market prices'],
-  ['/admin/suppliers', 'Suppliers'],
-  ['/admin/pools', 'Pools'],
-  ['/admin/commitments', 'Commitments'],
-  ['/admin/orders', 'Orders'],
-  ['/admin/pickup-points', 'Pickup points'],
-  ['/admin/savings', 'Savings'],
-  ['/admin/feedback', 'Feedback'],
-  ['/admin/issues', 'Issues'],
-]
-
-function Navigation({ mobile = false }: { mobile?: boolean }) {
-  const navClass = mobile ? 'grid grid-cols-1 gap-1 min-[380px]:grid-cols-2 sm:grid-cols-3' : 'grid gap-1'
-  const linkClass = mobile
-    ? 'min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 break-words'
-    : 'rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100'
-
-  return <>
-    <p className="px-2 pb-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Executive</p>
-    <nav className={navClass}>{executiveLinks.map(([href,label])=><Link key={href} href={href} className={`${linkClass} font-bold`}>{label}</Link>)}</nav>
-    <p className="mt-5 px-2 pb-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Operate the business</p>
-    <nav className={navClass}>{operationsLinks.map(([href,label])=><Link key={href} href={href} className={linkClass}>{label}</Link>)}</nav>
-  </>
+function Navigation({ mobile=false }:{mobile?:boolean}) {
+  const navClass=mobile?'grid grid-cols-1 gap-1 min-[380px]:grid-cols-2 sm:grid-cols-3':'grid gap-1'
+  const linkClass=mobile?'min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 break-words':'rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100'
+  return <><p className="px-2 pb-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Executive</p><nav className={navClass}>{executiveLinks.map(([href,label])=><Link key={href} href={href} className={`${linkClass} font-bold`}>{label}</Link>)}</nav><p className="mt-5 px-2 pb-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Operate the business</p><nav className={navClass}>{operationsLinks.map(([href,label])=><Link key={href} href={href} className={linkClass}>{label}</Link>)}</nav></>
 }
 
-export function SuperAdminShell({ children }: { children: React.ReactNode }) {
+export function SuperAdminShell({children}:{children:React.ReactNode}) {
   return <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-100 text-slate-950">
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 text-slate-950 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-[1500px] items-center justify-between gap-2 px-3 py-2 sm:px-4">
-        <Link href="/super-admin" className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3" aria-label="2-TAKA-R-BAZAR Super Admin">
-          <BrandLogo size={56} />
-          <div className="hidden min-w-0 md:block"><p className="font-black tracking-tight">SUPER ADMIN</p><p className="text-xs text-slate-500">Owner command center · live operational data</p></div>
-        </Link>
-        <div className="flex min-w-0 items-center justify-end gap-1 text-[10px] sm:gap-2 sm:text-sm">
-          <ThemeToggle />
-          <Link href="/admin" className="shrink-0 rounded-lg border border-slate-300 bg-white px-2 py-2 font-bold text-slate-900 sm:px-3">Operations</Link>
-          <Link href="/home" className="shrink-0 rounded-lg bg-black px-2 py-2 font-bold text-white sm:px-3">Customer app</Link>
-        </div>
+    <header className="app-shell-header sticky top-0 z-50 w-full px-3 pt-2 sm:px-5">
+      <div className="app-shell-header-bar mx-auto flex w-full max-w-6xl items-center justify-between gap-3 rounded-[20px] border border-sky-200/80 bg-white/65 px-3 py-2 shadow-[inset_0_1px_0_white,0_10px_30px_rgba(14,165,233,.08)] backdrop-blur-xl sm:px-5">
+        <Link href="/super-admin" className="flex min-w-0 shrink-0 items-center gap-2.5" aria-label="2-TAKA-R-BAZAR Super Admin"><BrandLogo size={46}/><div className="hidden min-w-0 sm:block"><div className="text-sm font-black tracking-tight">SUPER ADMIN</div><div className="text-[10px] font-semibold tracking-wide text-slate-500">Owner command center · live operational data</div></div></Link>
+        <div className="app-role-actions flex min-w-0 flex-1 items-center justify-end gap-1 text-[10px] sm:gap-2 sm:text-xs"><ThemeToggle className="shrink-0"/><Link href="/admin" className="app-role-link shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm">Operations</Link><Link href="/home" className="btn-primary shrink-0 rounded-full px-3 py-2">Customer app</Link></div>
       </div>
     </header>
-
-    <div className="mx-auto w-full max-w-[1500px] min-w-0 px-3 py-4 sm:px-4 sm:py-5">
-      <details className="mb-4 w-full max-w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm xl:hidden">
-        <summary className="cursor-pointer list-none rounded-xl bg-slate-100 px-3 py-3 text-sm font-black text-slate-800">☰ Super Admin sections</summary>
-        <div className="mt-4 min-w-0"><Navigation mobile /></div>
-      </details>
-
-      <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[245px_minmax(0,1fr)]">
-        <aside className="hidden h-fit rounded-2xl border border-slate-200 bg-white p-3 shadow-sm xl:sticky xl:top-20 xl:block"><Navigation /></aside>
-        <main className="w-full max-w-full min-w-0 overflow-x-hidden">{children}</main>
-      </div>
+    <div className="mx-auto w-full max-w-6xl min-w-0 px-3 py-4 sm:px-5 sm:py-5">
+      <details className="mb-4 w-full max-w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm xl:hidden"><summary className="cursor-pointer list-none rounded-xl bg-slate-100 px-3 py-3 text-sm font-black text-slate-800">☰ Super Admin sections</summary><div className="mt-4 min-w-0"><Navigation mobile/></div></details>
+      <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[245px_minmax(0,1fr)]"><aside className="hidden h-fit rounded-2xl border border-slate-200 bg-white p-3 shadow-sm xl:sticky xl:top-20 xl:block"><Navigation/></aside><main className="w-full max-w-full min-w-0 overflow-x-hidden">{children}</main></div>
     </div>
   </div>
 }
