@@ -3,10 +3,17 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth'
+import { randomUUID } from 'node:crypto'
+import { PRODUCT_IMAGE_BUCKET, validateProductImage } from '@/lib/product-image.mjs'
 
 const t=(fd:FormData,k:string)=>String(fd.get(k)??'').trim()
 const n=(fd:FormData,k:string)=>Number(t(fd,k))
 const isoOrNull=(v:string)=>v?new Date(v).toISOString():null
+function existingProductImagePath(url:string){
+  const marker=`/storage/v1/object/public/${PRODUCT_IMAGE_BUCKET}/`
+  const i=url.indexOf(marker)
+  return i<0?null:decodeURIComponent(url.slice(i+marker.length).split('?')[0])
+}
 
 function done(path:string,message:string){revalidatePath('/admin','layout');redirect(`${path}?notice=${encodeURIComponent(message)}`)}
 function fail(path:string,message:string):never{redirect(`${path}?error=${encodeURIComponent(message)}`)}
@@ -50,3 +57,32 @@ export async function updateSupplier(fd:FormData){const {supabase}=await require
 export async function updatePickupPoint(fd:FormData){const {supabase}=await requireAdmin();const id=t(fd,'id');const payload={community_id:t(fd,'community_id'),name:t(fd,'name'),contact_name:t(fd,'contact_name')||null,contact_phone:t(fd,'contact_phone')||null,address:t(fd,'address'),google_maps_url:t(fd,'google_maps_url')||null,opening_hours:t(fd,'opening_hours')||null,active:fd.get('active')==='on'};if(!id||!payload.community_id||!payload.name||!payload.address)fail('/admin/pickup-points','Community, name and address are required');const {error}=await supabase.from('pickup_points').update(payload).eq('id',id);if(error)fail('/admin/pickup-points',error.message);done('/admin/pickup-points','Pickup point updated')}
 
 export async function removePickupOperatorAssignment(fd:FormData){const {supabase}=await requireAdmin();const userId=t(fd,'user_id'),pointId=t(fd,'pickup_point_id');if(!userId||!pointId)fail('/admin/pickup-points','Invalid assignment');const {error}=await supabase.from('pickup_operator_assignments').delete().eq('user_id',userId).eq('pickup_point_id',pointId);if(error)fail('/admin/pickup-points',error.message);done('/admin/pickup-points','Pickup assignment removed')}
+
+export async function upsertOwnProduct(fd:FormData){
+  const {supabase,user}=await requireAdmin(); const id=t(fd,'product_id')||null
+  const image=fd.get('image_file'); let imageUrl=t(fd,'image_url'); let uploadedPath:string|null=null
+  if(image instanceof File&&image.size>0){
+    const bytes=new Uint8Array(await image.arrayBuffer()); const validation=validateProductImage({type:image.type,size:image.size,bytes}); if(!validation.ok)fail('/admin/own-products',validation.error)
+    uploadedPath=`own-products/${user.id}/${randomUUID()}.${validation.extension}`
+    const {error:uploadError}=await supabase.storage.from(PRODUCT_IMAGE_BUCKET).upload(uploadedPath,bytes,{contentType:image.type,cacheControl:'31536000',upsert:false})
+    if(uploadError)fail('/admin/own-products',`Image upload failed: ${uploadError.message}`)
+    imageUrl=supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(uploadedPath).data.publicUrl
+  }
+  const data={name:t(fd,'name'),brand:t(fd,'brand'),category:t(fd,'category'),package_size:t(fd,'package_size'),unit:t(fd,'unit'),sku:t(fd,'sku'),image_url:imageUrl,source_type:t(fd,'source_type')||'DIRECT_PRODUCT',manufacturer_reference:t(fd,'manufacturer_reference'),batch_number:t(fd,'batch_number'),manufacture_date:t(fd,'manufacture_date'),expiry_date:t(fd,'expiry_date'),purchase_cost:n(fd,'purchase_cost')||0,packaging_cost:n(fd,'packaging_cost')||0,inbound_transport:n(fd,'inbound_transport')||0,handling_cost:n(fd,'handling_cost')||0,other_landed_cost:n(fd,'other_landed_cost')||0,initial_stock:n(fd,'initial_stock')||0,is_demo:fd.get('is_demo')==='on',active:id?fd.get('active')==='on':true}
+  const {error}=await supabase.rpc('admin_upsert_own_product',{p_product_id:id,p_data:data})
+  if(error){if(uploadedPath)await supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove([uploadedPath]);fail('/admin/own-products',error.message)}
+  if(uploadedPath){const previous=existingProductImagePath(t(fd,'previous_image_url'));if(previous&&previous!==uploadedPath)await supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove([previous])}
+  done('/admin/own-products',id?'Own product updated':'Own product created')
+}
+
+export async function adjustOwnProductStock(fd:FormData){
+  const {supabase}=await requireAdmin(); const delta=n(fd,'delta'),reason=t(fd,'reason'); if(!delta||!reason)fail('/admin/own-products','Non-zero stock adjustment and reason required')
+  const {error}=await supabase.rpc('admin_adjust_own_stock',{p_product_id:t(fd,'product_id'),p_delta:delta,p_reason:reason}); if(error)fail('/admin/own-products',error.message); done('/admin/own-products','Stock adjusted')
+}
+
+export async function addOwnProductToPool(fd:FormData){
+  const {supabase}=await requireAdmin(); const mode=t(fd,'pricing_mode'); const tierText=t(fd,'tiers')
+  let tiers:{min_quantity:number;unit_price:number}[]=[]
+  if(mode==='QUANTITY_TIER'){try{tiers=tierText.split(',').filter(Boolean).map(part=>{const [q,p]=part.split(':').map(Number);if(!(q>0&&p>0))throw new Error();return {min_quantity:q,unit_price:p}})}catch{fail('/admin/own-products','Use tier format 1:160,50:155,100:149')}}
+  const {error}=await supabase.rpc('admin_configure_own_pool_item',{p_pool_id:t(fd,'pool_id'),p_product_id:t(fd,'product_id'),p_pricing_mode:mode,p_fixed_price:n(fd,'fixed_price')||null,p_target_quantity:n(fd,'target_quantity')||null,p_target_price:n(fd,'target_price')||null,p_min_quantity:n(fd,'min_quantity')||1,p_max_quantity:n(fd,'max_quantity')||20,p_tiers:tiers}); if(error)fail('/admin/own-products',error.message); done('/admin/own-products','Own product added to draft pool')
+}
