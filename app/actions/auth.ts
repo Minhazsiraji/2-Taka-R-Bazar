@@ -8,18 +8,22 @@ import { createClient } from '@/lib/supabase/server'
 import { requireUser } from '@/lib/auth'
 import { toBdE164Phone } from '@/lib/bd-phone.mjs'
 
-function getText(formData: FormData, key: string) {
-  return String(formData.get(key) ?? '').trim()
-}
+function getText(formData: FormData, key: string) { return String(formData.get(key) ?? '').trim() }
 
 function phoneOtpErrorMessage(error: { message: string; code?: string }, mode: 'signup' | 'login') {
-  if (error.code === 'otp_disabled' || /signups not allowed for otp|otp disabled/i.test(error.message)) {
-    if (mode === 'login') {
-      return 'No account was found for this mobile number. Please use Join the community pool first.'
-    }
-    return 'This mobile number is not enabled for development OTP yet. Add it as a Supabase test phone number, or connect a real SMS provider.'
+  const message = error.message || ''
+  if (error.code === 'otp_disabled' || /signups not allowed for otp|otp disabled/i.test(message)) {
+    return mode === 'login'
+      ? 'No account was found for this mobile number. Please use Join the community pool first.'
+      : 'Mobile OTP is not available yet. Please try again later.'
   }
-  return error.message
+  // Never expose upstream SMS-provider account IDs, credentials, URLs or raw provider errors to customers.
+  if (/twilio|auth account|provider|confirmation otp|20003|authentication error|invalid.*credential/i.test(message)) {
+    console.error('Phone OTP provider failure', { code: error.code, message })
+    return 'SMS service is temporarily unavailable. The administrator needs to reconnect the OTP provider. Please try again after it is restored.'
+  }
+  console.error('Phone OTP request failed', { code: error.code, message })
+  return 'We could not send the OTP right now. Please try again shortly.'
 }
 
 async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
@@ -27,14 +31,9 @@ async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
   const referralCode = mode === 'signup' ? getText(formData, 'referral_code').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12) : ''
   const back = mode === 'signup' ? '/signup' : '/login'
   if (!phone) redirect(`${back}?error=Enter+a+valid+Bangladesh+mobile+number`)
-
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithOtp({
-    phone,
-    options: { shouldCreateUser: mode === 'signup' },
-  })
+  const { error } = await supabase.auth.signInWithOtp({ phone, options: { shouldCreateUser: mode === 'signup' } })
   if (error) redirect(`${back}?error=${encodeURIComponent(phoneOtpErrorMessage(error, mode))}`)
-
   const cookieStore = await cookies()
   cookieStore.set('bp_otp_phone', phone, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 600, path: '/' })
   cookieStore.set('bp_otp_mode', mode, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 600, path: '/' })
@@ -45,113 +44,49 @@ async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
   redirect('/verify-otp')
 }
 
-export async function requestSignupOtp(formData: FormData) {
-  return requestPhoneOtp(formData, 'signup')
-}
-
-export async function requestLoginOtp(formData: FormData) {
-  return requestPhoneOtp(formData, 'login')
-}
+export async function requestSignupOtp(formData: FormData) { return requestPhoneOtp(formData, 'signup') }
+export async function requestLoginOtp(formData: FormData) { return requestPhoneOtp(formData, 'login') }
 
 export async function verifyPhoneOtp(formData: FormData) {
   const token = getText(formData, 'token')
   if (!/^\d{6}$/.test(token)) redirect('/verify-otp?error=Enter+the+6-digit+OTP')
-
   const cookieStore = await cookies()
   const phone = cookieStore.get('bp_otp_phone')?.value
   const mode = cookieStore.get('bp_otp_mode')?.value === 'signup' ? 'signup' : 'login'
   if (!phone) redirect('/login?error=OTP+session+expired.+Enter+your+mobile+again')
-
   const supabase = await createClient()
   const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
   if (error) redirect(`/verify-otp?error=${encodeURIComponent(error.message)}`)
-
-  cookieStore.delete('bp_otp_phone')
-  cookieStore.delete('bp_otp_mode')
+  cookieStore.delete('bp_otp_phone'); cookieStore.delete('bp_otp_mode')
   revalidatePath('/', 'layout')
   if (mode === 'signup') redirect('/onboarding?notice=Mobile+verified.+Complete+your+household+profile')
   redirect('/home')
 }
 
 export async function restartSignupWithAnotherPhone() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-  const cookieStore = await cookies()
-  cookieStore.delete('bp_otp_phone')
-  cookieStore.delete('bp_otp_mode')
-  cookieStore.delete('bp_ref_code')
-  revalidatePath('/', 'layout')
-  redirect('/signup?notice=Enter+the+mobile+number+you+want+to+verify')
+  const supabase = await createClient(); await supabase.auth.signOut()
+  const cookieStore = await cookies(); cookieStore.delete('bp_otp_phone'); cookieStore.delete('bp_otp_mode'); cookieStore.delete('bp_ref_code')
+  revalidatePath('/', 'layout'); redirect('/signup?notice=Enter+the+mobile+number+you+want+to+verify')
 }
 
-export async function signOut() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
-  revalidatePath('/', 'layout')
-  redirect('/login')
-}
+export async function signOut() { const supabase = await createClient(); await supabase.auth.signOut(); revalidatePath('/', 'layout'); redirect('/login') }
 
-const onboardingSchema = z.object({
-  full_name: z.string().min(2).max(100),
-  household_name: z.string().min(2).max(120),
-  community_id: z.string().uuid(),
-  address_hint: z.string().max(240).optional(),
-  google_maps_url: z.string().url().optional().or(z.literal('')),
-})
+const onboardingSchema = z.object({ full_name: z.string().min(2).max(100), household_name: z.string().min(2).max(120), community_id: z.string().uuid(), address_hint: z.string().max(240).optional(), google_maps_url: z.string().url().optional().or(z.literal('')) })
 
 export async function completeOnboarding(formData: FormData) {
-  const { supabase, user } = await requireUser()
-  const phone = user.phone
+  const { supabase, user } = await requireUser(); const phone = user.phone
   if (!phone) redirect('/onboarding?error=Verified+mobile+number+is+required')
-  const payload = {
-    full_name: getText(formData, 'full_name'),
-    household_name: getText(formData, 'household_name'),
-    community_id: getText(formData, 'community_id'),
-    address_hint: getText(formData, 'address_hint'),
-    google_maps_url: getText(formData, 'google_maps_url'),
-  }
-  const parsed = onboardingSchema.safeParse(payload)
-  if (!parsed.success) redirect('/onboarding?error=Please+check+the+required+profile+fields')
-
-  const { error } = await supabase.from('profiles').update({
-    full_name: parsed.data.full_name,
-    phone,
-    household_name: parsed.data.household_name,
-    community_id: parsed.data.community_id,
-    pickup_point_id: null,
-    address_hint: parsed.data.address_hint || null,
-    google_maps_url: parsed.data.google_maps_url || null,
-    onboarding_completed_at: new Date().toISOString(),
-  }).eq('id', user.id)
-
+  const payload = { full_name:getText(formData,'full_name'), household_name:getText(formData,'household_name'), community_id:getText(formData,'community_id'), address_hint:getText(formData,'address_hint'), google_maps_url:getText(formData,'google_maps_url') }
+  const parsed = onboardingSchema.safeParse(payload); if (!parsed.success) redirect('/onboarding?error=Please+check+the+required+profile+fields')
+  const { error } = await supabase.from('profiles').update({ full_name:parsed.data.full_name, phone, household_name:parsed.data.household_name, community_id:parsed.data.community_id, pickup_point_id:null, address_hint:parsed.data.address_hint||null, google_maps_url:parsed.data.google_maps_url||null, onboarding_completed_at:new Date().toISOString() }).eq('id',user.id)
   if (error) redirect(`/onboarding?error=${encodeURIComponent(error.message)}`)
-  const cookieStore = await cookies()
-  const referralCode = cookieStore.get('bp_ref_code')?.value
-  if (referralCode) await supabase.rpc('apply_referral_code', { p_code: referralCode })
-  cookieStore.delete('bp_ref_code')
-  revalidatePath('/', 'layout')
-  redirect('/home')
+  const cookieStore=await cookies(); const referralCode=cookieStore.get('bp_ref_code')?.value; if(referralCode) await supabase.rpc('apply_referral_code',{p_code:referralCode}); cookieStore.delete('bp_ref_code'); revalidatePath('/','layout'); redirect('/home')
 }
 
 export async function updateProfile(formData: FormData) {
-  const { supabase, user } = await requireUser()
-  const pickupPointId = getText(formData, 'pickup_point_id') || null
-  const { data: current } = await supabase.from('profiles').select('community_id').eq('id', user.id).single()
-  if (!current?.community_id) redirect('/onboarding')
-
-  if (pickupPointId) {
-    const { data: pickup } = await supabase.from('pickup_points').select('id').eq('id', pickupPointId).eq('community_id', current.community_id).eq('active', true).maybeSingle()
-    if (!pickup) redirect('/profile?error=Choose+an+active+pickup+point+inside+your+community')
-  }
-
-  const { error } = await supabase.from('profiles').update({
-    full_name: getText(formData, 'full_name'),
-    household_name: getText(formData, 'household_name'),
-    address_hint: getText(formData, 'address_hint') || null,
-    google_maps_url: getText(formData, 'google_maps_url') || null,
-    pickup_point_id: pickupPointId,
-  }).eq('id', user.id)
-  if (error) redirect(`/profile?error=${encodeURIComponent(error.message)}`)
-  revalidatePath('/profile')
-  redirect('/profile?notice=Profile+updated')
+  const { supabase,user }=await requireUser(); const pickupPointId=getText(formData,'pickup_point_id')||null
+  const { data:current }=await supabase.from('profiles').select('community_id').eq('id',user.id).single(); if(!current?.community_id) redirect('/onboarding')
+  if(pickupPointId){ const {data:pickup}=await supabase.from('pickup_points').select('id').eq('id',pickupPointId).eq('community_id',current.community_id).eq('active',true).maybeSingle(); if(!pickup) redirect('/profile?error=Choose+an+active+pickup+point+inside+your+community') }
+  const {error}=await supabase.from('profiles').update({full_name:getText(formData,'full_name'),household_name:getText(formData,'household_name'),address_hint:getText(formData,'address_hint')||null,google_maps_url:getText(formData,'google_maps_url')||null,pickup_point_id:pickupPointId}).eq('id',user.id)
+  if(error) redirect(`/profile?error=${encodeURIComponent(error.message)}`); revalidatePath('/profile'); redirect('/profile?notice=Profile+updated')
 }

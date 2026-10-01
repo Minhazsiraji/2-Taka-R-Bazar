@@ -154,3 +154,24 @@ main :is(div,section,article,form,blockquote,details)[class*="rounded-"][class*=
   .card, .table-wrap,
   main :is(div,section,article,form,blockquote,details)[class*="rounded-"] { transform: none !important; }
 }
+
+/* Access roster: responsive cards prevent clipped columns and floating role menus. */
+.access-user-card { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:1rem; overflow:visible; }
+.access-user-main { display:grid; grid-template-columns:1.25fr 1.25fr 1.35fr 1.35fr .9fr 1.1fr; gap:1rem; align-items:start; }
+.access-label { margin-bottom:.35rem; font-size:.7rem; line-height:1rem; text-transform:uppercase; letter-spacing:.06em; color:#64748b; font-weight:600; }
+.access-user-action { display:flex; align-items:center; }
+.access-manage-btn { min-height:2.5rem; padding:.5rem .85rem; white-space:nowrap; }
+.access-editor { grid-column:1/-1; border-top:1px solid rgba(148,163,184,.22); padding-top:1rem; }
+.role-editor-panel { width:100%; }
+.role-editor-title { font-size:.875rem; font-weight:650; }
+.role-editor-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; margin-top:.75rem; }
+.role-editor-row { display:flex; min-width:0; align-items:center; justify-content:space-between; gap:.75rem; border:1px solid rgba(203,213,225,.7); border-radius:1rem; padding:.75rem; background:rgba(255,255,255,.56); }
+.role-action-btn { min-height:2.35rem; padding:.4rem .75rem; white-space:nowrap; font-size:.8rem; }
+@media (max-width:1199px){.access-user-main{grid-template-columns:repeat(3,minmax(0,1fr));}.role-editor-list{grid-template-columns:1fr;}}
+@media (max-width:639px){
+ .access-user-card{grid-template-columns:1fr; gap:.85rem; padding:1rem;}
+ .access-user-main{grid-template-columns:1fr 1fr; gap:.9rem .75rem;}
+ .access-user-action{width:100%;}.access-manage-btn{width:100%;}
+ .access-editor{padding-top:.85rem}.role-editor-row{padding:.7rem}.role-action-btn{width:auto; min-width:5.25rem;}
+}
+@media (max-width:380px){.access-user-main{grid-template-columns:1fr;}}
