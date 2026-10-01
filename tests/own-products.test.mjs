@@ -58,3 +58,15 @@ test('own-product image upload is constrained to admin storage policy and safe f
   assert.match(page,/accept="image\/jpeg,image\/png,image\/webp"/)
 })
 
+test('own-product preview UX has clean encoding, readiness messaging and readable admin navigation',()=>{
+  const page=readFileSync(new URL('../app/admin/own-products/page.tsx',import.meta.url),'utf8')
+  const action=readFileSync(new URL('../app/actions/admin.ts',import.meta.url),'utf8')
+  const shell=readFileSync(new URL('../components/admin-shell.tsx',import.meta.url),'utf8')
+  assert.doesNotMatch(page,/Â/)
+  assert.match(page,/JPEG, PNG or WebP — max 5 MB/)
+  assert.match(page,/Own Product storage is not configured in this environment/)
+  assert.match(action,/Own Product storage is not configured in this environment/)
+  assert.match(action,/bucket not found/i)
+  assert.match(shell,/lg:grid-cols-\[250px_minmax\(0,1fr\)\]/)
+  assert.match(shell,/lg:whitespace-normal/)
+})

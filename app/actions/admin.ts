@@ -17,6 +17,7 @@ function existingProductImagePath(url:string){
 
 function done(path:string,message:string){revalidatePath('/admin','layout');redirect(`${path}?notice=${encodeURIComponent(message)}`)}
 function fail(path:string,message:string):never{redirect(`${path}?error=${encodeURIComponent(message)}`)}
+function ownProductEnvironmentError(message:string){return /bucket not found|relation .*own_product|admin_upsert_own_product.*does not exist|schema cache/i.test(message)?'Own Product storage is not configured in this environment. Functional Own Product testing is unavailable here.':message}
 
 export async function createCommunity(fd:FormData){const {supabase}=await requireAdmin();const name=t(fd,'name'),slug=t(fd,'slug').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');if(!name||!slug)fail('/admin/communities','Name and slug required');const {error}=await supabase.from('communities').insert({name,slug,sort_order:n(fd,'sort_order')||100});if(error)fail('/admin/communities',error.message);done('/admin/communities','Community created')}
 
@@ -65,12 +66,12 @@ export async function upsertOwnProduct(fd:FormData){
     const bytes=new Uint8Array(await image.arrayBuffer()); const validation=validateProductImage({type:image.type,size:image.size,bytes}); if(!validation.ok)fail('/admin/own-products',validation.error)
     uploadedPath=`own-products/${user.id}/${randomUUID()}.${validation.extension}`
     const {error:uploadError}=await supabase.storage.from(PRODUCT_IMAGE_BUCKET).upload(uploadedPath,bytes,{contentType:image.type,cacheControl:'31536000',upsert:false})
-    if(uploadError)fail('/admin/own-products',`Image upload failed: ${uploadError.message}`)
+    if(uploadError)fail('/admin/own-products',ownProductEnvironmentError(uploadError.message))
     imageUrl=supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(uploadedPath).data.publicUrl
   }
   const data={name:t(fd,'name'),brand:t(fd,'brand'),category:t(fd,'category'),package_size:t(fd,'package_size'),unit:t(fd,'unit'),sku:t(fd,'sku'),image_url:imageUrl,source_type:t(fd,'source_type')||'DIRECT_PRODUCT',manufacturer_reference:t(fd,'manufacturer_reference'),batch_number:t(fd,'batch_number'),manufacture_date:t(fd,'manufacture_date'),expiry_date:t(fd,'expiry_date'),purchase_cost:n(fd,'purchase_cost')||0,packaging_cost:n(fd,'packaging_cost')||0,inbound_transport:n(fd,'inbound_transport')||0,handling_cost:n(fd,'handling_cost')||0,other_landed_cost:n(fd,'other_landed_cost')||0,initial_stock:n(fd,'initial_stock')||0,is_demo:fd.get('is_demo')==='on',active:id?fd.get('active')==='on':true}
   const {error}=await supabase.rpc('admin_upsert_own_product',{p_product_id:id,p_data:data})
-  if(error){if(uploadedPath)await supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove([uploadedPath]);fail('/admin/own-products',error.message)}
+  if(error){if(uploadedPath)await supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove([uploadedPath]);fail('/admin/own-products',ownProductEnvironmentError(error.message))}
   if(uploadedPath){const previous=existingProductImagePath(t(fd,'previous_image_url'));if(previous&&previous!==uploadedPath)await supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove([previous])}
   done('/admin/own-products',id?'Own product updated':'Own product created')
 }

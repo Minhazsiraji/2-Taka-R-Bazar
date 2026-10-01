@@ -18,7 +18,7 @@ function ProductFields({row}:{row?:any}){
     <label><span className="label">Unit</span><input className="input" name="unit" defaultValue={row?.unit??''} placeholder="pack" required/></label>
     <label><span className="label">SKU</span><input className="input" name="sku" defaultValue={row?.sku??''} required/></label>
     <input type="hidden" name="previous_image_url" value={row?.image_url??''}/>
-    <label><span className="label">Product image upload</span><input className="input" type="file" name="image_file" accept="image/jpeg,image/png,image/webp"/><span className="muted mt-1 block text-xs">JPEG, PNG or WebP Â· max 5 MB. Admin upload is stored in Supabase Storage.</span></label>
+    <label><span className="label">Product image upload</span><input className="input" type="file" name="image_file" accept="image/jpeg,image/png,image/webp"/><span className="muted mt-1 block text-xs">JPEG, PNG or WebP — max 5 MB. Admin upload is stored in Supabase Storage.</span></label>
     <label><span className="label">Image URL (optional fallback)</span><input className="input" type="url" name="image_url" defaultValue={row?.image_url??''}/></label>
     <label><span className="label">Manufacturer / supplier ref.</span><input className="input" name="manufacturer_reference" defaultValue={row?.manufacturer_reference??''}/></label>
     <label><span className="label">Batch / lot</span><input className="input" name="batch_number" defaultValue={row?.batch_number??''}/></label>
@@ -38,15 +38,16 @@ function CostFields({cost}:{cost?:any}){
 
 export default async function Page({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}){
   const {supabase}=await requireAdmin(); const sp=await searchParams
-  const [{data:products},{data:costs},{data:inventory},{data:performance},{data:pools},{data:benchmarks}]=await Promise.all([
+  const [{data:products},{data:costs,error:costsError},{data:inventory,error:inventoryError},{data:performance,error:performanceError},{data:pools},{data:benchmarks}]=await Promise.all([
     supabase.from('products').select('*').in('source_type',['DIRECT_PRODUCT','PRIVATE_LABEL','EXCLUSIVE_PARTNER']).order('created_at',{ascending:false}),
     supabase.from('own_product_costs').select('*'), supabase.from('own_product_inventory').select('*'), supabase.from('admin_own_product_performance').select('*'),
     supabase.from('pools').select('id,title,community_id,status').eq('status','draft').order('created_at',{ascending:false}),
     supabase.from('market_price_benchmarks').select('product_id,community_id,benchmark_price').eq('approved',true).is('superseded_at',null),
   ])
+  const ownProductInfrastructureReady=!costsError&&!inventoryError&&!performanceError
   const costBy=new Map((costs??[]).map((x:any)=>[x.product_id,x])),invBy=new Map((inventory??[]).map((x:any)=>[x.product_id,x])),perfBy=new Map((performance??[]).map((x:any)=>[x.product_id,x]))
   const benchmarkBy=new Map((benchmarks??[]).map((x:any)=>[`${x.product_id}:${x.community_id}`,x.benchmark_price]))
-  return <AdminShell><div className="grid gap-5"><section><div className="card-title">Products</div><h1 className="text-3xl font-black">2-TAKA-R-BAZAR Products</h1><p className="muted mt-1">Own inventory, landed cost, Pool pricing and contribution. Internal economics are admin-only.</p></section><Flash {...sp}/>
+  return <AdminShell><div className="grid gap-5"><section><div className="card-title">Products</div><h1 className="text-3xl font-black">2-TAKA-R-BAZAR Products</h1><p className="muted mt-1">Own inventory, landed cost, Pool pricing and contribution. Internal economics are admin-only.</p></section><Flash {...sp}/>{!ownProductInfrastructureReady&&<div className="notice"><b>Own Product storage is not configured in this environment.</b><p className="mt-1">Functional Own Product testing is unavailable here. No migration or storage configuration has been applied automatically.</p></div>}
     <form action={upsertOwnProduct} className="card form-grid"><h2 className="section-title md:col-span-2">Create own product</h2><ProductFields/><CostFields/><label><span className="label">Initial stock</span><input className="input" type="number" min="0" name="initial_stock" defaultValue="0"/></label><label className="flex items-center gap-2 self-end"><input type="checkbox" name="is_demo"/><span>Demo/test product</span></label><SubmitButton>Create own product</SubmitButton></form>
 
     <section className="grid gap-3">{(products??[]).map((p:any)=>{const c:any=costBy.get(p.id),i:any=invBy.get(p.id),m:any=perfBy.get(p.id);const available=Number(i?.stock_on_hand??0)-Number(i?.reserved_quantity??0);return <details className="card" key={p.id}><summary className="cursor-pointer"><div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div><b>{p.name}</b><p className="muted">{sourceLabels[p.source_type]} · {p.package_size} · {p.sku}</p></div><div className="flex flex-wrap gap-2"><span className="chip">Stock {i?.stock_on_hand??0}</span><span className="chip">Reserved {i?.reserved_quantity??0}</span><span className="chip">Available {available}</span></div></div></summary>
