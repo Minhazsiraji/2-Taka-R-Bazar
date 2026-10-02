@@ -91,3 +91,10 @@ test('Super Admin family financials are read-only summary data with top five cat
   assert.match(page,/Net savings/)
   assert.match(page,/Top \{i\}/)
 })
+
+test('My Money analytics RPCs revoke anonymous execution',()=>{
+  const sql=readFileSync(new URL('../supabase/migrations/202610020009_money_analytics_privilege_hardening.sql',import.meta.url),'utf8')
+  assert.match(sql,/set_my_money_summary_sharing\(boolean\) from anon/)
+  assert.match(sql,/super_admin_money_family_financials\(date\) from anon/)
+  assert.match(sql,/super_admin_money_family_usage\(date\) from anon/)
+})
