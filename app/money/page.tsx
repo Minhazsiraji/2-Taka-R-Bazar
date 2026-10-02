@@ -4,7 +4,7 @@ import { SubmitButton } from '@/components/submit-button'
 import { MoneyEntryForm } from '@/components/money-entry-form'
 import { requireOnboardedUser } from '@/lib/auth'
 import { taka } from '@/lib/format'
-import { monthBounds, normalizeMoneyMonth, shiftMoneyMonth, summarizeMoney } from '@/lib/money.mjs'
+import { monthBounds, normalizeMoneyMonth, shiftMoneyMonth, summarizeBudget, summarizeMoney } from '@/lib/money.mjs'
 import { createMoneyCategory, deleteMoneyBudget, deleteMoneyTransaction, saveMoneyBudget } from '@/app/actions/money'
 
 export const dynamic='force-dynamic'
@@ -34,7 +34,7 @@ export default async function MoneyPage({searchParams}:{searchParams:Promise<Sea
   ])
   const infrastructureMissing=Boolean(categoryError||transactionError||budgetError)
   const txs=(transactions??[]) as any[]; const budgetRows=(budgets??[]) as any[]
-  const summary=summarizeMoney(txs,budgetRows)
+  const summary=summarizeMoney(txs,budgetRows); const budgetSummary=summarizeBudget(txs,budgetRows)
   const verifiedSavings=(savingRows??[]).reduce((sum:number,row:any)=>sum+Number(row.amount??0),0)
   const todaySpend=month===bd.month?txs.filter(row=>row.transaction_type==='expense'&&row.transaction_date===bd.today).reduce((sum,row)=>sum+Number(row.amount),0):0
   const expenseCategories=((categories??[]) as any[]).filter(row=>row.kind==='expense')
@@ -64,7 +64,7 @@ export default async function MoneyPage({searchParams}:{searchParams:Promise<Sea
       <div className="card p-4"><div className="card-title">Today&apos;s spend</div><div className="metric mt-2">{month===bd.month?taka(todaySpend):'—'}</div><p className="muted mt-1">quick daily check</p></div>
       <div className="card p-4"><div className="card-title">Month spent</div><div className="metric mt-2 text-rose-700">{taka(summary.expense)}</div><p className="muted mt-1">all recorded expenses</p></div>
       <div className="card p-4"><div className="card-title">Month income</div><div className="metric mt-2 text-emerald-700">{taka(summary.income)}</div><p className="muted mt-1">recorded income</p></div>
-      <div className="card p-4"><div className="card-title">Budget left</div><div className={`metric mt-2 ${summary.budgetLeft<0?'text-rose-700':'text-sky-800'}`}>{summary.budget?taka(summary.budgetLeft):'Not set'}</div><p className="muted mt-1">budget {taka(summary.budget)}</p></div>
+      <div className="card p-4"><div className="card-title">Budget left</div><div className={`metric mt-2 ${budgetSummary.budgetLeft<0?'text-rose-700':'text-sky-800'}`}>{budgetSummary.budget?taka(budgetSummary.budgetLeft):'Not set'}</div><p className="muted mt-1">planned categories · {taka(budgetSummary.budget)}</p></div>
       <div className="card p-4"><div className="card-title">2-TAKA savings</div><div className="metric mt-2 text-emerald-700">+{taka(verifiedSavings)}</div><p className="muted mt-1">verified after collection</p></div>
     </section>
 

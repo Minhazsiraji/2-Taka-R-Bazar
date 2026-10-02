@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { monthBounds, shiftMoneyMonth, summarizeMoney } from '../lib/money.mjs'
+import { monthBounds, shiftMoneyMonth, summarizeBudget, summarizeMoney } from '../lib/money.mjs'
 
 test('money month helpers cross year boundaries correctly',()=>{
   assert.deepEqual(monthBounds('2026-12'),{start:'2026-12-01',next:'2027-01-01'})
@@ -9,13 +9,15 @@ test('money month helpers cross year boundaries correctly',()=>{
   assert.equal(shiftMoneyMonth('2026-12',1),'2027-01')
 })
 
-test('money summary keeps income expense and budget distinct',()=>{
-  const summary=summarizeMoney([
-    {transaction_type:'income',amount:'10000'},
-    {transaction_type:'expense',amount:'1200'},
-    {transaction_type:'expense',amount:300},
-  ],[{amount:'5000'},{amount:2000}])
-  assert.deepEqual(summary,{income:10000,expense:1500,net:8500,budget:7000,budgetLeft:5500})
+test('money summary keeps income expense and category budgets distinct',()=>{
+  const transactions=[
+    {transaction_type:'income',amount:'10000',category_id:'income'},
+    {transaction_type:'expense',amount:'1200',category_id:'groceries'},
+    {transaction_type:'expense',amount:300,category_id:'transport'},
+  ]
+  const budgets=[{amount:'5000',category_id:'groceries'},{amount:2000,category_id:'rent'}]
+  assert.deepEqual(summarizeMoney(transactions,budgets),{income:10000,expense:1500,net:8500,budget:7000})
+  assert.deepEqual(summarizeBudget(transactions,budgets),{budget:7000,budgetSpent:1200,budgetLeft:5800})
 })
 
 test('money tracker migration is private-by-default and user scoped',()=>{

@@ -3,7 +3,7 @@ import { AppShell } from '@/components/app-shell'
 import { StatusPill } from '@/components/status-pill'
 import { requireOnboardedUser } from '@/lib/auth'
 import { taka, shortDate } from '@/lib/format'
-import { monthBounds, summarizeMoney } from '@/lib/money.mjs'
+import { monthBounds, summarizeBudget, summarizeMoney } from '@/lib/money.mjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,8 +18,8 @@ export default async function HomePage() {
     supabase.from('orders').select('id,order_code,status,pickup_points(name,address,google_maps_url)').eq('customer_id',user.id).eq('status','ready_for_pickup').order('ready_at',{ascending:false}).limit(1).maybeSingle(),
     supabase.from('communities').select('id,name').eq('id',profile.community_id).maybeSingle(),
     supabase.rpc('get_my_community_summary'),
-    supabase.from('money_transactions').select('transaction_type,amount').eq('user_id',user.id).gte('transaction_date',moneyRange.start).lt('transaction_date',moneyRange.next),
-    supabase.from('money_budgets').select('amount').eq('user_id',user.id).eq('month',moneyRange.start),
+    supabase.from('money_transactions').select('transaction_type,amount,category_id').eq('user_id',user.id).gte('transaction_date',moneyRange.start).lt('transaction_date',moneyRange.next),
+    supabase.from('money_budgets').select('amount,category_id').eq('user_id',user.id).eq('month',moneyRange.start),
   ])
   const savingsSummary=savingsSummaryRows?.[0] as any
   const lifetime=Number(savingsSummary?.lifetime_verified_saving??0)
@@ -27,6 +27,7 @@ export default async function HomePage() {
   const summary=summaryRows?.[0] as any
   const pools=activePools??[]
   const moneySummary=summarizeMoney((moneyTransactions??[]) as any[],(moneyBudgets??[]) as any[])
+  const moneyBudgetSummary=summarizeBudget((moneyTransactions??[]) as any[],(moneyBudgets??[]) as any[])
   const glass='glass-panel'
 
   return <AppShell roles={roles}>
@@ -53,7 +54,7 @@ export default async function HomePage() {
         <div className={`${glass} flex items-center gap-4 rounded-[22px] p-4`}><Icon>📍</Icon><div><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">Community</div><div className="mt-1 text-lg font-black">{community?.name}</div><p className="mt-1 text-xs leading-4 text-slate-600">Your pools are selected specifically for this community.</p></div></div>
         <div className={`${glass} flex items-center gap-4 rounded-[22px] p-4`}><Icon>👥</Icon><div><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">Participating households</div><div className="mt-1 text-2xl font-black">{summary?.household_count??0}</div><p className="mt-1 text-xs leading-4 text-slate-600">members currently registered in your community.</p></div></div>
         <div className={`${glass} flex items-center gap-4 rounded-[22px] p-4`}><Icon>📊</Icon><div><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">Community savings · month</div><div className="mt-1 text-2xl font-black">{taka(summary?.month_verified_saving??0)}</div><p className="mt-1 text-xs leading-4 text-slate-600">verified only after successful collection.</p></div></div>
-        <Link href="/money" className={`${glass} flex items-center gap-4 rounded-[22px] p-4 transition hover:-translate-y-0.5`}><Icon>💰</Icon><div><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">My Money · free</div><div className="mt-1 text-2xl font-black">{taka(moneySummary.expense)}</div><p className="mt-1 text-xs leading-4 text-slate-600">spent this month · {moneySummary.budget?taka(moneySummary.budgetLeft):'set a budget'} left.</p></div></Link>
+        <Link href="/money" className={`${glass} flex items-center gap-4 rounded-[22px] p-4 transition hover:-translate-y-0.5`}><Icon>💰</Icon><div><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">My Money · free</div><div className="mt-1 text-2xl font-black">{taka(moneySummary.expense)}</div><p className="mt-1 text-xs leading-4 text-slate-600">spent this month · {moneyBudgetSummary.budget?taka(moneyBudgetSummary.budgetLeft):'set a budget'} left in planned categories.</p></div></Link>
       </section>
 
       <section>
