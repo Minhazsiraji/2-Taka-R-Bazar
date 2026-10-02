@@ -70,3 +70,14 @@ test('own-product preview UX has clean encoding, readiness messaging and readabl
   assert.match(shell,/lg:grid-cols-\[250px_minmax\(0,1fr\)\]/)
   assert.match(shell,/lg:whitespace-normal/)
 })
+
+
+test('customer Pool card renders product images safely when present',()=>{
+  const page=readFileSync(new URL('../app/pool/page.tsx',import.meta.url),'utf8')
+  assert.match(page,/product\?\.image_url&&/)
+  assert.match(page,/src=\{product\.image_url\}/)
+  assert.match(page,/alt=\{`\$\{product\.name\} product image`\}/)
+  assert.match(page,/object-contain/)
+  assert.match(page,/loading="lazy"/)
+  assert.match(page,/bg-white/)
+})
