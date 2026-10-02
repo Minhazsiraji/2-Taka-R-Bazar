@@ -57,13 +57,11 @@ test('money actions derive ownership from authenticated user',()=>{
   assert.match(actions,/saveMoneyAccount/);assert.match(actions,/saveMoneyTransfer/);assert.match(actions,/saveMoneyRecurring/);assert.match(actions,/saveMoneyGoal/)
 })
 
-test('My Money is discoverable from primary navigation and Home quick entry',()=>{
+test('My Money is a single header action and Home stays focused on BazarPool',()=>{
   const shell=readFileSync(new URL('../components/app-shell.tsx',import.meta.url),'utf8')
   const home=readFileSync(new URL('../app/home/page.tsx',import.meta.url),'utf8')
-  const entry=readFileSync(new URL('../components/money-entry-form.tsx',import.meta.url),'utf8')
-  assert.match(shell,/\['\/money',\s*'My Money'\]/);assert.match(shell,/Primary customer navigation/);assert.match(shell,/FREE/)
-  assert.match(home,/My Money · FREE/);assert.match(home,/Track today&apos;s cost in seconds/);assert.match(home,/returnTo="\/home"/)
-  assert.match(entry,/defaultCategory/);assert.match(entry,/Groceries/);assert.match(entry,/account_id/);assert.match(entry,/person_id/)
+  assert.match(shell,/href="\/money"/);assert.match(shell,/Open My Money dashboard/);assert.match(shell,/💰/)
+  assert.doesNotMatch(home,/MoneyEntryForm/);assert.doesNotMatch(home,/My Money · FREE/);assert.doesNotMatch(home,/Track today&apos;s cost in seconds/)
 })
 
 test('My Money exposes the complete requested module navigation',()=>{
