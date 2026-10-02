@@ -1,0 +1,26 @@
+import Link from 'next/link'
+import { AppShell } from '@/components/app-shell'
+import { MoneyNav } from '@/components/money-nav'
+import { MoneyDonut, MoneyTrend } from '@/components/money-charts'
+import { MoneyReportActions } from '@/components/money-report-actions'
+import { requireOnboardedUser } from '@/lib/auth'
+import { taka } from '@/lib/format'
+import { categoryTotals, monthlySeries, personTotals } from '@/lib/money.mjs'
+import { dhakaToday, loadMoneyReference } from '@/lib/money-server'
+
+export const dynamic='force-dynamic'
+type Q={range?:string}
+function startFor(range:string,today:string){const d=new Date(`${today}T00:00:00Z`);if(range==='year')return `${d.getUTCFullYear()}-01-01`;if(range==='quarter'){const q=Math.floor(d.getUTCMonth()/3)*3;return `${d.getUTCFullYear()}-${String(q+1).padStart(2,'0')}-01`}return `${today.slice(0,7)}-01`}
+
+export default async function ReportsPage({searchParams}:{searchParams:Promise<Q>}){
+  const {user,roles,supabase}=await requireOnboardedUser();const q=await searchParams;const range=['month','quarter','year'].includes(String(q.range))?String(q.range):'month';const bd=dhakaToday();const start=startFor(range,bd.today);const ref=await loadMoneyReference(supabase,user.id)
+  const {data:rows}=await supabase.from('money_transactions').select('transaction_type,amount,category_id,person_id,transaction_date').eq('user_id',user.id).gte('transaction_date',start).lte('transaction_date',bd.today).order('transaction_date')
+  const txs=(rows??[]) as any[],income=txs.filter(r=>r.transaction_type==='income').reduce((s,r)=>s+Number(r.amount),0),expense=txs.filter(r=>r.transaction_type==='expense').reduce((s,r)=>s+Number(r.amount),0)
+  const catMap=categoryTotals(txs),personMap=personTotals(txs);const catRows=[...catMap.entries()].map(([id,amount])=>({label:(ref.categories as any[]).find(c=>c.id===id)?.name??'Category',amount})).sort((a,b)=>b.amount-a.amount);const personRows=[...personMap.entries()].map(([id,amount])=>({label:(ref.people as any[]).find(p=>p.id===id)?.name??'Person',amount})).sort((a,b)=>b.amount-a.amount);const trend=monthlySeries(txs,bd.month,range==='year'?12:range==='quarter'?3:1)
+  return <AppShell roles={roles}><div className="grid gap-5"><MoneyNav/>
+    <section className="glass-panel rounded-[26px] p-5"><div className="flex flex-wrap items-end justify-between gap-3"><div><div className="text-xs font-black uppercase tracking-[.15em] text-violet-700">Insights</div><h1 className="mt-1 text-3xl font-black">Reports</h1><p className="muted mt-1">Financial overview and export tools.</p></div><MoneyReportActions range={range}/></div><div className="mt-4 flex gap-2">{['month','quarter','year'].map(value=><Link key={value} className={`rounded-xl px-4 py-2 text-xs font-black ${value===range?'bg-slate-950 text-white':'bg-white/70 text-slate-700'}`} href={`/money/reports?range=${value}`}>{value[0].toUpperCase()+value.slice(1)}</Link>)}</div></section>
+    <section className="grid gap-3 sm:grid-cols-3"><div className="card p-4"><div className="card-title">Income</div><div className="metric mt-2 text-emerald-700">{taka(income)}</div></div><div className="card p-4"><div className="card-title">Expense</div><div className="metric mt-2 text-rose-700">{taka(expense)}</div></div><div className="card p-4"><div className="card-title">Net</div><div className="metric mt-2">{taka(income-expense)}</div></div></section>
+    <section className="grid gap-4 lg:grid-cols-2"><div className="card p-5"><div className="card-title">Monthly Trend</div><div className="mt-4"><MoneyTrend series={trend as any}/></div></div><div className="card p-5"><div className="card-title">Expenses by Category</div><div className="mt-4"><MoneyDonut rows={catRows}/></div></div></section>
+    <section className="card p-5"><div className="card-title">Spending by Person</div><div className="mt-4"><MoneyDonut rows={personRows} empty="No spending-by-person data yet"/></div></section>
+  </div></AppShell>
+}
