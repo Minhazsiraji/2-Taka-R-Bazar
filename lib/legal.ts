@@ -3,6 +3,7 @@ export const POLICY_EFFECTIVE_DATE_EN = '28 September 2026'
 export const POLICY_EFFECTIVE_DATE_BN = '২৮ সেপ্টেম্বর ২০২৬'
 
 export const LEGAL_LINKS = [
+  ['/about', 'About / পরিচিতি'],
   ['/terms', 'Terms & Conditions / শর্তাবলি'],
   ['/return-policy', 'Return Policy / রিটার্ন নীতি'],
   ['/refund-policy', 'Refund Policy / রিফান্ড নীতি'],
