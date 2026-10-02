@@ -1,12 +1,16 @@
-export type MoneyTransactionSummaryRow = { transaction_type: 'income' | 'expense'; amount: number | string; category_id?: string }
-export type MoneyBudgetSummaryRow = { amount: number | string; category_id?: string }
-
-export function normalizeMoneyMonth(value: unknown, fallback: string): string
-export function monthBounds(month: string): { start: string; next: string }
-export function shiftMoneyMonth(month: string, delta: number): string
-export function summarizeMoney(
-  transactions?: MoneyTransactionSummaryRow[], budgets?: MoneyBudgetSummaryRow[],
-): { income: number; expense: number; net: number; budget: number }
-export function summarizeBudget(
-  transactions?: MoneyTransactionSummaryRow[], budgets?: MoneyBudgetSummaryRow[],
-): { budget: number; budgetSpent: number; budgetLeft: number }
+export type MoneyTransactionSummaryRow={transaction_type:'income'|'expense';amount:number|string;category_id?:string;account_id?:string;person_id?:string;transaction_date?:string}
+export type MoneyBudgetSummaryRow={amount:number|string;category_id?:string}
+export type MoneyAccountRow={id:string;opening_balance:number|string;[key:string]:unknown}
+export type MoneyTransferRow={from_account_id:string;to_account_id:string;amount:number|string}
+export function normalizeMoneyMonth(value:unknown,fallback:string):string
+export function monthBounds(month:string):{start:string;next:string}
+export function shiftMoneyMonth(month:string,delta:number):string
+export function summarizeMoney(transactions?:MoneyTransactionSummaryRow[],budgets?:MoneyBudgetSummaryRow[]):{income:number;expense:number;net:number;budget:number}
+export function summarizeBudget(transactions?:MoneyTransactionSummaryRow[],budgets?:MoneyBudgetSummaryRow[]):{budget:number;budgetSpent:number;budgetLeft:number}
+export function accountBalances(accounts?:MoneyAccountRow[],transactions?:MoneyTransactionSummaryRow[],transfers?:MoneyTransferRow[]):Array<MoneyAccountRow&{balance:number}>
+export function categoryTotals(transactions?:MoneyTransactionSummaryRow[]):Map<string,number>
+export function personTotals(transactions?:MoneyTransactionSummaryRow[]):Map<string,number>
+export function savingsRate(income?:number,expense?:number):number
+export function monthKey(dateValue:unknown):string
+export function monthlySeries(transactions:MoneyTransactionSummaryRow[],endMonth:string,count?:number):Array<{month:string;income:number;expense:number}>
+export function nextRecurringDate(dateValue:string,frequency:'weekly'|'monthly'|'yearly'):string
