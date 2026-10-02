@@ -8,13 +8,12 @@ import { PILOT_MODE } from '@/lib/pilot-mode'
 import { LEGAL_LINKS } from '@/lib/legal'
 
 const customerNav = [
-  ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'],
+  ['/home', 'Home'], ['/pool', 'Pools'], ['/money', 'My Money'], ['/orders', 'Orders'], ['/savings', 'Savings'],
   ...(!PILOT_MODE ? [['/subscription', 'Membership']] : []),
   ['/community', 'Community'], ['/pickup', 'Pickup'], ['/profile', 'Profile'], ['/notifications', 'Notifications'],
 ]
 const mobileNav = [
-  ['/home', 'Home'], ['/pool', 'Pools'], ['/orders', 'Orders'], ['/savings', 'Savings'],
-  ...(!PILOT_MODE ? [['/subscription', 'Membership']] : [['/community','Community']]),
+  ['/home', 'Home'], ['/pool', 'Pools'], ['/money', 'My Money'], ['/orders', 'Orders'], ['/savings', 'Savings'],
 ]
 
 function NotificationBellFallback() {
