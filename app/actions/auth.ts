@@ -56,7 +56,10 @@ export async function verifyPhoneOtp(formData: FormData) {
   if (!phone) redirect('/login?error=OTP+session+expired.+Enter+your+mobile+again')
   const supabase = await createClient()
   const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
-  if (error) redirect(`/verify-otp?error=${encodeURIComponent(error.message)}`)
+  if (error) {
+    console.warn('Phone OTP verification failed', { code: error.code })
+    redirect('/verify-otp?error=The+OTP+is+invalid+or+expired.+Request+a+new+code+and+try+again')
+  }
   cookieStore.delete('bp_otp_phone'); cookieStore.delete('bp_otp_mode')
   revalidatePath('/', 'layout')
   if (mode === 'signup') redirect('/onboarding?notice=Mobile+verified.+Complete+your+household+profile')
