@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -5,19 +6,56 @@ import { PublicHeader } from '@/components/public-header'
 import { PublicFooter } from '@/components/public-footer'
 import { PILOT_AREA, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 
+export const metadata: Metadata = {
+  title: 'Community Grocery Pooling in Savar',
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: SITE_URL },
+}
+
 export default async function LandingPage() {
   const supabase = await createClient()
   const { data: claimsResult } = await supabase.auth.getClaims()
   if (claimsResult?.claims?.sub) redirect('/home')
-  const schema={"@context":"https://schema.org","@graph":[
-    {"@type":"Organization","@id":`${SITE_URL}/#organization`,name:SITE_NAME,url:SITE_URL,description:SITE_DESCRIPTION},
-    {"@type":"WebSite","@id":`${SITE_URL}/#website`,url:SITE_URL,name:SITE_NAME,publisher:{"@id":`${SITE_URL}/#organization`},inLanguage:['en-BD','bn-BD']},
-    {"@type":"Service","@id":`${SITE_URL}/#service`,name:'Community grocery pooling',provider:{"@id":`${SITE_URL}/#organization`},areaServed:PILOT_AREA,description:SITE_DESCRIPTION}
-  ]}
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${SITE_URL}/#organization`,
+        name: SITE_NAME,
+        url: SITE_URL,
+        logo: `${SITE_URL}/brand-logo-header.png`,
+        description: SITE_DESCRIPTION,
+        areaServed: {
+          '@type': 'Place',
+          name: PILOT_AREA,
+        },
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${SITE_URL}/#website`,
+        url: SITE_URL,
+        name: SITE_NAME,
+        publisher: { '@id': `${SITE_URL}/#organization` },
+        inLanguage: ['en-BD', 'bn-BD'],
+      },
+      {
+        '@type': 'Service',
+        '@id': `${SITE_URL}/#service`,
+        name: 'Community grocery pooling',
+        provider: { '@id': `${SITE_URL}/#organization` },
+        areaServed: { '@type': 'Place', name: PILOT_AREA },
+        audience: { '@type': 'Audience', audienceType: 'Households and community grocery buyers' },
+        description: SITE_DESCRIPTION,
+      },
+    ],
+  }
+
   return (
     <main className="min-h-screen bg-white text-black">
       <PublicHeader actionHref="/login" actionLabel="Sign in" />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <div className="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-12">
         <div className="grid items-stretch gap-6 lg:grid-cols-2">
           <section className="flex min-w-0 flex-col justify-center rounded-[28px] border border-black/10 bg-white p-6 sm:p-8 lg:min-h-[540px]">
@@ -46,7 +84,7 @@ export default async function LandingPage() {
             <div className="rounded-2xl bg-white p-5"><b>3. Confirm after price</b><p className="muted mt-2">A commitment becomes an order only after you accept the final price.</p></div>
             <div className="rounded-2xl bg-white p-5"><b>4. Verify the savings</b><p className="muted mt-2">Savings are credited only after collection.</p></div>
           </div>
-          <div className="mt-6"><Link href="/faq" className="font-black underline">Read FAQ / প্রশ্নোত্তর →</Link></div>
+          <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2"><Link href="/about" className="font-black underline">About the model →</Link><Link href="/faq" className="font-black underline">Read FAQ / প্রশ্নোত্তর →</Link></div>
         </section>
       </div>
       <PublicFooter />
