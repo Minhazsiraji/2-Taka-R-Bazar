@@ -5,6 +5,9 @@ export function GET() {
 
 ${SITE_DESCRIPTION}
 
+## Core positioning
+${SITE_NAME} is a community grocery-pooling platform where households combine demand, suppliers compete for volume, customers see the final price before confirming, and actual savings are verified after pickup. It is designed for smart, modern households who value convenience, transparency, better buying decisions, and a more premium everyday shopping experience.
+
 ## Core facts
 - ${SITE_NAME} is a community grocery-pooling service in Bangladesh.
 - Current controlled pilot area: ${PILOT_AREA}.
