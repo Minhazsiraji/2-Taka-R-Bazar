@@ -4,91 +4,50 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { requireOnboardedUser } from '@/lib/auth'
+import { nextRecurringDate } from '@/lib/money.mjs'
 
-function text(fd: FormData, key: string) { return String(fd.get(key) ?? '').trim() }
-function monthOf(fd: FormData) { const value=text(fd,'month'); return /^\d{4}-\d{2}$/.test(value)?value:'' }
-function moneyUrl(fd:FormData,kind:'error'|'notice',message:string){
-  const month=monthOf(fd); const params=new URLSearchParams(); if(month)params.set('month',month); params.set(kind,message)
-  return `/money?${params.toString()}`
-}
-function fail(fd:FormData,message:string):never{redirect(moneyUrl(fd,'error',message))}
-function ok(fd:FormData,message:string):never{revalidatePath('/money');revalidatePath('/home');redirect(moneyUrl(fd,'notice',message))}
+function text(fd:FormData,key:string){return String(fd.get(key)??'').trim()}
+function monthOf(fd:FormData){const value=text(fd,'month');return /^\d{4}-\d{2}$/.test(value)?value:''}
+function safeReturn(fd:FormData){const value=text(fd,'return_to');return value==='/home'||/^\/money(?:\/[a-z-]+)?$/.test(value)?value:'/money'}
+function targetUrl(fd:FormData,kind:'error'|'notice',message:string){const base=safeReturn(fd);const params=new URLSearchParams();const month=monthOf(fd);if(month&&base.startsWith('/money'))params.set('month',month);params.set(kind,message);return `${base}?${params.toString()}`}
+function fail(fd:FormData,message:string):never{redirect(targetUrl(fd,'error',message))}
+function refresh(){for(const path of ['/home','/money','/money/transactions','/money/accounts','/money/transfers','/money/budgets','/money/categories','/money/recurring','/money/reports'])revalidatePath(path)}
+function ok(fd:FormData,message:string):never{refresh();redirect(targetUrl(fd,'notice',message))}
+function uuid(value:string){return z.string().uuid().safeParse(value).success}
 
-const transactionSchema=z.object({
-  transaction_type:z.enum(['expense','income']),
-  amount:z.coerce.number().positive().max(100000000),
-  category_id:z.string().uuid(),
-  transaction_date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  payment_method:z.enum(['cash','mobile_wallet','bank','card','other']),
-  note:z.string().max(300),
-})
-
+const transactionSchema=z.object({transaction_type:z.enum(['expense','income']),amount:z.coerce.number().positive().max(100000000),category_id:z.string().uuid(),transaction_date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),account_id:z.string().uuid().optional().or(z.literal('')),person_id:z.string().uuid().optional().or(z.literal('')),payment_method:z.enum(['cash','mobile_wallet','bank','card','other']),description:z.string().max(120),note:z.string().max(300)})
 export async function saveMoneyTransaction(formData:FormData){
-  const {supabase,user}=await requireOnboardedUser()
-  const parsed=transactionSchema.safeParse({
-    transaction_type:text(formData,'transaction_type'), amount:text(formData,'amount'),
-    category_id:text(formData,'category_id'), transaction_date:text(formData,'transaction_date'),
-    payment_method:text(formData,'payment_method'), note:text(formData,'note'),
-  })
-  if(!parsed.success)fail(formData,'Please check the transaction details')
-
-  const values=parsed.data
-  const {data:category}=await supabase.from('money_categories').select('id,kind').eq('id',values.category_id).eq('user_id',user.id).eq('active',true).maybeSingle()
-  if(!category||category.kind!==values.transaction_type)fail(formData,'Choose a matching category')
-  const {error}=await supabase.from('money_transactions').insert({
-    user_id:user.id, transaction_type:values.transaction_type, amount:values.amount,
-    category_id:values.category_id, transaction_date:values.transaction_date,
-    payment_method:values.payment_method, note:values.note||null, source:'manual',
-  })
-  if(error)fail(formData,error.message)
-  ok(formData,values.transaction_type==='expense'?'Expense added':'Income added')
+  const {supabase,user}=await requireOnboardedUser();const parsed=transactionSchema.safeParse({transaction_type:text(formData,'transaction_type'),amount:text(formData,'amount'),category_id:text(formData,'category_id'),transaction_date:text(formData,'transaction_date'),account_id:text(formData,'account_id'),person_id:text(formData,'person_id'),payment_method:text(formData,'payment_method'),description:text(formData,'description'),note:text(formData,'note')});if(!parsed.success)fail(formData,'Please check the transaction details');const v=parsed.data
+  const [{data:category},{data:account},{data:person}]=await Promise.all([supabase.from('money_categories').select('id,kind').eq('id',v.category_id).eq('user_id',user.id).eq('active',true).maybeSingle(),v.account_id?supabase.from('money_accounts').select('id').eq('id',v.account_id).eq('user_id',user.id).eq('active',true).maybeSingle():supabase.from('money_accounts').select('id').eq('user_id',user.id).eq('name','Cash').maybeSingle(),v.person_id?supabase.from('money_people').select('id').eq('id',v.person_id).eq('user_id',user.id).eq('active',true).maybeSingle():supabase.from('money_people').select('id').eq('user_id',user.id).eq('name','Me').maybeSingle()])
+  if(!category||category.kind!==v.transaction_type)fail(formData,'Choose a matching category');if(!account||!person)fail(formData,'Money defaults are not ready yet')
+  const {error}=await supabase.from('money_transactions').insert({user_id:user.id,transaction_type:v.transaction_type,amount:v.amount,category_id:v.category_id,transaction_date:v.transaction_date,account_id:account.id,person_id:person.id,payment_method:v.payment_method,description:v.description||null,note:v.note||null,source:'manual'});if(error)fail(formData,error.message);ok(formData,v.transaction_type==='expense'?'Expense added':'Income added')
 }
-
-export async function deleteMoneyTransaction(formData:FormData){
-  const {supabase,user}=await requireOnboardedUser(); const id=text(formData,'id')
-  if(!z.string().uuid().safeParse(id).success)fail(formData,'Transaction not found')
-  const {error}=await supabase.from('money_transactions').delete().eq('id',id).eq('user_id',user.id)
-  if(error)fail(formData,error.message)
-  ok(formData,'Transaction deleted')
-}
+export async function deleteMoneyTransaction(formData:FormData){const {supabase,user}=await requireOnboardedUser();const id=text(formData,'id');if(!uuid(id))fail(formData,'Transaction not found');const {error}=await supabase.from('money_transactions').delete().eq('id',id).eq('user_id',user.id);if(error)fail(formData,error.message);ok(formData,'Transaction deleted')}
 
 const budgetSchema=z.object({category_id:z.string().uuid(),amount:z.coerce.number().positive().max(100000000),month:z.string().regex(/^\d{4}-\d{2}$/)})
+export async function saveMoneyBudget(formData:FormData){const {supabase,user}=await requireOnboardedUser();const parsed=budgetSchema.safeParse({category_id:text(formData,'category_id'),amount:text(formData,'amount'),month:text(formData,'month')});if(!parsed.success)fail(formData,'Please check the budget details');const v=parsed.data;const {data:category}=await supabase.from('money_categories').select('id').eq('id',v.category_id).eq('user_id',user.id).eq('kind','expense').eq('active',true).maybeSingle();if(!category)fail(formData,'Choose an expense category');const {error}=await supabase.from('money_budgets').upsert({user_id:user.id,category_id:v.category_id,month:`${v.month}-01`,amount:v.amount},{onConflict:'user_id,category_id,month'});if(error)fail(formData,error.message);ok(formData,'Monthly budget saved')}
+export async function deleteMoneyBudget(formData:FormData){const {supabase,user}=await requireOnboardedUser();const id=text(formData,'id');if(!uuid(id))fail(formData,'Budget not found');const {error}=await supabase.from('money_budgets').delete().eq('id',id).eq('user_id',user.id);if(error)fail(formData,error.message);ok(formData,'Budget removed')}
+export async function copyPreviousMoneyBudgets(formData:FormData){const {supabase,user}=await requireOnboardedUser();const month=monthOf(formData);if(!month)fail(formData,'Month not found');const [year,m]=month.split('-').map(Number);const date=new Date(Date.UTC(year,m-2,1));const previous=`${date.getUTCFullYear()}-${String(date.getUTCMonth()+1).padStart(2,'0')}-01`;const {data:rows,error}=await supabase.from('money_budgets').select('category_id,amount').eq('user_id',user.id).eq('month',previous);if(error)fail(formData,error.message);if(!rows?.length)fail(formData,'No budgets found in the previous month');const {error:copyError}=await supabase.from('money_budgets').upsert(rows.map(row=>({user_id:user.id,category_id:row.category_id,amount:row.amount,month:`${month}-01`})),{onConflict:'user_id,category_id,month'});if(copyError)fail(formData,copyError.message);ok(formData,'Previous month budgets copied')}
 
-export async function saveMoneyBudget(formData:FormData){
-  const {supabase,user}=await requireOnboardedUser()
-  const parsed=budgetSchema.safeParse({category_id:text(formData,'category_id'),amount:text(formData,'amount'),month:text(formData,'month')})
-  if(!parsed.success)fail(formData,'Please check the budget details')
-  const values=parsed.data
-  const {data:category}=await supabase.from('money_categories').select('id').eq('id',values.category_id).eq('user_id',user.id).eq('kind','expense').eq('active',true).maybeSingle()
-  if(!category)fail(formData,'Choose an expense category')
-  const {error}=await supabase.from('money_budgets').upsert({
-    user_id:user.id, category_id:values.category_id, month:`${values.month}-01`, amount:values.amount,
-  },{onConflict:'user_id,category_id,month'})
-  if(error)fail(formData,error.message)
-  ok(formData,'Monthly budget saved')
-}
+const categorySchema=z.object({kind:z.enum(['expense','income']),name:z.string().min(1).max(60),icon:z.string().max(8)})
+export async function createMoneyCategory(formData:FormData){const {supabase,user}=await requireOnboardedUser();const parsed=categorySchema.safeParse({kind:text(formData,'kind'),name:text(formData,'name'),icon:text(formData,'icon')});if(!parsed.success)fail(formData,'Please check the category details');const {error}=await supabase.from('money_categories').insert({user_id:user.id,kind:parsed.data.kind,name:parsed.data.name,icon:parsed.data.icon||null,is_default:false});if(error){if(error.code==='23505')fail(formData,'That category already exists');fail(formData,error.message)}ok(formData,'Category added')}
+export async function deleteMoneyCategory(formData:FormData){const {supabase,user}=await requireOnboardedUser();const id=text(formData,'id');if(!uuid(id))fail(formData,'Category not found');const {data:category}=await supabase.from('money_categories').select('id,is_default').eq('id',id).eq('user_id',user.id).maybeSingle();if(!category)fail(formData,'Category not found');if(category.is_default)fail(formData,'Default categories cannot be deleted');const {error}=await supabase.from('money_categories').delete().eq('id',id).eq('user_id',user.id);if(error)fail(formData,'This category is already in use. Keep it for your history.');ok(formData,'Category deleted')}
 
-export async function deleteMoneyBudget(formData:FormData){
-  const {supabase,user}=await requireOnboardedUser(); const id=text(formData,'id')
-  if(!z.string().uuid().safeParse(id).success)fail(formData,'Budget not found')
-  const {error}=await supabase.from('money_budgets').delete().eq('id',id).eq('user_id',user.id)
-  if(error)fail(formData,error.message)
-  ok(formData,'Budget removed')
-}
+const accountSchema=z.object({name:z.string().min(1).max(80),account_type:z.enum(['cash','bank','credit_card','mobile_wallet','other']),opening_balance:z.coerce.number().min(-1000000000).max(1000000000)})
+export async function saveMoneyAccount(formData:FormData){const {supabase,user}=await requireOnboardedUser();const parsed=accountSchema.safeParse({name:text(formData,'name'),account_type:text(formData,'account_type'),opening_balance:text(formData,'opening_balance')||'0'});if(!parsed.success)fail(formData,'Please check the account details');const id=text(formData,'id');const payload={...parsed.data,user_id:user.id};const result=id&&uuid(id)?await supabase.from('money_accounts').update(payload).eq('id',id).eq('user_id',user.id):await supabase.from('money_accounts').insert(payload);if(result.error){if(result.error.code==='23505')fail(formData,'An account with that name already exists');fail(formData,result.error.message)}ok(formData,id?'Account updated':'Account added')}
+export async function deleteMoneyAccount(formData:FormData){const {supabase,user}=await requireOnboardedUser();const id=text(formData,'id');if(!uuid(id))fail(formData,'Account not found');const {data:account}=await supabase.from('money_accounts').select('name').eq('id',id).eq('user_id',user.id).maybeSingle();if(account?.name==='Cash')fail(formData,'The default Cash account must remain available');const {error}=await supabase.from('money_accounts').delete().eq('id',id).eq('user_id',user.id);if(error)fail(formData,'This account has money history and cannot be deleted');ok(formData,'Account deleted')}
 
-const categorySchema=z.object({
-  kind:z.enum(['expense','income']),
-  name:z.string().min(1).max(60),
-  icon:z.string().max(8),
-})
+export async function createMoneyPerson(formData:FormData){const {supabase,user}=await requireOnboardedUser();const name=text(formData,'name');if(name.length<1||name.length>60)fail(formData,'Please enter a valid person name');const {error}=await supabase.from('money_people').insert({user_id:user.id,name,is_default:false});if(error){if(error.code==='23505')fail(formData,'That person already exists');fail(formData,error.message)}ok(formData,'Person added')}
+export async function deleteMoneyPerson(formData:FormData){const {supabase,user}=await requireOnboardedUser();const id=text(formData,'id');if(!uuid(id))fail(formData,'Person not found');const {data:person}=await supabase.from('money_people').select('is_default').eq('id',id).eq('user_id',user.id).maybeSingle();if(!person)fail(formData,'Person not found');if(person.is_default)fail(formData,'Default people cannot be deleted');const {error}=await supabase.from('money_people').delete().eq('id',id).eq('user_id',user.id);if(error)fail(formData,'This person is already used in transaction history');ok(formData,'Person deleted')}
 
-export async function createMoneyCategory(formData:FormData){
-  const {supabase,user}=await requireOnboardedUser()
-  const parsed=categorySchema.safeParse({kind:text(formData,'kind'),name:text(formData,'name'),icon:text(formData,'icon')})
-  if(!parsed.success)fail(formData,'Please check the category details')
-  const {error}=await supabase.from('money_categories').insert({
-    user_id:user.id,kind:parsed.data.kind,name:parsed.data.name,icon:parsed.data.icon||null,is_default:false,
-  })
-  if(error){if(error.code==='23505')fail(formData,'That category already exists');fail(formData,error.message)}
-  ok(formData,'Category added')
-}
+const transferSchema=z.object({from_account_id:z.string().uuid(),to_account_id:z.string().uuid(),amount:z.coerce.number().positive().max(100000000),transfer_date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),note:z.string().max(300)})
+export async function saveMoneyTransfer(formData:FormData){const {supabase,user}=await requireOnboardedUser();const parsed=transferSchema.safeParse({from_account_id:text(formData,'from_account_id'),to_account_id:text(formData,'to_account_id'),amount:text(formData,'amount'),transfer_date:text(formData,'transfer_date'),note:text(formData,'note')});if(!parsed.success||parsed.data.from_account_id===parsed.data.to_account_id)fail(formData,'Please check the transfer details');const v=parsed.data;const {data:accounts}=await supabase.from('money_accounts').select('id').eq('user_id',user.id).in('id',[v.from_account_id,v.to_account_id]).eq('active',true);if((accounts??[]).length!==2)fail(formData,'Choose two active accounts');const {error}=await supabase.from('money_transfers').insert({...v,user_id:user.id,note:v.note||null});if(error)fail(formData,error.message);ok(formData,'Transfer recorded')}
+export async function deleteMoneyTransfer(formData:FormData){const {supabase,user}=await requireOnboardedUser();const id=text(formData,'id');if(!uuid(id))fail(formData,'Transfer not found');const {error}=await supabase.from('money_transfers').delete().eq('id',id).eq('user_id',user.id);if(error)fail(formData,error.message);ok(formData,'Transfer deleted')}
+
+const recurringSchema=z.object({transaction_type:z.enum(['expense','income']),amount:z.coerce.number().positive().max(100000000),category_id:z.string().uuid(),account_id:z.string().uuid(),person_id:z.string().uuid(),frequency:z.enum(['weekly','monthly','yearly']),start_date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),end_date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),description:z.string().max(120),note:z.string().max(300)})
+export async function saveMoneyRecurring(formData:FormData){const {supabase,user}=await requireOnboardedUser();const parsed=recurringSchema.safeParse({transaction_type:text(formData,'transaction_type'),amount:text(formData,'amount'),category_id:text(formData,'category_id'),account_id:text(formData,'account_id'),person_id:text(formData,'person_id'),frequency:text(formData,'frequency'),start_date:text(formData,'start_date'),end_date:text(formData,'end_date'),description:text(formData,'description'),note:text(formData,'note')});if(!parsed.success)fail(formData,'Please check the recurring entry');const v=parsed.data;const [{data:category},{data:account},{data:person}]=await Promise.all([supabase.from('money_categories').select('kind').eq('id',v.category_id).eq('user_id',user.id).maybeSingle(),supabase.from('money_accounts').select('id').eq('id',v.account_id).eq('user_id',user.id).eq('active',true).maybeSingle(),supabase.from('money_people').select('id').eq('id',v.person_id).eq('user_id',user.id).eq('active',true).maybeSingle()]);if(!category||category.kind!==v.transaction_type||!account||!person)fail(formData,'Choose matching active money details');const {error}=await supabase.from('money_recurring').insert({user_id:user.id,transaction_type:v.transaction_type,amount:v.amount,category_id:v.category_id,account_id:v.account_id,person_id:v.person_id,frequency:v.frequency,start_date:v.start_date,end_date:v.end_date||null,next_due_date:v.start_date,description:v.description||null,note:v.note||null});if(error)fail(formData,error.message);ok(formData,'Recurring entry added')}
+export async function postMoneyRecurringNow(formData:FormData){const {supabase,user}=await requireOnboardedUser();const id=text(formData,'id');if(!uuid(id))fail(formData,'Recurring entry not found');const {data:row}=await supabase.from('money_recurring').select('*').eq('id',id).eq('user_id',user.id).eq('active',true).maybeSingle();if(!row)fail(formData,'Recurring entry not found');const date=text(formData,'transaction_date')||new Date().toISOString().slice(0,10);const {error}=await supabase.from('money_transactions').insert({user_id:user.id,transaction_type:row.transaction_type,amount:row.amount,category_id:row.category_id,account_id:row.account_id,person_id:row.person_id,transaction_date:date,payment_method:'other',description:row.description,note:row.note,source:'manual'});if(error)fail(formData,error.message);const next=nextRecurringDate(row.next_due_date,row.frequency);const active=!row.end_date||next<=row.end_date;await supabase.from('money_recurring').update({next_due_date:next,active}).eq('id',id).eq('user_id',user.id);ok(formData,'Recurring transaction posted')}
+export async function deleteMoneyRecurring(formData:FormData){const {supabase,user}=await requireOnboardedUser();const id=text(formData,'id');if(!uuid(id))fail(formData,'Recurring entry not found');const {error}=await supabase.from('money_recurring').delete().eq('id',id).eq('user_id',user.id);if(error)fail(formData,error.message);ok(formData,'Recurring entry deleted')}
+
+const goalSchema=z.object({goal_type:z.enum(['savings','emergency']),account_id:z.string().uuid().optional().or(z.literal('')),target_amount:z.coerce.number().positive().max(1000000000).optional(),monthly_target:z.coerce.number().positive().max(1000000000).optional()})
+export async function saveMoneyGoal(formData:FormData){const {supabase,user}=await requireOnboardedUser();const parsed=goalSchema.safeParse({goal_type:text(formData,'goal_type'),account_id:text(formData,'account_id'),target_amount:text(formData,'target_amount')||undefined,monthly_target:text(formData,'monthly_target')||undefined});if(!parsed.success)fail(formData,'Please check the savings target');const v=parsed.data;if(v.account_id){const {data}=await supabase.from('money_accounts').select('id').eq('id',v.account_id).eq('user_id',user.id).eq('active',true).maybeSingle();if(!data)fail(formData,'Choose an active account')}const {error}=await supabase.from('money_goals').upsert({user_id:user.id,goal_type:v.goal_type,account_id:v.account_id||null,target_amount:v.target_amount??null,monthly_target:v.monthly_target??null},{onConflict:'user_id,goal_type'});if(error)fail(formData,error.message);ok(formData,'Savings target saved')}
