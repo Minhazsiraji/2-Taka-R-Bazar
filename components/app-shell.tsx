@@ -7,9 +7,13 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { PILOT_MODE } from '@/lib/pilot-mode'
 import { LEGAL_LINKS } from '@/lib/legal'
 
-const customerNav=[['/home','Home'],['/pool','Pools'],['/money','My Money'],['/orders','Orders'],['/savings','Savings'],...(!PILOT_MODE?[['/subscription','Membership']]:[]),['/community','Community'],['/pickup','Pickup'],['/profile','Profile'],['/notifications','Notifications']]
-const mobileNav=[['/home','Home'],['/pool','Pools'],['/money','My Money'],['/orders','Orders'],['/savings','Savings']]
-const primaryNav=[['/home','Home'],['/pool','Pools'],['/money','My Money'],['/orders','Orders'],['/savings','Savings']]
+const customerNav = [
+  ['/home', 'Home'], ['/pool', 'Pools'], ['/money', 'My Money'], ['/orders', 'Orders'], ['/savings', 'Savings'],
+  ...(!PILOT_MODE ? [['/subscription', 'Membership']] : []),
+  ['/community', 'Community'], ['/pickup', 'Pickup'], ['/profile', 'Profile'], ['/notifications', 'Notifications'],
+]
+const mobileNav = [['/home', 'Home'], ['/pool', 'Pools'], ['/money', 'My Money'], ['/orders', 'Orders'], ['/savings', 'Savings']]
+const primaryNav = [['/home', 'Home'], ['/pool', 'Pools'], ['/money', 'My Money'], ['/orders', 'Orders'], ['/savings', 'Savings']]
 
 function NotificationBellFallback(){return <Link href="/notifications" className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm" aria-label="Notifications"><span aria-hidden="true" className="text-base">🔔</span></Link>}
 
