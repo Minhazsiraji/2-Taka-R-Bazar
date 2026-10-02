@@ -61,7 +61,7 @@ test('My Money is discoverable from primary navigation and Home quick entry',()=
   const shell=readFileSync(new URL('../components/app-shell.tsx',import.meta.url),'utf8')
   const home=readFileSync(new URL('../app/home/page.tsx',import.meta.url),'utf8')
   const entry=readFileSync(new URL('../components/money-entry-form.tsx',import.meta.url),'utf8')
-  assert.match(shell,/\['\/money','My Money'\]/);assert.match(shell,/Primary customer navigation/);assert.match(shell,/FREE/)
+  assert.match(shell,/\['\/money',\s*'My Money'\]/);assert.match(shell,/Primary customer navigation/);assert.match(shell,/FREE/)
   assert.match(home,/My Money · FREE/);assert.match(home,/Track today&apos;s cost in seconds/);assert.match(home,/returnTo="\/home"/)
   assert.match(entry,/defaultCategory/);assert.match(entry,/Groceries/);assert.match(entry,/account_id/);assert.match(entry,/person_id/)
 })
