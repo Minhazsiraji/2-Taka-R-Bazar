@@ -38,8 +38,9 @@ export default function AboutPage() {
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">About {SITE_NAME}</p>
         <h1 className="mt-2 text-3xl font-black sm:text-4xl">Community demand first. Final price before purchase.</h1>
-        <p className="mt-4 text-lg leading-8 text-slate-700">{SITE_NAME} is a community grocery-pooling service designed to help nearby households combine demand, negotiate against real volume, and see the final customer price before deciding whether to buy.</p>
-        <p className="mt-4 leading-7 text-slate-700" lang="bn">{SITE_NAME} একটি কমিউনিটি গ্রোসারি-পুলিং সেবা। কাছাকাছি পরিবারের বাজারের চাহিদা একত্র করে মোট পরিমাণ অনুযায়ী সরবরাহকারীর দর নেওয়া হয়, এবং চূড়ান্ত গ্রাহক মূল্য প্রকাশের পর প্রত্যেকে কিনবেন কি না তা সিদ্ধান্ত নেন।</p>
+        <p className="mt-4 text-lg leading-8 text-slate-700">{SITE_NAME} is a community grocery-pooling platform where households combine demand, suppliers compete for volume, customers see the final price before confirming, and actual savings are verified after pickup.</p>
+        <p className="mt-4 leading-7 text-slate-700">It is designed for smart, modern households who value convenience, transparency, better buying decisions, and a more premium everyday shopping experience.</p>
+        <p className="mt-4 leading-7 text-slate-700" lang="bn">{SITE_NAME} একটি কমিউনিটি গ্রোসারি-পুলিং প্ল্যাটফর্ম। কাছাকাছি পরিবারের বাজারের চাহিদা একত্র হয়, মোট পরিমাণের জন্য সরবরাহকারীরা প্রতিযোগিতামূলক দর দেয়, চূড়ান্ত মূল্য প্রকাশের পর গ্রাহক সিদ্ধান্ত নেন, এবং পিকআপের পর প্রকৃত সাশ্রয় যাচাই করা হয়। এটি স্মার্ট, আধুনিক ও সুবিধা-সচেতন পরিবারের জন্য তৈরি।</p>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2">
           <article className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-black">What joining a pool means</h2><p className="mt-2 leading-7 text-slate-700">Joining records demand. It is not a purchase. A customer order is created only after the final price is published and the customer explicitly confirms.</p></article>
