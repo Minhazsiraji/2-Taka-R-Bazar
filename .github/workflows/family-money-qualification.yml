@@ -1,0 +1,37 @@
+name: Family Money Qualification
+
+on:
+  push:
+    branches:
+      - feat/family-budget-tracker
+  workflow_dispatch:
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+      - run: git diff --check
+
+  migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start disposable local Supabase
+        run: supabase start
+      - name: Apply migrations from zero
+        run: supabase db reset
+      - name: Stop disposable Supabase
+        if: always()
+        run: supabase stop --no-backup
