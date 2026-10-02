@@ -21,7 +21,7 @@ create table if not exists public.money_transactions (
   user_id uuid not null references auth.users(id) on delete cascade,
   transaction_type text not null check (transaction_type in ('expense','income')),
   amount numeric(14,2) not null check (amount > 0 and amount <= 100000000),
-  category_id uuid not null references public.money_categories(id) on delete restrict,
+  category_id uuid not null,
   transaction_date date not null default current_date,
   payment_method text not null default 'cash' check (payment_method in ('cash','mobile_wallet','bank','card','other')),
   note text check (note is null or char_length(note) <= 300),
@@ -34,7 +34,7 @@ create table if not exists public.money_transactions (
 create table if not exists public.money_budgets (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  category_id uuid not null references public.money_categories(id) on delete cascade,
+  category_id uuid not null,
   month date not null,
   amount numeric(14,2) not null check (amount > 0 and amount <= 100000000),
   created_at timestamptz not null default now(),

@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { SubmitButton } from '@/components/submit-button'
+import { MoneyEntryForm } from '@/components/money-entry-form'
 import { requireOnboardedUser } from '@/lib/auth'
 import { taka } from '@/lib/format'
 import { monthBounds, normalizeMoneyMonth, shiftMoneyMonth, summarizeMoney } from '@/lib/money.mjs'
-import { createMoneyCategory, deleteMoneyBudget, deleteMoneyTransaction, saveMoneyBudget, saveMoneyTransaction } from '@/app/actions/money'
+import { createMoneyCategory, deleteMoneyBudget, deleteMoneyTransaction, saveMoneyBudget } from '@/app/actions/money'
 
 export const dynamic='force-dynamic'
 
@@ -68,18 +69,7 @@ export default async function MoneyPage({searchParams}:{searchParams:Promise<Sea
     </section>
 
     <section className="grid gap-4 lg:grid-cols-[1.05fr_.95fr]">
-      <form action={saveMoneyTransaction} className="card grid gap-4 p-5">
-        <input type="hidden" name="month" value={month}/><div><div className="card-title">Quick entry</div><h2 className="section-title mt-1">Add today&apos;s money</h2><p className="muted mt-1">Designed to take only a few seconds.</p></div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label><span className="label">Type</span><select className="input" name="transaction_type" defaultValue="expense"><option value="expense">Expense</option><option value="income">Income</option></select></label>
-          <label><span className="label">Amount (৳)</span><input className="input" name="amount" type="number" min="0.01" max="100000000" step="0.01" inputMode="decimal" placeholder="e.g. 450" required/></label>
-          <label><span className="label">Category</span><select className="input" name="category_id" defaultValue="" required><option value="" disabled>Choose category</option><optgroup label="Expenses">{expenseCategories.map(c=><option key={c.id} value={c.id}>{c.icon??'•'} {c.name}</option>)}</optgroup><optgroup label="Income">{incomeCategories.map(c=><option key={c.id} value={c.id}>{c.icon??'•'} {c.name}</option>)}</optgroup></select></label>
-          <label><span className="label">Date</span><input className="input" name="transaction_date" type="date" defaultValue={month===bd.month?bd.today:range.start} required/></label>
-          <label><span className="label">Paid via</span><select className="input" name="payment_method" defaultValue="cash"><option value="cash">Cash</option><option value="mobile_wallet">Mobile wallet</option><option value="bank">Bank</option><option value="card">Card</option><option value="other">Other</option></select></label>
-          <label><span className="label">Note (optional)</span><input className="input" name="note" maxLength={300} placeholder="e.g. weekly vegetables"/></label>
-        </div>
-        <SubmitButton>Add transaction</SubmitButton>
-      </form>
+      <MoneyEntryForm month={month} today={month===bd.month?bd.today:range.start} expenseCategories={expenseCategories} incomeCategories={incomeCategories}/>
 
       <div className="card p-5"><div className="card-title">Where the money went</div><h2 className="section-title mt-1">Top expense categories</h2>
         {topCategories.length===0?<p className="muted mt-5">Add your first expense and the category breakdown will appear here.</p>:<div className="mt-5 grid gap-4">{topCategories.map(row=><div key={row.id}><div className="flex items-center justify-between gap-3 text-sm"><b>{row.category?.icon??'•'} {row.category?.name??'Category'}</b><span className="font-black">{taka(row.total)}</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-600" style={{width:`${Math.max(4,(row.total/maxCategory)*100)}%`}}/></div></div>)}</div>}
