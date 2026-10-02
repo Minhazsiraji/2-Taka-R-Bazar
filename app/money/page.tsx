@@ -6,6 +6,7 @@ import { requireOnboardedUser } from '@/lib/auth'
 import { taka } from '@/lib/format'
 import { accountBalances, categoryTotals, monthBounds, monthlySeries, personTotals, savingsRate } from '@/lib/money.mjs'
 import { dhakaToday, loadMoneyReference } from '@/lib/money-server'
+import { setMoneySummarySharing } from '@/app/actions/money'
 
 export const dynamic='force-dynamic'
 type SearchParams={error?:string;notice?:string}
@@ -25,10 +26,12 @@ export default async function MoneyDashboard({searchParams}:{searchParams:Promis
   const categoryRows=[...categoryMap.entries()].map(([id,amount])=>({label:(reference.categories as any[]).find(row=>row.id===id)?.name??'Category',amount})).sort((a,b)=>b.amount-a.amount)
   const personRows=[...personMap.entries()].map(([id,amount])=>({label:(reference.people as any[]).find(row=>row.id===id)?.name??'Person',amount})).sort((a,b)=>b.amount-a.amount)
   const trend=monthlySeries(txs,bd.month,12);const recent=monthTx.slice(0,6);const creditDue=accountRows.filter((row:any)=>row.account_type==='credit_card'&&Number(row.balance)<0).reduce((sum:number,row:any)=>sum+Math.abs(Number(row.balance)),0)
+  const summarySharing=(profile as any).money_summary_sharing!==false
   return <AppShell roles={roles}><div className="grid gap-5">
     <MoneyNav/>
     <section className="glass-panel rounded-[28px] p-5 sm:p-7"><div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><div className="text-xs font-black uppercase tracking-[.16em] text-violet-700">Overview</div><h1 className="mt-1 text-3xl font-black">My Money Dashboard</h1><p className="mt-2 text-sm text-slate-600">{profile.household_name} · BDT · private to your account</p></div><Link href="/money/transactions" className="btn-primary">+ Add transaction</Link></div><div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 text-xs font-semibold text-emerald-950">Free household money tracking. We never ask for a bank password, card PIN or mobile-wallet PIN.</div></section>
     {query.error&&<div className="error">{query.error}</div>}{query.notice&&<div className="success">{query.notice}</div>}
+    <section className="card p-5"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><div className="card-title">Privacy & sharing</div><h2 className="mt-1 text-lg font-black">Monthly summary sharing is {summarySharing?'ON':'OFF'}</h2><p className="muted mt-1 max-w-3xl">Enabled by default. When on, Super Admin can read only your monthly income, expense, net savings and top 5 expense categories. Bank credentials, PINs, account balances and transaction descriptions are never included.</p></div><form action={setMoneySummarySharing}><input type="hidden" name="return_to" value="/money"/><input type="hidden" name="enabled" value={summarySharing?'false':'true'}/><button className={summarySharing?'btn-secondary':'btn-primary'} type="submit">{summarySharing?'Turn sharing off':'Turn sharing on'}</button></form></div></section>
     <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
       <div className="card p-4"><div className="card-title">Total income</div><div className="metric mt-2 text-emerald-700">{taka(income)}</div></div>
       <div className="card p-4"><div className="card-title">Total expenses</div><div className="metric mt-2 text-rose-700">{taka(expense)}</div></div>

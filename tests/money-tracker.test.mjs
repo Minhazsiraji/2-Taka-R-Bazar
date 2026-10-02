@@ -69,3 +69,25 @@ test('My Money exposes the complete requested module navigation',()=>{
   for(const label of ['Dashboard','Transactions','Accounts','Transfers','Budgets','Categories','Recurring','Reports']) assert.match(nav,new RegExp(label))
   for(const path of ['transactions','accounts','transfers','budgets','categories','recurring','reports']) assert.doesNotThrow(()=>readFileSync(new URL(`../app/money/${path}/page.tsx`,import.meta.url),'utf8'))
 })
+
+
+test('My Money summary sharing defaults on and supports customer opt-out',()=>{
+  const sql=readFileSync(new URL('../supabase/migrations/202610020007_money_summary_sharing.sql',import.meta.url),'utf8')
+  const actions=readFileSync(new URL('../app/actions/money.ts',import.meta.url),'utf8')
+  const page=readFileSync(new URL('../app/money/page.tsx',import.meta.url),'utf8')
+  assert.match(sql,/money_summary_sharing boolean not null default true/)
+  assert.match(sql,/set_my_money_summary_sharing/)
+  assert.match(sql,/coalesce\(p\.money_summary_sharing,true\)=true/)
+  assert.match(actions,/setMoneySummarySharing/)
+  assert.match(page,/Monthly summary sharing is/)
+})
+
+test('Super Admin family financials are read-only summary data with top five categories',()=>{
+  const sql=readFileSync(new URL('../supabase/migrations/202610020006_super_admin_money_family_financials.sql',import.meta.url),'utf8')
+  const page=readFileSync(new URL('../app/super-admin/money-analytics/page.tsx',import.meta.url),'utf8')
+  assert.match(sql,/super_admin_money_family_financials/)
+  assert.match(sql,/ct\.rn<=5/)
+  assert.match(page,/Private family financials/)
+  assert.match(page,/Net savings/)
+  assert.match(page,/Top \{i\}/)
+})

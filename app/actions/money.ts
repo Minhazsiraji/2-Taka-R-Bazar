@@ -11,7 +11,7 @@ function monthOf(fd:FormData){const value=text(fd,'month');return /^\d{4}-\d{2}$
 function safeReturn(fd:FormData){const value=text(fd,'return_to');return value==='/home'||/^\/money(?:\/[a-z-]+)?$/.test(value)?value:'/money'}
 function targetUrl(fd:FormData,kind:'error'|'notice',message:string){const base=safeReturn(fd);const params=new URLSearchParams();const month=monthOf(fd);if(month&&base.startsWith('/money'))params.set('month',month);params.set(kind,message);return `${base}?${params.toString()}`}
 function fail(fd:FormData,message:string):never{redirect(targetUrl(fd,'error',message))}
-function refresh(){for(const path of ['/home','/money','/money/transactions','/money/accounts','/money/transfers','/money/budgets','/money/categories','/money/recurring','/money/reports'])revalidatePath(path)}
+function refresh(){for(const path of ['/home','/money','/money/transactions','/money/accounts','/money/transfers','/money/budgets','/money/categories','/money/recurring','/money/monthly-income','/money/reports'])revalidatePath(path)}
 function ok(fd:FormData,message:string):never{refresh();redirect(targetUrl(fd,'notice',message))}
 function uuid(value:string){return z.string().uuid().safeParse(value).success}
 
@@ -51,3 +51,12 @@ export async function deleteMoneyRecurring(formData:FormData){const {supabase,us
 
 const goalSchema=z.object({goal_type:z.enum(['savings','emergency']),account_id:z.string().uuid().optional().or(z.literal('')),target_amount:z.coerce.number().positive().max(1000000000).optional(),monthly_target:z.coerce.number().positive().max(1000000000).optional()})
 export async function saveMoneyGoal(formData:FormData){const {supabase,user}=await requireOnboardedUser();const parsed=goalSchema.safeParse({goal_type:text(formData,'goal_type'),account_id:text(formData,'account_id'),target_amount:text(formData,'target_amount')||undefined,monthly_target:text(formData,'monthly_target')||undefined});if(!parsed.success)fail(formData,'Please check the savings target');const v=parsed.data;if(v.account_id){const {data}=await supabase.from('money_accounts').select('id').eq('id',v.account_id).eq('user_id',user.id).eq('active',true).maybeSingle();if(!data)fail(formData,'Choose an active account')}const {error}=await supabase.from('money_goals').upsert({user_id:user.id,goal_type:v.goal_type,account_id:v.account_id||null,target_amount:v.target_amount??null,monthly_target:v.monthly_target??null},{onConflict:'user_id,goal_type'});if(error)fail(formData,error.message);ok(formData,'Savings target saved')}
+
+export async function setMoneySummarySharing(formData:FormData){
+  const {supabase}=await requireOnboardedUser()
+  const enabled=text(formData,'enabled')==='true'
+  const {error}=await supabase.rpc('set_my_money_summary_sharing',{p_enabled:enabled})
+  if(error)fail(formData,'Unable to update sharing preference')
+  revalidatePath('/super-admin/money-analytics')
+  ok(formData,enabled?'Monthly summary sharing is on':'Monthly summary sharing is off')
+}
