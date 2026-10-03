@@ -2,7 +2,7 @@ import { AdminShell } from '@/components/admin-shell'
 import { Flash } from '@/components/flash'
 import { ProductImage } from '@/components/product-image'
 import { SubmitButton } from '@/components/submit-button'
-import { createProduct, updateProduct } from '@/app/actions/admin'
+import { createProductWithImage as createProduct, updateProductWithImage as updateProduct } from '@/app/actions/product-images'
 import { requireAdmin } from '@/lib/auth'
 
 export const dynamic='force-dynamic'
