@@ -1,0 +1,20 @@
+/* Pool product photography: maximize useful image area without cropping packs. */
+div:has(> img[alt$=" product image"])[class*="aspect-"] {
+  padding: 0.25rem !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+div:has(> img[alt$=" product image"])[class*="aspect-"] > img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+@media (min-width: 640px) {
+  div:has(> img[alt$=" product image"])[class*="aspect-"] {
+    aspect-ratio: 4 / 3 !important;
+  }
+}
