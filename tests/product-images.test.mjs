@@ -14,17 +14,28 @@ test('product image actions use managed validated uploads and never accept arbit
   assert.doesNotMatch(actions,/t\(fd,'image_url'\)/)
 })
 
-test('all admin product types use file upload instead of an external URL field',()=>{
+test('all admin product types use the shared optimized file input instead of an external URL field',()=>{
   const products=read('app/admin/products/page.tsx')
   const own=read('app/admin/own-products/page.tsx')
+  const input=read('components/product-image-input.tsx')
   for(const page of [products,own]){
-    assert.match(page,/name="image_file"/)
-    assert.match(page,/image\/jpeg,image\/png,image\/webp/)
+    assert.match(page,/ProductImageInput/)
     assert.doesNotMatch(page,/type="url" name="image_url"/)
     assert.match(page,/ProductImage/)
   }
+  assert.match(input,/name="image_file"/)
+  assert.match(input,/image\/jpeg,image\/png,image\/webp/)
+  assert.match(input,/TARGET_BYTES=850\*1024/)
+  assert.match(input,/createImageBitmap/)
+  assert.match(input,/image\/webp/)
   assert.match(products,/createProductWithImage/)
   assert.match(own,/upsertOwnProductWithImage/)
+})
+
+test('server actions keep limited upload headroom rather than accepting large raw files',()=>{
+  const config=read('next.config.ts')
+  assert.match(config,/serverActions/)
+  assert.match(config,/bodySizeLimit: '2mb'/)
 })
 
 test('shared product image component is responsive and protects referrer data',()=>{
