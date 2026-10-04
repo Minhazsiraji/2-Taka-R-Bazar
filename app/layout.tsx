@@ -9,6 +9,7 @@ import './site-theme.css'
 import './site-theme-semantic.css'
 import './site-theme-mobile.css'
 import './site-theme-admin.css'
+import './site-theme-surface-fix.css'
 import { PwaRegister } from '@/components/pwa-register'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 

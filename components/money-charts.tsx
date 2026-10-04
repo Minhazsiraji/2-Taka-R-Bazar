@@ -3,9 +3,13 @@ import { taka } from '@/lib/format'
 type Series={month:string;income:number;expense:number}
 type Slice={label:string;amount:number}
 
+const INCOME_COLOR='#059669'
+const EXPENSE_COLOR='#e11d48'
+const BAR_RADIUS='6px 6px 0 0'
+
 export function MoneyTrend({series}:{series:Series[]}){
   const max=Math.max(1,...series.flatMap(row=>[row.income,row.expense]))
-  return <div className="grid gap-3"><div className="flex h-44 items-end gap-2 border-b border-slate-200 px-1">{series.map(row=><div key={row.month} className="flex min-w-0 flex-1 items-end justify-center gap-1" title={`${row.month}: Income ${taka(row.income)}, Expense ${taka(row.expense)}`}><div className="w-[42%] rounded-t bg-emerald-400" style={{height:`${Math.max(row.income?4:0,(row.income/max)*100)}%`}}/><div className="w-[42%] rounded-t bg-rose-400" style={{height:`${Math.max(row.expense?4:0,(row.expense/max)*100)}%`}}/></div>)}</div><div className="flex justify-between text-[9px] font-semibold text-slate-500">{series.map((row,index)=><span key={row.month} className={index%2?'hidden sm:block':''}>{row.month.slice(5)}</span>)}</div><div className="flex gap-4 text-xs font-bold"><span className="text-emerald-700">● Income</span><span className="text-rose-700">● Expense</span></div></div>
+  return <div className="grid gap-3"><div className="flex h-44 items-end gap-2 border-b border-slate-200 px-1">{series.map(row=><div key={row.month} className="flex h-full min-w-0 flex-1 items-end justify-center gap-1" title={`${row.month}: Income ${taka(row.income)}, Expense ${taka(row.expense)}`}><div className="w-[42%]" style={{height:`${Math.max(row.income?4:0,(row.income/max)*100)}%`,backgroundColor:INCOME_COLOR,borderRadius:BAR_RADIUS,boxShadow:'none',backdropFilter:'none'}}/><div className="w-[42%]" style={{height:`${Math.max(row.expense?4:0,(row.expense/max)*100)}%`,backgroundColor:EXPENSE_COLOR,borderRadius:BAR_RADIUS,boxShadow:'none',backdropFilter:'none'}}/></div>)}</div><div className="flex justify-between text-[9px] font-semibold text-slate-500">{series.map((row,index)=><span key={row.month} className={index%2?'hidden sm:block':''}>{row.month.slice(5)}</span>)}</div><div className="flex gap-4 text-xs font-bold"><span style={{color:INCOME_COLOR}}>● Income</span><span style={{color:EXPENSE_COLOR}}>● Expense</span></div></div>
 }
 
 const palette=['#6366f1','#10b981','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#84cc16','#f97316']
