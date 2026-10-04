@@ -1,6 +1,7 @@
 import { AdminShell } from '@/components/admin-shell'
 import { Flash } from '@/components/flash'
 import { ProductImage } from '@/components/product-image'
+import { ProductImageInput } from '@/components/product-image-input'
 import { SubmitButton } from '@/components/submit-button'
 import { requireAdmin } from '@/lib/auth'
 import { taka } from '@/lib/format'
@@ -19,7 +20,7 @@ function ProductFields({row}:{row?:any}){
     <label><span className="label">Pack size</span><input className="input" name="package_size" defaultValue={row?.package_size??''} placeholder="1 kg" required/></label>
     <label><span className="label">Unit</span><input className="input" name="unit" defaultValue={row?.unit??''} placeholder="pack" required/></label>
     <label><span className="label">SKU</span><input className="input" name="sku" defaultValue={row?.sku??''} required/></label>
-    <label className="md:col-span-2"><span className="label">Product image</span><input className="input" type="file" name="image_file" accept="image/jpeg,image/png,image/webp"/><span className="muted mt-1 block text-xs">JPEG, PNG or WebP — max 5 MB. Upload once and the same master image appears in Pools and customer views.</span></label>
+    <ProductImageInput/>
     {row?.image_url&&<label className="flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm md:col-span-2"><input className="mt-1" type="checkbox" name="remove_image"/><span><b>Remove current image</b><span className="muted block">Uploading a replacement automatically supersedes the previous managed image.</span></span></label>}
     <label><span className="label">Manufacturer / supplier ref.</span><input className="input" name="manufacturer_reference" defaultValue={row?.manufacturer_reference??''}/></label>
     <label><span className="label">Batch / lot</span><input className="input" name="batch_number" defaultValue={row?.batch_number??''}/></label>
