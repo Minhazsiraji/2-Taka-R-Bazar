@@ -17,15 +17,20 @@ test('surface contract applies across customer money operations and super admin 
   assert.match(css,/main \.glass-panel/)
   assert.match(css,/aside\[class\*="rounded-"\]/)
   assert.match(css,/details\[class\*="rounded-"\]/)
-  assert.match(css,/\[class\*="bg-white"\]/)
-  assert.match(css,/\[class\*="bg-slate-"\]/)
 })
 
-test('light and dark surfaces remove duplicate decorative layers',()=>{
+test('dark primary surfaces use the same deep family instead of a grey slab',()=>{
   const css=readFileSync(new URL('../app/site-theme-surface-fix.css',import.meta.url),'utf8')
-  assert.match(css,/--app-surface-primary: var\(--glass-panel\)/)
-  assert.match(css,/html\[data-theme="dark"\][\s\S]*--app-surface-primary: linear-gradient/)
-  assert.match(css,/main :is\(\.card,\.table-wrap,\.glass-panel\)::before/)
-  assert.match(css,/content: none !important/)
-  assert.match(css,/\.home-liquid-route \{ background: transparent !important; \}/)
+  assert.match(css,/--app-surface-primary: rgba\(7,13,22,\.90\)/)
+  assert.match(css,/body\.site-glass-root main :is\(\.card,\.table-wrap,\.glass-panel\)/)
+  assert.match(css,/background-image:none !important/)
+  assert.match(css,/content:none !important/)
+})
+
+test('interactive glass inset controls keep explicit text contrast',()=>{
+  const css=readFileSync(new URL('../app/site-theme-surface-fix.css',import.meta.url),'utf8')
+  assert.match(css,/:is\(a,button\)\.glass-inset/)
+  assert.match(css,/--app-control-text: #e7eef9/)
+  assert.match(css,/color:#e7eef9 !important/)
+  assert.doesNotMatch(css,/main :is\(\.glass-subpanel,\.glass-inset,\.glass-icon\)/)
 })
