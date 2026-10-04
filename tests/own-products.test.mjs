@@ -38,8 +38,9 @@ test('migration owns inventory reservation, release, fulfilment and supplier reg
 
 test('own-product image upload is constrained to admin storage policy and safe formats',()=>{
   const sql=readFileSync(new URL('../supabase/migrations/202610010001_own_products_pool.sql',import.meta.url),'utf8')
-  const action=readFileSync(new URL('../app/actions/admin.ts',import.meta.url),'utf8')
+  const action=readFileSync(new URL('../app/actions/product-images.ts',import.meta.url),'utf8')
   const validator=readFileSync(new URL('../lib/product-image.mjs',import.meta.url),'utf8')
+  const input=readFileSync(new URL('../components/product-image-input.tsx',import.meta.url),'utf8')
   const page=readFileSync(new URL('../app/admin/own-products/page.tsx',import.meta.url),'utf8')
   assert.match(sql,/product-images/)
   assert.match(sql,/file_size_limit,allowed_mime_types/)
@@ -54,16 +55,19 @@ test('own-product image upload is constrained to admin storage policy and safe f
   assert.match(validator,/hasValidProductImageSignature/)
   assert.match(action,/validateProductImage/)
   assert.match(action,/requireAdmin\(\)/)
-  assert.match(page,/name="image_file"/)
-  assert.match(page,/accept="image\/jpeg,image\/png,image\/webp"/)
+  assert.match(input,/name="image_file"/)
+  assert.match(input,/accept="image\/jpeg,image\/png,image\/webp"/)
+  assert.match(page,/ProductImageInput/)
 })
 
 test('own-product preview UX has clean encoding, readiness messaging and readable admin navigation',()=>{
   const page=readFileSync(new URL('../app/admin/own-products/page.tsx',import.meta.url),'utf8')
+  const input=readFileSync(new URL('../components/product-image-input.tsx',import.meta.url),'utf8')
   const action=readFileSync(new URL('../app/actions/admin.ts',import.meta.url),'utf8')
   const shell=readFileSync(new URL('../components/admin-shell.tsx',import.meta.url),'utf8')
   assert.doesNotMatch(page,/Â/)
-  assert.match(page,/JPEG, PNG or WebP — max 5 MB/)
+  assert.match(input,/JPEG, PNG or WebP — max 5 MB/)
+  assert.match(input,/optimized automatically/)
   assert.match(page,/Own Product storage is not configured in this environment/)
   assert.match(action,/Own Product storage is not configured in this environment/)
   assert.match(action,/bucket not found/i)
