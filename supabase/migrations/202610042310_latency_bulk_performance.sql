@@ -6,7 +6,7 @@ create index if not exists order_items_pool_item_id_idx on public.order_items (p
 create index if not exists order_items_product_id_idx on public.order_items (product_id);
 create index if not exists pool_items_product_id_idx on public.pool_items (product_id);
 create index if not exists supplier_quotes_supplier_id_idx on public.supplier_quotes (supplier_id);
-create index if not exists market_price_observations_community_product_observed_idx on public.market_price_observations (community_id, product_id, observed_at desc);
+create index if not exists market_price_observations_community_product_observed_idx on public.market_price_observations (community_id, product_id, observed_on desc);
 create index if not exists notifications_pool_id_idx on public.notifications (pool_id) where pool_id is not null;
 create index if not exists notifications_order_id_idx on public.notifications (order_id) where order_id is not null;
 create index if not exists pickup_points_community_id_idx on public.pickup_points (community_id);
