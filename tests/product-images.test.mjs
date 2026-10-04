@@ -58,6 +58,17 @@ test('Pool keeps product master image as the source of truth',()=>{
   assert.match(pool,/aspect-\[4\/3\]/)
 })
 
+test('Pool auto-fits legacy images with blank margins without object-cover cropping',()=>{
+  const fitter=read('components/pool-product-image-fit.tsx')
+  const layout=read('app/pool/layout.tsx')
+  assert.match(fitter,/crossOrigin='anonymous'/)
+  assert.match(fitter,/r>=244&&g>=244&&b>=244/)
+  assert.match(fitter,/expandAspect/)
+  assert.match(fitter,/object-fit','fill','important'/)
+  assert.match(fitter,/maxH=.*300:320/)
+  assert.match(layout,/PoolProductImageFit/)
+})
+
 test('orders savings and admin Pool details carry the master product image',()=>{
   const orders=read('app/orders/page.tsx')
   const savings=read('app/savings/page.tsx')
