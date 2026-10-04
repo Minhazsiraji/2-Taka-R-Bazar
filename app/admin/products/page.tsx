@@ -1,6 +1,7 @@
 import { AdminShell } from '@/components/admin-shell'
 import { Flash } from '@/components/flash'
 import { ProductImage } from '@/components/product-image'
+import { ProductImageInput } from '@/components/product-image-input'
 import { SubmitButton } from '@/components/submit-button'
 import { createProductWithImage as createProduct, updateProductWithImage as updateProduct } from '@/app/actions/product-images'
 import { requireAdmin } from '@/lib/auth'
@@ -15,7 +16,7 @@ function ProductFields({row}:{row?:any}){
     <label><span className="label">Package size</span><input className="input" name="package_size" defaultValue={row?.package_size??''} placeholder="1 kg" required/></label>
     <label><span className="label">Unit</span><input className="input" name="unit" defaultValue={row?.unit??''} placeholder="pack" required/></label>
     <label><span className="label">SKU</span><input className="input" name="sku" defaultValue={row?.sku??''} required/></label>
-    <label className="md:col-span-2"><span className="label">Product image</span><input className="input" type="file" name="image_file" accept="image/jpeg,image/png,image/webp"/><span className="muted mt-1 block text-xs">JPEG, PNG or WebP · maximum 5 MB. The image is stored in managed product storage and reused automatically in Pools and customer views.</span></label>
+    <ProductImageInput/>
   </>
 }
 
@@ -27,7 +28,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
     <Flash {...sp}/>
 
     <form action={createProduct} className="card grid min-w-0 gap-4 p-4 sm:p-5 md:grid-cols-2">
-      <div className="md:col-span-2"><h2 className="section-title">Create product</h2><p className="muted mt-1 text-sm">Upload the genuine product pack/image once. Do not paste third-party image URLs.</p></div>
+      <div className="md:col-span-2"><h2 className="section-title">Create product</h2><p className="muted mt-1 text-sm">Upload the genuine product pack/image once. Large phone photos are optimized before upload for faster mobile use.</p></div>
       <ProductFields/>
       <label className="flex items-center gap-2"><input type="checkbox" name="is_demo"/><span>Demo/test product</span></label>
       <SubmitButton className="md:w-fit">Create product</SubmitButton>
