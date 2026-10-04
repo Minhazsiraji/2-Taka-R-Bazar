@@ -9,17 +9,14 @@
   --app-surface-secondary: linear-gradient(135deg,rgba(255,255,255,.30),rgba(242,240,250,.20));
   --app-surface-secondary-border: rgba(255,255,255,.72);
   --app-surface-secondary-shadow: inset 0 1px 0 rgba(255,255,255,.76),0 7px 18px rgba(38,47,77,.07);
+  --app-control-text: #17213b;
+  --app-control-bg: linear-gradient(135deg,rgba(255,255,255,.42),rgba(242,240,250,.24));
+  --app-control-border: rgba(255,255,255,.84);
 }
 
-/* Keep the page canvas continuous. Home previously added a second full-page layer. */
 .site-glass-root .home-liquid-route { background: transparent !important; }
-.site-glass-root .home-liquid-route::before {
-  content: none !important;
-  display: none !important;
-  background: none !important;
-}
+.site-glass-root .home-liquid-route::before { content:none !important; display:none !important; background:none !important; }
 
-/* Shell anchor + all reusable top-level app surfaces use one material family. */
 .site-glass-root :is(
   .app-shell-header-bar,
   .public-glass-header,
@@ -38,8 +35,6 @@
   -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
 }
 
-/* Plain white/slate route sections are also primary surfaces, but semantic
-   success/warning/error colours are intentionally left untouched. */
 .site-glass-root main > :is(section,article,aside,details)[class*="rounded-"][class*="bg-white"],
 .site-glass-root main > :is(section,article,aside,details)[class*="rounded-"][class*="bg-slate-"],
 .site-glass-root main > div > :is(section,article,aside,details)[class*="rounded-"][class*="bg-white"],
@@ -51,50 +46,67 @@
   -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
 }
 
-/* Remove decorative paint layers from major surfaces. Those pseudo-elements
-   were the visible extra grey layer under several pages. */
 .site-glass-root main :is(.card,.table-wrap,.glass-panel)::before,
 .site-glass-root main :is(.card,.table-wrap,.glass-panel)::after {
-  content: none !important;
-  display: none !important;
-  background: none !important;
-  box-shadow: none !important;
+  content:none !important; display:none !important; background:none !important; box-shadow:none !important;
 }
 
-/* Secondary/inset surfaces retain depth but no milky overlay. */
-.site-glass-root main :is(.glass-subpanel,.glass-inset,.glass-icon) {
-  outline: none !important;
-  border-color: var(--app-surface-secondary-border) !important;
-  background: var(--app-surface-secondary) !important;
-  box-shadow: var(--app-surface-secondary-shadow) !important;
-  backdrop-filter: blur(16px) saturate(132%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(132%) !important;
+/* Containers only: do not style links/buttons as inset panels. */
+.site-glass-root main :is(
+  div.glass-subpanel,section.glass-subpanel,article.glass-subpanel,
+  div.glass-inset,section.glass-inset,article.glass-inset,
+  div.glass-icon,span.glass-icon
+) {
+  outline:none !important;
+  border-color:var(--app-surface-secondary-border) !important;
+  background:var(--app-surface-secondary) !important;
+  box-shadow:var(--app-surface-secondary-shadow) !important;
+  backdrop-filter:blur(16px) saturate(132%) !important;
+  -webkit-backdrop-filter:blur(16px) saturate(132%) !important;
 }
-.site-glass-root main :is(.glass-subpanel,.glass-inset,.glass-icon)::before,
-.site-glass-root main :is(.glass-subpanel,.glass-inset,.glass-icon)::after {
-  content: none !important;
-  display: none !important;
+.site-glass-root main :is(div.glass-subpanel,section.glass-subpanel,article.glass-subpanel,div.glass-inset,section.glass-inset,article.glass-inset)::before,
+.site-glass-root main :is(div.glass-subpanel,section.glass-subpanel,article.glass-subpanel,div.glass-inset,section.glass-inset,article.glass-inset)::after {
+  content:none !important; display:none !important;
 }
+
+/* Interactive glass controls keep their own readable control treatment. */
+.site-glass-root main :is(a,button).glass-inset {
+  color:var(--app-control-text) !important;
+  border:1px solid var(--app-control-border) !important;
+  background:var(--app-control-bg) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 6px 16px rgba(38,47,77,.08) !important;
+  backdrop-filter:blur(14px) saturate(128%) !important;
+  -webkit-backdrop-filter:blur(14px) saturate(128%) !important;
+}
+.site-glass-root main :is(a,button).glass-inset:hover { filter:brightness(1.05); }
 
 html[data-theme="dark"] .site-glass-root {
-  --app-surface-primary: linear-gradient(145deg,rgba(24,34,50,.78),rgba(12,20,31,.60));
-  --app-surface-primary-border: rgba(226,239,255,.16);
-  --app-surface-primary-shadow: 0 18px 44px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.10),inset -1px -1px 0 rgba(79,222,228,.09),3px 4px 10px rgba(66,211,220,.035),-2px 4px 8px rgba(143,111,225,.028);
-  --app-surface-secondary: linear-gradient(145deg,rgba(20,30,45,.76),rgba(10,17,28,.66));
+  --app-surface-primary: rgba(7,13,22,.90);
+  --app-surface-primary-border: rgba(201,220,242,.14);
+  --app-surface-primary-shadow: 0 16px 38px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.07),inset -1px -1px 0 rgba(79,222,228,.06);
+  --app-surface-secondary: rgba(13,21,33,.76);
   --app-surface-secondary-border: rgba(214,230,248,.13);
-  --app-surface-secondary-shadow: inset 0 1px 0 rgba(255,255,255,.07),inset -1px -1px 0 rgba(65,226,232,.06),0 7px 18px rgba(0,0,0,.18);
+  --app-surface-secondary-shadow: inset 0 1px 0 rgba(255,255,255,.06),0 7px 18px rgba(0,0,0,.16);
+  --app-control-text: #e7eef9;
+  --app-control-bg: linear-gradient(180deg,rgba(34,46,63,.88),rgba(17,26,39,.86));
+  --app-control-border: rgba(218,232,248,.18);
+}
+html[data-theme="dark"] .site-glass-root .home-liquid-route { background:transparent !important; }
+html[data-theme="dark"] .site-glass-root .home-liquid-route::before { content:none !important; display:none !important; background:none !important; }
+
+html[data-theme="dark"] body.site-glass-root main :is(.card,.table-wrap,.glass-panel) {
+  background:rgba(7,13,22,.90) !important;
+  background-image:none !important;
+  color:#eef4ff !important;
+}
+html[data-theme="dark"] body.site-glass-root main :is(a,button).glass-inset {
+  color:#e7eef9 !important;
+  background:linear-gradient(180deg,rgba(34,46,63,.88),rgba(17,26,39,.86)) !important;
 }
 
-html[data-theme="dark"] .site-glass-root .home-liquid-route { background: transparent !important; }
-html[data-theme="dark"] .site-glass-root .home-liquid-route::before {
-  content: none !important;
-  display: none !important;
-  background: none !important;
-}
-
-@media (max-width: 767px) {
+@media (max-width:767px) {
   .site-glass-root main :is(.card,.table-wrap,.glass-panel) {
-    backdrop-filter: blur(18px) saturate(132%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(132%) !important;
+    backdrop-filter:blur(18px) saturate(132%) !important;
+    -webkit-backdrop-filter:blur(18px) saturate(132%) !important;
   }
 }
