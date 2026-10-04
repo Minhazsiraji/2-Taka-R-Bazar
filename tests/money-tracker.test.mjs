@@ -104,3 +104,13 @@ test('My Money trend chart gives percentage-height bars a full-height containing
   assert.match(charts,/\(row\.income\/max\)\*100/)
   assert.match(charts,/\(row\.expense\/max\)\*100/)
 })
+
+test('My Money trend chart uses the same explicit colors for bars and legend',()=>{
+  const charts=readFileSync(new URL('../components/money-charts.tsx',import.meta.url),'utf8')
+  assert.match(charts,/const INCOME_COLOR='#059669'/)
+  assert.match(charts,/const EXPENSE_COLOR='#e11d48'/)
+  assert.match(charts,/backgroundColor:INCOME_COLOR/)
+  assert.match(charts,/backgroundColor:EXPENSE_COLOR/)
+  assert.match(charts,/style=\{\{color:INCOME_COLOR\}\}>● Income/)
+  assert.match(charts,/style=\{\{color:EXPENSE_COLOR\}\}>● Expense/)
+})
