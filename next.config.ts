@@ -5,6 +5,11 @@ const assetCache = 'public, max-age=86400, stale-while-revalidate=2592000'
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
   headers: async () => [
     {
       source: '/(.*)',
