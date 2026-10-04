@@ -70,7 +70,6 @@ test('My Money exposes the complete requested module navigation',()=>{
   for(const path of ['transactions','accounts','transfers','budgets','categories','recurring','reports']) assert.doesNotThrow(()=>readFileSync(new URL(`../app/money/${path}/page.tsx`,import.meta.url),'utf8'))
 })
 
-
 test('My Money summary sharing defaults on and supports customer opt-out',()=>{
   const sql=readFileSync(new URL('../supabase/migrations/202610020008_money_summary_sharing.sql',import.meta.url),'utf8')
   const actions=readFileSync(new URL('../app/actions/money.ts',import.meta.url),'utf8')
@@ -97,4 +96,11 @@ test('My Money analytics RPCs revoke anonymous execution',()=>{
   assert.match(sql,/set_my_money_summary_sharing\(boolean\) from anon/)
   assert.match(sql,/super_admin_money_family_financials\(date\) from anon/)
   assert.match(sql,/super_admin_money_family_usage\(date\) from anon/)
+})
+
+test('My Money trend chart gives percentage-height bars a full-height containing block',()=>{
+  const charts=readFileSync(new URL('../components/money-charts.tsx',import.meta.url),'utf8')
+  assert.match(charts,/className="flex h-full min-w-0 flex-1 items-end justify-center gap-1"/)
+  assert.match(charts,/\(row\.income\/max\)\*100/)
+  assert.match(charts,/\(row\.expense\/max\)\*100/)
 })
