@@ -6,20 +6,23 @@ import { requireAdmin } from '@/lib/auth'
 
 const t=(fd:FormData,k:string)=>String(fd.get(k)??'').trim()
 const isoOrNull=(v:string)=>v?new Date(v).toISOString():null
-function fail(message:string):never{redirect(`/admin/pools?error=${encodeURIComponent(message)}`)}
-function done(message:string):never{revalidatePath('/admin','layout');redirect(`/admin/pools?notice=${encodeURIComponent(message)}`)}
+const createReturnTo=(fd:FormData)=>t(fd,'return_to')==='/admin/pools/new'?'/admin/pools/new':'/admin/pools/workflow'
+function fail(message:string,path='/admin/pools'):never{redirect(`${path}?error=${encodeURIComponent(message)}`)}
+function done(message:string,path='/admin/pools'):never{revalidatePath('/admin','layout');redirect(`${path}?notice=${encodeURIComponent(message)}`)}
+function created(title:string,id:string):never{revalidatePath('/admin','layout');redirect(`/admin/pools/workflow?notice=${encodeURIComponent(`${title} created successfully`)}&created=${encodeURIComponent(id)}#pool-${encodeURIComponent(id)}`)}
 
-function validateTimeline(opensAt:string|null,commitmentCloses:string|null,confirmationCloses:string|null,supplierDeliveryAt:string|null,pickupAt:string|null){
+function validateTimeline(opensAt:string|null,commitmentCloses:string|null,confirmationCloses:string|null,supplierDeliveryAt:string|null,pickupAt:string|null,errorPath='/admin/pools'){
   const ts=(v:string|null)=>v?new Date(v).getTime():null
   const open=ts(opensAt),commit=ts(commitmentCloses),confirm=ts(confirmationCloses),delivery=ts(supplierDeliveryAt),pickup=ts(pickupAt)
-  if(open!==null&&commit!==null&&commit<=open) fail('Commitment close must be after pool open time')
-  if(commit!==null&&confirm!==null&&confirm<=commit) fail('Confirmation close must be after commitment close')
-  if(confirm!==null&&delivery!==null&&delivery<=confirm) fail('Supplier delivery must be after customer confirmation closes')
-  if(delivery!==null&&pickup!==null&&pickup<=delivery) fail('Customer pickup must start after supplier delivery')
+  if(open!==null&&commit!==null&&commit<=open) fail('Commitment close must be after pool open time',errorPath)
+  if(commit!==null&&confirm!==null&&confirm<=commit) fail('Confirmation close must be after commitment close',errorPath)
+  if(confirm!==null&&delivery!==null&&delivery<=confirm) fail('Supplier delivery must be after customer confirmation closes',errorPath)
+  if(delivery!==null&&pickup!==null&&pickup<=delivery) fail('Customer pickup must start after supplier delivery',errorPath)
 }
 
 export async function createPoolV2(fd:FormData){
   const {supabase,user}=await requireAdmin()
+  const errorPath=createReturnTo(fd)
   const cadence=t(fd,'cadence')==='monthly'?'monthly':'weekly'
   const payload={
     community_id:t(fd,'community_id'),title:t(fd,'title'),cadence,status:'draft',
@@ -27,12 +30,12 @@ export async function createPoolV2(fd:FormData){
     confirmation_closes_at:isoOrNull(t(fd,'confirmation_closes_at')),supplier_delivery_at:isoOrNull(t(fd,'supplier_delivery_at')),pickup_at:isoOrNull(t(fd,'pickup_at')),
     receiving_pickup_point_id:t(fd,'receiving_pickup_point_id')||null,notes:t(fd,'notes')||null,created_by:user.id,
   }
-  if(!payload.community_id||!payload.title)fail('Community and title required')
-  validateTimeline(payload.opens_at,payload.commitment_closes_at,payload.confirmation_closes_at,payload.supplier_delivery_at,payload.pickup_at)
-  if(payload.receiving_pickup_point_id){const {data:point}=await supabase.from('pickup_points').select('id').eq('id',payload.receiving_pickup_point_id).eq('community_id',payload.community_id).eq('active',true).maybeSingle();if(!point)fail('Receiving point must be active and belong to the selected community')}
-  const {error}=await supabase.from('pools').insert(payload)
-  if(error)fail(error.message)
-  done(`${cadence==='weekly'?'Weekly':'Monthly'} draft pool created`)
+  if(!payload.community_id||!payload.title)fail('Community and title required',errorPath)
+  validateTimeline(payload.opens_at,payload.commitment_closes_at,payload.confirmation_closes_at,payload.supplier_delivery_at,payload.pickup_at,errorPath)
+  if(payload.receiving_pickup_point_id){const {data:point}=await supabase.from('pickup_points').select('id').eq('id',payload.receiving_pickup_point_id).eq('community_id',payload.community_id).eq('active',true).maybeSingle();if(!point)fail('Receiving point must be active and belong to the selected community',errorPath)}
+  const {data,error}=await supabase.from('pools').insert(payload).select('id').single()
+  if(error||!data)fail(error?.message??'Pool could not be created',errorPath)
+  created(payload.title,data.id)
 }
 
 export async function updateDraftPool(fd:FormData){

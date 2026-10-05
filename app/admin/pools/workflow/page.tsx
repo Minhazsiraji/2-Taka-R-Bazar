@@ -14,7 +14,7 @@ const nextStatus:Record<string,string>={draft:'open',open:'pricing',pricing:'fin
 const stageLabel=(status:string)=>status==='ready_for_pickup'?'ready for fulfilment':status.replaceAll('_',' ')
 const dt=(value:string|null)=>value?new Date(value).toISOString().slice(0,16):''
 
-export default async function Page({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}){
+export default async function Page({searchParams}:{searchParams:Promise<{error?:string;notice?:string;created?:string}>}){
   const {supabase:db}=await requireAdmin(); const sp=await searchParams
   const results=await Promise.all([
     db.from('communities').select('id,name').eq('active',true).order('sort_order'),
@@ -45,7 +45,8 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
     <section><h1 className="text-2xl font-black sm:text-3xl">Pools</h1><p className="muted mt-1">Business flow: Draft → planning tiers → Open demand → frozen Pricing → final negotiation → margin check → Confirmation → Ordered → supplier receipt → customer fulfilment.</p></section>
     <Flash {...sp}/>
     <form action={createPoolV2} className="card form-grid">
-      <h2 className="section-title md:col-span-2">Create a new draft pool</h2>
+      <input type="hidden" name="return_to" value="/admin/pools/workflow"/>
+      <div className="md:col-span-2"><h2 className="section-title">Create a new draft pool</h2><p className="muted mt-1">After a successful save, the new Draft is highlighted below. If creation fails, the exact reason will appear here.</p></div>
       <label><span className="label">Pool cycle</span><select className="input" name="cadence" defaultValue="weekly"><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></label>
       <label><span className="label">Visible to community</span><select className="input" name="community_id" required><option value="">Choose community</option>{communities.map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
       <label className="md:col-span-2"><span className="label">Pool title</span><input className="input" name="title" placeholder="Amin Model Town Weekly Grocery Pool" required/></label>
@@ -65,8 +66,9 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
       const poolCommitments=items.flatMap((i:any)=>commitmentsByItem.get(i.id)??[]),poolQuotes=items.flatMap((i:any)=>quotesByItem.get(i.id)??[]),poolOrders=orders.filter((o:any)=>o.pool_id===p.id)
       const hasFinalQuotes=poolQuotes.some((q:any)=>q.quote_phase==='final')
       const canReturnToDraft=['open','pricing'].includes(p.status)&&poolCommitments.length===0&&!hasFinalQuotes&&poolOrders.length===0
-      return <section className="card border-slate-300" key={p.id}>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><span className="chip capitalize">{p.cadence??'weekly'}</span><span className="text-xs font-bold uppercase text-slate-500">{community?.name}</span></div><h2 className="mt-2 text-xl font-black sm:text-2xl">{p.title}</h2><p className="muted mt-1">Created {shortDate(p.created_at)} · {items.length} item{items.length===1?'':'s'} · supplier handover {p.supplier_delivery_at?dateTime(p.supplier_delivery_at):'not set'} · pickup {p.pickup_at?dateTime(p.pickup_at):'not set'}</p></div><StatusPill status={p.status}/></div>
+      const justCreated=sp.created===p.id
+      return <section id={`pool-${p.id}`} className={`card scroll-mt-4 border-slate-300 ${justCreated?'ring-2 ring-emerald-500 ring-offset-2':''}`} key={p.id}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><span className="chip capitalize">{p.cadence??'weekly'}</span><span className="text-xs font-bold uppercase text-slate-500">{community?.name}</span>{justCreated&&<span className="chip">Just created</span>}</div><h2 className="mt-2 text-xl font-black sm:text-2xl">{p.title}</h2><p className="muted mt-1">Created {shortDate(p.created_at)} · {items.length} item{items.length===1?'':'s'} · supplier handover {p.supplier_delivery_at?dateTime(p.supplier_delivery_at):'not set'} · pickup {p.pickup_at?dateTime(p.pickup_at):'not set'}</p></div><StatusPill status={p.status}/></div>
         {canReturnToDraft&&<div className="notice mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><b>No customer/commercial activity yet.</b><p className="mt-1">Return to Draft if this pool was advanced by mistake.</p></div><form action={resetPoolToDraft}><input type="hidden" name="pool_id" value={p.id}/><SubmitButton className="btn-secondary">Return to Draft</SubmitButton></form></div>}
         {p.status==='draft'&&<form action={updateDraftPool} className="mt-4 grid gap-3 rounded-xl border border-slate-200 bg-white p-3 md:grid-cols-2">
           <input type="hidden" name="pool_id" value={p.id}/><div className="md:col-span-2"><b>1. Pool setup & handover timing</b><p className="muted">Supplier handover must happen after confirmation closes and before customer pickup starts.</p></div>

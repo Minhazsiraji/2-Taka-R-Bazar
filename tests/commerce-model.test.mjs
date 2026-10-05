@@ -139,3 +139,17 @@ test('owner dashboard reports product and delivery contribution without calling 
   assert.match(page,/Realized gross contribution/)
   assert.match(page,/Contribution is not net profit/)
 })
+
+test('pool creation reports failures on the originating form and highlights a confirmed insert',()=>{
+  const action=readFileSync(new URL('../app/actions/pools.ts',import.meta.url),'utf8')
+  const workflow=readFileSync(new URL('../app/admin/pools/workflow/page.tsx',import.meta.url),'utf8')
+  const createPage=readFileSync(new URL('../app/admin/pools/new/page.tsx',import.meta.url),'utf8')
+  assert.match(action,/createReturnTo/)
+  assert.match(action,/insert\(payload\)\.select\('id'\)\.single\(\)/)
+  assert.match(action,/created\(payload\.title,data\.id\)/)
+  assert.match(workflow,/name="return_to" value="\/admin\/pools\/workflow"/)
+  assert.match(workflow,/Just created/)
+  assert.match(workflow,/ring-2 ring-emerald-500/)
+  assert.match(createPage,/<Flash \{\.\.\.sp\}\/\>/)
+  assert.match(createPage,/name="return_to" value="\/admin\/pools\/new"/)
+})
