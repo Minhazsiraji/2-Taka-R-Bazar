@@ -1,6 +1,6 @@
-export const CURRENT_POLICY_VERSION = '2026-09-28'
-export const POLICY_EFFECTIVE_DATE_EN = '28 September 2026'
-export const POLICY_EFFECTIVE_DATE_BN = '২৮ সেপ্টেম্বর ২০২৬'
+export const CURRENT_POLICY_VERSION = '2026-10-05'
+export const POLICY_EFFECTIVE_DATE_EN = '5 October 2026'
+export const POLICY_EFFECTIVE_DATE_BN = '৫ অক্টোবর ২০২৬'
 
 export const LEGAL_LINKS = [
   ['/about', 'About / পরিচিতি'],

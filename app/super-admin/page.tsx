@@ -27,10 +27,10 @@ export default async function SuperAdminDashboard() {
     supabase.from('market_price_benchmarks').select('id,product_id,community_id,benchmark_price,approved,superseded_at,effective_from'),
     supabase.from('suppliers').select('id,business_name,reliability_status,active'),
     supabase.from('pools').select('id,community_id,title,status,opens_at,commitment_closes_at,confirmation_closes_at,pickup_at,created_at'),
-    supabase.from('pool_items').select('id,pool_id,product_id,benchmark_price_snapshot,final_customer_price,expected_pool_price,active'),
+    supabase.from('pool_items').select('id,pool_id,product_id,benchmark_price_snapshot,final_customer_price,expected_pool_price,active,frozen_committed_quantity,effective_cost_per_unit,platform_margin_per_unit,customer_saving_per_unit'),
     supabase.from('commitments').select('id,pool_item_id,customer_id,quantity,status,committed_at,confirmed_at,updated_at'),
     supabase.from('supplier_quotes').select('id,pool_item_id,supplier_id,quantity,landed_unit_price,selected,created_at'),
-    supabase.from('orders').select('id,customer_id,pool_id,pickup_point_id,status,payment_status,total_amount,confirmed_at,completed_at,created_at'),
+    supabase.from('orders').select('id,customer_id,pool_id,pickup_point_id,fulfillment_method,product_subtotal,delivery_fee,delivery_actual_cost,status,payment_status,total_amount,confirmed_at,completed_at,created_at'),
     supabase.from('order_items').select('id,order_id,pool_item_id,product_id,quantity,benchmark_price_snapshot,unit_price,expected_saving'),
     supabase.from('savings_ledger').select('id,customer_id,community_id,order_id,amount,benchmark_price,pool_unit_price,fulfilled_quantity,verified_at'),
     supabase.from('payment_records').select('id,order_id,status,method,amount,created_at'),
@@ -56,6 +56,8 @@ export default async function SuperAdminDashboard() {
   const feedback = (feedbackR.data ?? []) as any[]
   const issues = (issuesR.data ?? []) as any[]
   const audit = (auditR.data ?? []) as any[]
+  const { data: ownProductPerformance } = await supabase.from('admin_own_product_performance').select('gross_contribution')
+  const ownProductContribution = (ownProductPerformance ?? []).reduce((sum:any,row:any)=>sum+n(row.gross_contribution),0)
 
   const communityById = new Map(communities.map(row => [row.id, row]))
   const poolById = new Map(pools.map(row => [row.id, row]))
@@ -76,6 +78,13 @@ export default async function SuperAdminDashboard() {
   const gmv30 = liveOrders.filter(row => within(row.created_at, since30)).reduce((sum,row)=>sum+n(row.total_amount),0)
   const verifiedSavings = savings.reduce((sum,row)=>sum+n(row.amount),0)
   const savings30 = savings.filter(row => within(row.verified_at, since30)).reduce((sum,row)=>sum+n(row.amount),0)
+  const completedOrderIds = new Set(completedOrders.map(row=>row.id))
+  const supplierProductContribution = orderItems.filter(row=>completedOrderIds.has(row.order_id)).reduce((sum,row)=>sum+n(poolItemById.get(row.pool_item_id)?.platform_margin_per_unit)*n(row.quantity),0)
+  const productContribution = supplierProductContribution + ownProductContribution
+  const projectedPoolContribution = poolItems.reduce((sum,row)=>sum+n(row.platform_margin_per_unit)*n(row.frozen_committed_quantity),0)
+  const homeDeliveries = completedOrders.filter(row=>row.fulfillment_method==='home_delivery')
+  const recordedDeliveryContribution = homeDeliveries.filter(row=>row.delivery_actual_cost!=null).reduce((sum,row)=>sum+n(row.delivery_fee)-n(row.delivery_actual_cost),0)
+  const grossContribution = productContribution + recordedDeliveryContribution
   const marketValue = savings.reduce((sum,row)=>sum+n(row.benchmark_price)*n(row.fulfilled_quantity),0)
   const savingsRate = pct(verifiedSavings, marketValue)
   const unresolvedCommitments = commitments.filter(row => ['confirmed','withdrawn','cancelled'].includes(row.status))
@@ -171,6 +180,8 @@ export default async function SuperAdminDashboard() {
         ['Onboarded households',onboarded.length,`+${newHouseholds30} in 30d`],
         ['Active households · 30d',activeHouseholds30,`${pct(activeHouseholds30,onboarded.length)}% of onboarded`],
         ['GMV · 30d',taka(gmv30),`${taka(gmv)} live/completed total`],
+        ['Product contribution',taka(productContribution),`${taka(supplierProductContribution)} supplier-pool · ${taka(ownProductContribution)} own-product`],
+        ['Realized gross contribution',taka(grossContribution),`${taka(recordedDeliveryContribution)} delivery contribution · ${taka(projectedPoolContribution)} supplier-Pool projection`],
         ['Verified savings · 30d',taka(savings30),`${taka(verifiedSavings)} lifetime`],
         ['Active pools',activePools.length,`${pools.length} total pools`],
         ['Resolved commitment conversion',`${commitmentConversion}%`,`${confirmedCommitments} confirmed`],
@@ -185,7 +196,7 @@ export default async function SuperAdminDashboard() {
       <div className="card"><div className="card-title">Customer voice</div><div className="metric text-2xl">{avgRating?avgRating.toFixed(1):'—'} / 5</div><p className="muted mt-2">{feedback.length} review(s) · {approvedTestimonials} approved testimonial(s).</p><Link href="/admin/feedback" className="mt-3 inline-flex font-bold text-slate-900 underline">Review feedback →</Link></div>
     </section>
 
-    <section className="card border-slate-300"><div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between"><div><div className="card-title">Decision center</div><h2 className="mt-1 text-xl font-black">What needs your attention now</h2></div><span className="chip">{decisionFlags.length} flag(s)</span></div>{decisionFlags.length ? <div className="mt-4 grid gap-2">{decisionFlags.map((flag,index)=><Link href={flag.href} key={`${flag.text}-${index}`} className="flex min-w-0 items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 hover:bg-white"><div><span className={`mr-2 inline-flex rounded-full px-2 py-0.5 text-xs font-black ${flag.level==='High'?'bg-rose-100 text-rose-800':'bg-amber-100 text-amber-800'}`}>{flag.level}</span><span className="text-sm font-semibold">{flag.text}</span></div><span aria-hidden>→</span></Link>)}</div> : <div className="success mt-4">No immediate operating exception detected from the current data.</div>}<p className="mt-3 text-xs text-slate-500">Profit and platform revenue are not shown because the current data model does not yet record platform fees, overhead, or operating cost. This dashboard does not fabricate them.</p></section>
+    <section className="card border-slate-300"><div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between"><div><div className="card-title">Decision center</div><h2 className="mt-1 text-xl font-black">What needs your attention now</h2></div><span className="chip">{decisionFlags.length} flag(s)</span></div>{decisionFlags.length ? <div className="mt-4 grid gap-2">{decisionFlags.map((flag,index)=><Link href={flag.href} key={`${flag.text}-${index}`} className="flex min-w-0 items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 hover:bg-white"><div><span className={`mr-2 inline-flex rounded-full px-2 py-0.5 text-xs font-black ${flag.level==='High'?'bg-rose-100 text-rose-800':'bg-amber-100 text-amber-800'}`}>{flag.level}</span><span className="text-sm font-semibold">{flag.text}</span></div><span aria-hidden>→</span></Link>)}</div> : <div className="success mt-4">No immediate operating exception detected from the current data.</div>}<p className="mt-3 text-xs text-slate-500">Contribution is not net profit. Product contribution uses the commercial cost snapshot saved at final pricing; delivery contribution is customer delivery fee minus recorded actual delivery cost. Fixed overhead, tax and other non-allocated costs remain outside these figures.</p></section>
 
     <section><div className="mb-3"><div className="card-title">Community performance</div><h2 className="section-title">Where the business is moving</h2></div><div className="table-wrap"><table><thead><tr><th>Community</th><th>Households</th><th>Active pools</th><th>Orders</th><th>GMV</th><th>Verified savings</th><th>Open issues</th></tr></thead><tbody>{communityRows.map(row=><tr key={row.id}><td><b>{row.name}</b><div className="muted">{row.active?'Active':'Inactive'}</div></td><td>{row.households}</td><td>{row.pools}</td><td>{row.orders}</td><td>{taka(row.gmv)}</td><td>{taka(row.savings)}</td><td>{row.issues}</td></tr>)}</tbody></table></div></section>
 
@@ -194,7 +205,7 @@ export default async function SuperAdminDashboard() {
       <div><div className="mb-3"><div className="card-title">Sourcing intelligence</div><h2 className="section-title">Supplier quote performance</h2></div><div className="table-wrap"><table><thead><tr><th>Supplier</th><th>Status</th><th>Quotes</th><th>Selected</th><th>Win rate</th><th>Avg landed</th></tr></thead><tbody>{supplierRows.length?supplierRows.map(row=><tr key={row.id}><td><b>{row.name}</b></td><td>{row.active?row.reliability:'inactive'}</td><td>{row.quotes}</td><td>{row.selected}</td><td>{row.winRate}%</td><td>{row.avgLanded?taka(row.avgLanded):'—'}</td></tr>):<tr><td colSpan={6} className="text-slate-500">No supplier quote data yet.</td></tr>}</tbody></table></div></div>
     </section>
 
-    <section><div className="mb-3"><div className="card-title">Pool performance</div><h2 className="section-title">Recent pool execution</h2></div><div className="table-wrap"><table><thead><tr><th>Pool</th><th>Community</th><th>Status</th><th>Demand households</th><th>Committed qty</th><th>Orders</th><th>GMV</th><th>Pickup target</th></tr></thead><tbody>{recentPools.length?recentPools.map(row=><tr key={row.id}><td><b>{row.title}</b></td><td>{row.community}</td><td>{row.status}</td><td>{row.households}</td><td>{row.committedQty}</td><td>{row.orders}</td><td>{taka(row.gmv)}</td><td>{dateTime(row.pickup_at)}</td></tr>):<tr><td colSpan={8} className="text-slate-500">No pools created yet.</td></tr>}</tbody></table></div></section>
+    <section><div className="mb-3"><div className="card-title">Pool performance</div><h2 className="section-title">Recent pool execution</h2></div><div className="table-wrap"><table><thead><tr><th>Pool</th><th>Community</th><th>Status</th><th>Demand households</th><th>Committed qty</th><th>Orders</th><th>GMV</th><th>Fulfilment target</th></tr></thead><tbody>{recentPools.length?recentPools.map(row=><tr key={row.id}><td><b>{row.title}</b></td><td>{row.community}</td><td>{row.status}</td><td>{row.households}</td><td>{row.committedQty}</td><td>{row.orders}</td><td>{taka(row.gmv)}</td><td>{dateTime(row.pickup_at)}</td></tr>):<tr><td colSpan={8} className="text-slate-500">No pools created yet.</td></tr>}</tbody></table></div></section>
 
     <section className="grid gap-4 2xl:grid-cols-2">
       <div><div className="mb-3"><div className="card-title">Fulfilment intelligence</div><h2 className="section-title">Pickup point performance</h2></div><div className="table-wrap"><table><thead><tr><th>Pickup point</th><th>Community</th><th>Orders</th><th>Ready</th><th>Completed</th><th>GMV</th></tr></thead><tbody>{pickupRows.length?pickupRows.map(row=><tr key={row.id}><td><b>{row.name}</b><div className="muted">{row.active?'Active':'Inactive'}</div></td><td>{row.community}</td><td>{row.orders}</td><td>{row.ready}</td><td>{row.completed}</td><td>{taka(row.gmv)}</td></tr>):<tr><td colSpan={6} className="text-slate-500">No pickup points yet.</td></tr>}</tbody></table></div></div>

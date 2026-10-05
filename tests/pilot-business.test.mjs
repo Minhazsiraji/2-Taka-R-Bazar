@@ -71,12 +71,14 @@ test('invalid and self referral are non-blocking outcomes',()=>{
   assert.match(sql,/return 'already_attributed'/)
 })
 
-test('pilot subscription remains dormant and customer navigation hides membership',()=>{
-  const sql=readFileSync(new URL('../supabase/migrations/202609280001_pilot_business_mechanism.sql',import.meta.url),'utf8')
+test('subscription is retired from commerce and customer navigation',()=>{
+  const sql=readFileSync(new URL('../supabase/migrations/202610050001_no_subscription_margin_delivery.sql',import.meta.url),'utf8')
   const shell=readFileSync(new URL('../components/app-shell.tsx',import.meta.url),'utf8')
-  assert.match(sql,/if private\.is_pilot_mode\(\) then return 0; end if;/)
-  assert.match(sql,/enforcement_enabled=case when private\.is_pilot_mode\(\) then false/)
-  assert.match(shell,/!PILOT_MODE \? \[\['\/subscription'/)
+  const subscriptionPage=readFileSync(new URL('../app/subscription/page.tsx',import.meta.url),'utf8')
+  assert.match(sql,/set enforcement_enabled=false/)
+  assert.match(sql,/Membership billing is retired/)
+  assert.doesNotMatch(shell,/\/subscription/)
+  assert.match(subscriptionPage,/No subscription fee/)
 })
 
 test('unlocked customer ceiling is monotonic and frozen from the best reached tier',()=>{

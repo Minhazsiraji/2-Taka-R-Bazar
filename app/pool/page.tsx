@@ -6,10 +6,10 @@ import { PriceTargetProgress } from '@/components/price-target-progress'
 import { commitToPool, submitPoolItemReview, submitPoolReview, togglePoolItemLove, togglePoolLove } from '@/app/actions/customer'
 import { requireOnboardedUser } from '@/lib/auth'
 import { taka, shortDate } from '@/lib/format'
-import { PILOT_MODE } from '@/lib/pilot-mode'
 
 export const dynamic = 'force-dynamic'
 const activeStatuses=['open','pricing','final_price','confirmation','ordered','ready_for_pickup']
+const stageLabel=(status:string)=>status==='ready_for_pickup'?'ready for fulfilment':status.replaceAll('_',' ')
 
 function ratingSummary(rows:any[]){
   if(!rows.length)return {avg:0,count:0}
@@ -23,12 +23,7 @@ function Stars({value}:{value:number}){
 export default async function PoolPage({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}) {
   const {user,profile,roles,supabase}=await requireOnboardedUser()
   const {error,notice}=await searchParams
-  const [{data:pools},{data:subscriptionRows}]=await Promise.all([
-    supabase.from('pools').select('*').eq('community_id',profile.community_id).in('status',activeStatuses).order('created_at',{ascending:false}),
-    supabase.rpc('get_my_subscription_status'),
-  ])
-  const membership=(subscriptionRows??[])[0] as any
-  const membershipBlocked=!PILOT_MODE&&Boolean(membership?.enforcement_enabled)&&!Boolean(membership?.active)
+  const {data:pools}=await supabase.from('pools').select('*').eq('community_id',profile.community_id).in('status',activeStatuses).order('created_at',{ascending:false})
   const poolIds=(pools??[]).map((p:any)=>p.id)
   let items:any[]=[]
   const commitments=new Map<string,any>()
@@ -90,7 +85,6 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
       </section>
 
       {error&&<div className="error">{error}</div>}{notice&&<div className="success">{notice}</div>}
-      {membershipBlocked&&<div className="notice flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><b>Membership required to join pools.</b><p className="mt-1">Pay the monthly bill or redeem a valid 1/2/3-month coupon. You can still browse pool prices and demand.</p></div><Link href="/subscription" className="btn-primary shrink-0">Activate membership</Link></div>}
 
       {!pools?.length?<div className="card p-5"><div className="card-title">Pool status</div><h2 className="mt-2 text-xl font-black">No active pool right now</h2><p className="muted mt-2">The next community buying pool will appear here as soon as it opens.</p></div>:(pools??[]).map((pool:any)=>{
         const poolItems=items.filter((item:any)=>item.pool_id===pool.id)
@@ -104,7 +98,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
         const communityPotential=poolItems.reduce((s:number,i:any)=>{const b=Number(i.benchmark_price_snapshot||0),u=Number(unlockByItem.get(i.id)?.unlocked_price||0);return s+(u>0?Math.max(0,b-u)*(demand.get(i.id)??0):0)},0)
         return <section id={`pool-${pool.id}`} key={pool.id} className="grid min-w-0 gap-4 border-t border-slate-200 pt-5 first:border-t-0 first:pt-0 sm:gap-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div><div className="flex flex-wrap gap-2"><span className="chip capitalize">{pool.cadence??'weekly'} pool</span><StatusPill status={pool.status}/></div><h2 className="mt-2 text-xl font-black sm:text-2xl">{pool.title}</h2><p className="muted mt-1">Pickup target · {shortDate(pool.pickup_at)}</p></div>
+            <div><div className="flex flex-wrap gap-2"><span className="chip capitalize">{pool.cadence??'weekly'} pool</span><StatusPill status={pool.status}/></div><h2 className="mt-2 text-xl font-black sm:text-2xl">{pool.title}</h2><p className="muted mt-1">Fulfilment target · {shortDate(pool.pickup_at)}</p></div>
             <form action={togglePoolLove}><input type="hidden" name="pool_id" value={pool.id}/><button className={`btn-secondary min-h-10 px-3 text-sm ${loved?'border-rose-200 text-rose-700':''}`}>{loved?'♥ Loved':'♡ Love'} · {likes.length}</button></form>
           </div>
 
@@ -120,7 +114,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
           </div>
           {reviews.filter((r:any)=>r.comment).length>0&&<div><div className="mb-3"><div className="card-title">Community feedback</div><h3 className="section-title">Verified buyer reviews</h3></div><div className="grid gap-3 md:grid-cols-2">{reviews.filter((r:any)=>r.comment).slice(0,2).map((r:any,index:number)=><blockquote key={`${r.user_id}-${index}`} className="card p-4 text-sm"><div className="font-black text-amber-500">★ {r.rating}/5</div><p className="mt-2 text-slate-700">“{r.comment}”</p><p className="mt-2 text-xs font-bold text-slate-500">Verified buyer</p></blockquote>)}</div></div>}
 
-          {completedPoolIds.has(pool.id)?<form action={submitPoolReview} className="card grid gap-3 sm:grid-cols-[140px_1fr_auto] sm:items-end"><input type="hidden" name="pool_id" value={pool.id}/><label><span className="label">Rate this pool</span><select className="input" name="rating" defaultValue={ownReview?.rating??5} required>{[5,4,3,2,1].map(n=><option key={n} value={n}>{n} star{n===1?'':'s'}</option>)}</select></label><label><span className="label">Review</span><input className="input" name="comment" maxLength={800} defaultValue={ownReview?.comment??''} placeholder="What was good or could improve?"/></label><SubmitButton>{ownReview?'Update review':'Post review'}</SubmitButton></form>:<p className="text-xs font-semibold text-slate-500">Pool ratings and reviews are accepted from verified buyers after completed pickup.</p>}
+          {completedPoolIds.has(pool.id)?<form action={submitPoolReview} className="card grid gap-3 sm:grid-cols-[140px_1fr_auto] sm:items-end"><input type="hidden" name="pool_id" value={pool.id}/><label><span className="label">Rate this pool</span><select className="input" name="rating" defaultValue={ownReview?.rating??5} required>{[5,4,3,2,1].map(n=><option key={n} value={n}>{n} star{n===1?'':'s'}</option>)}</select></label><label><span className="label">Review</span><input className="input" name="comment" maxLength={800} defaultValue={ownReview?.comment??''} placeholder="What was good or could improve?"/></label><SubmitButton>{ownReview?'Update review':'Post review'}</SubmitButton></form>:<p className="text-xs font-semibold text-slate-500">Pool ratings and reviews are accepted from verified buyers after successful fulfilment.</p>}
 
           <div>
             <div className="mb-3"><div className="card-title">Pool items</div><h3 className="section-title">Choose what you need</h3></div>
@@ -152,7 +146,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
 
                     {completedItemIds.has(item.id)&&<form action={submitPoolItemReview} className="mt-4 grid gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3"><input type="hidden" name="pool_item_id" value={item.id}/><div className="grid gap-2 sm:grid-cols-[140px_1fr]"><select className="input" name="rating" defaultValue={ownItemReview?.rating??5} required>{[5,4,3,2,1].map(n=><option key={n} value={n}>{n} star{n===1?'':'s'}</option>)}</select><input className="input" name="comment" maxLength={800} defaultValue={ownItemReview?.comment??''} placeholder="Review this item"/></div><SubmitButton className="btn-secondary">{ownItemReview?'Update item review':'Review item'}</SubmitButton></form>}
 
-                    {pool.status==='open'?(membershipBlocked?<div className="mt-4 border-t border-slate-200 pt-4"><p className="text-sm font-semibold text-amber-800">Activate membership before committing to this item.</p><Link href="/subscription" className="btn-primary mt-3">Membership & billing</Link></div>:<form action={commitToPool} className="mt-4 grid gap-2 border-t border-slate-200 pt-4 sm:grid-cols-[minmax(0,180px)_auto] sm:items-end"><input type="hidden" name="pool_item_id" value={item.id}/><label><span className="label">Quantity</span><input className="input" type="number" name="quantity" min={item.min_quantity} max={item.max_quantity} defaultValue={own?.quantity??1} required/></label><SubmitButton className="w-full sm:w-auto">{own?'Update commitment':'I want this'}</SubmitButton></form>):<p className="muted mt-4 border-t border-slate-200 pt-4">Commitments are closed while this pool is in {String(pool.status).replaceAll('_',' ')}.</p>}
+                    {pool.status==='open'?<form action={commitToPool} className="mt-4 grid gap-2 border-t border-slate-200 pt-4 sm:grid-cols-[minmax(0,180px)_auto] sm:items-end"><input type="hidden" name="pool_item_id" value={item.id}/><label><span className="label">Quantity</span><input className="input" type="number" name="quantity" min={item.min_quantity} max={item.max_quantity} defaultValue={own?.quantity??1} required/></label><SubmitButton className="w-full sm:w-auto">{own?'Update commitment':'I want this'}</SubmitButton></form>:<p className="muted mt-4 border-t border-slate-200 pt-4">Commitments are closed while this pool is in {stageLabel(String(pool.status))}.</p>}
                   </div>
                 </div>
               </article>
@@ -161,7 +155,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
         </section>
       })}
 
-      <div className="card border-slate-200 p-4"><div className="card-title">Price promise</div><p className="mt-2 text-sm leading-6 text-slate-600"><b className="text-slate-900">Demand unlocks a maximum price.</b> When your community reaches a tier, that unlocked price can stay the same or improve after final supplier negotiation—it cannot increase. Final savings use the final customer price; verified savings are credited only after successful collection.</p></div>
+      <div className="card border-slate-200 p-4"><div className="card-title">Price promise</div><p className="mt-2 text-sm leading-6 text-slate-600"><b className="text-slate-900">Demand unlocks a maximum price.</b> When your community reaches a tier, that unlocked price can stay the same or improve after final supplier negotiation—it cannot increase. Final savings use the final customer price; verified product savings are credited only after successful fulfilment; delivery charges are separate.</p></div>
     </div>
   </AppShell>
 }
