@@ -7,7 +7,7 @@ const operationsLinks = [['/admin','Operations dashboard'],['/admin/communities'
 
 function Navigation({ mobile=false }:{mobile?:boolean}) {
   const navClass=mobile?'grid grid-cols-1 gap-1 min-[380px]:grid-cols-2 sm:grid-cols-3':'grid gap-1'
-  const linkClass=mobile?'min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 break-words':'rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100'
+  const linkClass=mobile?'super-admin-nav-link min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 break-words':'super-admin-nav-link rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100'
   return <><p className="px-2 pb-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Executive</p><nav className={navClass}>{executiveLinks.map(([href,label])=><Link key={href} href={href} className={`${linkClass} font-bold`}>{label}</Link>)}</nav><p className="mt-5 px-2 pb-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Operate the business</p><nav className={navClass}>{operationsLinks.map(([href,label])=><Link key={href} href={href} className={linkClass}>{label}</Link>)}</nav></>
 }
 

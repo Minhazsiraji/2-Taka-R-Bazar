@@ -23,18 +23,18 @@ export function PriceTargetProgress({ currentQuantity, households, nextThreshold
           {households} famil{households===1?'y':'ies'} joined · {currentQuantity} / {nextThreshold} units committed
         </div>
       </div>
-      <div className="text-sm font-bold text-teal-800">
+      <div className="price-target-unlock text-sm font-bold">
         {remaining} more unit{remaining===1?'':'s'} → unlock {taka(nextPrice)}
       </div>
     </div>
 
-    <div className="mt-3 h-3 overflow-hidden rounded-full border border-white/90 bg-white/45 shadow-inner" aria-label={`${currentQuantity} of ${nextThreshold} units committed`}>
-      <div className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-teal-300 to-teal-500 transition-[width] duration-500" style={{width:`${progress}%`}} />
+    <div className="price-target-track mt-3 h-3 overflow-hidden" role="progressbar" aria-label={`${currentQuantity} of ${nextThreshold} units committed`} aria-valuemin={0} aria-valuemax={nextThreshold} aria-valuenow={Math.min(currentQuantity,nextThreshold)}>
+      <div className="price-target-fill h-full transition-[width] duration-500" style={{width:`${progress}%`}} />
     </div>
 
-    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-600">
+    <div className="price-target-meta mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
       <span>Market retail <b className="text-slate-900">{taka(benchmarkPrice)}</b></span>
-      <span>Target price <b className="text-teal-800">{taka(nextPrice)}</b></span>
+      <span>Target price <b className="price-target-value">{taka(nextPrice)}</b></span>
       <span>Target saving <b className="text-emerald-700">{taka(saving)}/unit</b></span>
     </div>
   </div>

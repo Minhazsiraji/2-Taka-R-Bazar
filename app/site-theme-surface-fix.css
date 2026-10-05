@@ -9,17 +9,14 @@
   --app-surface-secondary: linear-gradient(135deg,rgba(255,255,255,.30),rgba(242,240,250,.20));
   --app-surface-secondary-border: rgba(255,255,255,.72);
   --app-surface-secondary-shadow: inset 0 1px 0 rgba(255,255,255,.76),0 7px 18px rgba(38,47,77,.07);
+  --app-control-text: #17213b;
+  --app-control-bg: linear-gradient(135deg,rgba(255,255,255,.42),rgba(242,240,250,.24));
+  --app-control-border: rgba(255,255,255,.84);
 }
 
-/* Keep the page canvas continuous. Home previously added a second full-page layer. */
 .site-glass-root .home-liquid-route { background: transparent !important; }
-.site-glass-root .home-liquid-route::before {
-  content: none !important;
-  display: none !important;
-  background: none !important;
-}
+.site-glass-root .home-liquid-route::before { content:none !important; display:none !important; background:none !important; }
 
-/* Shell anchor + all reusable top-level app surfaces use one material family. */
 .site-glass-root :is(
   .app-shell-header-bar,
   .public-glass-header,
@@ -38,8 +35,6 @@
   -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
 }
 
-/* Plain white/slate route sections are also primary surfaces, but semantic
-   success/warning/error colours are intentionally left untouched. */
 .site-glass-root main > :is(section,article,aside,details)[class*="rounded-"][class*="bg-white"],
 .site-glass-root main > :is(section,article,aside,details)[class*="rounded-"][class*="bg-slate-"],
 .site-glass-root main > div > :is(section,article,aside,details)[class*="rounded-"][class*="bg-white"],
@@ -51,50 +46,297 @@
   -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
 }
 
-/* Remove decorative paint layers from major surfaces. Those pseudo-elements
-   were the visible extra grey layer under several pages. */
 .site-glass-root main :is(.card,.table-wrap,.glass-panel)::before,
 .site-glass-root main :is(.card,.table-wrap,.glass-panel)::after {
-  content: none !important;
-  display: none !important;
-  background: none !important;
-  box-shadow: none !important;
+  content:none !important; display:none !important; background:none !important; box-shadow:none !important;
 }
 
-/* Secondary/inset surfaces retain depth but no milky overlay. */
-.site-glass-root main :is(.glass-subpanel,.glass-inset,.glass-icon) {
-  outline: none !important;
-  border-color: var(--app-surface-secondary-border) !important;
-  background: var(--app-surface-secondary) !important;
-  box-shadow: var(--app-surface-secondary-shadow) !important;
-  backdrop-filter: blur(16px) saturate(132%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(132%) !important;
+/* Containers only: do not style links/buttons as inset panels. */
+.site-glass-root main :is(
+  div.glass-subpanel,section.glass-subpanel,article.glass-subpanel,
+  div.glass-inset,section.glass-inset,article.glass-inset,
+  div.glass-icon,span.glass-icon
+) {
+  outline:none !important;
+  border-color:var(--app-surface-secondary-border) !important;
+  background:var(--app-surface-secondary) !important;
+  box-shadow:var(--app-surface-secondary-shadow) !important;
+  backdrop-filter:blur(16px) saturate(132%) !important;
+  -webkit-backdrop-filter:blur(16px) saturate(132%) !important;
 }
-.site-glass-root main :is(.glass-subpanel,.glass-inset,.glass-icon)::before,
-.site-glass-root main :is(.glass-subpanel,.glass-inset,.glass-icon)::after {
-  content: none !important;
-  display: none !important;
+.site-glass-root main :is(div.glass-subpanel,section.glass-subpanel,article.glass-subpanel,div.glass-inset,section.glass-inset,article.glass-inset)::before,
+.site-glass-root main :is(div.glass-subpanel,section.glass-subpanel,article.glass-subpanel,div.glass-inset,section.glass-inset,article.glass-inset)::after {
+  content:none !important; display:none !important;
 }
+
+/* Interactive glass controls keep their own readable control treatment. */
+.site-glass-root main :is(a,button).glass-inset {
+  color:var(--app-control-text) !important;
+  border:1px solid var(--app-control-border) !important;
+  background:var(--app-control-bg) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 6px 16px rgba(38,47,77,.08) !important;
+  backdrop-filter:blur(14px) saturate(128%) !important;
+  -webkit-backdrop-filter:blur(14px) saturate(128%) !important;
+}
+.site-glass-root main :is(a,button).glass-inset:hover { filter:brightness(1.05); }
 
 html[data-theme="dark"] .site-glass-root {
-  --app-surface-primary: linear-gradient(145deg,rgba(24,34,50,.78),rgba(12,20,31,.60));
-  --app-surface-primary-border: rgba(226,239,255,.16);
-  --app-surface-primary-shadow: 0 18px 44px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.10),inset -1px -1px 0 rgba(79,222,228,.09),3px 4px 10px rgba(66,211,220,.035),-2px 4px 8px rgba(143,111,225,.028);
-  --app-surface-secondary: linear-gradient(145deg,rgba(20,30,45,.76),rgba(10,17,28,.66));
+  --app-surface-primary: rgba(7,13,22,.90);
+  --app-surface-primary-border: rgba(201,220,242,.14);
+  --app-surface-primary-shadow: 0 16px 38px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.07),inset -1px -1px 0 rgba(79,222,228,.06);
+  --app-surface-secondary: rgba(13,21,33,.76);
   --app-surface-secondary-border: rgba(214,230,248,.13);
-  --app-surface-secondary-shadow: inset 0 1px 0 rgba(255,255,255,.07),inset -1px -1px 0 rgba(65,226,232,.06),0 7px 18px rgba(0,0,0,.18);
+  --app-surface-secondary-shadow: inset 0 1px 0 rgba(255,255,255,.06),0 7px 18px rgba(0,0,0,.16);
+  --app-control-text: #e7eef9;
+  --app-control-bg: linear-gradient(180deg,rgba(34,46,63,.88),rgba(17,26,39,.86));
+  --app-control-border: rgba(218,232,248,.18);
+}
+html[data-theme="dark"] .site-glass-root .home-liquid-route { background:transparent !important; }
+html[data-theme="dark"] .site-glass-root .home-liquid-route::before { content:none !important; display:none !important; background:none !important; }
+
+html[data-theme="dark"] body.site-glass-root main :is(.card,.table-wrap,.glass-panel) {
+  background:rgba(7,13,22,.90) !important;
+  background-image:none !important;
+  color:#eef4ff !important;
+}
+html[data-theme="dark"] body.site-glass-root main :is(a,button).glass-inset {
+  color:#e7eef9 !important;
+  background:linear-gradient(180deg,rgba(34,46,63,.88),rgba(17,26,39,.86)) !important;
 }
 
-html[data-theme="dark"] .site-glass-root .home-liquid-route { background: transparent !important; }
-html[data-theme="dark"] .site-glass-root .home-liquid-route::before {
-  content: none !important;
-  display: none !important;
-  background: none !important;
+/* The legacy dark theme has a high-specificity catch-all for every rounded
+   section/div/form. These selectors intentionally outrank it so named glass
+   components use the same surface contract as the shell instead of grey. */
+html[data-theme="dark"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-panel[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap) {
+  border-color:var(--app-surface-primary-border) !important;
+  background:var(--app-surface-primary) !important;
+  background-color:rgba(7,13,22,.90) !important;
+  background-image:none !important;
+  box-shadow:var(--app-surface-primary-shadow) !important;
+}
+html[data-theme="dark"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-subpanel[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap),
+html[data-theme="dark"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-inset[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap) {
+  border-color:var(--app-surface-secondary-border) !important;
+  background:var(--app-surface-secondary) !important;
+  background-image:none !important;
+  box-shadow:var(--app-surface-secondary-shadow) !important;
 }
 
-@media (max-width: 767px) {
+/* Light mode uses the same named component contract and prevents legacy
+   rounded-element paint from creating a second milky layer. */
+html[data-theme="light"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-panel[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap) {
+  border-color:var(--app-surface-primary-border) !important;
+  background:var(--app-surface-primary) !important;
+  box-shadow:var(--app-surface-primary-shadow) !important;
+}
+html[data-theme="light"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-subpanel[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap),
+html[data-theme="light"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-inset[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap) {
+  border-color:var(--app-surface-secondary-border) !important;
+  background:var(--app-surface-secondary) !important;
+  box-shadow:var(--app-surface-secondary-shadow) !important;
+}
+
+@media (max-width:767px) {
   .site-glass-root main :is(.card,.table-wrap,.glass-panel) {
-    backdrop-filter: blur(18px) saturate(132%) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(132%) !important;
+    backdrop-filter:blur(18px) saturate(132%) !important;
+    -webkit-backdrop-filter:blur(18px) saturate(132%) !important;
+  }
+}
+
+
+/* REGRESSION-SAFE NAMED SURFACES */
+.site-glass-root .data-snapshot-card,
+.site-glass-root .quick-decisions-panel,
+.site-glass-root .pool-price-metrics,
+.site-glass-root .price-target-progress {
+  border-color:var(--app-surface-primary-border) !important;
+  background:var(--app-surface-primary) !important;
+  background-image:none !important;
+  box-shadow:var(--app-surface-primary-shadow) !important;
+}
+.site-glass-root .quick-decision-link {
+  color:var(--app-control-text) !important;
+  border:1px solid var(--app-control-border) !important;
+  background:var(--app-control-bg) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 6px 16px rgba(38,47,77,.08) !important;
+}
+.site-glass-root .product-image-surface {
+  border-color:rgba(148,163,184,.28) !important;
+  background:#fff !important;
+  background-image:none !important;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.04) !important;
+}
+.site-glass-root .pool-price-metrics > div {
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.site-glass-root .price-target-track {
+  border:1px solid rgba(148,163,184,.35) !important;
+  border-radius:9999px !important;
+  background:rgba(15,23,42,.12) !important;
+  box-shadow:inset 0 1px 3px rgba(15,23,42,.16) !important;
+}
+.site-glass-root .price-target-fill {
+  border-radius:9999px !important;
+  background:linear-gradient(90deg,#22d3ee,#14b8a6,#0f766e) !important;
+  box-shadow:0 0 12px rgba(20,184,166,.22) !important;
+}
+.site-glass-root .price-target-unlock,
+.site-glass-root .price-target-value { color:#0f766e !important; }
+.site-glass-root .price-target-meta { color:#52617a !important; }
+
+
+/* DARK NAMED-SURFACE CONTRACT */
+html[data-theme="dark"] body.site-glass-root .data-snapshot-card,
+html[data-theme="dark"] body.site-glass-root .quick-decisions-panel,
+html[data-theme="dark"] body.site-glass-root .pool-price-metrics,
+html[data-theme="dark"] body.site-glass-root .price-target-progress {
+  color:#eef4ff !important;
+  border-color:rgba(201,220,242,.14) !important;
+  background:rgba(7,13,22,.90) !important;
+  background-image:none !important;
+  box-shadow:0 16px 38px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.07),inset -1px -1px 0 rgba(79,222,228,.06) !important;
+}
+html[data-theme="dark"] body.site-glass-root .data-snapshot-card {
+  background:rgba(10,18,29,.92) !important;
+}
+html[data-theme="dark"] body.site-glass-root .quick-decision-link {
+  color:#e7eef9 !important;
+  border-color:rgba(218,232,248,.18) !important;
+  background:linear-gradient(180deg,rgba(34,46,63,.88),rgba(17,26,39,.86)) !important;
+}
+html[data-theme="dark"] body.site-glass-root .pool-price-metrics > div {
+  color:#eef4ff !important;
+  background:rgba(11,19,31,.72) !important;
+}
+html[data-theme="dark"] body.site-glass-root .price-target-track {
+  border-color:rgba(201,220,242,.22) !important;
+  background:#101a2a !important;
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.55) !important;
+}
+html[data-theme="dark"] body.site-glass-root .price-target-fill {
+  background:linear-gradient(90deg,#67e8f9,#2dd4bf,#14b8a6) !important;
+  box-shadow:0 0 12px rgba(45,212,191,.28) !important;
+}
+html[data-theme="dark"] body.site-glass-root .price-target-unlock,
+html[data-theme="dark"] body.site-glass-root .price-target-value { color:#67e8f9 !important; }
+html[data-theme="dark"] body.site-glass-root .price-target-meta { color:#b8c5d8 !important; }
+html[data-theme="dark"] body.site-glass-root .price-target-meta .text-slate-900 { color:#eef4ff !important; }
+html[data-theme="dark"] body.site-glass-root .price-target-meta .text-emerald-700 { color:#6ee7b7 !important; }
+html[data-theme="dark"] body.site-glass-root .pool-price-metrics .text-emerald-800,
+html[data-theme="dark"] body.site-glass-root .pool-price-metrics .text-emerald-700 { color:#6ee7b7 !important; }
+html[data-theme="dark"] body.site-glass-root main .product-image-surface {
+  background:#fff !important;
+  background-color:#fff !important;
+  background-image:none !important;
+  color:#0f172a !important;
+  box-shadow:inset 0 0 0 1px rgba(148,163,184,.18) !important;
+}
+
+.site-glass-root .pool-price-note {
+  color:#065f46 !important;
+  border-color:rgba(16,185,129,.24) !important;
+  background:rgba(236,253,245,.72) !important;
+}
+html[data-theme="dark"] body.site-glass-root .pool-price-note {
+  color:#a7f3d0 !important;
+  border-color:rgba(52,211,153,.22) !important;
+  background:rgba(6,78,59,.20) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+
+/* EXACT REMAINING SURFACES: deterministic route-level surfaces. */
+html[data-theme="dark"] body.site-glass-root main .money-person-row,
+html[data-theme="dark"] body.site-glass-root main .money-account-row,
+html[data-theme="dark"] body.site-glass-root main .data-snapshot-card,
+html[data-theme="dark"] body.site-glass-root main .quick-decisions-panel {
+  color:#eef4ff !important;
+  border-color:rgba(201,220,242,.14) !important;
+  background:rgba(7,13,22,.90) !important;
+  background-color:rgba(7,13,22,.90) !important;
+  background-image:none !important;
+}
+html[data-theme="light"] body.site-glass-root main .money-person-row,
+html[data-theme="light"] body.site-glass-root main .money-account-row,
+html[data-theme="light"] body.site-glass-root main .data-snapshot-card,
+html[data-theme="light"] body.site-glass-root main .quick-decisions-panel {
+  background:rgba(255,255,255,.70) !important;
+  background-image:none !important;
+}
+
+/* BRAND INTERACTION GLOW */
+.site-glass-root {
+  --brand-rim: rgba(45,212,191,.46);
+  --brand-glow: rgba(34,211,238,.16);
+  --brand-glow-strong: rgba(45,212,191,.30);
+}
+html[data-theme="dark"] .site-glass-root {
+  --brand-rim: rgba(103,232,249,.58);
+  --brand-glow: rgba(34,211,238,.20);
+  --brand-glow-strong: rgba(45,212,191,.38);
+}
+.site-glass-root :is(button,.btn-primary,.btn-secondary,.btn-danger,.quick-decision-link,.super-admin-nav-link,a.glass-inset,.app-role-link) {
+  border-color:var(--brand-rim) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(45,212,191,.12),0 0 12px var(--brand-glow) !important;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,filter .18s ease !important;
+}
+.site-glass-root main a[class*="rounded-xl"],
+.site-glass-root main a[class*="rounded-2xl"],
+.site-glass-root main a[class*="rounded-full"] {
+  border-color:var(--brand-rim) !important;
+  box-shadow:0 0 0 1px rgba(45,212,191,.10),0 0 10px var(--brand-glow) !important;
+}
+@media (hover:hover) and (pointer:fine) {
+  .site-glass-root :is(button,.btn-primary,.btn-secondary,.btn-danger,.quick-decision-link,.super-admin-nav-link,a.glass-inset,.app-role-link):hover,
+  .site-glass-root main a[class*="rounded-xl"]:hover,
+  .site-glass-root main a[class*="rounded-2xl"]:hover,
+  .site-glass-root main a[class*="rounded-full"]:hover {
+    transform:translateY(-1px) !important;
+    border-color:rgba(103,232,249,.88) !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 1px rgba(45,212,191,.24),0 0 22px var(--brand-glow-strong),0 8px 22px rgba(0,0,0,.14) !important;
+    filter:brightness(1.045) saturate(1.06);
+  }
+}
+.site-glass-root :is(button,a):focus-visible {
+  outline:2px solid rgba(34,211,238,.78) !important;
+  outline-offset:2px !important;
+  box-shadow:0 0 0 3px rgba(34,211,238,.16),0 0 22px var(--brand-glow-strong) !important;
+}
+.site-glass-root :is([role="progressbar"],.money-person-progress-track,.price-target-track),
+.site-glass-root main div[class*="h-2"][class*="overflow-hidden"][class*="rounded-full"] {
+  border:1px solid var(--brand-rim) !important;
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.28),0 0 0 1px rgba(45,212,191,.08),0 0 12px var(--brand-glow) !important;
+}
+
+/* FULL BRAND RIM: cards, KPI tiles and header navigation use the same interaction language. */
+.site-glass-root main :is(.card,.data-snapshot-card,.money-person-row,.money-account-row,.quick-decisions-panel,.price-target-progress),
+.site-glass-root main .pool-price-metrics > div {
+  border-color:var(--brand-rim) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 0 1px rgba(45,212,191,.08),0 0 12px var(--brand-glow),0 10px 24px rgba(2,6,23,.06) !important;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,filter .18s ease !important;
+}
+.site-glass-root .app-shell-header a[class*="rounded-"],
+.site-glass-root .app-shell-header button[class*="rounded-"],
+.site-glass-root nav[aria-label="My Money navigation"] a[class*="rounded-"] {
+  border:1px solid var(--brand-rim) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 0 0 1px rgba(45,212,191,.10),0 0 12px var(--brand-glow) !important;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,filter .18s ease !important;
+}
+@media (hover:hover) and (pointer:fine) {
+  .site-glass-root main :is(.card,.data-snapshot-card,.money-person-row,.money-account-row,.quick-decisions-panel,.price-target-progress):hover,
+  .site-glass-root main .pool-price-metrics > div:hover {
+    transform:translateY(-1px) !important;
+    border-color:rgba(103,232,249,.88) !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 0 0 1px rgba(45,212,191,.20),0 0 24px var(--brand-glow-strong),0 12px 28px rgba(2,6,23,.12) !important;
+    filter:brightness(1.03) saturate(1.04);
+  }
+  .site-glass-root .app-shell-header a[class*="rounded-"]:hover,
+  .site-glass-root .app-shell-header button[class*="rounded-"]:hover,
+  .site-glass-root nav[aria-label="My Money navigation"] a[class*="rounded-"]:hover {
+    transform:translateY(-1px) !important;
+    border-color:rgba(103,232,249,.92) !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 0 1px rgba(45,212,191,.22),0 0 22px var(--brand-glow-strong),0 8px 20px rgba(2,6,23,.12) !important;
+    filter:brightness(1.04) saturate(1.05);
   }
 }
