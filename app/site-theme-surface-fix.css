@@ -142,3 +142,99 @@ html[data-theme="light"] body.site-glass-root main :is(section,article,form,div,
     -webkit-backdrop-filter:blur(18px) saturate(132%) !important;
   }
 }
+
+
+/* REGRESSION-SAFE NAMED SURFACES */
+.site-glass-root .data-snapshot-card,
+.site-glass-root .quick-decisions-panel,
+.site-glass-root .pool-price-metrics,
+.site-glass-root .price-target-progress {
+  border-color:var(--app-surface-primary-border) !important;
+  background:var(--app-surface-primary) !important;
+  background-image:none !important;
+  box-shadow:var(--app-surface-primary-shadow) !important;
+}
+.site-glass-root .quick-decision-link {
+  color:var(--app-control-text) !important;
+  border:1px solid var(--app-control-border) !important;
+  background:var(--app-control-bg) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 6px 16px rgba(38,47,77,.08) !important;
+}
+.site-glass-root .product-image-surface {
+  border-color:rgba(148,163,184,.28) !important;
+  background:#fff !important;
+  background-image:none !important;
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.04) !important;
+}
+.site-glass-root .pool-price-metrics > div {
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.site-glass-root .price-target-track {
+  border:1px solid rgba(148,163,184,.35) !important;
+  border-radius:9999px !important;
+  background:rgba(15,23,42,.12) !important;
+  box-shadow:inset 0 1px 3px rgba(15,23,42,.16) !important;
+}
+.site-glass-root .price-target-fill {
+  border-radius:9999px !important;
+  background:linear-gradient(90deg,#22d3ee,#14b8a6,#0f766e) !important;
+  box-shadow:0 0 12px rgba(20,184,166,.22) !important;
+}
+.site-glass-root .price-target-unlock,
+.site-glass-root .price-target-value { color:#0f766e !important; }
+.site-glass-root .price-target-meta { color:#52617a !important; }
+
+
+/* DARK NAMED-SURFACE CONTRACT */
+html[data-theme="dark"] body.site-glass-root .data-snapshot-card,
+html[data-theme="dark"] body.site-glass-root .quick-decisions-panel,
+html[data-theme="dark"] body.site-glass-root .pool-price-metrics,
+html[data-theme="dark"] body.site-glass-root .price-target-progress {
+  color:#eef4ff !important;
+  border-color:rgba(201,220,242,.14) !important;
+  background:rgba(7,13,22,.90) !important;
+  background-image:none !important;
+  box-shadow:0 16px 38px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.07),inset -1px -1px 0 rgba(79,222,228,.06) !important;
+}
+html[data-theme="dark"] body.site-glass-root .data-snapshot-card {
+  background:rgba(10,18,29,.92) !important;
+}
+html[data-theme="dark"] body.site-glass-root .quick-decision-link {
+  color:#e7eef9 !important;
+  border-color:rgba(218,232,248,.18) !important;
+  background:linear-gradient(180deg,rgba(34,46,63,.88),rgba(17,26,39,.86)) !important;
+}
+html[data-theme="dark"] body.site-glass-root .pool-price-metrics > div {
+  color:#eef4ff !important;
+  background:rgba(11,19,31,.72) !important;
+}
+html[data-theme="dark"] body.site-glass-root .price-target-track {
+  border-color:rgba(201,220,242,.22) !important;
+  background:#101a2a !important;
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.55) !important;
+}
+html[data-theme="dark"] body.site-glass-root .price-target-fill {
+  background:linear-gradient(90deg,#67e8f9,#2dd4bf,#14b8a6) !important;
+  box-shadow:0 0 12px rgba(45,212,191,.28) !important;
+}
+html[data-theme="dark"] body.site-glass-root .price-target-unlock,
+html[data-theme="dark"] body.site-glass-root .price-target-value { color:#67e8f9 !important; }
+html[data-theme="dark"] body.site-glass-root .price-target-meta { color:#b8c5d8 !important; }
+html[data-theme="dark"] body.site-glass-root .price-target-meta .text-slate-900 { color:#eef4ff !important; }
+html[data-theme="dark"] body.site-glass-root .price-target-meta .text-emerald-700 { color:#6ee7b7 !important; }
+html[data-theme="dark"] body.site-glass-root .pool-price-metrics .text-emerald-800,
+html[data-theme="dark"] body.site-glass-root .pool-price-metrics .text-emerald-700 { color:#6ee7b7 !important; }
+html[data-theme="dark"] body.site-glass-root .product-image-surface { background:#fff !important; }
+
+.site-glass-root .pool-price-note {
+  color:#065f46 !important;
+  border-color:rgba(16,185,129,.24) !important;
+  background:rgba(236,253,245,.72) !important;
+}
+html[data-theme="dark"] body.site-glass-root .pool-price-note {
+  color:#a7f3d0 !important;
+  border-color:rgba(52,211,153,.22) !important;
+  background:rgba(6,78,59,.20) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}

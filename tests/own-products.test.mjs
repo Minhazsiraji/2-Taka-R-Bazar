@@ -85,5 +85,7 @@ test('customer Pool card renders product images safely when present',()=>{
   assert.match(page,/object-contain/)
   assert.match(page,/style=\{\{width:'100%',height:'100%',objectFit:'contain'\}\}/)
   assert.match(page,/loading="lazy"/)
-  assert.match(page,/bg-white/)
+  assert.match(page,/product-image-surface/)
+  const surface=readFileSync(new URL('../app/site-theme-surface-fix.css',import.meta.url),'utf8')
+  assert.match(surface,/product-image-surface[\s\S]*background:#fff !important/)
 })

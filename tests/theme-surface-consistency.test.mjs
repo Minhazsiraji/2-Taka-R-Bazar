@@ -51,3 +51,11 @@ test('spending by person uses a dedicated progress fill outside rounded backgrou
   assert.match(page,/linear-gradient\(90deg,#13cfc8,#0b8995\)/)
   assert.match(page,/role="progressbar"/)
 })
+
+
+test('named admin and pool surfaces keep dedicated theme contracts',()=>{
+  const css=readFileSync(new URL('../app/site-theme-surface-fix.css',import.meta.url),'utf8')
+  for(const name of ['data-snapshot-card','quick-decisions-panel','quick-decision-link','product-image-surface','pool-price-metrics','price-target-track','price-target-fill','price-target-unlock']) assert.match(css,new RegExp(name))
+  assert.match(css,/product-image-surface[\s\S]*background:#fff !important/)
+  assert.match(css,/price-target-fill[\s\S]*#67e8f9/)
+})
