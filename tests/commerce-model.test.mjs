@@ -153,3 +153,18 @@ test('pool creation reports failures on the originating form and highlights a co
   assert.match(createPage,/<Flash \{\.\.\.sp\}\/\>/)
   assert.match(createPage,/name="return_to" value="\/admin\/pools\/new"/)
 })
+
+test('advanced workflow actions stay in workflow and return to the active pool card',()=>{
+  const pools=readFileSync(new URL('../app/actions/pools.ts',import.meta.url),'utf8')
+  const pilot=readFileSync(new URL('../app/actions/pilot.ts',import.meta.url),'utf8')
+  const admin=readFileSync(new URL('../app/actions/admin.ts',import.meta.url),'utf8')
+  const workflow=readFileSync(new URL('../app/admin/pools/workflow/page.tsx',import.meta.url),'utf8')
+  assert.match(pools,/workflowPath=\(poolId:string\)=>`\/admin\/pools\/workflow#pool-/)
+  assert.match(pilot,/\/admin\/pools\/workflow\?notice=/)
+  assert.match(pilot,/#pool-\$\{encodeURIComponent\(poolId\)\}/)
+  assert.match(admin,/function workflowDone/)
+  assert.match(admin,/function workflowFail/)
+  assert.match(workflow,/action=\{enterPlanningTier\}[^\n]+name="pool_id" value=\{p\.id\}/)
+  assert.match(workflow,/action=\{finalizePoolItem\}[^\n]+name="pool_id" value=\{p\.id\}/)
+  assert.match(workflow,/action=\{recordSupplierReceipt\}[^\n]+name="pool_id" value=\{p\.id\}/)
+})
