@@ -72,7 +72,7 @@ test('invalid and self referral are non-blocking outcomes',()=>{
 })
 
 test('subscription is retired from commerce and customer navigation',()=>{
-  const sql=readFileSync(new URL('../supabase/migrations/202610050001_no_subscription_margin_delivery.sql',import.meta.url),'utf8')
+  const sql=readFileSync(new URL('../supabase/migrations/20261005054015_no_subscription_margin_delivery.sql',import.meta.url),'utf8')
   const shell=readFileSync(new URL('../components/app-shell.tsx',import.meta.url),'utf8')
   const subscriptionPage=readFileSync(new URL('../app/subscription/page.tsx',import.meta.url),'utf8')
   assert.match(sql,/set enforcement_enabled=false/)

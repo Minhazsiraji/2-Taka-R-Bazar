@@ -38,7 +38,7 @@ test('final customer price is protected by effective cost, benchmark and unlocke
 })
 
 test('restructure migration owns no-subscription, margin and basket-delivery invariants',()=>{
-  const sql=readFileSync(new URL('../supabase/migrations/202610050001_no_subscription_margin_delivery.sql',import.meta.url),'utf8')
+  const sql=readFileSync(new URL('../supabase/migrations/20261005054015_no_subscription_margin_delivery.sql',import.meta.url),'utf8')
   assert.match(sql,/set enforcement_enabled=false/)
   assert.match(sql,/variable_cost_per_unit/)
   assert.match(sql,/supplier_rebate_per_unit/)
@@ -75,7 +75,7 @@ test('operations finalization captures commercial cost layers',()=>{
 
 
 test('legacy confirmation and margin bypasses are fail-closed',()=>{
-  const sql=readFileSync(new URL('../supabase/migrations/202610050001_no_subscription_margin_delivery.sql',import.meta.url),'utf8')
+  const sql=readFileSync(new URL('../supabase/migrations/20261005054015_no_subscription_margin_delivery.sql',import.meta.url),'utf8')
   assert.match(sql,/drop function if exists public\.confirm_commitment_order\(uuid\);/)
   assert.match(sql,/drop function if exists public\.confirm_commitment_order\(uuid,uuid\);/)
   assert.match(sql,/Legacy finalization API retired/)
@@ -90,7 +90,7 @@ test('pool participation has no membership query or gate',()=>{
 
 test('pickup and notification surfaces distinguish pickup from home delivery',()=>{
   const pickup=readFileSync(new URL('../app/pickup/page.tsx',import.meta.url),'utf8')
-  const notifications=readFileSync(new URL('../supabase/migrations/202610050002_fulfillment_notifications.sql',import.meta.url),'utf8')
+  const notifications=readFileSync(new URL('../supabase/migrations/20261005054055_fulfillment_notifications.sql',import.meta.url),'utf8')
   const deliveries=readFileSync(new URL('../app/admin/deliveries/page.tsx',import.meta.url),'utf8')
   assert.match(pickup,/eq\('fulfillment_method','pickup'\)/)
   assert.match(notifications,/ready_for_delivery/)
@@ -102,7 +102,7 @@ test('pickup and notification surfaces distinguish pickup from home delivery',()
 
 
 test('retired subscription surface cannot be reactivated through legacy RPCs or cron',()=>{
-  const sql=readFileSync(new URL('../supabase/migrations/202610050001_no_subscription_margin_delivery.sql',import.meta.url),'utf8')
+  const sql=readFileSync(new URL('../supabase/migrations/20261005054015_no_subscription_margin_delivery.sql',import.meta.url),'utf8')
   assert.match(sql,/revoke all on function public\.get_my_subscription_status\(\) from public,anon,authenticated/)
   assert.match(sql,/revoke all on function public\.redeem_subscription_coupon\(text\) from public,anon,authenticated/)
   assert.match(sql,/revoke all on function public\.admin_update_subscription_settings/)
@@ -111,7 +111,7 @@ test('retired subscription surface cannot be reactivated through legacy RPCs or 
 
 test('home delivery completion requires actual cost for delivery economics',()=>{
   const action=readFileSync(new URL('../app/actions/admin.ts',import.meta.url),'utf8')
-  const sql=readFileSync(new URL('../supabase/migrations/202610050001_no_subscription_margin_delivery.sql',import.meta.url),'utf8')
+  const sql=readFileSync(new URL('../supabase/migrations/20261005054015_no_subscription_margin_delivery.sql',import.meta.url),'utf8')
   const page=readFileSync(new URL('../app/admin/deliveries/page.tsx',import.meta.url),'utf8')
   assert.match(action,/Actual delivery cost is required/)
   assert.match(action,/fail\('\/admin\/deliveries'/)
