@@ -104,6 +104,38 @@ html[data-theme="dark"] body.site-glass-root main :is(a,button).glass-inset {
   background:linear-gradient(180deg,rgba(34,46,63,.88),rgba(17,26,39,.86)) !important;
 }
 
+/* The legacy dark theme has a high-specificity catch-all for every rounded
+   section/div/form. These selectors intentionally outrank it so named glass
+   components use the same surface contract as the shell instead of grey. */
+html[data-theme="dark"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-panel[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap) {
+  border-color:var(--app-surface-primary-border) !important;
+  background:var(--app-surface-primary) !important;
+  background-color:rgba(7,13,22,.90) !important;
+  background-image:none !important;
+  box-shadow:var(--app-surface-primary-shadow) !important;
+}
+html[data-theme="dark"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-subpanel[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap),
+html[data-theme="dark"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-inset[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap) {
+  border-color:var(--app-surface-secondary-border) !important;
+  background:var(--app-surface-secondary) !important;
+  background-image:none !important;
+  box-shadow:var(--app-surface-secondary-shadow) !important;
+}
+
+/* Light mode uses the same named component contract and prevents legacy
+   rounded-element paint from creating a second milky layer. */
+html[data-theme="light"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-panel[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap) {
+  border-color:var(--app-surface-primary-border) !important;
+  background:var(--app-surface-primary) !important;
+  box-shadow:var(--app-surface-primary-shadow) !important;
+}
+html[data-theme="light"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-subpanel[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap),
+html[data-theme="light"] body.site-glass-root main :is(section,article,form,div,blockquote,aside,details).glass-inset[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap) {
+  border-color:var(--app-surface-secondary-border) !important;
+  background:var(--app-surface-secondary) !important;
+  box-shadow:var(--app-surface-secondary-shadow) !important;
+}
+
 @media (max-width:767px) {
   .site-glass-root main :is(.card,.table-wrap,.glass-panel) {
     backdrop-filter:blur(18px) saturate(132%) !important;
