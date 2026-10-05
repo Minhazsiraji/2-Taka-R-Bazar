@@ -59,3 +59,11 @@ test('named admin and pool surfaces keep dedicated theme contracts',()=>{
   assert.match(css,/product-image-surface[\s\S]*background:#fff !important/)
   assert.match(css,/price-target-fill[\s\S]*#67e8f9/)
 })
+
+
+test('legacy dark rounded rule stays on the shell surface and exempts special surfaces',()=>{
+  const css=readFileSync(new URL('../app/site-theme.css',import.meta.url),'utf8')
+  assert.match(css,/background: rgba\(7,13,22,\.90\) !important/)
+  for(const name of ['product-image-surface','notice','success','error','pool-price-note']) assert.match(css,new RegExp(':not\\(\\.'+name+'\\)'))
+  assert.doesNotMatch(css,/linear-gradient\(145deg,rgba\(23,33,49,\.74\),rgba\(13,21,33,\.58\)\)/)
+})
