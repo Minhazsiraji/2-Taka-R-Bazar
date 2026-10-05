@@ -67,3 +67,14 @@ test('legacy dark rounded rule stays on the shell surface and exempts special su
   for(const name of ['product-image-surface','notice','success','error','pool-price-note']) assert.match(css,new RegExp(':not\\(\\.'+name+'\\)'))
   assert.doesNotMatch(css,/linear-gradient\(145deg,rgba\(23,33,49,\.74\),rgba\(13,21,33,\.58\)\)/)
 })
+
+
+test('remaining money admin and pool surfaces have exact named dark contracts',()=>{
+  const money=readFileSync(new URL('../app/money/page.tsx',import.meta.url),'utf8')
+  const css=readFileSync(new URL('../app/site-theme-surface-fix.css',import.meta.url),'utf8')
+  assert.match(money,/money-person-row/)
+  assert.match(money,/money-account-row/)
+  for(const name of ['money-person-row','money-account-row','data-snapshot-card','quick-decisions-panel','product-image-surface']) assert.match(css,new RegExp(name))
+  assert.match(css,/main \.product-image-surface[\s\S]*background:#fff !important/)
+  assert.match(css,/money-account-row[\s\S]*background:rgba\(7,13,22,\.90\) !important/)
+})

@@ -225,7 +225,13 @@ html[data-theme="dark"] body.site-glass-root .price-target-meta .text-slate-900 
 html[data-theme="dark"] body.site-glass-root .price-target-meta .text-emerald-700 { color:#6ee7b7 !important; }
 html[data-theme="dark"] body.site-glass-root .pool-price-metrics .text-emerald-800,
 html[data-theme="dark"] body.site-glass-root .pool-price-metrics .text-emerald-700 { color:#6ee7b7 !important; }
-html[data-theme="dark"] body.site-glass-root .product-image-surface { background:#fff !important; }
+html[data-theme="dark"] body.site-glass-root main .product-image-surface {
+  background:#fff !important;
+  background-color:#fff !important;
+  background-image:none !important;
+  color:#0f172a !important;
+  box-shadow:inset 0 0 0 1px rgba(148,163,184,.18) !important;
+}
 
 .site-glass-root .pool-price-note {
   color:#065f46 !important;
@@ -237,4 +243,24 @@ html[data-theme="dark"] body.site-glass-root .pool-price-note {
   border-color:rgba(52,211,153,.22) !important;
   background:rgba(6,78,59,.20) !important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+
+/* EXACT REMAINING SURFACES: deterministic route-level surfaces. */
+html[data-theme="dark"] body.site-glass-root main .money-person-row,
+html[data-theme="dark"] body.site-glass-root main .money-account-row,
+html[data-theme="dark"] body.site-glass-root main .data-snapshot-card,
+html[data-theme="dark"] body.site-glass-root main .quick-decisions-panel {
+  color:#eef4ff !important;
+  border-color:rgba(201,220,242,.14) !important;
+  background:rgba(7,13,22,.90) !important;
+  background-color:rgba(7,13,22,.90) !important;
+  background-image:none !important;
+}
+html[data-theme="light"] body.site-glass-root main .money-person-row,
+html[data-theme="light"] body.site-glass-root main .money-account-row,
+html[data-theme="light"] body.site-glass-root main .data-snapshot-card,
+html[data-theme="light"] body.site-glass-root main .quick-decisions-panel {
+  background:rgba(255,255,255,.70) !important;
+  background-image:none !important;
 }
