@@ -42,3 +42,12 @@ test('interactive glass inset controls keep explicit text contrast',()=>{
   assert.match(css,/color:#e7eef9 !important/)
   assert.doesNotMatch(css,/main :is\(\.glass-subpanel,\.glass-inset,\.glass-icon\)/)
 })
+
+test('spending by person uses a dedicated progress fill outside rounded background utilities',()=>{
+  const page=readFileSync(new URL('../app/money/page.tsx',import.meta.url),'utf8')
+  assert.match(page,/money-person-progress-track/)
+  assert.match(page,/money-person-progress-fill/)
+  assert.match(page,/Math\.max\(3,Math\.min\(100,row\.amount\/max\*100\)\)/)
+  assert.match(page,/linear-gradient\(90deg,#13cfc8,#0b8995\)/)
+  assert.match(page,/role="progressbar"/)
+})
