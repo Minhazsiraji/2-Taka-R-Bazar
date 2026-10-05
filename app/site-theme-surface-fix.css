@@ -264,3 +264,47 @@ html[data-theme="light"] body.site-glass-root main .quick-decisions-panel {
   background:rgba(255,255,255,.70) !important;
   background-image:none !important;
 }
+
+/* BRAND INTERACTION GLOW */
+.site-glass-root {
+  --brand-rim: rgba(45,212,191,.46);
+  --brand-glow: rgba(34,211,238,.16);
+  --brand-glow-strong: rgba(45,212,191,.30);
+}
+html[data-theme="dark"] .site-glass-root {
+  --brand-rim: rgba(103,232,249,.58);
+  --brand-glow: rgba(34,211,238,.20);
+  --brand-glow-strong: rgba(45,212,191,.38);
+}
+.site-glass-root :is(button,.btn-primary,.btn-secondary,.btn-danger,.quick-decision-link,.super-admin-nav-link,a.glass-inset,.app-role-link) {
+  border-color:var(--brand-rim) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(45,212,191,.12),0 0 12px var(--brand-glow) !important;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,filter .18s ease !important;
+}
+.site-glass-root main a[class*="rounded-xl"],
+.site-glass-root main a[class*="rounded-2xl"],
+.site-glass-root main a[class*="rounded-full"] {
+  border-color:var(--brand-rim) !important;
+  box-shadow:0 0 0 1px rgba(45,212,191,.10),0 0 10px var(--brand-glow) !important;
+}
+@media (hover:hover) and (pointer:fine) {
+  .site-glass-root :is(button,.btn-primary,.btn-secondary,.btn-danger,.quick-decision-link,.super-admin-nav-link,a.glass-inset,.app-role-link):hover,
+  .site-glass-root main a[class*="rounded-xl"]:hover,
+  .site-glass-root main a[class*="rounded-2xl"]:hover,
+  .site-glass-root main a[class*="rounded-full"]:hover {
+    transform:translateY(-1px) !important;
+    border-color:rgba(103,232,249,.88) !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 1px rgba(45,212,191,.24),0 0 22px var(--brand-glow-strong),0 8px 22px rgba(0,0,0,.14) !important;
+    filter:brightness(1.045) saturate(1.06);
+  }
+}
+.site-glass-root :is(button,a):focus-visible {
+  outline:2px solid rgba(34,211,238,.78) !important;
+  outline-offset:2px !important;
+  box-shadow:0 0 0 3px rgba(34,211,238,.16),0 0 22px var(--brand-glow-strong) !important;
+}
+.site-glass-root :is([role="progressbar"],.money-person-progress-track,.price-target-track),
+.site-glass-root main div[class*="h-2"][class*="overflow-hidden"][class*="rounded-full"] {
+  border:1px solid var(--brand-rim) !important;
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.28),0 0 0 1px rgba(45,212,191,.08),0 0 12px var(--brand-glow) !important;
+}

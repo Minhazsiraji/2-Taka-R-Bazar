@@ -78,3 +78,13 @@ test('remaining money admin and pool surfaces have exact named dark contracts',(
   assert.match(css,/main \.product-image-surface[\s\S]*background:#fff !important/)
   assert.match(css,/money-account-row[\s\S]*background:rgba\(7,13,22,\.90\) !important/)
 })
+
+test('brand glow covers buttons links and progress rims without reviving legacy image paint',()=>{
+  const css=readFileSync(new URL('../app/site-theme-surface-fix.css',import.meta.url),'utf8')
+  const pool=readFileSync(new URL('../app/pool/page.tsx',import.meta.url),'utf8')
+  for(const token of ['--brand-rim','--brand-glow-strong','super-admin-nav-link','role="progressbar"']) assert.match(css,new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')))
+  assert.match(css,/translateY\(-1px\)/)
+  assert.match(pool,/product-image-surface[^\n]*style=\{\{borderRadius:'0\.9rem',backgroundColor:'#fff'\}\}/)
+  const imageLine=pool.split('\n').find(line=>line.includes('product-image-surface'))??''
+  assert.doesNotMatch(imageLine,/rounded-xl/)
+})
