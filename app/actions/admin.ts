@@ -41,6 +41,12 @@ export async function addPoolItem(fd:FormData){const {supabase}=await requireAdm
 
 export async function setPoolStatus(fd:FormData){const {supabase}=await requireAdmin();const poolId=t(fd,'pool_id'),status=t(fd,'status');const {error}=await supabase.rpc('admin_set_pool_status',{p_pool_id:poolId,p_status:status});if(error)workflowFail(poolId,error.message);workflowDone(poolId,`Pool moved to ${status.replaceAll('_',' ')}`)}
 
+export async function setPoolPause(fd:FormData){const {supabase}=await requireAdmin();const poolId=t(fd,'pool_id'),paused=t(fd,'paused')==='true',reason=t(fd,'reason');if(paused&&!reason)workflowFail(poolId,'Pause reason required');const {error}=await supabase.rpc('admin_set_pool_pause',{p_pool_id:poolId,p_paused:paused,p_reason:reason||null});if(error)workflowFail(poolId,error.message);workflowDone(poolId,paused?'Pool paused; existing commitments are preserved':'Pool resumed and is accepting commitments again')}
+
+export async function cancelPool(fd:FormData){const {supabase}=await requireAdmin();const poolId=t(fd,'pool_id'),reason=t(fd,'reason');if(!reason)workflowFail(poolId,'Cancellation reason required');const {error}=await supabase.rpc('admin_cancel_pool',{p_pool_id:poolId,p_reason:reason});if(error)workflowFail(poolId,error.message);workflowDone(poolId,'Pool cancelled with reason recorded')}
+
+export async function removeDraftPoolItem(fd:FormData){const {supabase}=await requireAdmin();const poolId=t(fd,'pool_id'),itemId=t(fd,'pool_item_id');const {error}=await supabase.rpc('admin_remove_draft_pool_item',{p_pool_item_id:itemId});if(error)workflowFail(poolId,error.message);workflowDone(poolId,'Product removed from this draft pool; master product and inventory were not deleted')}
+
 export async function enterSupplierQuote(fd:FormData){const {supabase,user}=await requireAdmin();const payload={pool_item_id:t(fd,'pool_item_id'),supplier_id:t(fd,'supplier_id'),quantity:n(fd,'quantity'),quoted_unit_price:n(fd,'quoted_unit_price'),delivery_cost:n(fd,'delivery_cost')||0,landed_unit_price:n(fd,'landed_unit_price'),available_quantity:n(fd,'available_quantity')||null,delivery_date:t(fd,'delivery_date')||null,payment_terms:t(fd,'payment_terms')||null,valid_until:t(fd,'valid_until')||null,notes:t(fd,'notes')||null,created_by:user.id};if(!payload.pool_item_id||!payload.supplier_id||!(payload.quantity>0)||!(payload.quoted_unit_price>0)||!(payload.landed_unit_price>0))fail('/admin/pools','Complete required quote fields');const {error}=await supabase.from('supplier_quotes').insert(payload);if(error)fail('/admin/pools',error.message);done('/admin/pools','Supplier quotation recorded')}
 
 export async function finalizePoolItem(fd:FormData){const {supabase}=await requireAdmin();const poolId=t(fd,'pool_id');const {error}=await supabase.rpc('admin_finalize_pool_item',{p_pool_item_id:t(fd,'pool_item_id'),p_quote_id:t(fd,'quote_id'),p_final_customer_price:n(fd,'final_customer_price'),p_variable_cost_per_unit:n(fd,'variable_cost_per_unit')||0,p_supplier_rebate_per_unit:n(fd,'supplier_rebate_per_unit')||0,p_brand_support_per_unit:n(fd,'brand_support_per_unit')||0,p_reason:t(fd,'reason')});if(error)workflowFail(poolId,error.message);workflowDone(poolId,'Winning quote, customer saving and platform contribution saved')}
@@ -86,8 +92,11 @@ export async function adjustOwnProductStock(fd:FormData){
 }
 
 export async function addOwnProductToPool(fd:FormData){
-  const {supabase}=await requireAdmin(); const mode=t(fd,'pricing_mode'); const tierText=t(fd,'tiers')
+  const {supabase}=await requireAdmin(); const poolId=t(fd,'pool_id'),mode=t(fd,'pricing_mode'),tierText=t(fd,'tiers'),returnTo=t(fd,'return_to')
+  const failHere=(message:string):never=>returnTo==='workflow'?workflowFail(poolId,message):fail('/admin/own-products',message)
   let tiers:{min_quantity:number;unit_price:number}[]=[]
-  if(mode==='QUANTITY_TIER'){try{tiers=tierText.split(',').filter(Boolean).map(part=>{const [q,p]=part.split(':').map(Number);if(!(q>0&&p>0))throw new Error();return {min_quantity:q,unit_price:p}})}catch{fail('/admin/own-products','Use tier format 1:160,50:155,100:149')}}
-  const {error}=await supabase.rpc('admin_configure_own_pool_item',{p_pool_id:t(fd,'pool_id'),p_product_id:t(fd,'product_id'),p_pricing_mode:mode,p_fixed_price:n(fd,'fixed_price')||null,p_target_quantity:n(fd,'target_quantity')||null,p_target_price:n(fd,'target_price')||null,p_min_quantity:n(fd,'min_quantity')||1,p_max_quantity:n(fd,'max_quantity')||20,p_tiers:tiers}); if(error)fail('/admin/own-products',error.message); done('/admin/own-products','Own product added to draft pool')
+  if(mode==='QUANTITY_TIER'){try{tiers=tierText.split(',').map(x=>x.trim()).filter(Boolean).map(part=>{const [q,p]=part.split(':').map(Number);if(!(q>0&&p>0))throw new Error();return {min_quantity:q,unit_price:p}});if(new Set(tiers.map(x=>x.min_quantity)).size!==tiers.length)throw new Error()}catch{failHere('Use unique tier thresholds in format 1:200,20:190,50:180,100:170')}}
+  const {error}=await supabase.rpc('admin_configure_own_pool_item',{p_pool_id:poolId,p_product_id:t(fd,'product_id'),p_pricing_mode:mode,p_fixed_price:n(fd,'fixed_price')||null,p_target_quantity:n(fd,'target_quantity')||null,p_target_price:n(fd,'target_price')||null,p_min_quantity:n(fd,'min_quantity')||1,p_max_quantity:n(fd,'max_quantity')||20,p_tiers:tiers}); if(error)failHere(error.message)
+  if(returnTo==='workflow')workflowDone(poolId,'Own-product pricing saved')
+  done('/admin/own-products','Own product configured in draft pool')
 }
