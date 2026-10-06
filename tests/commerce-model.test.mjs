@@ -69,7 +69,7 @@ test('operations finalization captures commercial cost layers',()=>{
   assert.match(action,/p_supplier_rebate_per_unit/)
   assert.match(action,/p_brand_support_per_unit/)
   assert.match(workflow,/Commercial margin engine/)
-  assert.match(workflow,/Platform gross contribution/)
+  assert.match(workflow,/2-TBR gross contribution/)
   assert.match(workflow,/Customer saving/)
 })
 
@@ -198,4 +198,22 @@ test('open pools support audited pause resume and reasoned cancellation',()=>{
   assert.match(workflow,/Resume pool/)
   assert.match(workflow,/Cancellation reason/)
   assert.match(customer,/pool\.status==='open'&&!pool\.is_paused/)
+})
+
+
+test('own-product economics use the common pool-item reporting contract without double counting',()=>{
+  const workflow=readFileSync(new URL('../app/admin/pools/workflow/page.tsx',import.meta.url),'utf8')
+  const owner=readFileSync(new URL('../app/super-admin/page.tsx',import.meta.url),'utf8')
+  const sql=readFileSync(new URL('../supabase/migrations/20261006090000_own_product_economics_alignment.sql',import.meta.url),'utf8')
+  assert.match(sql,/sync_own_pool_item_economics/)
+  assert.match(sql,/new\.effective_cost_per_unit:=round\(v_landed,2\)/)
+  assert.match(sql,/new\.platform_margin_per_unit:=round\(new\.final_customer_price-v_landed,2\)/)
+  assert.match(sql,/new\.customer_saving_per_unit:=round\(new\.benchmark_price_snapshot-new\.final_customer_price,2\)/)
+  assert.match(workflow,/Own landed cost/)
+  assert.match(workflow,/2-TBR gross contribution/)
+  assert.match(workflow,/Verified market benchmark/)
+  assert.match(owner,/admin_own_product_performance/)
+  assert.match(owner,/source_type==='SUPPLIER_POOL'/)
+  assert.match(owner,/const realizedSupplierContribution = orderItems\.filter/)
+  assert.match(owner,/const productContribution = realizedSupplierContribution \+ ownProductContribution/)
 })
