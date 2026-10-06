@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { PublicHeader } from '@/components/public-header'
 import { PublicFooter } from '@/components/public-footer'
-import { SITE_NAME, SITE_URL } from '@/lib/site'
+import { SEO_UPDATED_AT, SITE_NAME, SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {title:'FAQ | প্রশ্নোত্তর',description:'Answers about 2-TAKA-R-BAZAR community grocery pools, final pricing, fulfilment, verified savings, returns and refunds.',alternates:{canonical:`${SITE_URL}/faq`}}
 
@@ -16,7 +16,8 @@ const faqs=[
 ]
 
 export default function FaqPage(){
-  const schema={"@context":"https://schema.org","@type":"FAQPage",mainEntity:faqs.map(([q,a])=>({"@type":"Question",name:q,acceptedAnswer:{"@type":"Answer",text:a}}))}
-  return <main className="min-h-screen bg-slate-50 text-slate-950"><PublicHeader actionHref="/" actionLabel="Home"/><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
+  const schema={"@context":"https://schema.org","@type":"FAQPage","@id":`${SITE_URL}/faq#faq`,url:`${SITE_URL}/faq`,name:'Frequently asked questions',dateModified:SEO_UPDATED_AT,isPartOf:{"@id":`${SITE_URL}/#website`},breadcrumb:{"@id":`${SITE_URL}/faq#breadcrumb`},mainEntity:faqs.map(([q,a])=>({"@type":"Question",name:q,acceptedAnswer:{"@type":"Answer",text:a}}))}
+  const breadcrumb={"@context":"https://schema.org","@type":"BreadcrumbList","@id":`${SITE_URL}/faq#breadcrumb`,itemListElement:[{"@type":"ListItem",position:1,name:'Home',item:SITE_URL},{"@type":"ListItem",position:2,name:'FAQ',item:`${SITE_URL}/faq`}]}
+  return <main className="min-h-screen bg-slate-50 text-slate-950"><PublicHeader actionHref="/" actionLabel="Home"/><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(breadcrumb)}}/>
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12"><p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{SITE_NAME}</p><h1 className="mt-2 text-3xl font-black sm:text-4xl">Frequently asked questions</h1><p className="mt-1 text-xl font-bold text-slate-700" lang="bn">সাধারণ প্রশ্নোত্তর</p><div className="mt-6 grid gap-4">{faqs.map(([q,a,qb,ab])=><article key={q} className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-black">{q}</h2><p className="mt-2 leading-7 text-slate-700">{a}</p><h3 className="mt-4 font-bold" lang="bn">{qb}</h3><p className="mt-2 leading-7 text-slate-700" lang="bn">{ab}</p></article>)}</div></div><PublicFooter/></main>
 }
