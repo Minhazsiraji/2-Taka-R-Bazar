@@ -32,3 +32,20 @@ test('Pool detail stays compact on mobile without dropping information',()=>{
   assert.match(css,/height: 13rem/)
   assert.match(css,/object-fit: contain/)
 })
+
+
+test('paused pools are not advertised as available on customer Home',()=>{
+  const home=read('app/home/page.tsx')
+  assert.match(home,/status,is_paused,pickup_at/)
+  assert.match(home,/filter\(\(pool:any\)=>!pool\.is_paused\)/)
+})
+
+test('paused pools stay visible only to customers with an existing commitment and never show Open status',()=>{
+  const pool=read('app/pool/page.tsx')
+  assert.match(pool,/const visiblePools=\(pools\?\?\[\]\)\.filter/)
+  assert.match(pool,/if\(!pool\.is_paused\)return true/)
+  assert.match(pool,/commitments\.has\(item\.id\)/)
+  assert.match(pool,/StatusPill status=\{pool\.is_paused\?'paused':pool\.status\}/)
+  assert.match(pool,/!visiblePools\.length/)
+  assert.match(pool,/visiblePools\.map/)
+})
