@@ -7,8 +7,21 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
   headers: { "content-type": "application/json" },
 });
 
+function constantTimeEqual(a: string, b: string) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  const presentedSecret = req.headers.get("x-dispatch-secret");
+  // Reject internet scans before creating a privileged client or touching the database.
+  if (!presentedSecret || presentedSecret.length < 32 || presentedSecret.length > 256) {
+    return json({ error: "Unauthorized" }, 401);
+  }
 
   const url = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -22,7 +35,7 @@ Deno.serve(async (req: Request) => {
     .single();
 
   if (configError || !config) return json({ error: "Push config unavailable" }, 500);
-  if (req.headers.get("x-dispatch-secret") !== config.dispatch_secret) return json({ error: "Unauthorized" }, 401);
+  if (!constantTimeEqual(presentedSecret, config.dispatch_secret)) return json({ error: "Unauthorized" }, 401);
   if (!config.vapid_public_key || !config.vapid_private_key) return json({ error: "VAPID is not configured" }, 503);
 
   webpush.setVapidDetails(config.vapid_subject, config.vapid_public_key, config.vapid_private_key);
