@@ -15,7 +15,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const status = sp.status ?? 'all'
 
   const [{ data: pools }, { data: communities }, { data: items }, { data: commitments }] = await Promise.all([
-    supabase.from('pools').select('id,community_id,title,status,cadence,pickup_at,created_at').order('created_at', { ascending: false }),
+    supabase.from('pools').select('id,community_id,title,status,cadence,pickup_at,created_at,is_paused').order('created_at', { ascending: false }),
     supabase.from('communities').select('id,name'),
     supabase.from('pool_items').select('id,pool_id'),
     supabase.from('commitments').select('pool_item_id,quantity,status'),
@@ -59,7 +59,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         const demand = itemIds.reduce((sum, id) => sum + (demandByItem.get(id) ?? 0), 0)
         return <Link key={p.id} href={`/admin/pools/${p.id}`} className="card group grid gap-3 p-4 transition hover:-translate-y-0.5 sm:grid-cols-[1fr_auto] sm:items-center">
           <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="chip capitalize">{p.cadence ?? 'weekly'}</span><span className="text-xs font-bold uppercase text-slate-500">{communityById.get(p.community_id) ?? 'Unknown community'}</span></div><h2 className="mt-2 truncate text-lg font-bold sm:text-xl">{p.title}</h2><p className="muted mt-1">Created {shortDate(p.created_at)} · {itemIds.length} SKU{itemIds.length === 1 ? '' : 's'} · {demand} committed units · pickup {p.pickup_at ? shortDate(p.pickup_at) : 'not set'}</p></div>
-          <div className="flex items-center gap-3 sm:justify-end"><StatusPill status={p.status}/><span className="btn-secondary px-4 py-2">Open →</span></div>
+          <div className="flex items-center gap-3 sm:justify-end">{p.is_paused&&<span className="chip">Paused</span>}<StatusPill status={p.status}/><span className="btn-secondary px-4 py-2">Open →</span></div>
         </Link>
       })}
     </div>

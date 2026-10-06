@@ -73,16 +73,16 @@ export default async function LandingPage() {
 
         <section className="mt-6 rounded-[28px] border border-black/10 bg-slate-50 p-6 sm:p-8">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">What is 2-TAKA-R-BAZAR?</p>
-          <div className="mt-3 grid gap-4 md:grid-cols-2"><p className="leading-7 text-slate-700">It is a community procurement service: households pool grocery demand first, suppliers quote against the volume, customers confirm only after the final price is published, and verified savings are recorded after pickup.</p><p className="leading-7 text-slate-700" lang="bn">এটি একটি কমিউনিটি procurement সেবা: পরিবারের বাজারের চাহিদা আগে একত্র হয়, মোট পরিমাণ অনুযায়ী supplier দর দেয়, চূড়ান্ত দাম প্রকাশের পর গ্রাহক ক্রয় নিশ্চিত করেন, এবং পিকআপের পর যাচাইকৃত সাশ্রয় রেকর্ড হয়।</p></div>
+          <div className="mt-3 grid gap-4 md:grid-cols-2"><p className="leading-7 text-slate-700">It is a community procurement service: households pool grocery demand first, suppliers quote against the volume, customers confirm only after the final price is published, and verified product savings are recorded after successful fulfilment.</p><p className="leading-7 text-slate-700" lang="bn">এটি একটি কমিউনিটি procurement সেবা: পরিবারের বাজারের চাহিদা আগে একত্র হয়, মোট পরিমাণ অনুযায়ী supplier দর দেয়, চূড়ান্ত দাম প্রকাশের পর গ্রাহক ক্রয় নিশ্চিত করেন, এবং সফলভাবে পণ্য হস্তান্তরের পর যাচাইকৃত পণ্যের সাশ্রয় রেকর্ড হয়।</p></div>
         </section>
 
         <section className="mt-6 rounded-[28px] border border-black/10 bg-slate-50 p-6 sm:p-8">
           <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">How it works</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl bg-white p-5"><b>1. Join your community</b><p className="muted mt-2">Choose your local community and pickup point.</p></div>
+            <div className="rounded-2xl bg-white p-5"><b>1. Join your community</b><p className="muted mt-2">Choose your local community. At purchase confirmation, select FREE community collection or optional home delivery.</p></div>
             <div className="rounded-2xl bg-white p-5"><b>2. Pool the demand</b><p className="muted mt-2">Households commit quantity before buying.</p></div>
             <div className="rounded-2xl bg-white p-5"><b>3. Confirm after price</b><p className="muted mt-2">A commitment becomes an order only after you accept the final price.</p></div>
-            <div className="rounded-2xl bg-white p-5"><b>4. Verify the savings</b><p className="muted mt-2">Savings are credited only after collection.</p></div>
+            <div className="rounded-2xl bg-white p-5"><b>4. Verify the savings</b><p className="muted mt-2">Product savings are credited only after successful fulfilment; delivery is separate.</p></div>
           </div>
           <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2"><Link href="/about" className="font-black underline">About the model →</Link><Link href="/faq" className="font-black underline">Read FAQ / প্রশ্নোত্তর →</Link></div>
         </section>

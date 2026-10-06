@@ -51,15 +51,22 @@ export async function submitPoolItemReview(formData:FormData){
 export async function confirmCommitment(formData: FormData) {
   const { supabase } = await requireOnboardedUser()
   const commitmentId = text(formData, 'commitment_id')
-  const pickupPointId = text(formData, 'pickup_point_id')
+  const fulfillmentMethod = text(formData, 'fulfillment_method')
+  const pickupPointId = text(formData, 'pickup_point_id') || null
+  const deliveryAddress = text(formData, 'delivery_address') || null
   const policyAccepted = formData.get('policy_accepted') === 'on'
   const policyVersion = text(formData, 'policy_version')
-  if (!commitmentId || !pickupPointId) redirect('/orders?error=Choose+a+pickup+point+before+confirming+your+purchase')
+  if (!commitmentId || !['pickup','home_delivery'].includes(fulfillmentMethod)) redirect('/orders?error=Choose+pickup+or+home+delivery+before+confirming+your+purchase')
   if (!policyAccepted || policyVersion !== CURRENT_POLICY_VERSION) redirect('/orders?error=Please+review+and+accept+the+current+Terms,+Return+Policy+and+Refund+Policy+before+confirming.')
-  const { error } = await supabase.rpc('confirm_commitment_order', { p_commitment_id: commitmentId, p_pickup_point_id: pickupPointId })
+  const { error } = await supabase.rpc('confirm_commitment_order', {
+    p_commitment_id: commitmentId,
+    p_fulfillment_method: fulfillmentMethod,
+    p_pickup_point_id: pickupPointId,
+    p_delivery_address: deliveryAddress,
+  })
   if (error) redirect(`/orders?error=${encodeURIComponent(error.message)}`)
   revalidatePath('/orders'); revalidatePath('/home'); revalidatePath('/pool')
-  redirect('/orders?notice=Purchase+confirmed+with+your+selected+pickup+point.')
+  redirect('/orders?notice=Purchase+confirmed.+Product+savings+and+delivery+charges+are+shown+separately.')
 }
 
 export async function submitFeedback(formData: FormData) {

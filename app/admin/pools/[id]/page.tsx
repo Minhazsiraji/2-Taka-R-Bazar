@@ -12,7 +12,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const { id } = await params
   const { supabase } = await requireAdmin()
 
-  const { data: pool } = await supabase.from('pools').select('id,community_id,title,status,cadence,commitment_closes_at,confirmation_closes_at,supplier_delivery_at,pickup_at,receiving_pickup_point_id,notes').eq('id', id).maybeSingle()
+  const { data: pool } = await supabase.from('pools').select('id,community_id,title,status,cadence,commitment_closes_at,confirmation_closes_at,supplier_delivery_at,pickup_at,receiving_pickup_point_id,notes,is_paused,pause_reason,cancellation_reason').eq('id', id).maybeSingle()
   if (!pool) notFound()
 
   const [{ data: community }, { data: items }, { data: products }, { data: commitments }, { data: quotes }, { data: pickups }] = await Promise.all([
@@ -34,7 +34,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     <div className="flex flex-wrap items-center gap-2 text-sm"><Link className="font-bold text-cyan-800 underline" href="/admin/pools">← Pools</Link><span className="text-slate-400">/</span><span>{pool.title}</span></div>
 
     <section className="card p-4 sm:p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><div className="card-title">Pool details</div><h1 className="mt-1 text-2xl font-bold sm:text-3xl">{pool.title}</h1><p className="muted mt-2">Use this page to review one pool. Operational edits are safe; products, benchmarks, existing demand and pricing history stay protected once the pool is active.</p></div><StatusPill status={pool.status}/></div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><div className="card-title">Pool details</div><h1 className="mt-1 text-2xl font-bold sm:text-3xl">{pool.title}</h1><p className="muted mt-2">Use this page to review one pool. Operational edits are safe; products, benchmarks, existing demand and pricing history stay protected once the pool is active.</p></div><div className="flex flex-wrap items-center gap-2">{pool.is_paused&&<span className="chip">Paused</span>}<StatusPill status={pool.status}/></div></div>{pool.is_paused&&<div className="notice mt-3"><b>Pool temporarily paused.</b><p className="mt-1">Existing commitments are preserved. Reason: {pool.pause_reason||'Not recorded'}</p></div>}{pool.status==='cancelled'&&pool.cancellation_reason&&<div className="notice mt-3"><b>Cancellation reason:</b> {pool.cancellation_reason}</div>}
       <div className="mt-4 flex flex-wrap gap-2"><Link className="btn-primary" href={`/admin/pools/edit?pool=${pool.id}`}>Edit pool details</Link><Link className="btn-secondary" href="/admin/pools/workflow">Advanced workflow</Link><Link className="btn-secondary" href="/pool">Customer view</Link></div>
     </section>
 
