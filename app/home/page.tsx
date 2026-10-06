@@ -13,7 +13,7 @@ export default async function HomePage(){
   const {user,profile,roles,supabase}=await requireOnboardedUser()
   const [{data:savingsSummaryRows},{data:activePools},{data:readyOrder},{data:community},{data:summaryRows}]=await Promise.all([
     supabase.rpc('get_my_savings_summary'),
-    supabase.from('pools').select('id,title,status,pickup_at,commitment_closes_at,cadence,pool_items(id,benchmark_price_snapshot)').eq('community_id',profile.community_id).in('status',['open','pricing','final_price','confirmation','ordered','ready_for_pickup']).order('created_at',{ascending:false}).limit(6),
+    supabase.from('pools').select('id,title,status,is_paused,pickup_at,commitment_closes_at,cadence,pool_items(id,benchmark_price_snapshot)').eq('community_id',profile.community_id).in('status',['open','pricing','final_price','confirmation','ordered','ready_for_pickup']).order('created_at',{ascending:false}).limit(6),
     supabase.from('orders').select('id,order_code,status,fulfillment_method,delivery_address,delivery_fee,pickup_points(name,address,google_maps_url)').eq('customer_id',user.id).eq('status','ready_for_pickup').order('ready_at',{ascending:false}).limit(1).maybeSingle(),
     supabase.from('communities').select('id,name').eq('id',profile.community_id).maybeSingle(),
     supabase.rpc('get_my_community_summary'),
@@ -22,7 +22,7 @@ export default async function HomePage(){
   const lifetime=Number(savingsSummary?.lifetime_verified_saving??0)
   const thisMonth=Number(savingsSummary?.month_verified_saving??0)
   const summary=summaryRows?.[0] as any
-  const pools=activePools??[]
+  const pools=(activePools??[]).filter((pool:any)=>!pool.is_paused)
   const glass='glass-panel'
 
   const poolStatsEntries=await Promise.all(pools.map(async(pool:any)=>{
