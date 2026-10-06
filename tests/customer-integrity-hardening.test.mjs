@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 
-const migration = fs.readFileSync('supabase/migrations/20261006045000_customer_integrity_hardening.sql','utf8')
+const migration = fs.readFileSync('supabase/migrations/20261006050149_customer_integrity_hardening.sql','utf8')
 const config = fs.readFileSync('next.config.ts','utf8')
 const customerActions = fs.readFileSync('app/actions/customer.ts','utf8')
 const pickupActions = fs.readFileSync('app/actions/pickup.ts','utf8')
