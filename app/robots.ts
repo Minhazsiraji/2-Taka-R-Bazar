@@ -23,17 +23,24 @@ const PRIVATE_PATHS = [
   '/money',
 ]
 
+const PUBLIC_PATHS = ['/', '/about', '/terms', '/return-policy', '/refund-policy', '/faq', '/llms.txt']
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/about', '/terms', '/return-policy', '/refund-policy', '/faq', '/llms.txt'],
+        allow: PUBLIC_PATHS,
         disallow: PRIVATE_PATHS,
       },
       {
         userAgent: 'OAI-SearchBot',
-        allow: ['/', '/about', '/terms', '/return-policy', '/refund-policy', '/faq', '/llms.txt'],
+        allow: PUBLIC_PATHS,
+        disallow: PRIVATE_PATHS,
+      },
+      {
+        userAgent: 'OAI-AdsBot',
+        allow: PUBLIC_PATHS,
         disallow: PRIVATE_PATHS,
       },
     ],

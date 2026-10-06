@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { PublicHeader } from '@/components/public-header'
 import { PublicFooter } from '@/components/public-footer'
-import { PILOT_AREA, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
+import { PILOT_AREA, PUBLIC_CONTACT_EMAIL, SEO_UPDATED_AT, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'Community Grocery Pooling in Savar',
@@ -27,6 +27,14 @@ export default async function LandingPage() {
         url: SITE_URL,
         logo: `${SITE_URL}/brand-logo-header.png`,
         description: SITE_DESCRIPTION,
+        slogan: 'Smart Shopping. Real Savings.',
+        email: PUBLIC_CONTACT_EMAIL,
+        contactPoint: {
+          '@type': 'ContactPoint',
+          contactType: 'customer service',
+          email: PUBLIC_CONTACT_EMAIL,
+          availableLanguage: ['English', 'Bangla'],
+        },
         areaServed: {
           '@type': 'Place',
           name: PILOT_AREA,
@@ -41,12 +49,33 @@ export default async function LandingPage() {
         inLanguage: ['en-BD', 'bn-BD'],
       },
       {
+        '@type': 'ImageObject',
+        '@id': `${SITE_URL}/#primaryimage`,
+        contentUrl: `${SITE_URL}/grocery-hero-glass.svg`,
+        caption: 'Everyday grocery essentials pooled locally through 2-TAKA-R-BAZAR',
+        representativeOfPage: true,
+      },
+      {
+        '@type': 'WebPage',
+        '@id': `${SITE_URL}/#webpage`,
+        url: SITE_URL,
+        name: `${SITE_NAME} | Community Grocery Pooling in Savar`,
+        description: SITE_DESCRIPTION,
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+        about: { '@id': `${SITE_URL}/#service` },
+        primaryImageOfPage: { '@id': `${SITE_URL}/#primaryimage` },
+        dateModified: SEO_UPDATED_AT,
+        inLanguage: ['en-BD', 'bn-BD'],
+      },
+      {
         '@type': 'Service',
         '@id': `${SITE_URL}/#service`,
         name: 'Community grocery pooling',
         provider: { '@id': `${SITE_URL}/#organization` },
         areaServed: { '@type': 'Place', name: PILOT_AREA },
-        audience: { '@type': 'Audience', audienceType: 'Households and community grocery buyers' },
+        audience: { '@type': 'Audience', audienceType: 'Smart, modern households and community grocery buyers' },
+        serviceType: 'Community grocery pooling and group buying',
+        availableChannel: { '@type': 'ServiceChannel', serviceUrl: SITE_URL },
         description: SITE_DESCRIPTION,
       },
     ],

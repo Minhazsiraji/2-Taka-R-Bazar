@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicHeader } from '@/components/public-header'
 import { PublicFooter } from '@/components/public-footer'
-import { PILOT_AREA, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
+import { PILOT_AREA, PUBLIC_CONTACT_EMAIL, SEO_UPDATED_AT, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'About the Community Grocery Pooling Model',
@@ -19,6 +19,9 @@ export default function AboutPage() {
     name: `About ${SITE_NAME}`,
     description: SITE_DESCRIPTION,
     inLanguage: ['en-BD', 'bn-BD'],
+    dateModified: SEO_UPDATED_AT,
+    isPartOf: { '@id': `${SITE_URL}/#website` },
+    breadcrumb: { '@id': `${SITE_URL}/about#breadcrumb` },
     about: { '@id': `${SITE_URL}/#organization` },
     mainEntity: {
       '@type': 'Organization',
@@ -27,14 +30,26 @@ export default function AboutPage() {
       url: SITE_URL,
       logo: `${SITE_URL}/brand-logo-header.png`,
       description: SITE_DESCRIPTION,
+      email: PUBLIC_CONTACT_EMAIL,
       areaServed: { '@type': 'Place', name: PILOT_AREA },
     },
+  }
+
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    '@id': `${SITE_URL}/about#breadcrumb`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'About', item: `${SITE_URL}/about` },
+    ],
   }
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <PublicHeader actionHref="/" actionLabel="Home" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">About {SITE_NAME}</p>
         <h1 className="mt-2 text-3xl font-black sm:text-4xl">Community demand first. Final price before purchase.</h1>
@@ -47,6 +62,17 @@ export default function AboutPage() {
           <article className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-black">How price improvement works</h2><p className="mt-2 leading-7 text-slate-700">More community demand can unlock better pricing tiers. Final supplier negotiation may keep or improve the earned customer price ceiling; it should not make that earned ceiling worse.</p></article>
           <article className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-black">How fulfilment works</h2><p className="mt-2 leading-7 text-slate-700">Suppliers deliver consolidated goods to the community receiving point. After Operations verifies receipt, customers choose FREE community collection or optional home delivery. Delivery charges remain separate from product savings.</p></article>
           <article className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-black">How savings are verified</h2><p className="mt-2 leading-7 text-slate-700">Savings compare an approved local-market benchmark with the final customer price. Product savings become verified only after successful fulfilment.</p></article>
+        </section>
+
+        <section className="mt-8 grid gap-4 sm:grid-cols-2">
+          <article className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h2 className="text-xl font-black">Who is it designed for?</h2>
+            <p className="mt-2 leading-7 text-slate-700">For households that want a smarter way to buy recurring groceries: transparent local benchmarks, stronger volume-based supplier negotiation, clear final prices before purchase, and convenient community fulfilment.</p>
+          </article>
+          <article className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h2 className="text-xl font-black">Why is it different from a normal grocery store?</h2>
+            <p className="mt-2 leading-7 text-slate-700">The model starts with pooled community demand instead of a fixed retail shelf price. Customers see the negotiated final price before confirming, and verified product savings are recorded only after successful fulfilment.</p>
+          </article>
         </section>
 
         <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
