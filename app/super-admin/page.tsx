@@ -79,8 +79,8 @@ export default async function SuperAdminDashboard() {
   const verifiedSavings = savings.reduce((sum,row)=>sum+n(row.amount),0)
   const savings30 = savings.filter(row => within(row.verified_at, since30)).reduce((sum,row)=>sum+n(row.amount),0)
   const completedOrderIds = new Set(completedOrders.map(row=>row.id))
-  const supplierProductContribution = orderItems.filter(row=>completedOrderIds.has(row.order_id)).reduce((sum,row)=>sum+n(poolItemById.get(row.pool_item_id)?.platform_margin_per_unit)*n(row.quantity),0)
-  const productContribution = supplierProductContribution + ownProductContribution
+  const realizedSupplierContribution = orderItems.filter(row=>completedOrderIds.has(row.order_id)&&productById.get(row.product_id)?.source_type==='SUPPLIER_POOL').reduce((sum,row)=>sum+n(poolItemById.get(row.pool_item_id)?.platform_margin_per_unit)*n(row.quantity),0)
+  const productContribution = realizedSupplierContribution + ownProductContribution
   const projectedPoolContribution = poolItems.reduce((sum,row)=>sum+n(row.platform_margin_per_unit)*n(row.frozen_committed_quantity),0)
   const homeDeliveries = completedOrders.filter(row=>row.fulfillment_method==='home_delivery')
   const recordedDeliveryContribution = homeDeliveries.filter(row=>row.delivery_actual_cost!=null).reduce((sum,row)=>sum+n(row.delivery_fee)-n(row.delivery_actual_cost),0)
@@ -180,8 +180,8 @@ export default async function SuperAdminDashboard() {
         ['Onboarded households',onboarded.length,`+${newHouseholds30} in 30d`],
         ['Active households · 30d',activeHouseholds30,`${pct(activeHouseholds30,onboarded.length)}% of onboarded`],
         ['GMV · 30d',taka(gmv30),`${taka(gmv)} live/completed total`],
-        ['Product contribution',taka(productContribution),`${taka(supplierProductContribution)} supplier-pool · ${taka(ownProductContribution)} own-product`],
-        ['Realized gross contribution',taka(grossContribution),`${taka(recordedDeliveryContribution)} delivery contribution · ${taka(projectedPoolContribution)} supplier-Pool projection`],
+        ['Product contribution',taka(productContribution),`${taka(realizedSupplierContribution)} supplier-pool · ${taka(ownProductContribution)} own-product`],
+        ['Realized gross contribution',taka(grossContribution),`${taka(recordedDeliveryContribution)} delivery contribution · ${taka(projectedPoolContribution)} all-Pool projection`],
         ['Verified savings · 30d',taka(savings30),`${taka(verifiedSavings)} lifetime`],
         ['Active pools',activePools.length,`${pools.length} total pools`],
         ['Resolved commitment conversion',`${commitmentConversion}%`,`${confirmedCommitments} confirmed`],
