@@ -33,7 +33,6 @@ export default function AboutPage() {
       email: PUBLIC_CONTACT_EMAIL,
       areaServed: { '@type': 'Place', name: PILOT_AREA },
     },
-    '@graph': undefined,
   }
 
   const breadcrumb = {
