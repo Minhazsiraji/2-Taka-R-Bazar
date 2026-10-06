@@ -76,6 +76,11 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
     itemLoves=il.data??[];itemReviews=ir.data??[]
   }
 
+  const visiblePools=(pools??[]).filter((pool:any)=>{
+    if(!pool.is_paused)return true
+    return items.some((item:any)=>item.pool_id===pool.id&&commitments.has(item.id))
+  })
+
   return <AppShell roles={roles}>
     <div className="grid min-w-0 gap-5 sm:gap-6">
       <section>
@@ -86,7 +91,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
 
       {error&&<div className="error">{error}</div>}{notice&&<div className="success">{notice}</div>}
 
-      {!pools?.length?<div className="card p-5"><div className="card-title">Pool status</div><h2 className="mt-2 text-xl font-black">No active pool right now</h2><p className="muted mt-2">The next community buying pool will appear here as soon as it opens.</p></div>:(pools??[]).map((pool:any)=>{
+      {!visiblePools.length?<div className="card p-5"><div className="card-title">Pool status</div><h2 className="mt-2 text-xl font-black">No active pool right now</h2><p className="muted mt-2">The next community buying pool will appear here as soon as it opens.</p></div>:visiblePools.map((pool:any)=>{
         const poolItems=items.filter((item:any)=>item.pool_id===pool.id)
         const joined=participation.get(pool.id)??{joined:0,units:0}
         const likes=poolLoves.filter((x:any)=>x.pool_id===pool.id);const loved=likes.some((x:any)=>x.user_id===user.id)
@@ -98,7 +103,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
         const communityPotential=poolItems.reduce((s:number,i:any)=>{const b=Number(i.benchmark_price_snapshot||0),u=Number(unlockByItem.get(i.id)?.unlocked_price||0);return s+(u>0?Math.max(0,b-u)*(demand.get(i.id)??0):0)},0)
         return <section id={`pool-${pool.id}`} key={pool.id} className="grid min-w-0 gap-4 border-t border-slate-200 pt-5 first:border-t-0 first:pt-0 sm:gap-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div><div className="flex flex-wrap gap-2"><span className="chip capitalize">{pool.cadence??'weekly'} pool</span>{pool.is_paused&&<span className="chip">Temporarily paused</span>}<StatusPill status={pool.status}/></div><h2 className="mt-2 text-xl font-black sm:text-2xl">{pool.title}</h2><p className="muted mt-1">Fulfilment target · {shortDate(pool.pickup_at)}</p>{pool.is_paused&&<p className="mt-2 text-sm font-semibold">This pool is temporarily paused. Your existing commitment is safe; new commitment changes will reopen after operations resumes it.</p>}</div>
+            <div><div className="flex flex-wrap gap-2"><span className="chip capitalize">{pool.cadence??'weekly'} pool</span><StatusPill status={pool.is_paused?'paused':pool.status}/></div><h2 className="mt-2 text-xl font-black sm:text-2xl">{pool.title}</h2><p className="muted mt-1">Fulfilment target · {shortDate(pool.pickup_at)}</p>{pool.is_paused&&<p className="mt-2 text-sm font-semibold">This pool is temporarily paused. Your existing commitment is safe; new commitment changes will reopen after operations resumes it.</p>}</div>
             <form action={togglePoolLove}><input type="hidden" name="pool_id" value={pool.id}/><button className={`btn-secondary min-h-10 px-3 text-sm ${loved?'border-rose-200 text-rose-700':''}`}>{loved?'♥ Loved':'♡ Love'} · {likes.length}</button></form>
           </div>
 
