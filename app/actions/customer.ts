@@ -76,6 +76,7 @@ export async function submitFeedback(formData: FormData) {
   const comment = text(formData, 'comment')
   const permission = formData.get('testimonial_permission') === 'on'
   if (!orderId || !Number.isInteger(rating) || rating < 1 || rating > 5) redirect('/feedback?error=Choose+a+rating+from+1+to+5')
+  if (comment.length > 2000) redirect('/feedback?error=Keep+the+comment+within+2000+characters')
   const { data: order } = await supabase.from('orders').select('id,status').eq('id', orderId).eq('customer_id', user.id).maybeSingle()
   if (!order || order.status !== 'completed') redirect('/feedback?error=Feedback+is+available+after+completed+pickup')
   const { error } = await supabase.from('feedback').upsert({ order_id: orderId, customer_id: user.id, rating, comment: comment || null, testimonial_permission: permission }, { onConflict: 'order_id,customer_id' })
@@ -90,6 +91,7 @@ export async function reportCustomerIssue(formData: FormData) {
   const issueType = text(formData, 'issue_type')
   const description = text(formData, 'description')
   if (!issueType || description.length < 5) redirect('/orders?error=Please+describe+the+issue')
+  if (description.length > 2000 || !/^[a-z0-9_]{1,40}$/.test(issueType)) redirect('/orders?error=Issue+details+are+invalid')
   if (orderId) {
     const { data } = await supabase.from('orders').select('id').eq('id',orderId).eq('customer_id',user.id).maybeSingle()
     if (!data) redirect('/orders?error=Order+not+found')
