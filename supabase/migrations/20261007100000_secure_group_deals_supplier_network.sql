@@ -100,7 +100,7 @@ create table if not exists public.group_deal_commitments (
   circle_id uuid not null references public.group_circles(id) on delete restrict,
   customer_id uuid not null references auth.users(id) on delete cascade,
   quantity integer not null check(quantity between 1 and 100),
-  status text not null default 'qualified' check(status in ('qualified','cancelled','fulfilled')),
+  status text not null default 'forming' check(status in ('forming','qualified','cancelled','fulfilled')),
   qualification_version text not null default 'geo-risk-v1',
   qualified_at timestamptz not null default now(),
   cancelled_at timestamptz,
@@ -624,9 +624,9 @@ begin
     where c.group_deal_id=p_group_deal_id
       and c.community_id=v_community
       and c.closed_at is null
-      and (select count(*) from public.group_deal_commitments gc where gc.circle_id=c.id and gc.status='qualified')<c.target_size
+      and (select count(*) from public.group_deal_commitments gc where gc.circle_id=c.id and gc.status in ('forming','qualified'))<c.target_size
     order by extensions.st_distance(gl.anchor_location,v_location),
-      (select count(*) from public.group_deal_commitments gc where gc.circle_id=c.id and gc.status='qualified') desc,
+      (select count(*) from public.group_deal_commitments gc where gc.circle_id=c.id and gc.status in ('forming','qualified')) desc,
       c.created_at
     limit 1
     for update of c;
@@ -639,12 +639,30 @@ begin
     end if;
 
     insert into public.group_deal_commitments(group_deal_id,circle_id,customer_id,quantity,status,qualified_at)
-    values(p_group_deal_id,v_circle,v_user,p_quantity,'qualified',now())
+    values(p_group_deal_id,v_circle,v_user,p_quantity,'forming',now())
     returning id into v_commitment;
   else
     if v_existing_status='cancelled' then
+      select c.id into v_circle
+      from public.group_circles c
+      join private.group_circle_locations gl on gl.circle_id=c.id
+      where c.group_deal_id=p_group_deal_id
+        and c.community_id=v_community
+        and c.closed_at is null
+        and (select count(*) from public.group_deal_commitments gc where gc.circle_id=c.id and gc.status in ('forming','qualified'))<c.target_size
+      order by extensions.st_distance(gl.anchor_location,v_location),
+        (select count(*) from public.group_deal_commitments gc where gc.circle_id=c.id and gc.status in ('forming','qualified')) desc,
+        c.created_at
+      limit 1
+      for update of c;
+      if v_circle is null then
+        insert into public.group_circles(group_deal_id,community_id,target_size,created_by)
+        values(p_group_deal_id,v_community,v_deal.circle_capacity,v_user)
+        returning id into v_circle;
+        insert into private.group_circle_locations(circle_id,anchor_location) values(v_circle,v_location);
+      end if;
       update public.group_deal_commitments
-      set status='qualified',quantity=p_quantity,qualified_at=now(),cancelled_at=null,cancellation_reason=null
+      set circle_id=v_circle,status='forming',quantity=p_quantity,qualified_at=now(),cancelled_at=null,cancellation_reason=null
       where id=v_commitment;
     else
       update public.group_deal_commitments set quantity=p_quantity where id=v_commitment;
@@ -652,7 +670,12 @@ begin
   end if;
 
   select target_size into v_circle_target from public.group_circles where id=v_circle;
-  select count(*) into v_circle_members from public.group_deal_commitments where circle_id=v_circle and status='qualified';
+  select count(*) into v_circle_members from public.group_deal_commitments where circle_id=v_circle and status in ('forming','qualified');
+  if v_circle_members>=v_deal.min_group_size then
+    update public.group_deal_commitments
+    set status='qualified',qualified_at=now()
+    where circle_id=v_circle and status='forming';
+  end if;
   if v_circle_members>=v_circle_target then update public.group_circles set closed_at=coalesce(closed_at,now()) where id=v_circle; end if;
 
   select count(distinct customer_id) into v_buyers
@@ -663,15 +686,17 @@ begin
   where group_deal_id=p_group_deal_id and buyer_threshold>v_buyers
   order by buyer_threshold limit 1;
 
-  update private.group_security_events set decision='accepted',
-    metadata=jsonb_build_object('quantity',p_quantity,'community_buyers',v_buyers,'circle_members',v_circle_members)
+  update private.group_security_events set decision=case when v_circle_members>=v_deal.min_group_size then 'accepted' else 'forming' end,
+    metadata=jsonb_build_object('quantity',p_quantity,'community_buyers',v_buyers,'circle_members',v_circle_members,'minimum_circle_size',v_deal.min_group_size)
   where id=(select max(id) from private.group_security_events where user_id=v_user and event_type='group_join');
 
   insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
   values(v_user,'group_deal_commitment_qualified','group_deal',p_group_deal_id,
     jsonb_build_object('quantity',p_quantity,'circle_id',v_circle,'community_buyers',v_buyers));
 
-  return query select true,'Commitment qualified.',v_commitment,v_circle,v_circle_members,v_circle_target,
+  return query select true,
+    case when v_circle_members>=v_deal.min_group_size then 'Commitment qualified.' else 'Circle is forming; it will count after at least 5 active people join.' end,
+    v_commitment,v_circle,v_circle_members,v_circle_target,
     v_buyers,v_price,v_next_threshold,v_next_price,
     case when v_next_threshold is null then 0 else greatest(v_next_threshold-v_buyers,0)::integer end;
 end $$;
@@ -683,18 +708,39 @@ returns text language plpgsql security definer set search_path='' as $$
 declare
   v_user uuid:=auth.uid();
   v_deal_status text;
+  v_min_group_size integer;
+  v_circle uuid;
+  v_remaining integer;
+  v_target integer;
   v_changed integer;
   v_cancellations integer;
 begin
   if v_user is null then raise exception 'Authentication required'; end if;
-  select status into v_deal_status from public.group_deals where id=p_group_deal_id for update;
+  select status,min_group_size into v_deal_status,v_min_group_size from public.group_deals where id=p_group_deal_id for update;
   if v_deal_status<>'open' then return 'This deal is already locked; contact Operations for a correction.'; end if;
+  select circle_id into v_circle from public.group_deal_commitments
+    where group_deal_id=p_group_deal_id and customer_id=v_user and status in ('forming','qualified') for update;
 
   update public.group_deal_commitments
   set status='cancelled',cancelled_at=now(),cancellation_reason='customer_withdrew'
-  where group_deal_id=p_group_deal_id and customer_id=v_user and status='qualified';
+  where group_deal_id=p_group_deal_id and customer_id=v_user and status in ('forming','qualified');
   get diagnostics v_changed=row_count;
   if v_changed=0 then return 'No active commitment found.'; end if;
+
+  if v_circle is not null then
+    select count(*),c.target_size into v_remaining,v_target
+    from public.group_circles c
+    left join public.group_deal_commitments gc on gc.circle_id=c.id and gc.status in ('forming','qualified')
+    where c.id=v_circle
+    group by c.id,c.target_size;
+    if coalesce(v_remaining,0)<v_min_group_size then
+      update public.group_deal_commitments set status='forming'
+      where circle_id=v_circle and status='qualified';
+    end if;
+    if coalesce(v_remaining,0)<coalesce(v_target,0) then
+      update public.group_circles set closed_at=null where id=v_circle;
+    end if;
+  end if;
 
   insert into private.group_security_events(user_id,group_deal_id,event_type,decision)
   values(v_user,p_group_deal_id,'group_leave','accepted');
@@ -772,13 +818,13 @@ language sql stable security definer set search_path='' as $$
   ) stats on true
   left join lateral (
     select gc.quantity,gc.circle_id from public.group_deal_commitments gc
-    where gc.group_deal_id=d.id and gc.customer_id=v.id and gc.status in ('qualified','fulfilled')
+    where gc.group_deal_id=d.id and gc.customer_id=v.id and gc.status in ('forming','qualified','fulfilled')
     limit 1
   ) mine on true
   left join lateral (
     select count(*)::bigint as members,c.target_size
     from public.group_circles c
-    left join public.group_deal_commitments gc on gc.circle_id=c.id and gc.status='qualified'
+    left join public.group_deal_commitments gc on gc.circle_id=c.id and gc.status in ('forming','qualified')
     where c.id=mine.circle_id
     group by c.id,c.target_size
   ) circle_stats on true
