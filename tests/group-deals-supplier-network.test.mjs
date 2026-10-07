@@ -83,7 +83,7 @@ test('desktop geolocation diagnostics retry safely without weakening server proo
   assert.match(geoComponent,/enableHighAccuracy:true/i)
   assert.match(geoComponent,/enableHighAccuracy:false/i)
   assert.match(geoComponent,/navigator\.permissions\.query\(\{name:'geolocation'\}\)/i)
-  assert.match(geoComponent,/Windows\/desktop location provider denied the request/i)
+  assert.match(geoComponent,/Location permission is allowed, but this device could not provide a usable position/i)
   assert.match(runtimeFix,/values\(v_user,v_community,v_point,p_accuracy_m,v_distance,'gps-community','all'/i)
 })
 
