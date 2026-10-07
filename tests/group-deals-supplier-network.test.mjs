@@ -9,6 +9,7 @@ const geoComponent=fs.readFileSync('components/community-location-verifier.tsx',
 const groupActions=fs.readFileSync('app/actions/group-deals.ts','utf8')
 const runtimeFix=fs.readFileSync('supabase/migrations/20261007143000_group_location_uat_supplier_fix.sql','utf8')
 const joinAmbiguityFix=fs.readFileSync('supabase/migrations/20261007150000_join_group_deal_column_ambiguity_fix.sql','utf8')
+const groupProgress=fs.readFileSync('components/group-deal-unlock-progress.tsx','utf8')
 
 test('Group Deals cannot unlock below five qualified buyers',()=>{
   assert.match(migration,/min_group_size integer not null default 5 check\(min_group_size>=5\)/i)
@@ -97,4 +98,25 @@ test('join_group_deal qualifies commitment columns that collide with RETURNS TAB
   assert.match(joinAmbiguityFix,/where gc\.circle_id=v_circle and gc\.status in \('forming','qualified'\)/i)
   assert.match(joinAmbiguityFix,/update public\.group_deal_commitments gc[\s\S]*where gc\.circle_id=v_circle and gc\.status='forming'/i)
   assert.doesNotMatch(joinAmbiguityFix,/select id,circle_id,status into/i)
+})
+
+
+test('Group Deal UI shows buyer progress toward the next price tier',()=>{
+  assert.match(groupProgress,/First price unlock/i)
+  assert.match(groupProgress,/progressBuyers\/nextThreshold/i)
+  assert.match(groupProgress,/more buyer.*needed/i)
+  assert.match(groupProgress,/price-target-track/i)
+  assert.match(groupProgress,/Each verified person counts once/i)
+  assert.match(customerPage,/unlockProgressBuyers=buyers===0&&joined/i)
+  assert.match(customerPage,/unlockBuyersNeeded=next\?Math\.max\(next-unlockProgressBuyers,0\):0/i)
+})
+
+test('mobile Group Deal location requests automatically once when verification is needed',()=>{
+  assert.match(geoComponent,/useEffect/i)
+  assert.match(geoComponent,/Android\|iPhone\|iPad\|iPod\|Mobile/i)
+  assert.match(geoComponent,/pointer: coarse/i)
+  assert.match(geoComponent,/2tbr-group-location-auto-requested-v1/i)
+  assert.match(geoComponent,/await verify\(true\)/i)
+  assert.match(geoComponent,/sessionStorage/i)
+  assert.match(customerPage,/initialVerified=\{process\.env\.VERCEL_ENV==='preview'\?false:Boolean\(location\?\.verified\)\}/i)
 })
