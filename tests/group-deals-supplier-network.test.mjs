@@ -6,6 +6,8 @@ const migration=fs.readFileSync('supabase/migrations/20261007100000_secure_group
 const customerPage=fs.readFileSync('app/group-deals/page.tsx','utf8')
 const supplierPage=fs.readFileSync('app/supplier/page.tsx','utf8')
 const geoComponent=fs.readFileSync('components/community-location-verifier.tsx','utf8')
+const groupActions=fs.readFileSync('app/actions/group-deals.ts','utf8')
+const runtimeFix=fs.readFileSync('supabase/migrations/20261007143000_group_location_uat_supplier_fix.sql','utf8')
 
 test('Group Deals cannot unlock below five qualified buyers',()=>{
   assert.match(migration,/min_group_size integer not null default 5 check\(min_group_size>=5\)/i)
@@ -62,4 +64,28 @@ test('new tables and RPCs remain fail-closed by default',()=>{
   assert.match(migration,/d\.status in \('open','locked','procurement','fulfilling','completed'\)/i)
   assert.match(migration,/private\.can_read_group_deal\(p_deal uuid\)[\s\S]*as \$\$[\s\S]*\$\$;/i)
   assert.match(migration,/alter default privileges for role postgres in schema public[\s\S]*revoke select,insert,update,delete on tables from anon,authenticated,service_role/i)
+})
+
+
+test('preview UAT fallback is demo-only and cannot qualify live deals',()=>{
+  assert.match(runtimeFix,/verification_scope in \('all','demo_only'\)/i)
+  assert.match(runtimeFix,/admin_verify_my_uat_location/i)
+  assert.match(runtimeFix,/p\.is_demo/i)
+  assert.match(runtimeFix,/verification_scope='demo_only'/i)
+  assert.match(runtimeFix,/Secure device GPS verification is required for live Group Deals/i)
+  assert.match(groupActions,/process\.env\.VERCEL_ENV!=='preview'/i)
+  assert.match(geoComponent,/Admin UAT fallback/i)
+})
+
+test('desktop geolocation diagnostics retry safely without weakening server proof',()=>{
+  assert.match(geoComponent,/enableHighAccuracy:true/i)
+  assert.match(geoComponent,/enableHighAccuracy:false/i)
+  assert.match(geoComponent,/navigator\.permissions\.query\(\{name:'geolocation'\}\)/i)
+  assert.match(geoComponent,/Windows\/desktop location provider denied the request/i)
+  assert.match(runtimeFix,/values\(v_user,v_community,v_point,p_accuracy_m,v_distance,'gps-community','all'/i)
+})
+
+test('supplier open demand UNION is wrapped before ordering',()=>{
+  assert.match(runtimeFix,/combined as \(/i)
+  assert.match(runtimeFix,/from combined c\s+order by c\.closes_at/is)
 })
