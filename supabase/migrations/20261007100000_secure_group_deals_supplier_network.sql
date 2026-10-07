@@ -217,7 +217,7 @@ revoke all on function private.is_supplier_member(uuid,uuid) from public,anon,au
 grant execute on function private.is_supplier_member(uuid,uuid) to authenticated;
 
 create or replace function private.can_read_group_deal(p_deal uuid)
-returns boolean language sql stable security definer set search_path='' as $
+returns boolean language sql stable security definer set search_path='' as $$
   select exists(
     select 1
     from public.group_deals d
@@ -229,7 +229,7 @@ returns boolean language sql stable security definer set search_path='' as $
       and d.status in ('open','locked','procurement','fulfilling','completed')
       and (d.status<>'open' or now()>=d.opens_at)
   );
-$;
+$$;
 revoke all on function private.can_read_group_deal(uuid) from public,anon,authenticated,service_role;
 grant execute on function private.can_read_group_deal(uuid) to authenticated;
 
