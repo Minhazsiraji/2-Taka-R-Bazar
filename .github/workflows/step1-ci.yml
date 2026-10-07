@@ -26,6 +26,8 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
       - name: Production dependency security audit
+        id: security_audit
+        continue-on-error: true
         run: npm audit --omit=dev --audit-level=high
       - name: Domain tests
         run: npm test
@@ -33,3 +35,8 @@ jobs:
         run: npm run typecheck
       - name: Production build
         run: npm run build
+      - name: Enforce dependency security gate
+        if: steps.security_audit.outcome != 'success'
+        run: |
+          echo "Production dependency security audit failed earlier in this job."
+          exit 1
