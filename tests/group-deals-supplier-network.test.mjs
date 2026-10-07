@@ -71,7 +71,7 @@ test('preview UAT fallback is demo-only and cannot qualify live deals',()=>{
   assert.match(runtimeFix,/verification_scope in \('all','demo_only'\)/i)
   assert.match(runtimeFix,/admin_verify_my_uat_location/i)
   assert.match(runtimeFix,/p\.is_demo/i)
-  assert.match(runtimeFix,/verification_scope='demo_only'/i)
+  assert.match(runtimeFix,/'admin-uat-preview','demo_only'/i)
   assert.match(runtimeFix,/Secure device GPS verification is required for live Group Deals/i)
   assert.match(groupActions,/process\.env\.VERCEL_ENV!=='preview'/i)
   assert.match(geoComponent,/Admin UAT fallback/i)
