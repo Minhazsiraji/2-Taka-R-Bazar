@@ -49,6 +49,7 @@ create table if not exists public.group_deals (
   pickup_at timestamptz not null,
   min_group_size integer not null default 5 check(min_group_size>=5),
   circle_capacity integer not null default 10 check(circle_capacity in (5,10)),
+  circle_radius_m integer not null default 750 check(circle_radius_m between 100 and 3000),
   max_quantity_per_buyer integer not null default 20 check(max_quantity_per_buyer between 1 and 100),
   locked_buyer_count integer,
   locked_unit_quantity integer,
@@ -216,16 +217,19 @@ revoke all on function private.is_supplier_member(uuid,uuid) from public,anon,au
 grant execute on function private.is_supplier_member(uuid,uuid) to authenticated;
 
 create or replace function private.can_read_group_deal(p_deal uuid)
-returns boolean language sql stable security definer set search_path='' as $$
+returns boolean language sql stable security definer set search_path='' as $
   select exists(
     select 1
-    from public.group_deal_communities dc
+    from public.group_deals d
+    join public.group_deal_communities dc on dc.group_deal_id=d.id
     join public.profiles p on p.id=auth.uid()
-    where dc.group_deal_id=p_deal
+    where d.id=p_deal
       and dc.community_id=p.community_id
       and p.onboarding_completed_at is not null
+      and d.status in ('open','locked','procurement','fulfilling','completed')
+      and (d.status<>'open' or now()>=d.opens_at)
   );
-$$;
+$;
 revoke all on function private.can_read_group_deal(uuid) from public,anon,authenticated,service_role;
 grant execute on function private.can_read_group_deal(uuid) to authenticated;
 
@@ -276,8 +280,7 @@ for select to authenticated using(
 drop policy if exists group_deal_communities_read on public.group_deal_communities;
 create policy group_deal_communities_read on public.group_deal_communities
 for select to authenticated using(
-  private.is_ops((select auth.uid())) or
-  community_id=(select p.community_id from public.profiles p where p.id=(select auth.uid()))
+  private.is_ops((select auth.uid())) or private.can_read_group_deal(group_deal_id)
 );
 
 drop policy if exists group_circles_ops on public.group_circles;
@@ -625,6 +628,7 @@ begin
     where c.group_deal_id=p_group_deal_id
       and c.community_id=v_community
       and c.closed_at is null
+      and extensions.st_dwithin(gl.anchor_location,v_location,v_deal.circle_radius_m)
       and (select count(*) from public.group_deal_commitments gc where gc.circle_id=c.id and gc.status in ('forming','qualified'))<c.target_size
     order by extensions.st_distance(gl.anchor_location,v_location),
       (select count(*) from public.group_deal_commitments gc where gc.circle_id=c.id and gc.status in ('forming','qualified')) desc,
@@ -788,7 +792,8 @@ returns table(
   my_quantity integer,
   circle_members bigint,
   circle_target integer,
-  location_verified boolean
+  location_verified boolean,
+  circle_radius_m integer
 )
 language sql stable security definer set search_path='' as $$
   with viewer as (
@@ -807,7 +812,8 @@ language sql stable security definer set search_path='' as $$
     mine.quantity,
     coalesce(circle_stats.members,0),
     circle_stats.target_size,
-    v.location_verified
+    v.location_verified,
+    d.circle_radius_m
   from viewer v
   join public.group_deal_communities dc on dc.community_id=v.community_id
   join public.group_deals d on d.id=dc.group_deal_id
@@ -851,6 +857,7 @@ create or replace function public.admin_create_group_deal(
   p_pickup_at timestamptz,
   p_min_group_size integer,
   p_circle_capacity integer,
+  p_circle_radius_m integer,
   p_max_quantity integer,
   p_community_ids uuid[],
   p_tiers jsonb
@@ -869,6 +876,7 @@ begin
   if p_market_price is null or p_market_price<=0 then raise exception 'Market price must be positive'; end if;
   if p_min_group_size is null or p_min_group_size<5 then raise exception 'Minimum group size cannot be below 5'; end if;
   if p_circle_capacity not in (5,10) or p_circle_capacity<p_min_group_size then raise exception 'Circle capacity must be 5 or 10 and not below minimum group size'; end if;
+  if p_circle_radius_m is null or p_circle_radius_m<100 or p_circle_radius_m>3000 then raise exception 'Circle radius must be between 100 and 3000 metres'; end if;
   if p_max_quantity is null or p_max_quantity<1 or p_max_quantity>100 then raise exception 'Invalid per-buyer quantity limit'; end if;
   if p_opens_at is null or p_closes_at is null or p_pickup_at is null or p_closes_at<=p_opens_at or p_pickup_at<=p_closes_at then
     raise exception 'Use a valid open, close and pickup timeline';
@@ -893,10 +901,10 @@ begin
 
   insert into public.group_deals(
     product_id,title,market_price_snapshot,opens_at,closes_at,pickup_at,
-    min_group_size,circle_capacity,max_quantity_per_buyer,created_by
+    min_group_size,circle_capacity,circle_radius_m,max_quantity_per_buyer,created_by
   ) values(
     p_product_id,btrim(p_title),p_market_price,p_opens_at,p_closes_at,p_pickup_at,
-    p_min_group_size,p_circle_capacity,p_max_quantity,v_user
+    p_min_group_size,p_circle_capacity,p_circle_radius_m,p_max_quantity,v_user
   ) returning id into v_deal;
 
   foreach v_community in array p_community_ids loop
@@ -916,8 +924,8 @@ begin
 
   return v_deal;
 end $$;
-revoke all on function public.admin_create_group_deal(uuid,text,numeric,timestamptz,timestamptz,timestamptz,integer,integer,integer,uuid[],jsonb) from public,anon,authenticated,service_role;
-grant execute on function public.admin_create_group_deal(uuid,text,numeric,timestamptz,timestamptz,timestamptz,integer,integer,integer,uuid[],jsonb) to authenticated;
+revoke all on function public.admin_create_group_deal(uuid,text,numeric,timestamptz,timestamptz,timestamptz,integer,integer,integer,integer,uuid[],jsonb) from public,anon,authenticated,service_role;
+grant execute on function public.admin_create_group_deal(uuid,text,numeric,timestamptz,timestamptz,timestamptz,integer,integer,integer,integer,uuid[],jsonb) to authenticated;
 
 create or replace function public.admin_set_group_deal_status(
   p_group_deal_id uuid,
