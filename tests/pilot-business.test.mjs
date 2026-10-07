@@ -108,3 +108,40 @@ test('planning tiers do not by themselves prevent a safe return to Draft',()=>{
   assert.match(sql,/q\.quote_phase='final'/)
   assert.match(workflow,/hasFinalQuotes=poolQuotes\.some/)
 })
+
+
+test('supplier-backed pools require a 2 to 3 tier ladder before opening',()=>{
+  const policy=readFileSync(new URL('../supabase/migrations/20261007174500_pool_two_three_tier_policy.sql',import.meta.url),'utf8')
+  const action=readFileSync(new URL('../app/actions/pilot.ts',import.meta.url),'utf8')
+  const workflow=readFileSync(new URL('../app/admin/pools/workflow/page.tsx',import.meta.url),'utf8')
+  assert.match(policy,/not between 2 and 3/i)
+  assert.match(policy,/at most 3 planning price tiers/i)
+  assert.match(policy,/quantity threshold already exists/i)
+  assert.match(action,/existingTiers/)
+  assert.match(action,/length>=3/)
+  assert.match(workflow,/planningQuotes\.length<3/)
+  assert.match(workflow,/Configure 2–3 quantity tiers before opening/i)
+})
+
+test('customer Pool UI advances from an unlocked tier to the next better tier',()=>{
+  const page=readFileSync(new URL('../app/pool/page.tsx',import.meta.url),'utf8')
+  const progress=readFileSync(new URL('../components/price-target-progress.tsx',import.meta.url),'utf8')
+  assert.match(page,/unlockedThreshold=Number\(unlock\.unlocked_threshold/)
+  assert.match(page,/unlockedThreshold=\{unlockedThreshold\}/)
+  assert.match(progress,/Current tier unlocked/i)
+  assert.match(progress,/Next price tier/i)
+  assert.match(progress,/more unit/)
+  assert.match(progress,/Saving at next tier/i)
+})
+
+test('mobile customer nav stays attached with subtle 3D buttons',()=>{
+  const css=readFileSync(new URL('../app/site-theme-mobile.css',import.meta.url),'utf8')
+  assert.match(css,/Attached 3D mobile customer dock/)
+  assert.match(css,/left: 0 !important/)
+  assert.match(css,/right: 0 !important/)
+  assert.match(css,/bottom: 0 !important/)
+  assert.match(css,/border-radius: 16px 16px 0 0 !important/)
+  assert.match(css,/app-mobile-nav-link\.is-active/)
+  assert.match(css,/0 3px 6px rgba\(30,48,72,.12\)/)
+  assert.doesNotMatch(css,/left: 8px !important/)
+})
