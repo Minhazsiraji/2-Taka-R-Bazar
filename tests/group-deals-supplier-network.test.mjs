@@ -10,6 +10,7 @@ const groupActions=fs.readFileSync('app/actions/group-deals.ts','utf8')
 const runtimeFix=fs.readFileSync('supabase/migrations/20261007143000_group_location_uat_supplier_fix.sql','utf8')
 const joinAmbiguityFix=fs.readFileSync('supabase/migrations/20261007150000_join_group_deal_column_ambiguity_fix.sql','utf8')
 const groupProgress=fs.readFileSync('components/group-deal-unlock-progress.tsx','utf8')
+const nextConfig=fs.readFileSync('next.config.ts','utf8')
 
 test('Group Deals cannot unlock below five qualified buyers',()=>{
   assert.match(migration,/min_group_size integer not null default 5 check\(min_group_size>=5\)/i)
@@ -119,4 +120,10 @@ test('mobile Group Deal location requests automatically once when verification i
   assert.match(geoComponent,/await verify\(true\)/i)
   assert.match(geoComponent,/sessionStorage/i)
   assert.match(customerPage,/initialVerified=\{process\.env\.VERCEL_ENV==='preview'\?false:Boolean\(location\?\.verified\)\}/i)
+})
+
+
+test('security headers allow only same-origin geolocation while camera and microphone stay blocked',()=>{
+  assert.match(nextConfig,/camera=\(\), microphone=\(\), geolocation=\(self\)/i)
+  assert.doesNotMatch(nextConfig,/geolocation=\(\)/i)
 })
