@@ -28,6 +28,7 @@ export async function createGroupDeal(fd:FormData){
     p_pickup_at:new Date(pickupAt).toISOString(),
     p_min_group_size:Number(t(fd,'min_group_size')||5),
     p_circle_capacity:Number(t(fd,'circle_capacity')||10),
+    p_circle_radius_m:Number(t(fd,'circle_radius_m')||750),
     p_max_quantity:Number(t(fd,'max_quantity')||20),
     p_community_ids:communities,
     p_tiers:tiers,
