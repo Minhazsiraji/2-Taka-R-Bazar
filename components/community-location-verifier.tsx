@@ -1,19 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { verifyAdminUatLocation, verifyCommunityLocation } from '@/app/actions/group-deals'
 
-type Props={allowUatFallback?:boolean}
+type Props={
+  allowUatFallback?:boolean
+  initialVerified?:boolean
+}
 
 type PositionFailure={code:number;message?:string}
 
-export function CommunityLocationVerifier({allowUatFallback=false}:Props){
+export function CommunityLocationVerifier({
+  allowUatFallback=false,
+  initialVerified=false,
+}:Props){
   const [busy,setBusy]=useState(false)
   const [uatBusy,setUatBusy]=useState(false)
   const [message,setMessage]=useState('')
-  const [ok,setOk]=useState<boolean|null>(null)
+  const [ok,setOk]=useState<boolean|null>(initialVerified?true:null)
+  const autoStarted=useRef(false)
 
-  async function permissionState(){
+  const permissionState=useCallback(async()=>{
     try{
       if(!navigator.permissions)return 'unknown'
       const result=await navigator.permissions.query({name:'geolocation'})
@@ -21,15 +28,15 @@ export function CommunityLocationVerifier({allowUatFallback=false}:Props){
     }catch{
       return 'unknown'
     }
-  }
+  },[])
 
-  function getPosition(options:PositionOptions){
+  const getPosition=useCallback((options:PositionOptions)=>{
     return new Promise<GeolocationPosition>((resolve,reject)=>{
       navigator.geolocation.getCurrentPosition(resolve,reject,options)
     })
-  }
+  },[])
 
-  async function submitPosition(position:GeolocationPosition){
+  const submitPosition=useCallback(async(position:GeolocationPosition)=>{
     const fd=new FormData()
     fd.set('latitude',String(position.coords.latitude))
     fd.set('longitude',String(position.coords.longitude))
@@ -40,34 +47,36 @@ export function CommunityLocationVerifier({allowUatFallback=false}:Props){
       ? result.message+' Accuracy: about '+Math.round(position.coords.accuracy)+' m.'
       : result.message)
     if(result.ok)window.location.reload()
-  }
+  },[])
 
-  async function describeFailure(error:PositionFailure){
+  const describeFailure=useCallback(async(error:PositionFailure)=>{
     const permission=await permissionState()
     if(error.code===1){
       if(permission==='granted'){
-        return 'Site permission is granted, but the Windows/desktop location provider denied the request. On a PC, enable “Let desktop apps access your location” if available, or verify from a phone for real GPS.'
+        return 'Location permission is allowed, but this device could not provide a usable position. On desktop, verify from a phone for real GPS.'
       }
-      return 'Location is blocked for this site. Allow Location in the browser site-permission menu, then retry.'
+      return 'Location is blocked for this site. Open browser site permissions, allow Location, then tap Verify my location again.'
     }
     if(error.code===2){
-      return 'Your device could not determine a location. Try Wi-Fi/mobile data, move near a window, or verify from a phone.'
+      return 'Your device could not determine a location. Turn on Location/GPS and Wi-Fi or mobile data, then try again.'
     }
     if(error.code===3){
       return 'Location lookup timed out. Please retry; a lower-accuracy fallback was also attempted.'
     }
     return error.message||'Could not obtain a reliable location.'
-  }
+  },[permissionState])
 
-  async function verify(){
+  const verify=useCallback(async(auto=false)=>{
     if(!navigator.geolocation){
       setOk(false)
-      setMessage('Location is not supported by this device/browser. Use a phone for secure verification.')
+      setMessage('Location is not supported by this device/browser. Use a phone with Location/GPS enabled.')
       return
     }
+
     setBusy(true)
     setOk(null)
-    setMessage('Checking your community location…')
+    setMessage(auto?'Requesting your phone location…':'Checking your community location…')
+
     try{
       let position:GeolocationPosition
       try{
@@ -87,7 +96,31 @@ export function CommunityLocationVerifier({allowUatFallback=false}:Props){
     }finally{
       setBusy(false)
     }
-  }
+  },[describeFailure,getPosition,submitPosition])
+
+  useEffect(()=>{
+    if(initialVerified||autoStarted.current||typeof window==='undefined')return
+    const mobileUserAgent=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+    const coarsePointer=window.matchMedia?.('(pointer: coarse)').matches??false
+    if(!mobileUserAgent&&!coarsePointer)return
+
+    const storageKey='2tbr-group-location-auto-requested-v1'
+    if(window.sessionStorage.getItem(storageKey)==='1')return
+    autoStarted.current=true
+
+    void (async()=>{
+      const state=await permissionState()
+      if(state==='denied'){
+        setOk(false)
+        setMessage('Location is blocked for this site. Allow Location in your mobile browser settings, then tap Verify my location.')
+        window.sessionStorage.setItem(storageKey,'1')
+        return
+      }
+
+      window.sessionStorage.setItem(storageKey,'1')
+      await verify(true)
+    })()
+  },[initialVerified,permissionState,verify])
 
   async function useUatFallback(){
     setUatBusy(true)
@@ -110,10 +143,10 @@ export function CommunityLocationVerifier({allowUatFallback=false}:Props){
     <div>
       <div className="card-title">Nearby verification</div>
       <h2 className="mt-1 text-lg font-black">Verify that you are inside your community</h2>
-      <p className="muted mt-1 text-sm">Your exact GPS point is used only for secure qualification and nearby-circle matching. Other customers and suppliers never receive your coordinates.</p>
+      <p className="muted mt-1 text-sm">On a phone, 2-TAKA-R-BAZAR requests Location automatically once when verification is still needed. Your exact GPS point is used only for secure qualification and nearby-circle matching; other customers and suppliers never receive your coordinates.</p>
     </div>
     <div className="flex flex-wrap gap-2">
-      <button type="button" className="btn-primary w-fit" onClick={verify} disabled={busy||uatBusy}>{busy?'Checking…':'Verify my location'}</button>
+      <button type="button" className="btn-primary w-fit" onClick={()=>void verify(false)} disabled={busy||uatBusy}>{busy?'Checking…':'Verify my location'}</button>
       {allowUatFallback&&<button type="button" className="btn-secondary w-fit" onClick={useUatFallback} disabled={busy||uatBusy}>{uatBusy?'Applying…':'Admin UAT fallback'}</button>}
     </div>
     {allowUatFallback&&<p className="muted text-xs">Preview-only safety valve: it creates a 30-minute, demo-only verification for an admin account. It cannot qualify a non-demo/live Group Deal.</p>}
