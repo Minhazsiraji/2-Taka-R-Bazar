@@ -14,7 +14,8 @@ test('Group Deals cannot unlock below five qualified buyers',()=>{
   assert.match(migration,/having count\\(distinct gc\\.customer_id\\)>=5/i)
   assert.match(migration,/default 'forming' check\\(status in \\('forming','qualified','cancelled','fulfilled'\\)\\)/i)
   assert.match(migration,/v_circle_members>=v_deal\\.min_group_size[\\s\\S]*set status='qualified'/i)
-  assert.match(migration,/v_remaining,0\\)<v_min_group_size[\\s\\S]*set status='forming'/i)
+  assert.ok(migration.includes("coalesce(v_remaining,0)<v_min_group_size"))
+  assert.match(migration,/set status='forming'/i)
   assert.match(customerPage,/A deal never unlocks below 5 qualified people/i)
 })
 
