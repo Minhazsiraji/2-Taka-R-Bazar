@@ -32,9 +32,10 @@ export default async function GroupDealAdminPage({searchParams}:{searchParams:Pr
         <label><span className="label">Open time</span><input className="input" name="opens_at" type="datetime-local" required/></label>
         <label><span className="label">Close time</span><input className="input" name="closes_at" type="datetime-local" required/></label>
         <label><span className="label">Target fulfilment</span><input className="input" name="pickup_at" type="datetime-local" required/></label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <label><span className="label">Minimum</span><input className="input" name="min_group_size" type="number" min="5" defaultValue="5" required/></label>
-          <label><span className="label">Circle</span><select className="input" name="circle_capacity" defaultValue="10"><option value="5">5</option><option value="10">10</option></select></label>
+          <label><span className="label">Circle size</span><select className="input" name="circle_capacity" defaultValue="10"><option value="5">5</option><option value="10">10</option></select></label>
+          <label><span className="label">Nearby radius (m)</span><input className="input" name="circle_radius_m" type="number" min="100" max="3000" defaultValue="750" required/></label>
           <label><span className="label">Max qty</span><input className="input" name="max_quantity" type="number" min="1" max="100" defaultValue="20" required/></label>
         </div>
         <fieldset className="rounded-xl border border-slate-200 p-3 md:col-span-2"><legend className="px-2 text-sm font-black">Communities</legend><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{communities?.filter((c:any)=>c.active).map((c:any)=><label className="flex items-center gap-2" key={c.id}><input type="checkbox" name="community_id" value={c.id}/><span>{c.name}</span></label>)}</div></fieldset>
