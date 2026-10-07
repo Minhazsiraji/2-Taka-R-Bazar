@@ -145,3 +145,15 @@ test('mobile customer nav stays attached with subtle 3D buttons',()=>{
   assert.match(css,/0 3px 6px rgba\(30,48,72,.12\)/)
   assert.doesNotMatch(css,/left: 8px !important/)
 })
+
+
+test('Pool cancellation cannot bypass the reasoned audit path',()=>{
+  const sql=readFileSync(new URL('../supabase/migrations/20261007183000_pool_cancellation_reason_hardening.sql',import.meta.url),'utf8')
+  const actions=readFileSync(new URL('../app/actions/admin.ts',import.meta.url),'utf8')
+  assert.match(sql,/Use admin_cancel_pool with a cancellation reason/i)
+  assert.match(sql,/Cancellation reason required/i)
+  assert.match(sql,/pool_cancelled_with_reason/i)
+  assert.match(sql,/pool_cancellation_reason_backfilled/i)
+  assert.match(sql,/status='cancelled'/i)
+  assert.match(actions,/supabase\.rpc\('admin_cancel_pool'/)
+})
