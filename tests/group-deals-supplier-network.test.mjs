@@ -16,6 +16,9 @@ test('Group Deals cannot unlock below five qualified buyers',()=>{
   assert.match(migration,/v_circle_members>=v_deal\.min_group_size[\s\S]*set status='qualified'/i)
   assert.ok(migration.includes("coalesce(v_remaining,0)<v_min_group_size"))
   assert.match(migration,/set status='forming'/i)
+  assert.match(migration,/circle_below_minimum_at_lock/i)
+  assert.match(migration,/Deal cannot be locked before the advertised close time/i)
+  assert.match(migration,/Cancellation reason required/i)
   assert.match(customerPage,/A deal never unlocks below 5 qualified people/i)
 })
 
@@ -46,6 +49,7 @@ test('supplier access is product-scoped and aggregate-only',()=>{
   assert.match(migration,/join public\.supplier_products sp on sp\.supplier_id=sm\.supplier_id and sp\.active/i)
   assert.match(migration,/get_supplier_open_demand/i)
   assert.match(migration,/having count\(distinct c\.customer_id\)>=5/i)
+  assert.match(migration,/o\.status='completed' and coalesce\(o\.completed_at,o\.created_at\)::date=d\.day/i)
   assert.match(supplierPage,/Customer names, phones, exact locations and individual baskets are never exposed/i)
 })
 
