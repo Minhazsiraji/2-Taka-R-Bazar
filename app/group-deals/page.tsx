@@ -26,7 +26,7 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
 
     {sp.error&&<div className="error">{sp.error}</div>}
     {sp.notice&&<div className="success">{sp.notice}</div>}
-    {dealError&&<div className="error">{dealError.message}</div>}
+    {dealError&&<div className="error">Group Deals are temporarily unavailable.</div>}
 
     <CommunityLocationVerifier/>
 
@@ -71,7 +71,7 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
 
                 <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50/60 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2"><b>Nearby circle</b><span className="chip">{joined?String(circleMembers)+'/'+String(circleTarget):'Auto-assigned after joining'}</span></div>
-                  <p className="muted mt-1 text-sm">We group verified neighbours automatically; exact neighbour locations stay private. A circle cannot produce a valid deal below 5 qualified buyers.</p>
+                  <p className="muted mt-1 text-sm">We group verified neighbours automatically within up to {deal.circle_radius_m} metres; exact neighbour locations stay private. A circle cannot produce a valid deal below 5 qualified buyers.</p>
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-end gap-3">
