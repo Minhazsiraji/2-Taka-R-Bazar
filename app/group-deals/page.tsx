@@ -28,7 +28,7 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
     {sp.notice&&<div className="success">{sp.notice}</div>}
     {dealError&&<div className="error">Group Deals are temporarily unavailable.</div>}
 
-    <CommunityLocationVerifier/>
+    <CommunityLocationVerifier allowUatFallback={process.env.VERCEL_ENV==='preview'&&(roles.has('admin')||roles.has('super_admin'))}/>
 
     <div className="card p-4">
       <div className="card-title">Location gate</div>
