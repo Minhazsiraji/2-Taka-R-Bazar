@@ -1,5 +1,6 @@
 import { AppShell } from '@/components/app-shell'
 import { CommunityLocationVerifier } from '@/components/community-location-verifier'
+import { GroupDealUnlockProgress } from '@/components/group-deal-unlock-progress'
 import { ProductImage } from '@/components/product-image'
 import { SubmitButton } from '@/components/submit-button'
 import { joinGroupDeal, leaveGroupDeal } from '@/app/actions/group-deals'
@@ -28,7 +29,10 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
     {sp.notice&&<div className="success">{sp.notice}</div>}
     {dealError&&<div className="error">Group Deals are temporarily unavailable.</div>}
 
-    <CommunityLocationVerifier allowUatFallback={process.env.VERCEL_ENV==='preview'&&(roles.has('admin')||roles.has('super_admin'))}/>
+    <CommunityLocationVerifier
+      allowUatFallback={process.env.VERCEL_ENV==='preview'&&(roles.has('admin')||roles.has('super_admin'))}
+      initialVerified={process.env.VERCEL_ENV==='preview'?false:Boolean(location?.verified)}
+    />
 
     <div className="card p-4">
       <div className="card-title">Location gate</div>
@@ -52,6 +56,8 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
           const saving=price>0?Math.max(0,Number(deal.market_price)-price):0
           const circleMembers=Number(deal.circle_members||0)
           const circleTarget=Number(deal.circle_target||0)
+          const unlockProgressBuyers=buyers===0&&joined?Math.min(circleMembers,next):Math.min(buyers,next)
+          const unlockBuyersNeeded=next?Math.max(next-unlockProgressBuyers,0):0
           return <article className="card min-w-0 p-0" key={deal.deal_id}>
             <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[180px_minmax(0,1fr)]">
               <ProductImage src={deal.image_url} name={deal.product_name}/>
@@ -66,10 +72,19 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                   <div className="rounded-xl border border-slate-200 p-3"><div className="card-title">Market reference</div><b className="text-xl">{taka(Number(deal.market_price))}</b></div>
                   <div className="rounded-xl border border-slate-200 p-3"><div className="card-title">Unlocked price</div><b className="text-xl text-emerald-700">{price>0?taka(price):'Needs 5 buyers'}</b>{price>0&&<p className="muted text-xs">Save up to {taka(saving)} / unit</p>}</div>
-                  <div className="rounded-xl border border-slate-200 p-3"><div className="card-title">Next unlock</div><b className="text-xl">{next?String(deal.buyers_needed)+' more':threshold?'Best listed tier':'Waiting'}</b>{next>0&&<p className="muted text-xs">{next} buyers → {taka(Number(deal.next_price))}</p>}</div>
+                  <div className="rounded-xl border border-slate-200 p-3"><div className="card-title">Next unlock</div><b className="text-xl">{next?String(unlockBuyersNeeded)+' more':threshold?'Best listed tier':'Waiting'}</b>{next>0&&<p className="muted text-xs">{unlockProgressBuyers}/{next} buyers · unlock {taka(Number(deal.next_price))}</p>}</div>
                 </div>
 
-                <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50/60 p-3">
+                <GroupDealUnlockProgress
+                  qualifiedBuyers={buyers}
+                  circleMembers={circleMembers}
+                  nextThreshold={next}
+                  nextPrice={Number(deal.next_price||0)}
+                  marketPrice={Number(deal.market_price||0)}
+                  joined={joined}
+                />
+
+                <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50/60 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2"><b>Nearby circle</b><span className="chip">{joined?String(circleMembers)+'/'+String(circleTarget):'Auto-assigned after joining'}</span></div>
                   <p className="muted mt-1 text-sm">We group verified neighbours automatically within up to {deal.circle_radius_m} metres; exact neighbour locations stay private. A circle cannot produce a valid deal below 5 qualified buyers.</p>
                 </div>
