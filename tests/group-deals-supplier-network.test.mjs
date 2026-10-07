@@ -8,6 +8,7 @@ const supplierPage=fs.readFileSync('app/supplier/page.tsx','utf8')
 const geoComponent=fs.readFileSync('components/community-location-verifier.tsx','utf8')
 const groupActions=fs.readFileSync('app/actions/group-deals.ts','utf8')
 const runtimeFix=fs.readFileSync('supabase/migrations/20261007143000_group_location_uat_supplier_fix.sql','utf8')
+const joinAmbiguityFix=fs.readFileSync('supabase/migrations/20261007150000_join_group_deal_column_ambiguity_fix.sql','utf8')
 
 test('Group Deals cannot unlock below five qualified buyers',()=>{
   assert.match(migration,/min_group_size integer not null default 5 check\(min_group_size>=5\)/i)
@@ -88,4 +89,12 @@ test('desktop geolocation diagnostics retry safely without weakening server proo
 test('supplier open demand UNION is wrapped before ordering',()=>{
   assert.match(runtimeFix,/combined as \(/i)
   assert.match(runtimeFix,/from combined c\s+order by c\.closes_at/is)
+})
+
+
+test('join_group_deal qualifies commitment columns that collide with RETURNS TABLE names',()=>{
+  assert.match(joinAmbiguityFix,/select gc\.id,gc\.circle_id,gc\.status into v_commitment,v_circle,v_existing_status/i)
+  assert.match(joinAmbiguityFix,/where gc\.circle_id=v_circle and gc\.status in \('forming','qualified'\)/i)
+  assert.match(joinAmbiguityFix,/update public\.group_deal_commitments gc[\s\S]*where gc\.circle_id=v_circle and gc\.status='forming'/i)
+  assert.doesNotMatch(joinAmbiguityFix,/select id,circle_id,status into/i)
 })
