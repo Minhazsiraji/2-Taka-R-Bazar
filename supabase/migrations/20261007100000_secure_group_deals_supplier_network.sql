@@ -952,6 +952,7 @@ begin
     or (v_deal.status='procurement' and p_status in ('fulfilling','cancelled'))
     or (v_deal.status='fulfilling' and p_status in ('completed','cancelled'));
   if not v_allowed then raise exception 'Invalid Group Deal transition: % -> %',v_deal.status,p_status; end if;
+  if p_status='cancelled' and nullif(btrim(coalesce(p_reason,'')),'') is null then raise exception 'Cancellation reason required'; end if;
 
   if p_status='open' then
     if v_deal.closes_at<=now() then raise exception 'Close time must still be in the future'; end if;
@@ -960,6 +961,10 @@ begin
       raise exception 'Minimum unlock tier is missing';
     end if;
   elsif p_status='locked' then
+    if now()<v_deal.closes_at then raise exception 'Deal cannot be locked before the advertised close time'; end if;
+    update public.group_deal_commitments
+      set status='cancelled',cancelled_at=now(),cancellation_reason='circle_below_minimum_at_lock'
+      where group_deal_id=p_group_deal_id and status='forming';
     select count(distinct customer_id),coalesce(sum(quantity),0)
       into v_buyers,v_units
     from public.group_deal_commitments where group_deal_id=p_group_deal_id and status='qualified';
@@ -980,6 +985,15 @@ begin
   set status=p_status,
       cancellation_reason=case when p_status='cancelled' then nullif(btrim(coalesce(p_reason,'')),'') else cancellation_reason end
   where id=p_group_deal_id;
+
+  if p_status='cancelled' then
+    update public.group_deal_commitments
+      set status='cancelled',cancelled_at=coalesce(cancelled_at,now()),cancellation_reason=coalesce(cancellation_reason,'deal_cancelled')
+      where group_deal_id=p_group_deal_id and status in ('forming','qualified');
+  elsif p_status='completed' then
+    update public.group_deal_commitments set status='fulfilled'
+      where group_deal_id=p_group_deal_id and status='qualified';
+  end if;
 
   insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
   values(v_user,'group_deal_status_changed','group_deal',p_group_deal_id,
@@ -1089,7 +1103,7 @@ begin
       select sum(oi.quantity)::bigint
       from public.order_items oi
       join public.orders o on o.id=oi.order_id
-      where oi.product_id=a.product_id and o.status<>'cancelled' and o.created_at::date=d.day
+      where oi.product_id=a.product_id and o.status='completed' and coalesce(o.completed_at,o.created_at)::date=d.day
     ),0)::bigint
   from allowed a cross join days d
   order by a.business_name,a.name,d.day desc;
