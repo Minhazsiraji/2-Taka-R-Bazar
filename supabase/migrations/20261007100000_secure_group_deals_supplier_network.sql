@@ -654,6 +654,7 @@ begin
       where c.group_deal_id=p_group_deal_id
         and c.community_id=v_community
         and c.closed_at is null
+        and extensions.st_dwithin(gl.anchor_location,v_location,v_deal.circle_radius_m)
         and (select count(*) from public.group_deal_commitments gc where gc.circle_id=c.id and gc.status in ('forming','qualified'))<c.target_size
       order by extensions.st_distance(gl.anchor_location,v_location),
         (select count(*) from public.group_deal_commitments gc where gc.circle_id=c.id and gc.status in ('forming','qualified')) desc,
