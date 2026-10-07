@@ -52,5 +52,6 @@ test('new tables and RPCs remain fail-closed by default',()=>{
   assert.match(migration,/alter table public\.group_deal_commitments enable row level security/i)
   assert.match(migration,/revoke all on function public\.join_group_deal\(uuid,integer\) from public,anon,authenticated,service_role/i)
   assert.match(migration,/grant execute on function public\.join_group_deal\(uuid,integer\) to authenticated/i)
+  assert.match(migration,/grant execute on function private\.is_ops\(uuid\) to authenticated/i)
   assert.match(migration,/alter default privileges for role postgres in schema public[\s\S]*revoke select,insert,update,delete on tables from anon,authenticated,service_role/i)
 })
