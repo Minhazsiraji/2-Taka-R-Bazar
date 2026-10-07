@@ -202,6 +202,7 @@ returns boolean language sql stable security definer set search_path='' as $$
   );
 $$;
 revoke all on function private.is_ops(uuid) from public,anon,authenticated,service_role;
+grant execute on function private.is_ops(uuid) to authenticated;
 
 create or replace function private.is_supplier_member(p_user uuid,p_supplier uuid)
 returns boolean language sql stable security definer set search_path='' as $$
