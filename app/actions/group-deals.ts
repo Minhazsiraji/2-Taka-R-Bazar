@@ -29,6 +29,26 @@ export async function verifyCommunityLocation(fd:FormData){
   }
 }
 
+export async function verifyAdminUatLocation(){
+  const {roles,supabase}=await requireOnboardedUser()
+  if(process.env.VERCEL_ENV!=='preview'){
+    return {ok:false,message:'UAT fallback is available only on Vercel Preview.'}
+  }
+  if(!roles.has('admin')&&!roles.has('super_admin')){
+    return {ok:false,message:'Admin UAT access required.'}
+  }
+  const {data,error}=await supabase.rpc('admin_verify_my_uat_location')
+  if(error)return {ok:false,message:'UAT location verification is temporarily unavailable.'}
+  const result=data?.[0] as any
+  revalidatePath('/group-deals')
+  return {
+    ok:Boolean(result?.verified),
+    message:String(result?.reason??(result?.verified?'UAT demo location verified.':'UAT location could not be verified.')),
+    expiresAt:result?.expires_at??null,
+  }
+}
+
+
 export async function joinGroupDeal(fd:FormData){
   const {supabase}=await requireOnboardedUser()
   const dealId=text(fd,'group_deal_id')
