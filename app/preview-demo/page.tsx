@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { BrandLogo } from '@/components/brand-logo'
@@ -6,6 +7,8 @@ import { OpportunityCard } from '@/components/opportunity-card'
 import { PriceComparison } from '@/components/price-comparison'
 
 export const dynamic='force-dynamic'
+
+export const metadata: Metadata = { robots: { index: false, follow: false, noarchive: true } }
 
 type DemoView='home'|'pools'|'deals'|'orders'|'savings'
 const views:DemoView[]=['home','pools','deals','orders','savings']
