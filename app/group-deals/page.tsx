@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { PriceComparison } from '@/components/price-comparison'
 import { AppShell } from '@/components/app-shell'
 import { CommunityLocationVerifier } from '@/components/community-location-verifier'
@@ -10,6 +11,8 @@ import { requireOnboardedUser } from '@/lib/auth'
 import { taka, shortDate } from '@/lib/format'
 
 export const dynamic='force-dynamic'
+
+export const metadata: Metadata = { robots: { index: false, follow: false, noarchive: true } }
 
 export default async function GroupDealsPage({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}){
   const {roles,supabase}=await requireOnboardedUser()
