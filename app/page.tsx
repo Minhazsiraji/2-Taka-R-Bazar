@@ -4,10 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { PublicHeader } from '@/components/public-header'
 import { PublicFooter } from '@/components/public-footer'
-import { PILOT_AREA, PUBLIC_CONTACT_EMAIL, SEO_UPDATED_AT, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
+import { PILOT_AREA, PUBLIC_CONTACT_EMAIL, SEO_UPDATED_AT, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE_EN, SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
-  title: 'Community Grocery Pooling in Savar',
+  title: { absolute: `${SITE_NAME} | ${SITE_TAGLINE_EN}` },
   description: SITE_DESCRIPTION,
   alternates: { canonical: SITE_URL },
 }
@@ -27,7 +27,7 @@ export default async function LandingPage() {
         url: SITE_URL,
         logo: `${SITE_URL}/brand-logo-header.png`,
         description: SITE_DESCRIPTION,
-        slogan: 'Smart Shopping. Real Savings.',
+        slogan: SITE_TAGLINE_EN,
         email: PUBLIC_CONTACT_EMAIL,
         contactPoint: {
           '@type': 'ContactPoint',
@@ -59,7 +59,7 @@ export default async function LandingPage() {
         '@type': 'WebPage',
         '@id': `${SITE_URL}/#webpage`,
         url: SITE_URL,
-        name: `${SITE_NAME} | Community Grocery Pooling in Savar`,
+        name: `${SITE_NAME} | ${SITE_TAGLINE_EN}`,
         description: SITE_DESCRIPTION,
         isPartOf: { '@id': `${SITE_URL}/#website` },
         about: { '@id': `${SITE_URL}/#service` },
