@@ -21,6 +21,8 @@ const NOINDEX_PREFIXES = [
   '/verify-otp',
   '/feedback',
   '/money',
+  '/join',
+  '/community-invite',
 ]
 
 function shouldNoIndex(pathname: string) {
