@@ -11,7 +11,7 @@ import './site-theme-admin.css'
 import './site-theme-surface-fix.css'
 import './site-customer-experience.css'
 import { PwaRegister } from '@/components/pwa-register'
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE_EN, SITE_URL } from '@/lib/site'
 
 const themeInitScript = `
 (function(){
@@ -32,7 +32,7 @@ const themeInitScript = `
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: `${SITE_NAME} | Community Grocery Pooling in Savar`, template: `%s · ${SITE_NAME}` },
+  title: { default: `${SITE_NAME} | ${SITE_TAGLINE_EN}`, template: `%s · ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   keywords: ['community grocery pooling','group buying Bangladesh','grocery savings Savar','Amin Model Town grocery','Pollibiddut grocery','কমিউনিটি বাজার','সাশ্রয়ী বাজার','Savar grocery pool'],
@@ -40,15 +40,15 @@ export const metadata: Metadata = {
     type: 'website',
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: `${SITE_NAME} | Community Grocery Pooling`,
+    title: `${SITE_NAME} | ${SITE_TAGLINE_EN}`,
     description: SITE_DESCRIPTION,
     locale: 'en_BD',
     alternateLocale: ['bn_BD'],
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: `${SITE_NAME} — Smart Shopping. Real Savings.` }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: `${SITE_NAME} — ${SITE_TAGLINE_EN}` }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} | Community Grocery Pooling`,
+    title: `${SITE_NAME} | ${SITE_TAGLINE_EN}`,
     description: SITE_DESCRIPTION,
     images: ['/opengraph-image'],
   },
