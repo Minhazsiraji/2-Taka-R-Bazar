@@ -229,3 +229,5 @@ html[data-theme="dark"] .site-glass-root .app-mobile-nav-link.is-active{
 .pool-view article.cx-compact-product{width:100%!important;max-width:100%!important}
 .pool-view article.cx-compact-product>div.grid{grid-template-columns:80px minmax(0,1fr)!important;gap:.75rem!important}
 }
+
+.cx-savings-hero~section>.lg\:grid-cols-2{grid-template-columns:minmax(0,1fr)!important}
