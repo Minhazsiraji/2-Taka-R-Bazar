@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { OpportunityCard } from '@/components/opportunity-card'
 import { AppShell } from '@/components/app-shell'
 import { StatusPill } from '@/components/status-pill'
 import { ShareUnlockButton } from '@/components/share-unlock-button'
@@ -171,20 +172,16 @@ export default async function HomePage(){
             <p className="muted mt-2 max-w-2xl text-sm">See what is close to a lower price, commit only what you need, and keep delivery separate from product savings.</p>
           </div>
 
-          <Link href="/savings" className="glass-inset min-w-[190px] rounded-2xl p-4">
+          <Link href="/savings" className="cx-saving-stat">
             <div className="text-[10px] font-black uppercase tracking-[.14em] text-emerald-700">You saved this month</div>
             <div className="mt-1 text-3xl font-black text-emerald-700">{taka(thisMonth)}</div>
             <div className="mt-1 text-xs font-bold text-slate-500">{taka(lifetime)} lifetime verified saving →</div>
           </Link>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:max-w-md">
-          <Link href="/pool" className="glass-secondary flex min-h-12 items-center justify-between rounded-2xl px-4 font-black">
-            <span>Pools</span><span className="chip">{pools.length} open</span>
-          </Link>
-          <Link href="/group-deals" className="glass-secondary flex min-h-12 items-center justify-between rounded-2xl px-4 font-black">
-            <span>Group Deals</span><span className="chip">{openDeals.length} open</span>
-          </Link>
+        <div className="cx-opportunity-grid">
+          <OpportunityCard href="/pool" title="Pools" count={pools.length}/>
+          <OpportunityCard href="/group-deals" title="Group Deals" count={openDeals.length}/>
         </div>
       </section>
 

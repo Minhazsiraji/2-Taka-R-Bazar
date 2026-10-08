@@ -130,7 +130,7 @@
 }
 
 /* Keep true backdrop blur only on the major glass planes, at a restrained cost. */
-.site-glass-root :is(.card,.table-wrap,.public-glass-header,.public-glass-footer,.app-shell-header-bar,.app-desktop-footer,.app-mobile-legal,.app-mobile-nav,aside[class*="rounded-"],details[class*="rounded-"]) {
+.site-glass-root :is(.card,.table-wrap,.public-glass-header,.public-glass-footer,.app-shell-header-bar,.app-desktop-footer,.app-mobile-legal,aside[class*="rounded-"],details[class*="rounded-"]) {
   backdrop-filter: blur(14px) saturate(128%) !important;
   -webkit-backdrop-filter: blur(14px) saturate(128%) !important;
 }
@@ -147,7 +147,7 @@
     -webkit-backdrop-filter: blur(6px) saturate(112%) !important;
   }
 
-  .site-glass-root :is(.public-glass-header,.public-glass-footer,.app-shell-header-bar,.app-mobile-legal,.app-mobile-nav) {
+  .site-glass-root :is(.public-glass-header,.public-glass-footer,.app-shell-header-bar,.app-mobile-legal) {
     backdrop-filter: blur(10px) saturate(118%) !important;
     -webkit-backdrop-filter: blur(10px) saturate(118%) !important;
   }

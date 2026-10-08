@@ -1,3 +1,4 @@
+import { PriceComparison } from '@/components/price-comparison'
 import { AppShell } from '@/components/app-shell'
 import { ProductImage } from '@/components/product-image'
 import { StatusPill } from '@/components/status-pill'
@@ -178,8 +179,8 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
                 const ownItemReview=irevs.find((x:any)=>x.user_id===user.id)
 
                 return <article className="card cx-compact-product min-w-0 p-4 sm:p-5" key={item.id}>
-                  <div className="grid min-w-0 grid-cols-[80px_minmax(0,1fr)] gap-3 sm:grid-cols-[96px_minmax(0,1fr)] sm:gap-4">
-                    <ProductImage src={product?.image_url} name={product?.name} variant="thumb" className="!h-20 !w-20 sm:!h-24 sm:!w-24"/>
+                  <div className="cx-product-heading">
+                    <ProductImage src={product?.image_url} name={product?.name} className="cx-product-photo"/>
                     <div className="min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -201,21 +202,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
                     </div>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200/80">
-                    <div className="p-2.5 sm:p-3">
-                      <div className="text-[9px] font-black uppercase tracking-wide text-slate-500">Market</div>
-                      <div className="mt-1 text-base font-black sm:text-lg">{taka(bench)}</div>
-                    </div>
-                    <div className="border-l border-slate-200/80 p-2.5 sm:p-3">
-                      <div className="text-[9px] font-black uppercase tracking-wide text-slate-500">{final?'Final price':'Current max'}</div>
-                      <div className="mt-1 text-base font-black text-emerald-700 sm:text-lg">{currentPrice>0?taka(currentPrice):'Building'}</div>
-                    </div>
-                    <div className="border-l border-slate-200/80 p-2.5 sm:p-3">
-                      <div className="text-[9px] font-black uppercase tracking-wide text-slate-500">You save</div>
-                      <div className="mt-1 text-base font-black text-emerald-700 sm:text-lg">{currentPrice>0?taka(currentSaving):'—'}</div>
-                      <div className="text-[9px] font-bold text-slate-500">per unit</div>
-                    </div>
-                  </div>
+                  <PriceComparison market={taka(bench)} current={currentPrice>0?taka(currentPrice):'Building'} currentLabel={final?'Final price':'Current max'} saving={currentPrice>0?taka(currentSaving):'—'}/>
 
                   <PriceTargetProgress
                     currentQuantity={currentQty}
@@ -245,7 +232,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
                   </div>}
 
                   {pool.status==='open'&&!pool.is_paused
-                    ? <form action={commitToPool} className="mt-3 grid grid-cols-[92px_minmax(0,1fr)] items-end gap-2 border-t border-slate-200 pt-3 sm:grid-cols-[130px_auto]">
+                    ? <form action={commitToPool} className="cx-quantity-form">
                         <input type="hidden" name="pool_item_id" value={item.id}/>
                         <label><span className="label">Quantity</span><input className="input" type="number" name="quantity" min={item.min_quantity} max={item.max_quantity} defaultValue={own?.quantity??1} required/></label>
                         <SubmitButton className="w-full sm:w-auto">{own?'Update quantity':'Commit'}</SubmitButton>

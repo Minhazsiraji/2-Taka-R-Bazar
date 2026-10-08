@@ -36,7 +36,7 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
 
           <div className="app-role-actions flex min-w-0 flex-1 items-center justify-end gap-1 text-[10px] sm:gap-2 sm:text-xs">
             <Link href="/money" className="cx-header-action shrink-0 rounded-full border border-violet-300 bg-violet-50 px-3 py-2 font-black text-violet-800 shadow-sm hover:bg-violet-100" aria-label="Open My Money dashboard">💰 <span className="hidden sm:inline">My Money</span></Link>
-            <ThemeToggle className="cx-header-theme hidden md:inline-flex"/>
+            <ThemeToggle className="cx-header-theme"/>
             <Suspense fallback={<NotificationBellFallback/>}><NotificationBell/></Suspense>
 
             {isPickup&&<Link className="app-role-link hidden shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm md:inline-flex" href="/pickup-ops"><span aria-hidden="true">▣</span><span className="role-label">Pickup Ops</span></Link>}

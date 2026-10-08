@@ -1,3 +1,4 @@
+import { PriceComparison } from '@/components/price-comparison'
 import { AppShell } from '@/components/app-shell'
 import { CommunityLocationVerifier } from '@/components/community-location-verifier'
 import { GroupDealUnlockProgress } from '@/components/group-deal-unlock-progress'
@@ -55,8 +56,8 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
             const unlockBuyersNeeded=next?Math.max(next-unlockProgressBuyers,0):0
 
             return <article className="card cx-compact-product min-w-0 p-4 sm:p-5" key={deal.deal_id}>
-              <div className="grid min-w-0 grid-cols-[80px_minmax(0,1fr)] gap-3 sm:grid-cols-[96px_minmax(0,1fr)] sm:gap-4">
-                <ProductImage src={deal.image_url} name={deal.product_name} variant="thumb" className="!h-20 !w-20 sm:!h-24 sm:!w-24"/>
+              <div className="cx-product-heading">
+                <ProductImage src={deal.image_url} name={deal.product_name} className="cx-product-photo"/>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="chip capitalize">{String(deal.status).replaceAll('_',' ')}</span>
@@ -69,11 +70,7 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
                 </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200/80">
-                <div className="p-2.5 sm:p-3"><div className="text-[9px] font-black uppercase tracking-wide text-slate-500">Market</div><div className="mt-1 text-base font-black sm:text-lg">{taka(Number(deal.market_price))}</div></div>
-                <div className="border-l border-slate-200/80 p-2.5 sm:p-3"><div className="text-[9px] font-black uppercase tracking-wide text-slate-500">Current price</div><div className="mt-1 text-base font-black text-emerald-700 sm:text-lg">{price>0?taka(price):'Unlocking'}</div></div>
-                <div className="border-l border-slate-200/80 p-2.5 sm:p-3"><div className="text-[9px] font-black uppercase tracking-wide text-slate-500">{price>0?'You save':'Next unlock'}</div><div className="mt-1 text-base font-black text-emerald-700 sm:text-lg">{price>0?taka(saving):next?unlockBuyersNeeded+' more':'—'}</div><div className="text-[9px] font-bold text-slate-500">{price>0?'per unit':next?taka(Number(deal.next_price)):'top tier'}</div></div>
-              </div>
+              <PriceComparison market={taka(Number(deal.market_price))} current={price>0?taka(price):'Unlocking'} currentLabel="Current price" savingLabel={price>0?'You save':'Next unlock'} saving={price>0?taka(saving):next?unlockBuyersNeeded+' more':'—'} note={price>0?'per unit':next?taka(Number(deal.next_price)):'top tier'}/>
 
               <GroupDealUnlockProgress
                 qualifiedBuyers={buyers}
@@ -103,7 +100,7 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
               </div>}
 
               <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-slate-200 pt-3">
-                {deal.status==='open'&&!joined&&<form action={joinGroupDeal} className="grid w-full grid-cols-[92px_minmax(0,1fr)] items-end gap-2 sm:w-auto sm:grid-cols-[120px_auto]">
+                {deal.status==='open'&&!joined&&<form action={joinGroupDeal} className="cx-quantity-form w-full">
                   <input type="hidden" name="group_deal_id" value={deal.deal_id}/>
                   <label><span className="label">Quantity</span><input className="input" type="number" name="quantity" min="1" max="100" defaultValue="1" required/></label>
                   <SubmitButton className="w-full sm:w-auto">Join group</SubmitButton>

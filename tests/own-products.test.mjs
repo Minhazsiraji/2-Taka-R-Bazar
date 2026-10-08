@@ -81,7 +81,7 @@ test('customer Pool card renders product images safely through the shared compon
   const image=readFileSync(new URL('../components/product-image.tsx',import.meta.url),'utf8')
   assert.match(page,/import \{ ProductImage \}/)
   assert.match(page,/src=\{product\?\.image_url\}/)
-  assert.match(page,/variant="thumb"/)
+  assert.match(page,/className="cx-product-photo"/)
   assert.match(image,/object-contain/)
   assert.match(image,/loading=\{eager\?'eager':'lazy'\}/)
   assert.match(image,/referrerPolicy="no-referrer"/)

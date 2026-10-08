@@ -139,7 +139,7 @@ test('mobile customer nav returns to the clean attached first-style treatment',(
   assert.match(css,/Restore the original clean mobile navigation/i)
   assert.match(css,/inset-inline:0/)
   assert.match(css,/bottom:0/)
-  assert.match(css,/border-radius:14px 14px 0 0/)
+  assert.match(css,/border-radius:12px 12px 0 0/)
   assert.match(css,/app-mobile-nav-link\.is-active/)
   assert.match(css,/box-shadow:none/)
   assert.doesNotMatch(css,/left:8px/)

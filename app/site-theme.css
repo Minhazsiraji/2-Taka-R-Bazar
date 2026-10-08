@@ -110,12 +110,9 @@ html[data-theme="dark"] .site-glass-root .success { color:#a7f3d0 !important; bo
 html[data-theme="dark"] .site-glass-root .error { color:#fecdd3 !important; border-color:rgba(251,113,133,.24) !important; background:rgba(127,29,29,.26) !important; }
 
 html[data-theme="dark"] .site-glass-root header { color:#eef4ff; }
-html[data-theme="dark"] .site-glass-root .app-mobile-nav,
 html[data-theme="dark"] .site-glass-root .app-mobile-legal,
 html[data-theme="dark"] .site-glass-root .app-desktop-footer,
 html[data-theme="dark"] .site-glass-root .public-glass-footer { color:#dce7f7 !important; border-color:rgba(201,220,242,.12) !important; background:rgba(7,13,22,.90) !important; }
-html[data-theme="dark"] .site-glass-root .app-mobile-nav a { color:#c8d4e6 !important; }
-html[data-theme="dark"] .site-glass-root .app-mobile-nav a:hover { background:rgba(49,67,91,.44) !important; }
 html[data-theme="dark"] .site-glass-root .app-desktop-footer [class*="text-sky-200"] { color:#78e4ea !important; }
 html[data-theme="dark"] .site-glass-root .app-desktop-footer :is(a,p,span,[class*="text-slate-"]) { color:#a9b8cc !important; }
 html[data-theme="dark"] .site-glass-root .app-desktop-footer a:hover { color:#7cecf0 !important; }
