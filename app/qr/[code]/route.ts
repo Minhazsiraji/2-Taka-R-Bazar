@@ -29,6 +29,7 @@ export async function GET(request:Request,{params}:{params:Promise<{code:string}
     'Content-Type':'image/svg+xml; charset=utf-8',
     'Cache-Control':'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400',
     'X-Content-Type-Options':'nosniff',
+    'X-Robots-Tag':'noindex, noimageindex, noarchive',
     'Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'",
   })
   if(url.searchParams.get('download')==='1'){
