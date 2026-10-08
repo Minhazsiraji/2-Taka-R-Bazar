@@ -2,6 +2,7 @@ import { AppShell } from '@/components/app-shell'
 import { CommunityLocationVerifier } from '@/components/community-location-verifier'
 import { GroupDealUnlockProgress } from '@/components/group-deal-unlock-progress'
 import { ProductImage } from '@/components/product-image'
+import { ShareUnlockButton } from '@/components/share-unlock-button'
 import { SubmitButton } from '@/components/submit-button'
 import { joinGroupDeal, leaveGroupDeal } from '@/app/actions/group-deals'
 import { requireOnboardedUser } from '@/lib/auth'
@@ -18,93 +19,110 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
   ])
   const location=locationRows?.[0] as any
 
-  return <AppShell roles={roles}><div className="grid gap-5">
-    <section>
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Neighbour-powered buying</p>
-      <h1 className="mt-1 text-2xl font-black sm:text-3xl">Group Deals</h1>
-      <p className="muted mt-1">Join verified nearby buyers. A deal never unlocks below 5 qualified people; more qualified buyers can unlock a better price.</p>
-    </section>
+  return <AppShell roles={roles}>
+    <div className="grid min-w-0 gap-4 sm:gap-5">
+      <section>
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Neighbour-powered buying</p>
+        <h1 className="mt-1 text-2xl font-black sm:text-3xl">Group Deals</h1>
+        <p className="muted mt-1 text-sm">Real nearby people unlock the price together. One verified person counts once, no matter how many units they buy.</p>
+      </section>
 
-    {sp.error&&<div className="error">{sp.error}</div>}
-    {sp.notice&&<div className="success">{sp.notice}</div>}
-    {dealError&&<div className="error">Group Deals are temporarily unavailable.</div>}
+      {sp.error&&<div className="error">{sp.error}</div>}
+      {sp.notice&&<div className="success">{sp.notice}</div>}
+      {dealError&&<div className="error">Group Deals are temporarily unavailable.</div>}
 
-    <CommunityLocationVerifier
-      allowUatFallback={process.env.VERCEL_ENV==='preview'&&(roles.has('admin')||roles.has('super_admin'))}
-      initialVerified={process.env.VERCEL_ENV==='preview'?false:Boolean(location?.verified)}
-    />
+      {location?.verified
+        ? <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/70 px-4 py-3">
+            <div className="flex items-center gap-2"><span aria-hidden="true">📍</span><div><b>Community location verified</b><p className="muted text-xs">Nearby matching is active; your exact GPS point stays private.</p></div></div>
+            <span className="chip border-emerald-200 bg-white text-emerald-700">Verified ✓</span>
+          </div>
+        : <CommunityLocationVerifier
+            allowUatFallback={process.env.VERCEL_ENV==='preview'&&(roles.has('admin')||roles.has('super_admin'))}
+            initialVerified={false}
+          />}
 
-    <div className="card p-4">
-      <div className="card-title">Location gate</div>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <span className="chip">{location?.configured?'Community map active':'Community map pending'}</span>
-        <span className="chip">{location?.verified?'Verified':'Verification needed'}</span>
-      </div>
-      <p className="muted mt-2 text-sm">{location?.verified&&location?.expires_at
-        ? 'Verified for this community until '+shortDate(location.expires_at)+'.'
-        : 'Verify from the device you are actually using in the community before your commitment can count.'}</p>
-    </div>
+      {!deals?.length
+        ? <div className="card p-6 text-center"><h2 className="text-xl font-black">No Group Deal is open right now</h2><p className="muted mt-2 text-sm">New verified nearby opportunities will appear here when Operations opens them.</p></div>
+        : <div className="grid gap-3">{deals.map((deal:any)=>{
+            const joined=Number(deal.my_quantity||0)>0
+            const buyers=Number(deal.buyer_count||0)
+            const next=Number(deal.next_threshold||0)
+            const price=Number(deal.current_price||0)
+            const saving=price>0?Math.max(0,Number(deal.market_price)-price):0
+            const circleMembers=Number(deal.circle_members||0)
+            const circleTarget=Number(deal.circle_target||0)
+            const unlockProgressBuyers=buyers===0&&joined?Math.min(circleMembers,next):Math.min(buyers,next)
+            const unlockBuyersNeeded=next?Math.max(next-unlockProgressBuyers,0):0
 
-    {!deals?.length
-      ? <div className="card p-5"><h2 className="text-xl font-black">No Group Deal is open for your community</h2><p className="muted mt-2">New verified deals will appear here when Operations opens them.</p></div>
-      : <div className="grid gap-4">{deals.map((deal:any)=>{
-          const joined=Number(deal.my_quantity||0)>0
-          const buyers=Number(deal.buyer_count||0)
-          const threshold=Number(deal.current_threshold||0)
-          const next=Number(deal.next_threshold||0)
-          const price=Number(deal.current_price||0)
-          const saving=price>0?Math.max(0,Number(deal.market_price)-price):0
-          const circleMembers=Number(deal.circle_members||0)
-          const circleTarget=Number(deal.circle_target||0)
-          const unlockProgressBuyers=buyers===0&&joined?Math.min(circleMembers,next):Math.min(buyers,next)
-          const unlockBuyersNeeded=next?Math.max(next-unlockProgressBuyers,0):0
-          return <article className="card min-w-0 p-0" key={deal.deal_id}>
-            <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[180px_minmax(0,1fr)]">
-              <ProductImage src={deal.image_url} name={deal.product_name}/>
-              <div className="min-w-0">
-                <div className="flex flex-wrap gap-2">
-                  <span className="chip capitalize">{String(deal.status).replaceAll('_',' ')}</span>
-                  <span className="chip">{buyers} qualified buyers</span>
+            return <article className="card cx-compact-product min-w-0 p-4 sm:p-5" key={deal.deal_id}>
+              <div className="grid min-w-0 grid-cols-[80px_minmax(0,1fr)] gap-3 sm:grid-cols-[96px_minmax(0,1fr)] sm:gap-4">
+                <ProductImage src={deal.image_url} name={deal.product_name} variant="thumb" className="!h-20 !w-20 sm:!h-24 sm:!w-24"/>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="chip capitalize">{String(deal.status).replaceAll('_',' ')}</span>
+                    <span className="chip">{buyers} qualified</span>
+                    {joined&&<span className="chip border-emerald-200 bg-emerald-50 text-emerald-700">Joined</span>}
+                  </div>
+                  <h2 className="mt-2 text-base font-black leading-tight sm:text-xl">{deal.product_name}</h2>
+                  <p className="muted mt-1 text-xs">{deal.brand?deal.brand+' · ':''}{deal.package_size} · closes {shortDate(deal.closes_at)}</p>
+                  <p className="mt-1 text-xs font-bold text-slate-600">{deal.title}</p>
                 </div>
-                <h2 className="mt-2 text-xl font-black sm:text-2xl">{deal.title}</h2>
-                <p className="muted mt-1">{deal.product_name}{deal.brand?' · '+deal.brand:''} · {deal.package_size}</p>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-xl border border-slate-200 p-3"><div className="card-title">Market reference</div><b className="text-xl">{taka(Number(deal.market_price))}</b></div>
-                  <div className="rounded-xl border border-slate-200 p-3"><div className="card-title">Unlocked price</div><b className="text-xl text-emerald-700">{price>0?taka(price):'Needs 5 buyers'}</b>{price>0&&<p className="muted text-xs">Save up to {taka(saving)} / unit</p>}</div>
-                  <div className="rounded-xl border border-slate-200 p-3"><div className="card-title">Next unlock</div><b className="text-xl">{next?String(unlockBuyersNeeded)+' more':threshold?'Best listed tier':'Waiting'}</b>{next>0&&<p className="muted text-xs">{unlockProgressBuyers}/{next} buyers · unlock {taka(Number(deal.next_price))}</p>}</div>
-                </div>
-
-                <GroupDealUnlockProgress
-                  qualifiedBuyers={buyers}
-                  circleMembers={circleMembers}
-                  nextThreshold={next}
-                  nextPrice={Number(deal.next_price||0)}
-                  marketPrice={Number(deal.market_price||0)}
-                  joined={joined}
-                />
-
-                <div className="mt-3 rounded-xl border border-sky-200 bg-sky-50/60 p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2"><b>Nearby circle</b><span className="chip">{joined?String(circleMembers)+'/'+String(circleTarget):'Auto-assigned after joining'}</span></div>
-                  <p className="muted mt-1 text-sm">We group verified neighbours automatically within up to {deal.circle_radius_m} metres; exact neighbour locations stay private. A circle cannot produce a valid deal below 5 qualified buyers.</p>
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-end gap-3">
-                  {deal.status==='open'&&!joined&&<form action={joinGroupDeal} className="flex flex-wrap items-end gap-2">
-                    <input type="hidden" name="group_deal_id" value={deal.deal_id}/>
-                    <label><span className="label">Quantity</span><input className="input w-28" type="number" name="quantity" min="1" max="100" defaultValue="1" required/></label>
-                    <SubmitButton>Join secure group</SubmitButton>
-                  </form>}
-                  {deal.status==='open'&&joined&&<>
-                    <div><div className="card-title">Your commitment</div><b>{deal.my_quantity} unit(s)</b></div>
-                    <form action={leaveGroupDeal}><input type="hidden" name="group_deal_id" value={deal.deal_id}/><SubmitButton className="btn-secondary">Leave group</SubmitButton></form>
-                  </>}
-                  {deal.status!=='open'&&joined&&<span className="chip">Your qualified quantity: {deal.my_quantity}</span>}
-                </div>
-                <p className="muted mt-3 text-xs">Closes {shortDate(deal.closes_at)} · Target fulfilment {shortDate(deal.pickup_at)}. Final fulfilment/payment workflow remains Operations-controlled.</p>
               </div>
-            </div>
-          </article>
-        })}</div>}
-  </div></AppShell>
+
+              <div className="mt-3 grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200/80">
+                <div className="p-2.5 sm:p-3"><div className="text-[9px] font-black uppercase tracking-wide text-slate-500">Market</div><div className="mt-1 text-base font-black sm:text-lg">{taka(Number(deal.market_price))}</div></div>
+                <div className="border-l border-slate-200/80 p-2.5 sm:p-3"><div className="text-[9px] font-black uppercase tracking-wide text-slate-500">Current price</div><div className="mt-1 text-base font-black text-emerald-700 sm:text-lg">{price>0?taka(price):'Unlocking'}</div></div>
+                <div className="border-l border-slate-200/80 p-2.5 sm:p-3"><div className="text-[9px] font-black uppercase tracking-wide text-slate-500">{price>0?'You save':'Next unlock'}</div><div className="mt-1 text-base font-black text-emerald-700 sm:text-lg">{price>0?taka(saving):next?unlockBuyersNeeded+' more':'—'}</div><div className="text-[9px] font-bold text-slate-500">{price>0?'per unit':next?taka(Number(deal.next_price)):'top tier'}</div></div>
+              </div>
+
+              <GroupDealUnlockProgress
+                qualifiedBuyers={buyers}
+                circleMembers={circleMembers}
+                nextThreshold={next}
+                nextPrice={Number(deal.next_price||0)}
+                marketPrice={Number(deal.market_price||0)}
+                joined={joined}
+              />
+
+              <div className="cx-compact-strip mt-3">
+                <span className="cx-compact-chip">👥 Nearby circle {joined?String(circleMembers)+'/'+String(circleTarget):'auto-match after joining'}</span>
+                <span className="cx-compact-chip">📍 within {deal.circle_radius_m} m</span>
+                {joined&&<span className="cx-compact-chip">Your qty {deal.my_quantity}</span>}
+              </div>
+
+              {next>0&&<div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-100 bg-emerald-50/55 p-3">
+                <div>
+                  <div className="text-xs font-black text-slate-700">{unlockBuyersNeeded} more verified neighbour{unlockBuyersNeeded===1?'':'s'} can unlock {taka(Number(deal.next_price))}</div>
+                  <div className="muted mt-1 text-[11px]">Sharing helps discovery; only separately verified people count.</div>
+                </div>
+                <ShareUnlockButton
+                  title={String(deal.product_name)}
+                  text={unlockBuyersNeeded+' more verified neighbours can unlock '+taka(Number(deal.next_price))+' for '+String(deal.product_name)+'.'}
+                  label={unlockBuyersNeeded>0?'Invite neighbours':'Share deal'}
+                />
+              </div>}
+
+              <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-slate-200 pt-3">
+                {deal.status==='open'&&!joined&&<form action={joinGroupDeal} className="grid w-full grid-cols-[92px_minmax(0,1fr)] items-end gap-2 sm:w-auto sm:grid-cols-[120px_auto]">
+                  <input type="hidden" name="group_deal_id" value={deal.deal_id}/>
+                  <label><span className="label">Quantity</span><input className="input" type="number" name="quantity" min="1" max="100" defaultValue="1" required/></label>
+                  <SubmitButton className="w-full sm:w-auto">Join group</SubmitButton>
+                </form>}
+
+                {deal.status==='open'&&joined&&<form action={leaveGroupDeal}>
+                  <input type="hidden" name="group_deal_id" value={deal.deal_id}/>
+                  <SubmitButton className="btn-secondary">Leave group</SubmitButton>
+                </form>}
+
+                {deal.status!=='open'&&joined&&<span className="chip">Qualified quantity: {deal.my_quantity}</span>}
+              </div>
+
+              <details className="mt-3 border-t border-slate-200 pt-3">
+                <summary className="cursor-pointer text-sm font-black text-slate-600">How nearby matching works</summary>
+                <p className="muted mt-2 text-sm leading-6">Verified neighbours are grouped automatically within up to {deal.circle_radius_m} metres. Exact coordinates are private. A circle cannot produce a valid deal below 5 qualified people. Target fulfilment: {shortDate(deal.pickup_at)}.</p>
+              </details>
+            </article>
+          })}</div>}
+    </div>
+  </AppShell>
 }
