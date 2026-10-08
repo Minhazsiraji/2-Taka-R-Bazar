@@ -1,12 +1,21 @@
 import { completeOnboarding, restartSignupWithAnotherPhone } from '@/app/actions/auth'
+import { cookies } from 'next/headers'
 import { PublicHeader } from '@/components/public-header'
 import { PublicFooter } from '@/components/public-footer'
 import { SubmitButton } from '@/components/submit-button'
 import { requireUser } from '@/lib/auth'
+import { COMMUNITY_QR_CODE_COOKIE, normalizeCommunityQrCode } from '@/lib/community-qr'
 
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
   const { supabase, user } = await requireUser()
   const { error, notice } = await searchParams
+  const store=await cookies()
+  const qrCode=normalizeCommunityQrCode(store.get(COMMUNITY_QR_CODE_COOKIE)?.value)
+  let qrCommunity:any=null
+  if(qrCode){
+    const {data:qrRows}=await supabase.rpc('get_public_community_qr',{p_code:qrCode})
+    qrCommunity=Array.isArray(qrRows)?qrRows[0]:null
+  }
   const { data: communities } = await supabase.from('communities').select('id,name').eq('active', true).order('sort_order')
 
   return <main className="min-h-screen bg-slate-50 text-black">
@@ -24,7 +33,14 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             <p className="mt-1.5 text-xs leading-5 text-slate-500">This number is locked because it has already been OTP verified.</p>
           </div>
           <label><span className="label">Household label</span><input className="input" name="household_name" placeholder="e.g. Siraji Family" required /></label>
-          <label><span className="label">Community</span><select className="input" name="community_id" required><option value="">Choose community</option>{communities?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+          {qrCommunity
+            ? <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4">
+                <div className="text-[10px] font-black uppercase tracking-[.14em] text-cyan-700">Scanned community · {qrCode}</div>
+                <div className="mt-1 text-lg font-black">{qrCommunity.community_name}</div>
+                <p className="muted mt-1 text-xs">This community came from your QR scan and is locked for this onboarding. A QR cannot silently move an existing household later.</p>
+                <input type="hidden" name="community_id" value={qrCommunity.community_id}/>
+              </div>
+            : <label><span className="label">Community</span><select className="input" name="community_id" required><option value="">Choose community</option>{communities?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
           <label><span className="label">Building / road / landmark (optional)</span><input className="input" name="address_hint" /></label>
           <label><span className="label">Google Maps share URL (optional)</span><input className="input" name="google_maps_url" type="url" placeholder="https://maps.app.goo.gl/..." /></label>
           <SubmitButton>Finish setup</SubmitButton>

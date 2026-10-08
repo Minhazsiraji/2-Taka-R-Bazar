@@ -7,6 +7,12 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { requireUser } from '@/lib/auth'
 import { toBdE164Phone } from '@/lib/bd-phone.mjs'
+import {
+  COMMUNITY_QR_CODE_COOKIE,
+  COMMUNITY_QR_SCAN_COOKIE,
+  COMMUNITY_QR_SOURCE_COOKIE,
+  normalizeCommunityQrCode,
+} from '@/lib/community-qr'
 
 function getText(formData: FormData, key: string) { return String(formData.get(key) ?? '').trim() }
 
@@ -62,7 +68,12 @@ export async function verifyPhoneOtp(formData: FormData) {
   }
   cookieStore.delete('bp_otp_phone'); cookieStore.delete('bp_otp_mode')
   revalidatePath('/', 'layout')
-  if (mode === 'signup') redirect('/onboarding?notice=Mobile+verified.+Complete+your+household+profile')
+  const qrCode=normalizeCommunityQrCode(cookieStore.get(COMMUNITY_QR_CODE_COOKIE)?.value)
+  if (mode === 'signup') {
+    const notice=qrCode?'Mobile verified. Complete your household profile to join your scanned community.':'Mobile verified. Complete your household profile.'
+    redirect('/onboarding?notice='+encodeURIComponent(notice))
+  }
+  if(qrCode) redirect('/community-invite/'+encodeURIComponent(qrCode)+'?notice='+encodeURIComponent('Mobile verified. Confirm your community to continue.'))
   redirect('/home')
 }
 
@@ -79,11 +90,45 @@ const onboardingSchema = z.object({ full_name: z.string().min(2).max(100), house
 export async function completeOnboarding(formData: FormData) {
   const { supabase, user } = await requireUser(); const phone = user.phone
   if (!phone) redirect('/onboarding?error=Verified+mobile+number+is+required')
-  const payload = { full_name:getText(formData,'full_name'), household_name:getText(formData,'household_name'), community_id:getText(formData,'community_id'), address_hint:getText(formData,'address_hint'), google_maps_url:getText(formData,'google_maps_url') }
+
+  const cookieStore=await cookies()
+  const qrCode=normalizeCommunityQrCode(cookieStore.get(COMMUNITY_QR_CODE_COOKIE)?.value)
+  let forcedCommunityId=''
+  let qrCommunityName=''
+  if(qrCode){
+    const {data:qrRows}=await supabase.rpc('get_public_community_qr',{p_code:qrCode})
+    const qr=Array.isArray(qrRows)?qrRows[0]:null
+    if(qr){ forcedCommunityId=String(qr.community_id); qrCommunityName=String(qr.community_name) }
+  }
+
+  const payload = {
+    full_name:getText(formData,'full_name'),
+    household_name:getText(formData,'household_name'),
+    community_id:forcedCommunityId||getText(formData,'community_id'),
+    address_hint:getText(formData,'address_hint'),
+    google_maps_url:getText(formData,'google_maps_url')
+  }
   const parsed = onboardingSchema.safeParse(payload); if (!parsed.success) redirect('/onboarding?error=Please+check+the+required+profile+fields')
   const { error } = await supabase.from('profiles').update({ full_name:parsed.data.full_name, phone, household_name:parsed.data.household_name, community_id:parsed.data.community_id, pickup_point_id:null, address_hint:parsed.data.address_hint||null, google_maps_url:parsed.data.google_maps_url||null, onboarding_completed_at:new Date().toISOString() }).eq('id',user.id)
   if (error) redirect(`/onboarding?error=${encodeURIComponent(error.message)}`)
-  const cookieStore=await cookies(); const referralCode=cookieStore.get('bp_ref_code')?.value; if(referralCode) await supabase.rpc('apply_referral_code',{p_code:referralCode}); cookieStore.delete('bp_ref_code'); revalidatePath('/','layout'); redirect('/home')
+
+  const referralCode=cookieStore.get('bp_ref_code')?.value
+  if(referralCode) await supabase.rpc('apply_referral_code',{p_code:referralCode})
+  cookieStore.delete('bp_ref_code')
+
+  if(qrCode&&forcedCommunityId){
+    const scanRaw=cookieStore.get(COMMUNITY_QR_SCAN_COOKIE)?.value
+    const scanToken=scanRaw&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(scanRaw)?scanRaw:null
+    const {error:qrError}=await supabase.rpc('complete_community_qr_conversion',{p_code:qrCode,p_scan_token:scanToken})
+    if(qrError) console.error('Community QR onboarding attribution failed',{code:qrCode,message:qrError.message})
+    cookieStore.delete(COMMUNITY_QR_CODE_COOKIE)
+    cookieStore.delete(COMMUNITY_QR_SCAN_COOKIE)
+    cookieStore.delete(COMMUNITY_QR_SOURCE_COOKIE)
+  }
+
+  revalidatePath('/','layout')
+  const notice=qrCommunityName?'Welcome to '+qrCommunityName+'. You can now browse active Pools and Group Deals.':'Household setup complete.'
+  redirect('/home?notice='+encodeURIComponent(notice))
 }
 
 export async function updateProfile(formData: FormData) {
