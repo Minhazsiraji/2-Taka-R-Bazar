@@ -161,7 +161,7 @@ export default async function OrdersPage({searchParams}:{searchParams:Promise<{e
 
               <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 sm:text-sm">
                 <input className="mt-1 h-4 w-4 shrink-0" type="checkbox" name="policy_accepted" required/>
-                <span>I agree to the <Link className="font-bold underline" href="/terms" target="_blank">Terms</Link>, <Link className="font-bold underline" href="/return-policy" target="_blank">Return Policy</Link> and <Link className="font-bold underline" href="/refund-policy" target="_blank">Refund Policy</Link>.<span className="mt-1 block text-slate-600" lang="bn">আমি প্রদর্শিত চূড়ান্ত পণ্যমূল্য এবং নির্বাচিত ডেলিভারি/পিকআপ পদ্ধতিতে এই ক্রয় নিশ্চিত করছি।</span></span>
+                <span>I agree to the <Link className="font-bold underline" href="/terms" target="_blank">Terms & Conditions / ব্যবহারের শর্তাবলি</Link>, <Link className="font-bold underline" href="/return-policy" target="_blank">Return Policy / রিটার্ন নীতি</Link> and <Link className="font-bold underline" href="/refund-policy" target="_blank">Refund Policy / রিফান্ড নীতি</Link>.<span className="mt-1 block text-slate-600" lang="bn">আমি প্রদর্শিত চূড়ান্ত পণ্যমূল্য এবং নির্বাচিত ডেলিভারি/পিকআপ পদ্ধতিতে এই ক্রয় নিশ্চিত করছি।</span></span>
               </label>
 
               <SubmitButton>Confirm purchase</SubmitButton>
