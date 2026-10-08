@@ -26,24 +26,23 @@ export function PriceTargetProgress({
   const saving = Math.max(0, benchmarkPrice - nextPrice)
   const hasUnlockedTier = unlockedThreshold > 0 && unlockedPrice > 0
 
-  return <div className="price-target-progress mt-3 rounded-2xl border border-white/80 bg-white/20 p-4">
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <div className="card-title">{hasUnlockedTier?'Next price tier':'First price tier'}</div>
-        <div className="mt-1 text-base font-bold text-slate-900">
-          {hasUnlockedTier
-            ? <>Current tier unlocked: {unlockedThreshold}+ units → {taka(unlockedPrice)}</>
-            : <>Building demand for the first unlock</>}
+  return <div className="price-target-progress mt-3 rounded-xl border border-white/80 bg-white/20 p-3">
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <div className="text-[9px] font-black uppercase tracking-[.12em] text-slate-500">{hasUnlockedTier?'Next price tier':'First price tier'}</div>
+        <div className="mt-1 text-sm font-black">
+          {hasUnlockedTier?taka(unlockedPrice)+' unlocked · ':''}{currentQuantity}/{nextThreshold} units
         </div>
-        <p className="muted mt-1 text-sm">{households} household{households===1?'':'s'} joined · {currentQuantity} / {nextThreshold} units toward the next target</p>
+        <div className="muted mt-1 text-[11px]">{households} household{households===1?'':'s'} joined</div>
       </div>
-      <div className="price-target-unlock text-sm font-bold">
-        {remaining} more unit{remaining===1?'':'s'} → unlock {taka(nextPrice)}
+      <div className="shrink-0 text-right">
+        <div className="text-xs font-black text-emerald-700">{remaining} more → {taka(nextPrice)}</div>
+        <div className="muted mt-1 text-[10px]">save {taka(saving)}/unit</div>
       </div>
     </div>
 
     <div
-      className="price-target-track mt-3 h-3 overflow-hidden"
+      className="price-target-track mt-2 h-2 overflow-hidden"
       role="progressbar"
       aria-label={String(currentQuantity)+' of '+String(nextThreshold)+' units committed toward the next price tier'}
       aria-valuemin={0}
@@ -51,12 +50,6 @@ export function PriceTargetProgress({
       aria-valuenow={Math.min(currentQuantity,nextThreshold)}
     >
       <div className="price-target-fill h-full transition-[width] duration-500" style={{width:String(progress)+'%'}} />
-    </div>
-
-    <div className="price-target-meta mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
-      <span>Next target <b className="text-slate-900">{nextThreshold} units</b></span>
-      <span>Next price <b className="price-target-value">{taka(nextPrice)}</b></span>
-      <span>Saving at next tier <b className="text-emerald-700">{taka(saving)}/unit</b></span>
     </div>
   </div>
 }
