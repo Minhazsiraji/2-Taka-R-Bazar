@@ -18,17 +18,8 @@ export function GroupDealUnlockProgress({
   joined,
 }:Props){
   if(!(nextThreshold>0)||!(nextPrice>0)){
-    return <div className="price-target-progress mt-3 rounded-2xl border border-white/80 bg-white/20 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <div className="card-title">Community price target</div>
-          <div className="mt-1 text-base font-bold text-slate-900">Best listed price tier reached</div>
-        </div>
-        <div className="price-target-unlock text-sm font-bold">Maximum community buying power unlocked</div>
-      </div>
-      <div className="price-target-track mt-3 h-3 overflow-hidden" role="progressbar" aria-label="Best listed Group Deal tier reached" aria-valuemin={0} aria-valuemax={100} aria-valuenow={100}>
-        <div className="price-target-fill h-full w-full transition-[width] duration-500"/>
-      </div>
+    return <div className="price-target-progress mt-3 rounded-xl border border-emerald-100 bg-emerald-50/45 p-3">
+      <div className="flex items-center justify-between gap-3"><div><div className="text-[9px] font-black uppercase tracking-wide text-slate-500">Community price</div><b className="mt-1 block text-sm">Best listed tier reached</b></div><span className="chip text-emerald-700">Unlocked ✓</span></div>
     </div>
   }
 
@@ -40,23 +31,21 @@ export function GroupDealUnlockProgress({
   const progress=Math.max(0,Math.min(100,(progressBuyers/nextThreshold)*100))
   const saving=Math.max(0,marketPrice-nextPrice)
 
-  return <div className="price-target-progress mt-3 rounded-2xl border border-white/80 bg-white/20 p-4">
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+  return <div className="price-target-progress mt-3 rounded-xl border border-white/80 bg-white/20 p-3">
+    <div className="flex items-start justify-between gap-3">
       <div>
-        <div className="card-title">{beforeFirstUnlock?'First price unlock':'Next community price unlock'}</div>
-        <div className="mt-1 text-base font-bold text-slate-900">
-          {progressBuyers} / {nextThreshold} buyer{nextThreshold===1?'':'s'}
-        </div>
+        <div className="text-[9px] font-black uppercase tracking-[.12em] text-slate-500">{beforeFirstUnlock?'First unlock':'Next price tier'}</div>
+        <div className="mt-1 text-sm font-black">{progressBuyers}/{nextThreshold} verified buyers</div>
+        <div className="muted mt-1 text-[11px]">{beforeFirstUnlock&&joined?circleMembers+' active in your circle':qualifiedBuyers+' qualified community buyers'}</div>
       </div>
-      <div className="price-target-unlock text-sm font-bold">
-        {remaining>0
-          ? remaining+' more buyer'+(remaining===1?'':'s')+' needed → '+taka(nextPrice)
-          : 'Unlocking '+taka(nextPrice)}
+      <div className="shrink-0 text-right">
+        <div className="text-xs font-black text-emerald-700">{remaining} more → {taka(nextPrice)}</div>
+        <div className="muted mt-1 text-[10px]">save {taka(saving)}/unit</div>
       </div>
     </div>
 
     <div
-      className="price-target-track mt-3 h-3 overflow-hidden"
+      className="price-target-track mt-2 h-2 overflow-hidden"
       role="progressbar"
       aria-label={progressBuyers+' of '+nextThreshold+' buyers toward the next Group Deal price'}
       aria-valuemin={0}
@@ -66,14 +55,6 @@ export function GroupDealUnlockProgress({
       <div className="price-target-fill h-full transition-[width] duration-500" style={{width:String(progress)+'%'}}/>
     </div>
 
-    <div className="price-target-meta mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
-      <span>Target price <b className="price-target-value">{taka(nextPrice)}</b></span>
-      <span>Target saving <b className="text-emerald-700">{taka(saving)}/unit</b></span>
-      {beforeFirstUnlock&&joined
-        ? <span><b className="text-slate-900">{circleMembers}</b> active in your nearby forming circle</span>
-        : <span><b className="text-slate-900">{qualifiedBuyers}</b> qualified community buyers</span>}
-    </div>
-
-    <p className="muted mt-2 text-xs">Each verified person counts once toward the buyer target, regardless of how many units they commit.</p>
+    <p className="muted mt-2 text-[10px]">Each verified person counts once, regardless of quantity.</p>
   </div>
 }
