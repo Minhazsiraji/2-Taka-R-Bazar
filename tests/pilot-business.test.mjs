@@ -137,12 +137,12 @@ test('customer Pool UI advances compactly from an unlocked tier to the next bett
 test('mobile customer nav returns to the clean attached first-style treatment',()=>{
   const css=readFileSync(new URL('../app/site-customer-experience.css',import.meta.url),'utf8')
   assert.match(css,/Restore the original clean mobile navigation/i)
-  assert.match(css,/inset-inline:0\\s*!important/)
-  assert.match(css,/bottom:0\\s*!important/)
-  assert.match(css,/border-radius:14px 14px 0 0\\s*!important/)
+  assert.match(css,/inset-inline:0/)
+  assert.match(css,/bottom:0/)
+  assert.match(css,/border-radius:14px 14px 0 0/)
   assert.match(css,/app-mobile-nav-link\.is-active/)
-  assert.match(css,/box-shadow:none\\s*!important/)
-  assert.doesNotMatch(css,/left:8px\\s*!important/)
+  assert.match(css,/box-shadow:none/)
+  assert.doesNotMatch(css,/left:8px/)
 })
 
 
