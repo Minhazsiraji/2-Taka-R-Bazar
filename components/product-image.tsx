@@ -16,7 +16,7 @@ export function ProductImage({src,name,variant='card',className='',eager=false}:
   return <div className={`flex items-center justify-center overflow-hidden border border-slate-200 bg-white ${frame} ${className}`}>
     {src?<img
       src={src}
-      alt={`${label} product image`}
+      alt={`${label} product photo`}
       className="block h-full w-full object-contain"
       loading={eager?'eager':'lazy'}
       decoding="async"
