@@ -21,6 +21,12 @@ const PRIVATE_PATHS = [
   '/verify-otp',
   '/feedback',
   '/money',
+  '/join',
+  '/community-invite',
+  '/group-deals',
+  '/supplier',
+  '/preview-demo',
+  '/qr/',
 ]
 
 const PUBLIC_PATHS = ['/', '/about', '/terms', '/return-policy', '/refund-policy', '/faq', '/llms.txt']
