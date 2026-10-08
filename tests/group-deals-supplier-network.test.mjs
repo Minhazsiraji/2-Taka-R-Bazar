@@ -24,7 +24,7 @@ test('Group Deals cannot unlock below five qualified buyers',()=>{
   assert.match(migration,/circle_below_minimum_at_lock/i)
   assert.match(migration,/Deal cannot be locked before the advertised close time/i)
   assert.match(migration,/Cancellation reason required/i)
-  assert.match(customerPage,/A deal never unlocks below 5 qualified people/i)
+  assert.match(customerPage,/One verified person counts once/i)
 })
 
 test('nearby matching uses private precise locations without exposing coordinates',()=>{
@@ -102,14 +102,15 @@ test('join_group_deal qualifies commitment columns that collide with RETURNS TAB
 })
 
 
-test('Group Deal UI shows buyer progress toward the next price tier',()=>{
-  assert.match(groupProgress,/First price unlock/i)
+test('Group Deal UI shows compact buyer progress toward the next price tier',()=>{
+  assert.match(groupProgress,/First unlock/i)
   assert.match(groupProgress,/progressBuyers\/nextThreshold/i)
-  assert.match(groupProgress,/more buyer.*needed/i)
+  assert.match(groupProgress,/more →/i)
   assert.match(groupProgress,/price-target-track/i)
   assert.match(groupProgress,/Each verified person counts once/i)
   assert.match(customerPage,/unlockProgressBuyers=buyers===0&&joined/i)
   assert.match(customerPage,/unlockBuyersNeeded=next\?Math\.max\(next-unlockProgressBuyers,0\):0/i)
+  assert.match(customerPage,/Invite neighbours/i)
 })
 
 test('mobile Group Deal location requests automatically once when verification is needed',()=>{
@@ -119,7 +120,8 @@ test('mobile Group Deal location requests automatically once when verification i
   assert.match(geoComponent,/2tbr-group-location-auto-requested-v1/i)
   assert.match(geoComponent,/await verify\(true\)/i)
   assert.match(geoComponent,/sessionStorage/i)
-  assert.match(customerPage,/initialVerified=\{process\.env\.VERCEL_ENV==='preview'\?false:Boolean\(location\?\.verified\)\}/i)
+  assert.match(customerPage,/location\?\.verified[\s\S]*Community location verified/i)
+  assert.match(customerPage,/initialVerified=\{false\}/i)
 })
 
 
