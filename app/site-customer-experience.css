@@ -231,3 +231,8 @@ html[data-theme="dark"] .site-glass-root .app-mobile-nav-link.is-active{
 }
 
 .cx-savings-hero~section>.lg\:grid-cols-2{grid-template-columns:minmax(0,1fr)!important}
+
+@media(max-width:767px){
+.site-glass-root .cx-mobile-ops,.site-glass-root .app-role-link,.site-glass-root .theme-toggle{display:none!important}
+.cx-savings-hero .glass-inset{width:100%!important;min-width:0!important}
+}
