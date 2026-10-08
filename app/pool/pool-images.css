@@ -1,86 +1,9 @@
-/* Pool product photography: maximize useful image area without cropping packs. */
-div:has(> img[alt$=" product image"])[class*="aspect-"] {
-  height: 13rem !important;
-  padding: 0.125rem !important;
-  aspect-ratio: auto !important;
-}
+/* Pool route-safe rules. Layout belongs to the shared customer experience layer. */
 
-div:has(> img[alt$=" product image"])[class*="aspect-"] > img {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: contain !important;
-  object-position: center !important;
-}
-
-/* A pool opened from Home is isolated with the URL fragment; /pool still shows all pools. */
 .pool-view:has(section[id^="pool-"]:target) section[id^="pool-"]:not(:target) {
   display: none !important;
 }
 
 .pool-view section[id^="pool-"]:target {
-  scroll-margin-top: 0.75rem;
-}
-
-@media (max-width: 639px) {
-  .pool-view section[id^="pool-"] {
-    gap: 0.75rem !important;
-    padding-top: 0.75rem !important;
-  }
-
-  .pool-view section[id^="pool-"] > div.grid {
-    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
-    gap: 0.5rem !important;
-  }
-
-  .pool-view section[id^="pool-"] > div.grid > .card {
-    padding: 0.65rem !important;
-    border-radius: 0.8rem !important;
-  }
-
-  .pool-view section[id^="pool-"] > div.grid > .card .card-title {
-    font-size: 0.58rem !important;
-    line-height: 0.8rem !important;
-  }
-
-  .pool-view section[id^="pool-"] > div.grid > .card .metric,
-  .pool-view section[id^="pool-"] > div.grid > .card .text-2xl {
-    font-size: 1.05rem !important;
-    line-height: 1.3rem !important;
-  }
-
-  .pool-view section[id^="pool-"] > div.grid > .card .muted {
-    margin-top: 0.25rem !important;
-    font-size: 0.67rem !important;
-    line-height: 0.95rem !important;
-  }
-
-  .pool-view article.card > div.grid > div {
-    padding: 0.75rem !important;
-  }
-
-  .pool-view article.card [class*="rounded-xl"] {
-    border-radius: 0.75rem !important;
-  }
-
-  .pool-view article.card .mt-5 {
-    margin-top: 0.75rem !important;
-  }
-
-  .pool-view article.card .mt-4 {
-    margin-top: 0.625rem !important;
-  }
-
-  .pool-view article.card .p-3 {
-    padding: 0.65rem !important;
-  }
-}
-
-@media (min-width: 640px) {
-  div:has(> img[alt$=" product image"])[class*="aspect-"] {
-    height: auto !important;
-    aspect-ratio: 4 / 3 !important;
-    padding: 0.25rem !important;
-  }
+  scroll-margin-top: 5.5rem;
 }

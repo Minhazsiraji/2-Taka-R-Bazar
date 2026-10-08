@@ -21,7 +21,6 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
   const isSuperAdmin=roles.has('super_admin')
   const isAdmin=roles.has('admin')||isSuperAdmin
   const isPickup=roles.has('pickup_operator')||isSuperAdmin
-  const mobileOpsHref=isAdmin?'/admin':isPickup?'/pickup-ops':null
 
   return <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-[linear-gradient(135deg,#f8fdff,#eaf8ff_50%,#f8fdff)] text-slate-950">
     <header className="app-shell-header sticky top-0 z-40 w-full px-3 pt-2 sm:px-5">
@@ -37,10 +36,8 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
 
           <div className="app-role-actions flex min-w-0 flex-1 items-center justify-end gap-1 text-[10px] sm:gap-2 sm:text-xs">
             <Link href="/money" className="cx-header-action shrink-0 rounded-full border border-violet-300 bg-violet-50 px-3 py-2 font-black text-violet-800 shadow-sm hover:bg-violet-100" aria-label="Open My Money dashboard">💰 <span className="hidden sm:inline">My Money</span></Link>
-            <ThemeToggle className="hidden md:inline-flex"/>
+            <ThemeToggle className="cx-header-theme hidden md:inline-flex"/>
             <Suspense fallback={<NotificationBellFallback/>}><NotificationBell/></Suspense>
-
-            {mobileOpsHref&&<Link href={mobileOpsHref} aria-label="Operations tools" className="cx-mobile-ops inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white bg-white/70 text-base font-black text-blue-700 shadow-sm md:hidden">⚙</Link>}
 
             {isPickup&&<Link className="app-role-link hidden shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm md:inline-flex" href="/pickup-ops"><span aria-hidden="true">▣</span><span className="role-label">Pickup Ops</span></Link>}
             {isAdmin&&<Link className="app-role-link hidden shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm md:inline-flex" href="/admin"><span aria-hidden="true">⚙</span><span className="role-label">Operations</span></Link>}

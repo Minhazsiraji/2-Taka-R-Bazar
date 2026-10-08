@@ -244,7 +244,7 @@ export default async function HomePage(){
           <Link href="/pool" className="text-sm font-black text-cyan-700">View all →</Link>
         </div>
 
-        {pools.length?<div className="grid gap-3 lg:grid-cols-2">{pools.slice(0,4).map((pool:any)=>{
+        {pools.length?<div className="cx-list-grid">{pools.slice(0,4).map((pool:any)=>{
           const stats=poolStats.get(pool.id)??{joined:0,units:0,savingPotential:0,bestNext:null}
           const itemCount=(pool.pool_items??[]).length
           return <article key={pool.id} className="card p-4">
@@ -279,7 +279,7 @@ export default async function HomePage(){
           <div><p className="text-[10px] font-black uppercase tracking-[.16em] text-sky-700">Nearby</p><h2 className="mt-1 text-xl font-black sm:text-2xl">Neighbour deals</h2></div>
           <Link href="/group-deals" className="text-sm font-black text-cyan-700">View all →</Link>
         </div>
-        <div className="grid gap-3 lg:grid-cols-2">{openDeals.slice(0,2).map((deal:any)=>{
+        <div className="cx-list-grid">{openDeals.slice(0,2).map((deal:any)=>{
           const price=Number(deal.current_price??0)
           const next=Number(deal.next_threshold??0)
           const buyers=Number(deal.buyer_count??0)
