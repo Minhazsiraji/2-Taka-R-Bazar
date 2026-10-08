@@ -24,7 +24,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     <section><h1 className="text-2xl font-black sm:text-3xl">Profile</h1><p className="muted mt-1 text-sm">Community: {community?.name}</p></section>
     {error && <div className="error">{error}</div>}{notice && <div className="success">{notice}</div>}
 
-    <form action={updateProfile} className="card grid gap-4">
+    <form action={updateProfile} className="card cx-glass-card grid gap-4">
       <label><span className="label">Full name</span><input className="input" name="full_name" defaultValue={profile.full_name ?? ''} required /></label>
       <label><span className="label">Verified mobile</span><input className="input bg-slate-100" value={user.phone ?? profile.phone ?? ''} readOnly aria-readonly="true" /></label>
       <p className="-mt-2 text-xs text-slate-500">Mobile changes require a new OTP verification flow.</p>
@@ -36,12 +36,12 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       <SubmitButton>Save profile</SubmitButton>
     </form>
 
-    <section className="card p-4">
+    <section className="card cx-glass-card p-4">
       <div className="card-title">App preferences</div>
       <div className="mt-3 flex flex-wrap items-center gap-2"><ThemeToggle/><Link href="/money" className="btn-secondary">💰 My Money</Link></div>
     </section>
 
-    {(isAdmin||isPickup)&&<section className="card p-4">
+    {(isAdmin||isPickup)&&<section className="card cx-glass-card p-4">
       <div className="card-title">Work tools</div>
       <p className="muted mt-1 text-sm">Customer shopping stays uncluttered. Operational tools live here instead of the mobile shopping header.</p>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -51,7 +51,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       </div>
     </section>}
 
-    <section className="card p-4">
+    <section className="card cx-glass-card p-4">
       <div className="card-title">Help & legal</div>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">{LEGAL_LINKS.map(([href,label])=><Link key={href} href={href} className="rounded-xl border border-slate-200 bg-white/45 px-3 py-2 text-sm font-bold hover:bg-sky-50">{label}</Link>)}</div>
     </section>

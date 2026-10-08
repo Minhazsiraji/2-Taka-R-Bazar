@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { readFileSync } from 'node:fs'
 import { loadSource } from './helpers/load-tsx.mjs'
 const link = ({ children, ...props }) => createElement('a', props, children)
 
@@ -32,42 +33,22 @@ test('Pool progress continues toward the next tier after a price unlock', async 
   assert.match(html, /aria-valuenow="10"/)
 })
 
-test('production, development and unset environments reject demo before touching authentication', async () => {
-  for (const VERCEL_ENV of ['production', 'development', undefined]) {
-    const { GET } = await loadSource('app/preview-demo/route.ts', {
-      'next/server': { NextResponse: { redirect: url => ({ url: String(url) }) } },
-      '@/lib/supabase/server': { createClient: () => { throw new Error('Authentication must not run') } },
-    }, { VERCEL_ENV })
-    for (const host of ['2takarbazar.com', 'www.2takarbazar.com']) {
-      const response = await GET({ url: `https://${host}/preview-demo` })
-      assert.ok(response.url.startsWith(`https://${host}/login?error=`))
-    }
-  }
+test('Preview demo is hard-gated to Vercel Preview and contains no auth bypass',()=> {
+  const page = readFileSync(new URL('../app/preview-demo/page.tsx', import.meta.url),'utf8')
+  assert.match(page,/process\.env\.VERCEL_ENV!=='preview'/)
+  assert.match(page,/redirect\('\/login\?error=Preview\+demo\+is\+available\+only\+on\+Preview\+deployments'\)/)
+  assert.doesNotMatch(page,/signInAnonymously/)
+  assert.doesNotMatch(page,/requestLoginOtp/)
+  assert.doesNotMatch(page,/service_role/i)
 })
 
-test('preview demo uses anonymous auth and the E2E community without SMS or privileged clients', async () => {
-  const calls = []
-  const chain = table => {
-    const q = {
-      select() { return q }, eq(key, value) { calls.push([table, key, value]); return q },
-      order() { return q }, limit() { return q },
-      update(value) { calls.push([table, 'update', value]); return q },
-      maybeSingle: async () => ({ data: { id: table === 'communities' ? 'synthetic-community' : 'synthetic-pickup' } }),
-    }
-    return q
-  }
-  const { GET } = await loadSource('app/preview-demo/route.ts', {
-    'next/server': { NextResponse: { redirect: url => ({ url: String(url) }) } },
-    '@/lib/supabase/server': { createClient: async () => ({
-      auth: { getUser: async () => ({ data: {} }), signInAnonymously: async () => ({ data: { user: { id: '00000000-0000-0000-0000-000000000001' } } }) },
-      from: chain,
-    }) },
-  }, { VERCEL_ENV: 'preview' })
-  const result = await GET({ url: 'https://example.vercel.app/preview-demo' })
-  assert.equal(result.url, 'https://example.vercel.app/home')
-  assert.ok(calls.some(c => c[0] === 'communities' && c[1] === 'slug' && c[2] === 'e2e-uat-community'))
-  const update = calls.find(c => c[1] === 'update')[2]
-  assert.equal(update.community_id, 'synthetic-community')
-  assert.equal(update.full_name, 'Preview Demo Customer')
-  assert.ok(calls.every(c => !['user_roles', 'supplier_users'].includes(c[0])))
+test('Preview demo is synthetic and covers all customer UAT sections without SMS',()=> {
+  const page = readFileSync(new URL('../app/preview-demo/page.tsx', import.meta.url),'utf8')
+  for (const label of ['Home','Pools','Group Deals','Orders','Savings']) assert.match(page,new RegExp(label))
+  assert.match(page,/Preview-only synthetic UAT/)
+  assert.match(page,/no SMS\/OTP used/)
+  assert.match(page,/no Production customer data shown/)
+  assert.match(page,/Amin Model Town/)
+  assert.match(page,/Rupchanda Soybean Oil 5L/)
+  assert.match(page,/Pusti Atta 2kg/)
 })

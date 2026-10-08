@@ -33,7 +33,7 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
       {dealError&&<div className="error">Group Deals are temporarily unavailable.</div>}
 
       {location?.verified
-        ? <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/70 px-4 py-3">
+        ? <div className="cx-glass-subcard flex flex-wrap items-center justify-between gap-2 rounded-2xl px-4 py-3">
             <div className="flex items-center gap-2"><span aria-hidden="true">📍</span><div><b>Community location verified</b><p className="muted text-xs">Nearby matching is active; your exact GPS point stays private.</p></div></div>
             <span className="chip border-emerald-200 bg-white text-emerald-700">Verified ✓</span>
           </div>
@@ -43,7 +43,7 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
           />}
 
       {!deals?.length
-        ? <div className="card p-6 text-center"><h2 className="text-xl font-black">No Group Deal is open right now</h2><p className="muted mt-2 text-sm">New verified nearby opportunities will appear here when Operations opens them.</p></div>
+        ? <div className="card cx-glass-card p-6 text-center"><h2 className="text-xl font-black">No Group Deal is open right now</h2><p className="muted mt-2 text-sm">New verified nearby opportunities will appear here when Operations opens them.</p></div>
         : <div className="grid gap-3">{deals.map((deal:any)=>{
             const joined=Number(deal.my_quantity||0)>0
             const buyers=Number(deal.buyer_count||0)
@@ -55,7 +55,7 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
             const unlockProgressBuyers=buyers===0&&joined?Math.min(circleMembers,next):Math.min(buyers,next)
             const unlockBuyersNeeded=next?Math.max(next-unlockProgressBuyers,0):0
 
-            return <article className="card cx-compact-product min-w-0 p-4 sm:p-5" key={deal.deal_id}>
+            return <article className="card cx-glass-card cx-compact-product min-w-0 p-4 sm:p-5" key={deal.deal_id}>
               <div className="cx-product-heading">
                 <ProductImage src={deal.image_url} name={deal.product_name} className="cx-product-photo"/>
                 <div className="min-w-0">
@@ -87,7 +87,7 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
                 {joined&&<span className="cx-compact-chip">Your qty {deal.my_quantity}</span>}
               </div>
 
-              {next>0&&<div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-100 bg-emerald-50/55 p-3">
+              {next>0&&<div className="cx-glass-subcard mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl p-3">
                 <div>
                   <div className="text-xs font-black text-slate-700">{unlockBuyersNeeded} more verified neighbour{unlockBuyersNeeded===1?'':'s'} can unlock {taka(Number(deal.next_price))}</div>
                   <div className="muted mt-1 text-[11px]">Sharing helps discovery; only separately verified people count.</div>

@@ -54,10 +54,10 @@ export default async function SavingsPage(){
         <div><p className="text-[10px] font-black uppercase tracking-[.16em] text-slate-500">Verified history</p><h2 className="mt-1 text-xl font-black">Where you saved</h2></div>
 
         {(rows??[]).length===0
-          ? <div className="card p-6 text-center"><div className="text-3xl">🪙</div><h3 className="mt-3 text-lg font-black">Your first saving is ahead</h3><p className="muted mt-2 text-sm">Verified product savings appear here after an order is successfully fulfilled.</p></div>
+          ? <div className="card cx-glass-card p-6 text-center"><div className="text-3xl">🪙</div><h3 className="mt-3 text-lg font-black">Your first saving is ahead</h3><p className="muted mt-2 text-sm">Verified product savings appear here after an order is successfully fulfilled.</p></div>
           : (rows??[]).map((r:any)=>{
               const product=r.order_items?.products
-              return <div className="card min-w-0 p-3 sm:p-4" key={r.id}>
+              return <div className="card cx-glass-card min-w-0 p-3 sm:p-4" key={r.id}>
                 <div className="grid min-w-0 grid-cols-[64px_minmax(0,1fr)_auto] items-center gap-3 sm:grid-cols-[76px_minmax(0,1fr)_auto]">
                   <ProductImage src={product?.image_url} name={product?.name} variant="thumb" className="!h-14 !w-16 sm:!h-16 sm:!w-20"/>
                   <div className="min-w-0">

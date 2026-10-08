@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
         {previewMode && <div className="mb-5 rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
           <div className="text-sm font-black text-cyan-950">Preview review mode</div>
-          <p className="mt-1 text-xs leading-5 text-cyan-900">Open the customer app with an isolated E2E demo account. No SMS or OTP credit is used.</p>
+          <p className="mt-1 text-xs leading-5 text-cyan-900">Open a Preview-only synthetic UAT view of Home, Pools, Deals, Orders and Savings. No SMS or OTP credit is used.</p>
           <Link href="/preview-demo" className="btn-primary mt-3 w-full">Open Preview without OTP</Link>
         </div>}
 

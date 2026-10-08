@@ -113,7 +113,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
       {notice&&<div className="success">{notice}</div>}
 
       {!visiblePools.length
-        ? <div className="card p-6 text-center"><h2 className="text-xl font-black">No active pool right now</h2><p className="muted mt-2">The next community buying opportunity will appear here as soon as it opens.</p></div>
+        ? <div className="card cx-glass-card p-6 text-center"><h2 className="text-xl font-black">No active pool right now</h2><p className="muted mt-2">The next community buying opportunity will appear here as soon as it opens.</p></div>
         : visiblePools.map((pool:any)=>{
           const poolItems=items.filter((item:any)=>item.pool_id===pool.id)
           const joined=participation.get(pool.id)??{joined:0,units:0}
@@ -128,7 +128,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
           const potentialBasket=allUnlocked?Math.max(0,benchmarkBasket-unlockedBasket):0
 
           return <section id={'pool-'+pool.id} key={pool.id} className="grid min-w-0 gap-3 border-t border-slate-200 pt-4 first:border-t-0 first:pt-0">
-            <div className="card p-4">
+            <div className="card cx-glass-card p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -178,7 +178,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
                 const irs=ratingSummary(irevs)
                 const ownItemReview=irevs.find((x:any)=>x.user_id===user.id)
 
-                return <article className="card cx-compact-product min-w-0 p-4 sm:p-5" key={item.id}>
+                return <article className="card cx-glass-card cx-compact-product min-w-0 p-4 sm:p-5" key={item.id}>
                   <div className="cx-product-heading">
                     <ProductImage src={product?.image_url} name={product?.name} className="cx-product-photo"/>
                     <div className="min-w-0">
@@ -214,7 +214,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
                     benchmarkPrice={bench}
                   />
 
-                  {nextThreshold>0&&<div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-emerald-100 bg-emerald-50/55 p-3">
+                  {nextThreshold>0&&<div className="cx-glass-subcard mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl p-3">
                     <div>
                       <div className="text-xs font-black text-slate-700">{unitsNeeded} more unit{unitsNeeded===1?'':'s'} can unlock {taka(nextPrice)}</div>
                       <div className="muted mt-1 text-[11px]">Share the target with neighbours; quantity still comes from real commitments.</div>
@@ -263,10 +263,10 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
                 </article>
               })}
 
-              {poolItems.length===0&&<div className="card"><p className="muted">No items have been added to this pool yet.</p></div>}
+              {poolItems.length===0&&<div className="card cx-glass-card"><p className="muted">No items have been added to this pool yet.</p></div>}
             </div>
 
-            {(reviews.filter((r:any)=>r.comment).length>0||completedPoolIds.has(pool.id))&&<details className="card p-4">
+            {(reviews.filter((r:any)=>r.comment).length>0||completedPoolIds.has(pool.id))&&<details className="card cx-glass-card p-4">
               <summary className="cursor-pointer text-sm font-black">Pool feedback</summary>
               <div className="mt-3 grid gap-3">
                 {reviews.filter((r:any)=>r.comment).slice(0,2).map((r:any,index:number)=><blockquote key={String(r.user_id)+'-'+index} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm"><div className="font-black text-amber-500">★ {r.rating}/5</div><p className="mt-1 text-slate-700">“{r.comment}”</p><p className="mt-1 text-xs font-bold text-slate-500">Verified buyer</p></blockquote>)}
@@ -282,7 +282,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
           </section>
         })}
 
-      <div className="card p-4">
+      <div className="card cx-glass-card p-4">
         <div className="flex items-start gap-3">
           <span className="text-xl">🛡️</span>
           <div><div className="card-title">Price promise</div><p className="muted mt-1 text-sm leading-6"><b className="text-slate-900">An unlocked maximum price cannot increase.</b> Final supplier negotiation can only keep it or improve it. Delivery stays separate from product savings.</p></div>

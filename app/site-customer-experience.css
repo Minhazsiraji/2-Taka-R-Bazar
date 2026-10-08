@@ -83,3 +83,171 @@ html[data-theme="dark"]{--cx-surface:#122334;--cx-ink:#f1f5f9;--cx-muted:#bccbdc
  .app-mobile-nav-link.is-active{color:var(--cx-accent);background:var(--cx-nav-active)}
  .app-mobile-nav-link.is-active::before{content:'';position:absolute;top:0;left:25%;right:25%;height:3px;background:#22c7d2;border-radius:0 0 3px 3px}
 }
+
+/* Human UAT correction — final customer glass/rim and mobile navigation contrast. */
+:root{
+  --cx-brand-rim:rgba(34,211,238,.58);
+  --cx-brand-rim-soft:rgba(45,212,191,.34);
+  --cx-brand-glow:0 12px 30px rgba(14,165,233,.09),0 0 0 1px rgba(34,211,238,.12),inset 0 1px 0 rgba(255,255,255,.86);
+  --cx-clear-glass:linear-gradient(135deg,rgba(255,255,255,.58),rgba(244,250,255,.30));
+  --cx-clear-glass-strong:linear-gradient(135deg,rgba(255,255,255,.72),rgba(239,249,255,.42));
+}
+html[data-theme="dark"]{
+  --cx-brand-rim:rgba(74,222,228,.50);
+  --cx-brand-rim-soft:rgba(45,212,191,.28);
+  --cx-brand-glow:0 14px 32px rgba(0,0,0,.24),0 0 18px rgba(45,212,191,.08),inset 0 1px 0 rgba(255,255,255,.07);
+  --cx-clear-glass:linear-gradient(135deg,rgba(8,24,34,.76),rgba(8,17,28,.62));
+  --cx-clear-glass-strong:linear-gradient(135deg,rgba(9,31,40,.86),rgba(9,20,32,.72));
+}
+
+/* Home hero, mission, quick actions, Pool cards and Group Deal cards use one material. */
+.site-glass-root :is(.cx-savings-hero,.cx-mission-card,.cx-saving-stat,.cx-opportunity-card,.cx-glass-card){
+  border:1px solid var(--cx-brand-rim)!important;
+  background:var(--cx-clear-glass)!important;
+  box-shadow:var(--cx-brand-glow)!important;
+  backdrop-filter:blur(22px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(145%)!important;
+}
+.site-glass-root .cx-savings-hero{background:var(--cx-clear-glass-strong)!important}
+.site-glass-root :is(.cx-saving-stat,.cx-opportunity-card){
+  border-color:var(--cx-brand-rim-soft)!important;
+  border-radius:18px!important;
+  color:var(--cx-ink)!important;
+}
+.site-glass-root .cx-saving-stat{
+  min-height:118px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.site-glass-root .cx-opportunity-card{
+  min-height:126px;
+  justify-content:space-between;
+  padding:14px 15px;
+}
+.site-glass-root .cx-opportunity-heading strong{font-size:.95rem;line-height:1.2}
+.site-glass-root .cx-count-badge{
+  border:1px solid var(--cx-brand-rim-soft);
+  background:rgba(255,255,255,.42);
+  color:#0f766e;
+}
+html[data-theme="dark"] .site-glass-root .cx-count-badge{
+  background:rgba(15,41,49,.72);
+  color:#99f6e4;
+}
+.site-glass-root .cx-opportunity-helper{
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+.site-glass-root .cx-opportunity-status{
+  font-size:.72rem;
+  font-weight:800;
+}
+.site-glass-root .cx-signal.is-live{
+  background:#10b981;
+  box-shadow:0 0 0 3px rgba(16,185,129,.13);
+}
+@media (hover:hover) and (pointer:fine){
+  .site-glass-root .cx-opportunity-card:hover,
+  .site-glass-root .cx-saving-stat:hover{
+    border-color:rgba(34,211,238,.84)!important;
+    transform:translateY(-1px);
+    box-shadow:0 14px 34px rgba(14,165,233,.12),0 0 18px rgba(45,212,191,.10),inset 0 1px 0 rgba(255,255,255,.9)!important;
+  }
+}
+
+/* Keep regular customer cards on the same clear-glass visual language. */
+.site-glass-root main .card.cx-glass-card{
+  border-color:var(--cx-brand-rim)!important;
+  background:var(--cx-clear-glass)!important;
+  box-shadow:var(--cx-brand-glow)!important;
+}
+
+/* Header theme button is always visible in the customer mobile shell. */
+@media (max-width:767px){
+  .site-glass-root .cx-header-theme{
+    display:inline-flex!important;
+    width:40px!important;
+    height:40px!important;
+    min-width:40px!important;
+    min-height:40px!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0!important;
+    opacity:1!important;
+    visibility:visible!important;
+  }
+  .site-glass-root .cx-header-theme .theme-toggle-icon{
+    display:inline-block!important;
+    color:inherit!important;
+    font-size:1rem!important;
+    opacity:1!important;
+  }
+  .site-glass-root .cx-header-theme .theme-toggle-label{display:none!important}
+
+  /* Attached customer dock: stronger readable labels in both themes. */
+  .site-glass-root .app-mobile-nav{
+    display:block!important;
+    border-top:1px solid var(--cx-brand-rim)!important;
+    background:rgba(248,252,255,.94)!important;
+    box-shadow:0 -8px 22px rgba(15,23,42,.10),0 0 16px rgba(34,211,238,.06)!important;
+    backdrop-filter:blur(18px) saturate(150%)!important;
+    -webkit-backdrop-filter:blur(18px) saturate(150%)!important;
+  }
+  .site-glass-root .app-mobile-nav-link{
+    min-height:60px!important;
+    color:#334155!important;
+    opacity:1!important;
+    font-size:11px!important;
+    font-weight:800!important;
+    letter-spacing:0!important;
+    text-shadow:none!important;
+  }
+  .site-glass-root .app-mobile-nav-link>span{
+    color:inherit!important;
+    opacity:1!important;
+  }
+  .site-glass-root .app-mobile-nav-link.is-active{
+    color:#075985!important;
+    background:linear-gradient(180deg,rgba(207,250,254,.78),rgba(236,254,255,.68))!important;
+  }
+  .site-glass-root .app-mobile-nav-link.is-active::before{
+    left:20%!important;
+    right:20%!important;
+    height:3px!important;
+    background:linear-gradient(90deg,#22d3ee,#14b8a6)!important;
+    box-shadow:0 0 10px rgba(34,211,238,.45);
+  }
+
+  html[data-theme="dark"] .site-glass-root .app-mobile-nav{
+    background:rgba(7,16,26,.95)!important;
+    border-top-color:rgba(74,222,228,.44)!important;
+    box-shadow:0 -8px 24px rgba(0,0,0,.28),0 0 16px rgba(45,212,191,.05)!important;
+  }
+  html[data-theme="dark"] .site-glass-root .app-mobile-nav-link{
+    color:#d7e3f2!important;
+    opacity:1!important;
+  }
+  html[data-theme="dark"] .site-glass-root .app-mobile-nav-link.is-active{
+    color:#ecfeff!important;
+    background:linear-gradient(180deg,rgba(15,79,88,.78),rgba(8,35,44,.78))!important;
+  }
+
+  .site-glass-root .cx-saving-stat{min-height:104px}
+  .site-glass-root .cx-opportunity-grid{gap:10px}
+  .site-glass-root .cx-opportunity-card{min-height:116px;padding:13px}
+}
+
+/* Secondary information surfaces inherit the same clear-glass material. */
+.site-glass-root :is(.cx-glass-subcard,.price-target-progress,.cx-commitment,.cx-price-grid){
+  border:1px solid var(--cx-brand-rim-soft)!important;
+  background:linear-gradient(135deg,rgba(255,255,255,.44),rgba(244,250,255,.20))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 8px 18px rgba(14,165,233,.05)!important;
+  backdrop-filter:blur(16px) saturate(135%)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(135%)!important;
+}
+html[data-theme="dark"] .site-glass-root :is(.cx-glass-subcard,.price-target-progress,.cx-commitment,.cx-price-grid){
+  background:linear-gradient(135deg,rgba(10,29,40,.70),rgba(9,19,31,.54))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 8px 18px rgba(0,0,0,.16)!important;
+}

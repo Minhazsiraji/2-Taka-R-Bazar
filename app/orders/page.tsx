@@ -44,7 +44,7 @@ export default async function OrdersPage({searchParams}:{searchParams:Promise<{e
     const productSaving=Math.max(0,marketValue-productSubtotal)
     const deliveryFee=Number(o.delivery_fee??0)
 
-    return <article className="card min-w-0 p-4 sm:p-5" key={o.id}>
+    return <article className="card cx-glass-card min-w-0 p-4 sm:p-5" key={o.id}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-black">{o.order_code}</h3>
@@ -129,7 +129,7 @@ export default async function OrdersPage({searchParams}:{searchParams:Promise<{e
           const existingOrder=existingOrderByPool.get(pool?.id) as any
           const pickupOptions=pickupsByPool.get(pool?.id)??[]
 
-          return <div className="card min-w-0 p-4 sm:p-5" key={c.id}>
+          return <div className="card cx-glass-card min-w-0 p-4 sm:p-5" key={c.id}>
             <div className="grid min-w-0 grid-cols-[64px_minmax(0,1fr)] gap-3 sm:grid-cols-[80px_minmax(0,1fr)]">
               <ProductImage src={product?.image_url} name={product?.name} variant="thumb" className="!h-16 !w-16 sm:!h-20 sm:!w-20"/>
               <div className="min-w-0">
@@ -175,7 +175,7 @@ export default async function OrdersPage({searchParams}:{searchParams:Promise<{e
         {activeOrders.map(renderOrder)}
       </section>}
 
-      {activeOrders.length===0&&pastOrders.length===0&&confirmable.length===0&&<section className="card p-6 text-center">
+      {activeOrders.length===0&&pastOrders.length===0&&confirmable.length===0&&<section className="card cx-glass-card p-6 text-center">
         <div className="text-3xl">🛒</div>
         <h2 className="mt-3 text-xl font-black">No active orders</h2>
         <p className="muted mx-auto mt-2 max-w-sm text-sm">Join a Pool or Group Deal. Your commitments and fulfilment progress will appear here.</p>

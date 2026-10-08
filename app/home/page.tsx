@@ -219,7 +219,7 @@ export default async function HomePage(){
         </div>
       </section>}
 
-      {readyOrder&&<section className="card p-4">
+      {readyOrder&&<section className="card cx-glass-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="card-title">Ready now</div>
@@ -244,7 +244,7 @@ export default async function HomePage(){
         {pools.length?<div className="cx-list-grid">{pools.slice(0,4).map((pool:any)=>{
           const stats=poolStats.get(pool.id)??{joined:0,units:0,savingPotential:0,bestNext:null}
           const itemCount=(pool.pool_items??[]).length
-          return <article key={pool.id} className="card p-4">
+          return <article key={pool.id} className="card cx-glass-card p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <div className="flex flex-wrap gap-2"><span className="chip capitalize">{pool.cadence??'weekly'} pool</span><StatusPill status={pool.status}/></div>
@@ -260,7 +260,7 @@ export default async function HomePage(){
               {stats.savingPotential>0&&<span className="cx-compact-chip text-emerald-700">↓ {taka(stats.savingPotential)} current saving</span>}
             </div>
 
-            {stats.bestNext&&<div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50/55 p-3">
+            {stats.bestNext&&<div className="cx-glass-subcard mt-3 rounded-xl p-3">
               <div className="flex items-center justify-between gap-2 text-xs font-black">
                 <span>{stats.bestNext.current}/{stats.bestNext.target} units</span>
                 <span className="text-emerald-700">{stats.bestNext.remaining} more → {taka(stats.bestNext.price)}</span>
@@ -268,7 +268,7 @@ export default async function HomePage(){
               <div className="price-target-track mt-2 h-2 overflow-hidden"><div className="price-target-fill h-full" style={{width:String(Math.min(100,Math.round(stats.bestNext.progress*100)))+'%'}}/></div>
             </div>}
           </article>
-        })}</div>:<div className="card p-6 text-center"><h3 className="text-lg font-black">No open pool right now</h3><p className="muted mt-2 text-sm">The next community buying opportunity will appear here.</p></div>}
+        })}</div>:<div className="card cx-glass-card p-6 text-center"><h3 className="text-lg font-black">No open pool right now</h3><p className="muted mt-2 text-sm">The next community buying opportunity will appear here.</p></div>}
       </section>
 
       {openDeals.length>0&&<section>
@@ -283,7 +283,7 @@ export default async function HomePage(){
           const joined=Number(deal.my_quantity??0)>0
           const progressBuyers=Math.min(buyers===0&&joined?Number(deal.circle_members??0):buyers,next||1)
           const remaining=next?Math.max(next-progressBuyers,0):0
-          return <article key={deal.deal_id} className="card p-4">
+          return <article key={deal.deal_id} className="card cx-glass-card p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0"><h3 className="text-lg font-black">{deal.product_name}</h3><p className="muted mt-1 text-xs">{deal.package_size} · closes {shortDate(deal.closes_at)}</p></div>
               <span className="chip">{joined?'Joined':'Open'}</span>
