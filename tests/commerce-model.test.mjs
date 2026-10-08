@@ -54,9 +54,11 @@ test('restructure migration owns no-subscription, margin and basket-delivery inv
 test('customer order UI keeps delivery separate from product savings',()=>{
   const page=readFileSync(new URL('../app/orders/page.tsx',import.meta.url),'utf8')
   const choice=readFileSync(new URL('../components/fulfillment-choice.tsx',import.meta.url),'utf8')
-  assert.match(page,/Savings board/)
   assert.match(page,/Product saving/)
-  assert.match(page,/Product subtotal .* delivery/)
+  assert.match(page,/Community pickup FREE/)
+  assert.match(page,/Home delivery ৳20 up to ৳1,000/)
+  assert.match(page,/deliveryFee/)
+  assert.match(page,/productSubtotal/)
   assert.match(choice,/Community delivery-point collection — FREE/)
   assert.match(choice,/৳20/)
   assert.match(choice,/৳30/)
