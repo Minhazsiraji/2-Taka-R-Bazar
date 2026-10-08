@@ -50,12 +50,14 @@ test('shared product image component is responsive and protects referrer data',(
   assert.match(component,/loading=\{eager\?'eager':'lazy'\}/)
 })
 
-test('Pool keeps product master image as the source of truth',()=>{
+test('Pool keeps product master image as the source of truth through the shared image component',()=>{
   const pool=read('app/pool/page.tsx')
+  const image=read('components/product-image.tsx')
   assert.match(pool,/products\(id,name,brand,category,package_size,unit,image_url,source_type\)/)
-  assert.match(pool,/product\?\.image_url/)
-  assert.match(pool,/object-contain/)
-  assert.match(pool,/aspect-\[4\/3\]/)
+  assert.match(pool,/src=\{product\?\.image_url\}/)
+  assert.match(pool,/ProductImage/)
+  assert.match(image,/object-contain/)
+  assert.match(image,/aspect-\[4\/3\]/)
 })
 
 test('Pool auto-fits legacy images with blank margins without object-cover cropping',()=>{
