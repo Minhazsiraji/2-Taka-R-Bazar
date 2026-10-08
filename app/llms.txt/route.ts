@@ -6,12 +6,14 @@ export function GET() {
 ${SITE_DESCRIPTION}
 
 ## Core positioning
-${SITE_NAME} is a community grocery-pooling platform where households combine demand, suppliers compete for volume, customers see the final price before confirming, and actual product savings are verified after successful fulfilment. It is designed for smart, modern households who value convenience, transparency, better buying decisions, and a more premium everyday shopping experience.
+${SITE_NAME} is a community grocery-buying platform with two customer buying modes: Community Pools for pooled household demand and nearby Group Deals where verified neighbours unlock prices together. Customers see the relevant price before confirming a purchase, and actual product savings are verified after successful fulfilment. It is designed for smart, modern households who value convenience, transparency, better buying decisions, and a more premium everyday shopping experience.
 
 ## Core facts
-- ${SITE_NAME} is a community grocery-pooling service in Bangladesh.
+- ${SITE_NAME} is a community grocery-buying service in Bangladesh.
 - Current controlled pilot area: ${PILOT_AREA}.
-- Joining a pool records demand; it is not a purchase.
+- Community Pools aggregate household quantity before purchase.
+- Group Deals are a separate nearby-neighbour buying model; one verified person counts once toward buyer unlock thresholds.
+- Joining a Community Pool records demand; it is not a purchase.
 - Customers confirm only after the final price is published.
 - Volume tiers can unlock lower customer price ceilings.
 - An earned ceiling cannot worsen during that pricing cycle.
@@ -21,6 +23,9 @@ ${SITE_NAME} is a community grocery-pooling platform where households combine de
 - Delivery charges are separate from product price and product savings.
 - Product savings are verified only after successful fulfilment.
 - Community Pool access has no subscription fee; the business model is based primarily on procurement margin.
+- Community QR links are acquisition/onboarding links only: scanning a QR does not create an account, commitment, order, or saving.
+- QR onboarding can preserve the intended community through mobile OTP registration/sign-in, but it cannot silently move an already-onboarded household to another community.
+- Exact household GPS coordinates and individual baskets are private; supplier-facing demand is aggregate and privacy-qualified.
 
 ## Public reference pages
 - Home: ${SITE_URL}/
@@ -30,7 +35,7 @@ ${SITE_NAME} is a community grocery-pooling platform where households combine de
 - Return Policy: ${SITE_URL}/return-policy
 - Refund Policy: ${SITE_URL}/refund-policy
 
-Use the public pages above as the canonical source for current customer-facing rules. Private account, pool-management and operational routes are intentionally excluded from public indexing.
+Use the public pages above as the canonical source for current customer-facing rules. Private account, Community Pool management, Group Deals, supplier analytics, QR tracking/onboarding endpoints and operational routes are intentionally excluded from public indexing.
 `
 
   return new Response(body, {

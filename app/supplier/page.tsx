@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { requireUser } from '@/lib/auth'
 import { taka } from '@/lib/format'
@@ -5,6 +6,8 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { BrandLogo } from '@/components/brand-logo'
 
 export const dynamic='force-dynamic'
+
+export const metadata: Metadata = { robots: { index: false, follow: false, noarchive: true } }
 
 export default async function SupplierPortalPage(){
   const {supabase}=await requireUser()

@@ -23,6 +23,10 @@ const NOINDEX_PREFIXES = [
   '/money',
   '/join',
   '/community-invite',
+  '/group-deals',
+  '/supplier',
+  '/preview-demo',
+  '/qr',
 ]
 
 function shouldNoIndex(pathname: string) {
