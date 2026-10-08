@@ -1,6 +1,7 @@
 import Image from 'next/image'
+import { SITE_NAME, SITE_TAGLINE_EN } from '@/lib/site'
 
-export function BrandLogo({ size = 56, alt = '2-TAKA-R-BAZAR - Smart Shopping. Real Savings.' }: { size?: number; alt?: string }) {
+export function BrandLogo({ size = 56, alt = `${SITE_NAME} - ${SITE_TAGLINE_EN}` }: { size?: number; alt?: string }) {
   return (
     <Image
       className="brand-logo"
