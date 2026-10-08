@@ -36,6 +36,10 @@ test('public SEO AEO GEO discovery assets are present',()=>{
   const proxy=read('proxy.ts')
 
   assert.match(layout,/metadataBase/)
+  assert.match(site,/SITE_TAGLINE_EN = 'Smart shopping\. Real savings!'/)
+  assert.match(site,/SITE_TAGLINE_BN = 'একসাথে কিনি, কম দামে পাই!'/)
+  assert.match(layout,/title: \{ default: \`\$\{SITE_NAME\} \| \$\{SITE_TAGLINE_EN\}\`/)
+  assert.doesNotMatch(layout,/Community Grocery Pooling in Savar/)
   assert.doesNotMatch(layout,/alternates:\s*\{\s*canonical:/)
   assert.match(home,/alternates:\s*\{\s*canonical:\s*SITE_URL/)
   assert.match(home,/application\/ld\+json/)
