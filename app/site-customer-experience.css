@@ -223,3 +223,9 @@ html[data-theme="dark"] .site-glass-root .app-mobile-nav-link.is-active{
 /* Desktop guard */
 .site-glass-root .app-mobile-nav{display:none!important}
 @media(max-width:767px){.site-glass-root .app-mobile-nav{display:block!important}}
+
+@media(max-width:639px){
+.pool-view section[id^="pool-"]>div.grid{grid-template-columns:minmax(0,1fr)!important;gap:.75rem!important}
+.pool-view article.cx-compact-product{width:100%!important;max-width:100%!important}
+.pool-view article.cx-compact-product>div.grid{grid-template-columns:80px minmax(0,1fr)!important;gap:.75rem!important}
+}
