@@ -1,55 +1,300 @@
 import Link from 'next/link'
+import { OpportunityCard } from '@/components/opportunity-card'
 import { AppShell } from '@/components/app-shell'
 import { StatusPill } from '@/components/status-pill'
+import { ShareUnlockButton } from '@/components/share-unlock-button'
 import { requireOnboardedUser } from '@/lib/auth'
 import { taka, shortDate } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
-const Icon=({children}:{children:React.ReactNode})=><span className="glass-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl">{children}</span>
 
-type PoolCardStats={joined:number;savingPotential:number}
+type PoolCardStats={
+  joined:number
+  units:number
+  savingPotential:number
+  bestNext:null|{
+    current:number
+    target:number
+    remaining:number
+    price:number
+    product:string
+    progress:number
+  }
+}
+
+type Mission={
+  kind:'pool'|'group'
+  title:string
+  subtitle:string
+  href:string
+  current:number
+  target:number
+  remaining:number
+  price:number
+  progress:number
+  unitLabel:string
+}
 
 export default async function HomePage(){
   const {user,profile,roles,supabase}=await requireOnboardedUser()
-  const [{data:savingsSummaryRows},{data:activePools},{data:readyOrder},{data:community},{data:summaryRows}]=await Promise.all([
+  const [
+    {data:savingsSummaryRows},
+    {data:activePools},
+    {data:readyOrder},
+    {data:community},
+    {data:summaryRows},
+    {data:groupDeals},
+  ]=await Promise.all([
     supabase.rpc('get_my_savings_summary'),
-    supabase.from('pools').select('id,title,status,is_paused,pickup_at,commitment_closes_at,cadence,pool_items(id,benchmark_price_snapshot)').eq('community_id',profile.community_id).in('status',['open','pricing','final_price','confirmation','ordered','ready_for_pickup']).order('created_at',{ascending:false}).limit(6),
-    supabase.from('orders').select('id,order_code,status,fulfillment_method,delivery_address,delivery_fee,pickup_points(name,address,google_maps_url)').eq('customer_id',user.id).eq('status','ready_for_pickup').order('ready_at',{ascending:false}).limit(1).maybeSingle(),
+    supabase.from('pools')
+      .select('id,title,status,is_paused,pickup_at,commitment_closes_at,cadence,pool_items(id,benchmark_price_snapshot,products(name))')
+      .eq('community_id',profile.community_id)
+      .in('status',['open','pricing','final_price','confirmation','ordered','ready_for_pickup'])
+      .order('created_at',{ascending:false})
+      .limit(6),
+    supabase.from('orders')
+      .select('id,order_code,status,fulfillment_method,delivery_address,delivery_fee,pickup_points(name,address,google_maps_url)')
+      .eq('customer_id',user.id)
+      .eq('status','ready_for_pickup')
+      .order('ready_at',{ascending:false})
+      .limit(1)
+      .maybeSingle(),
     supabase.from('communities').select('id,name').eq('id',profile.community_id).maybeSingle(),
     supabase.rpc('get_my_community_summary'),
+    supabase.rpc('get_my_group_deals'),
   ])
+
   const savingsSummary=savingsSummaryRows?.[0] as any
   const lifetime=Number(savingsSummary?.lifetime_verified_saving??0)
   const thisMonth=Number(savingsSummary?.month_verified_saving??0)
   const summary=summaryRows?.[0] as any
   const pools=(activePools??[]).filter((pool:any)=>!pool.is_paused)
-  const glass='glass-panel'
 
   const poolStatsEntries=await Promise.all(pools.map(async(pool:any)=>{
     const [participationResult,unlockResult]=await Promise.all([
       supabase.rpc('get_pool_participation',{p_pool_id:pool.id}),
       supabase.rpc('get_pool_price_unlocks',{p_pool_id:pool.id}),
     ])
+
     const joined=Number(participationResult.data?.[0]?.joined_households??0)
+    const units=Number(participationResult.data?.[0]?.total_committed_units??0)
     const itemsById=new Map((pool.pool_items??[]).map((item:any)=>[item.id,item]))
-    const savingPotential=(unlockResult.data??[]).reduce((sum:number,row:any)=>{
+
+    let savingPotential=0
+    let bestNext:PoolCardStats['bestNext']=null
+
+    for(const row of unlockResult.data??[]){
       const item:any=itemsById.get(row.pool_item_id)
       const benchmark=Number(item?.benchmark_price_snapshot??0)
       const unlocked=Number(row.unlocked_price??0)
       const quantity=Number(row.current_quantity??0)
-      return sum+(unlocked>0?Math.max(0,benchmark-unlocked)*quantity:0)
-    },0)
-    return [pool.id,{joined,savingPotential} satisfies PoolCardStats] as const
+      if(unlocked>0)savingPotential+=Math.max(0,benchmark-unlocked)*quantity
+
+      const target=Number(row.next_threshold??0)
+      const price=Number(row.next_price??0)
+      if(target>0&&price>0){
+        const current=Math.min(quantity,target)
+        const remaining=Math.max(target-current,0)
+        const progress=target?current/target:0
+        const candidate={
+          current,target,remaining,price,
+          product:String(item?.products?.name??'Pool item'),
+          progress,
+        }
+        if(!bestNext||candidate.progress>bestNext.progress||(candidate.progress===bestNext.progress&&candidate.remaining<bestNext.remaining)){
+          bestNext=candidate
+        }
+      }
+    }
+
+    return [pool.id,{joined,units,savingPotential,bestNext} satisfies PoolCardStats] as const
   }))
+
   const poolStats=new Map<string,PoolCardStats>(poolStatsEntries)
 
-  return <AppShell roles={roles}><div className="relative grid min-w-0 gap-4 sm:gap-5">
-    <section className={`${glass} relative overflow-hidden rounded-[28px] p-5 sm:p-7 lg:p-8`}><div className="relative grid gap-6 lg:grid-cols-[1.35fr_.65fr] lg:items-center"><div className="grid gap-5 md:grid-cols-[1fr_230px] md:items-center lg:grid-cols-[1fr_250px]"><div><p className="text-sm font-bold text-sky-700">Hello, {profile.full_name}</p><h1 className="mt-2 max-w-2xl text-3xl font-black leading-[1.02] tracking-[-.035em] sm:text-4xl lg:text-5xl">Shop together with <span className="text-cyan-700">{community?.name}</span></h1><p className="mt-3 max-w-xl text-sm font-medium leading-6 text-slate-700">Join a weekly or monthly pool, commit only what you need, and confirm only after the final pooled price is published.</p><div className="mt-5 flex flex-col gap-2 sm:flex-row"><Link href="/pool" className="glass-primary inline-flex min-h-12 items-center justify-center rounded-2xl border border-sky-400 bg-gradient-to-b from-sky-400 to-blue-600 px-6 font-black text-white">Browse pools</Link><Link href="/orders" className="glass-secondary inline-flex min-h-12 items-center justify-center rounded-2xl border border-white bg-white/55 px-6 font-black text-slate-900">▣ My orders</Link></div></div><div className="hidden items-center justify-center md:flex"><img src="/grocery-hero-glass.svg" alt="Grocery basket" decoding="async" fetchPriority="high" className="h-44 w-full object-contain"/></div></div><div className="glass-subpanel rounded-[24px] p-5"><div className="text-xs font-black uppercase tracking-[0.18em] text-sky-700">My verified savings</div><div className="mt-3 text-4xl font-black">🪙 {taka(thisMonth)}</div><div className="mt-1 text-sm font-medium text-slate-600">this month · {taka(lifetime)} lifetime</div><Link className="glass-inset mt-5 flex min-h-11 items-center justify-between rounded-xl px-4 text-sm font-black" href="/savings">View savings history <span>→</span></Link></div></div></section>
+  const missions:Mission[]=[]
+  for(const pool of pools){
+    const stats=poolStats.get(pool.id)
+    if(stats?.bestNext){
+      missions.push({
+        kind:'pool',
+        title:pool.title,
+        subtitle:stats.bestNext.product,
+        href:'/pool#pool-'+pool.id,
+        current:stats.bestNext.current,
+        target:stats.bestNext.target,
+        remaining:stats.bestNext.remaining,
+        price:stats.bestNext.price,
+        progress:stats.bestNext.progress,
+        unitLabel:'units',
+      })
+    }
+  }
 
-    <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"><div className={`${glass} flex items-center gap-4 rounded-[22px] p-4`}><Icon>📍</Icon><div><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">Community</div><div className="mt-1 text-lg font-black">{community?.name}</div><p className="mt-1 text-xs text-slate-600">Your pools are selected for this community.</p></div></div><div className={`${glass} flex items-center gap-4 rounded-[22px] p-4`}><Icon>👥</Icon><div><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">Participating households</div><div className="mt-1 text-2xl font-black">{summary?.household_count??0}</div></div></div><div className={`${glass} flex items-center gap-4 rounded-[22px] p-4`}><Icon>📊</Icon><div><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">Community savings · month</div><div className="mt-1 text-2xl font-black">{taka(summary?.month_verified_saving??0)}</div></div></div></section>
+  const openDeals=(groupDeals??[]).filter((deal:any)=>deal.status==='open')
+  for(const deal of openDeals){
+    const target=Number(deal.next_threshold??0)
+    const price=Number(deal.next_price??0)
+    if(target<=0||price<=0)continue
+    const qualified=Number(deal.buyer_count??0)
+    const joined=Number(deal.my_quantity??0)>0
+    const circleMembers=Number(deal.circle_members??0)
+    const current=Math.min(qualified===0&&joined?circleMembers:qualified,target)
+    missions.push({
+      kind:'group',
+      title:String(deal.product_name??deal.title),
+      subtitle:String(deal.title),
+      href:'/group-deals',
+      current,
+      target,
+      remaining:Math.max(target-current,0),
+      price,
+      progress:target?current/target:0,
+      unitLabel:'buyers',
+    })
+  }
 
-    <section><div className="mb-3 flex flex-wrap items-end justify-between gap-3 px-2"><div><p className="text-[11px] font-black uppercase tracking-[.16em] text-sky-700">Available now</p><h2 className="mt-1 text-2xl font-black tracking-tight">Your community pools</h2></div><Link href="/pool" className="text-sm font-black text-cyan-700 underline underline-offset-4">View all pools →</Link></div>{pools.length?<div className="grid gap-3">{pools.map((pool:any)=>{const itemCount=(pool.pool_items??[]).length;const stats=poolStats.get(pool.id)??{joined:0,savingPotential:0};return <article key={pool.id} className={`${glass} rounded-[22px] p-3 sm:p-4 lg:p-5`}><div className="grid gap-3 md:grid-cols-[120px_minmax(0,1fr)_190px] md:items-center lg:grid-cols-[145px_minmax(0,1fr)_210px]"><div className="hidden h-24 items-center justify-center md:flex lg:h-28"><img src="/grocery-hero-glass.svg" alt="Grocery pool" className="h-full w-full object-contain"/></div><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-black capitalize text-cyan-800">{pool.cadence??'weekly'} Pool</span><StatusPill status={pool.status}/><span className="ml-auto text-xs font-bold text-slate-500 md:hidden">{itemCount} item{itemCount===1?'':'s'}</span></div><h3 className="mt-2 text-lg font-black leading-tight sm:text-xl lg:text-2xl">{pool.title}</h3><div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4"><div className="glass-inset rounded-xl p-2.5"><span className="block text-[9px] font-black uppercase tracking-wide text-sky-700">Families joined</span><b className="mt-1 block text-base">{stats.joined}</b></div><div className="glass-inset rounded-xl p-2.5"><span className="block text-[9px] font-black uppercase tracking-wide text-emerald-700">Saving potential</span><b className="mt-1 block text-base text-emerald-800">{taka(stats.savingPotential)}</b></div><div className="glass-inset rounded-xl p-2.5"><span className="block text-[9px] font-black uppercase tracking-wide text-sky-700">Commit by</span><b className="mt-1 block text-sm">{shortDate(pool.commitment_closes_at)}</b></div><div className="glass-inset rounded-xl p-2.5"><span className="block text-[9px] font-black uppercase tracking-wide text-sky-700">Fulfilment target</span><b className="mt-1 block text-sm">{shortDate(pool.pickup_at)}</b></div></div></div><div className="flex flex-col gap-2 md:items-end"><span className="hidden text-sm font-bold text-slate-600 md:block">{itemCount} item{itemCount===1?'':'s'}</span><Link href={`/pool#pool-${pool.id}`} className="glass-primary inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-gradient-to-b from-sky-400 to-blue-600 px-5 font-black text-white">Open pool</Link></div></div></article>})}</div>:<div className={`${glass} rounded-[26px] p-8 text-center`}><h3 className="text-2xl font-black">The next weekly or monthly pool will appear here.</h3></div>}</section>
+  missions.sort((a,b)=>b.progress-a.progress||a.remaining-b.remaining)
+  const mission=missions[0]??null
+  const missionPercent=mission?Math.max(0,Math.min(100,Math.round(mission.progress*100))):0
 
-    <section className="grid gap-3 lg:grid-cols-[.9fr_1.1fr]"><div className={`${glass} rounded-[24px] p-5`}><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">Next fulfilment</div>{readyOrder?<><h2 className="mt-2 text-xl font-black">{readyOrder.order_code}</h2>{(readyOrder as any).fulfillment_method==='home_delivery'?<p className="mt-2 text-sm text-slate-600"><b>Home delivery · {taka((readyOrder as any).delivery_fee??0)}</b><br/>{(readyOrder as any).delivery_address}</p>:<p className="mt-2 text-sm text-slate-600"><b>FREE community collection</b><br/>{(readyOrder.pickup_points as any)?.name}<br/>{(readyOrder.pickup_points as any)?.address}</p>}<Link className="glass-secondary mt-4 inline-flex rounded-xl px-4 py-2 font-bold" href="/orders">Order details</Link></>:<><h2 className="mt-2 text-xl font-black">Nothing ready yet</h2><p className="mt-2 text-sm text-slate-600">When an order is ready for collection or home delivery, the details will appear here.</p></>}</div><div className={`${glass} rounded-[24px] p-5`}><div className="text-[11px] font-black uppercase tracking-wide text-sky-700">How 2-TAKA-R-BAZAR works</div><div className="mt-4 grid gap-3 sm:grid-cols-3">{[['1','Commit','Choose items and quantities while the pool is open.'],['2','Confirm','Confirm the final product price and choose FREE pickup or home delivery.'],['3','Receive & save','Collect or receive the order, then product savings are verified.']].map(([n,title,text])=><div key={n} className="glass-inset rounded-2xl p-4"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-b from-sky-400 to-blue-600 text-sm font-black text-white">{n}</div><div className="mt-3 font-black">{title}</div><p className="mt-1 text-xs leading-5 text-slate-600">{text}</p></div>)}</div></div></section>
-  </div></AppShell>
+  return <AppShell roles={roles}>
+    <div className="grid min-w-0 gap-4 sm:gap-5">
+      <section className="cx-savings-hero p-4 sm:p-6">
+        <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div className="min-w-0">
+            <div className="cx-compact-strip">
+              <span className="cx-compact-chip">📍 {community?.name??'Your community'}</span>
+              <span className="cx-compact-chip">👥 {summary?.household_count??0} households</span>
+            </div>
+            <p className="mt-4 text-xs font-black uppercase tracking-[.16em] text-cyan-700">Savings pulse</p>
+            <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-4xl">Your community is buying smarter.</h1>
+            <p className="muted mt-2 max-w-2xl text-sm">See what is close to a lower price, commit only what you need, and keep delivery separate from product savings.</p>
+          </div>
+
+          <Link href="/savings" className="cx-saving-stat">
+            <div className="text-[10px] font-black uppercase tracking-[.14em] text-emerald-700">You saved this month</div>
+            <div className="mt-1 text-3xl font-black text-emerald-700">{taka(thisMonth)}</div>
+            <div className="mt-1 text-xs font-bold text-slate-500">{taka(lifetime)} lifetime verified saving →</div>
+          </Link>
+        </div>
+
+        <div className="cx-opportunity-grid">
+          <OpportunityCard href="/pool" title="Pools" count={pools.length}/>
+          <OpportunityCard href="/group-deals" title="Group Deals" count={openDeals.length}/>
+        </div>
+      </section>
+
+      {mission&&<section className="cx-mission-card p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-[.16em] text-emerald-700">Best next saving move</p>
+            <h2 className="mt-1 text-lg font-black sm:text-xl">{mission.title}</h2>
+            <p className="muted mt-1 text-xs sm:text-sm">{mission.subtitle}</p>
+          </div>
+          <span className="chip">{mission.kind==='group'?'Neighbour deal':'Pool target'}</span>
+        </div>
+
+        <div className="mt-4 flex items-end justify-between gap-3">
+          <div>
+            <div className="text-xl font-black">{mission.current} / {mission.target} {mission.unitLabel}</div>
+            <div className="mt-1 text-sm font-black text-emerald-700">{mission.remaining} more → {taka(mission.price)}</div>
+          </div>
+          <div className="text-sm font-black text-slate-500">{missionPercent}%</div>
+        </div>
+
+        <div className="price-target-track mt-2 h-3 overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={missionPercent}>
+          <div className="price-target-fill h-full transition-[width] duration-500" style={{width:String(missionPercent)+'%'}}/>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href={mission.href} className="btn-primary min-h-10 px-4">Open opportunity</Link>
+          <ShareUnlockButton
+            title="2-TAKA-R-BAZAR saving target"
+            text={mission.kind==='group'
+              ? mission.remaining+' more neighbours can unlock '+taka(mission.price)+' for '+mission.title+'.'
+              : mission.remaining+' more units can unlock '+taka(mission.price)+' for '+mission.title+'.'}
+            label={mission.kind==='group'?'Invite neighbours':'Share with community'}
+          />
+        </div>
+      </section>}
+
+      {readyOrder&&<section className="card cx-glass-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="card-title">Ready now</div>
+            <h2 className="mt-1 text-lg font-black">{readyOrder.order_code}</h2>
+            <p className="muted mt-1 text-sm">{(readyOrder as any).fulfillment_method==='home_delivery'
+              ? 'Home delivery · '+taka((readyOrder as any).delivery_fee??0)
+              : 'FREE community pickup · '+((readyOrder.pickup_points as any)?.name??'Pickup point')}</p>
+          </div>
+          <Link className="btn-primary min-h-10 px-4" href="/orders">Track order</Link>
+        </div>
+      </section>}
+
+      <section>
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[.16em] text-sky-700">Shop now</p>
+            <h2 className="mt-1 text-xl font-black sm:text-2xl">Community pools</h2>
+          </div>
+          <Link href="/pool" className="text-sm font-black text-cyan-700">View all →</Link>
+        </div>
+
+        {pools.length?<div className="cx-list-grid">{pools.slice(0,4).map((pool:any)=>{
+          const stats=poolStats.get(pool.id)??{joined:0,units:0,savingPotential:0,bestNext:null}
+          const itemCount=(pool.pool_items??[]).length
+          return <article key={pool.id} className="card cx-glass-card p-4">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <div className="flex flex-wrap gap-2"><span className="chip capitalize">{pool.cadence??'weekly'} pool</span><StatusPill status={pool.status}/></div>
+                <h3 className="mt-2 text-lg font-black leading-tight">{pool.title}</h3>
+                <p className="muted mt-1 text-xs">{itemCount} item{itemCount===1?'':'s'} · fulfilment {shortDate(pool.pickup_at)}</p>
+              </div>
+              <Link href={'/pool#pool-'+pool.id} className="btn-secondary min-h-10 px-3 text-sm">Open</Link>
+            </div>
+
+            <div className="cx-compact-strip mt-3">
+              <span className="cx-compact-chip">👥 {stats.joined} households</span>
+              <span className="cx-compact-chip">📦 {stats.units} units</span>
+              {stats.savingPotential>0&&<span className="cx-compact-chip text-emerald-700">↓ {taka(stats.savingPotential)} current saving</span>}
+            </div>
+
+            {stats.bestNext&&<div className="cx-glass-subcard mt-3 rounded-xl p-3">
+              <div className="flex items-center justify-between gap-2 text-xs font-black">
+                <span>{stats.bestNext.current}/{stats.bestNext.target} units</span>
+                <span className="text-emerald-700">{stats.bestNext.remaining} more → {taka(stats.bestNext.price)}</span>
+              </div>
+              <div className="price-target-track mt-2 h-2 overflow-hidden"><div className="price-target-fill h-full" style={{width:String(Math.min(100,Math.round(stats.bestNext.progress*100)))+'%'}}/></div>
+            </div>}
+          </article>
+        })}</div>:<div className="card cx-glass-card p-6 text-center"><h3 className="text-lg font-black">No open pool right now</h3><p className="muted mt-2 text-sm">The next community buying opportunity will appear here.</p></div>}
+      </section>
+
+      {openDeals.length>0&&<section>
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div><p className="text-[10px] font-black uppercase tracking-[.16em] text-sky-700">Nearby</p><h2 className="mt-1 text-xl font-black sm:text-2xl">Neighbour deals</h2></div>
+          <Link href="/group-deals" className="text-sm font-black text-cyan-700">View all →</Link>
+        </div>
+        <div className="cx-list-grid">{openDeals.slice(0,2).map((deal:any)=>{
+          const price=Number(deal.current_price??0)
+          const next=Number(deal.next_threshold??0)
+          const buyers=Number(deal.buyer_count??0)
+          const joined=Number(deal.my_quantity??0)>0
+          const progressBuyers=Math.min(buyers===0&&joined?Number(deal.circle_members??0):buyers,next||1)
+          const remaining=next?Math.max(next-progressBuyers,0):0
+          return <article key={deal.deal_id} className="card cx-glass-card p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0"><h3 className="text-lg font-black">{deal.product_name}</h3><p className="muted mt-1 text-xs">{deal.package_size} · closes {shortDate(deal.closes_at)}</p></div>
+              <span className="chip">{joined?'Joined':'Open'}</span>
+            </div>
+            <div className="mt-3 flex items-end justify-between gap-3">
+              <div><span className="muted text-xs">Current price</span><div className="text-xl font-black text-emerald-700">{price?taka(price):'Unlocking'}</div></div>
+              {next>0&&<div className="text-right"><span className="muted text-xs">Next</span><div className="font-black">{progressBuyers}/{next} buyers</div><div className="text-xs font-black text-emerald-700">{remaining} more → {taka(Number(deal.next_price))}</div></div>}
+            </div>
+          </article>
+        })}</div>
+      </section>}
+    </div>
+  </AppShell>
 }

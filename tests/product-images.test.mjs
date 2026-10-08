@@ -50,23 +50,23 @@ test('shared product image component is responsive and protects referrer data',(
   assert.match(component,/loading=\{eager\?'eager':'lazy'\}/)
 })
 
-test('Pool keeps product master image as the source of truth',()=>{
+test('Pool keeps product master image as the source of truth through the shared image component',()=>{
   const pool=read('app/pool/page.tsx')
+  const image=read('components/product-image.tsx')
   assert.match(pool,/products\(id,name,brand,category,package_size,unit,image_url,source_type\)/)
-  assert.match(pool,/product\?\.image_url/)
-  assert.match(pool,/object-contain/)
-  assert.match(pool,/aspect-\[4\/3\]/)
+  assert.match(pool,/src=\{product\?\.image_url\}/)
+  assert.match(pool,/ProductImage/)
+  assert.match(image,/object-contain/)
+  assert.match(image,/aspect-\[4\/3\]/)
 })
 
-test('Pool auto-fits legacy images with blank margins without object-cover cropping',()=>{
-  const fitter=read('components/pool-product-image-fit.tsx')
+test('Pool uses the shared contain-fit image component without runtime frame mutation',()=>{
   const layout=read('app/pool/layout.tsx')
-  assert.match(fitter,/crossOrigin='anonymous'/)
-  assert.match(fitter,/r>=244&&g>=244&&b>=244/)
-  assert.match(fitter,/expandAspect/)
-  assert.match(fitter,/object-fit','fill','important'/)
-  assert.match(fitter,/maxH=.*300:320/)
-  assert.match(layout,/PoolProductImageFit/)
+  const image=read('components/product-image.tsx')
+  assert.doesNotMatch(layout,/PoolProductImageFit/)
+  assert.match(image,/object-contain/)
+  assert.match(image,/overflow-hidden/)
+  assert.match(image,/bg-white/)
 })
 
 test('orders savings and admin Pool details carry the master product image',()=>{

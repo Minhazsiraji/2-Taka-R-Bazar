@@ -30,7 +30,7 @@ export default async function NotificationsPage() {
 
         <PushNotificationManager publicKey={typeof publicKey === 'string' ? publicKey : null} serverHasSubscription={Boolean(hasPush)} />
 
-        <section className="card overflow-hidden">
+        <section className="card cx-glass-card overflow-hidden">
           <div className="border-b border-slate-200 px-5 py-4"><h2 className="font-black">Your activity timeline</h2></div>
           {(notifications ?? []).length === 0 ? (
             <div className="p-8 text-center"><div className="text-3xl">🔔</div><h3 className="mt-3 font-black">No notifications yet</h3><p className="mt-1 text-sm text-slate-600">When a pool for your community is published or your order changes, it will appear here.</p></div>

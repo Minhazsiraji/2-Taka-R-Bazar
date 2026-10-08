@@ -82,21 +82,24 @@ test('remaining money admin and pool surfaces have exact named dark contracts',(
 test('brand glow covers buttons links and progress rims without reviving legacy image paint',()=>{
   const css=readFileSync(new URL('../app/site-theme-surface-fix.css',import.meta.url),'utf8')
   const pool=readFileSync(new URL('../app/pool/page.tsx',import.meta.url),'utf8')
-  for(const token of ['--brand-rim','--brand-glow-strong','super-admin-nav-link','role="progressbar"']) assert.match(css,new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')))
+  const image=readFileSync(new URL('../components/product-image.tsx',import.meta.url),'utf8')
+  for(const token of ['--brand-rim','--brand-glow-strong','super-admin-nav-link','role="progressbar"']) assert.ok(css.includes(token))
   assert.match(css,/translateY\(-1px\)/)
-  assert.match(pool,/product-image-surface[^\n]*style=\{\{borderRadius:'0\.9rem',backgroundColor:'#fff'\}\}/)
-  const imageLine=pool.split('\n').find(line=>line.includes('product-image-surface'))??''
-  assert.doesNotMatch(imageLine,/rounded-xl/)
+  assert.match(pool,/ProductImage/)
+  assert.doesNotMatch(pool,/product-image-surface/)
+  assert.match(image,/bg-white/)
+  assert.match(image,/object-contain/)
 })
 
-test('final glow contract covers marked cards and pool image cannot exceed its column',()=>{
+test('final glow contract covers marked cards and compact Pool images stay inside their mobile column',()=>{
   const css=readFileSync(new URL('../app/site-theme-surface-fix.css',import.meta.url),'utf8')
   const pool=readFileSync(new URL('../app/pool/page.tsx',import.meta.url),'utf8')
+  const image=readFileSync(new URL('../components/product-image.tsx',import.meta.url),'utf8')
   assert.match(css,/\.card,.data-snapshot-card,.money-person-row,.money-account-row,.quick-decisions-panel,.price-target-progress/)
   assert.match(css,/\.app-shell-header a\[class\*="rounded-"\]/)
   assert.match(css,/nav\[aria-label="My Money navigation"\] a\[class\*="rounded-"\]/)
-  assert.match(pool,/grid min-w-0 overflow-hidden lg:grid-cols/)
-  assert.match(pool,/min-w-0 overflow-hidden border-b border-slate-200/)
-  assert.match(pool,/product-image-surface[^\n]+w-full min-w-0 max-w-full/)
-  assert.match(pool,/h-full w-full min-w-0 max-w-full object-contain object-center/)
+  assert.match(pool,/className="cx-product-heading"/)
+  assert.match(pool,/className="cx-product-photo"/)
+  assert.match(image,/overflow-hidden/)
+  assert.match(image,/object-contain/)
 })

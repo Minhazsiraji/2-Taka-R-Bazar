@@ -17,6 +17,10 @@ export async function enterPlanningTier(fd:FormData){
   if(!item||((item as any).pools?.status)!=='draft')fail(poolId,'Planning tiers are entered while the pool is Draft')
   if(!supplierId||!Number.isInteger(threshold)||threshold<1||!(quoted>0)||!(landed>0)||!(ceiling>0))fail(poolId,'Complete supplier, threshold and positive planning prices')
   if(ceiling<landed)fail(poolId,'Customer ceiling cannot be below delivered supplier cost')
+  const {data:existingTiers,error:tierLookupError}=await supabase.from('supplier_quotes').select('id,threshold_quantity').eq('pool_item_id',poolItemId).eq('quote_phase','planning_tier')
+  if(tierLookupError)fail(poolId,'Could not validate existing planning tiers')
+  if((existingTiers??[]).some((row:any)=>Number(row.threshold_quantity)===threshold))fail(poolId,'A planning tier with this quantity threshold already exists')
+  if((existingTiers??[]).length>=3)fail(poolId,'A supplier-backed pool item can have at most 3 planning price tiers')
   const {error}=await supabase.from('supplier_quotes').insert({
     pool_item_id:poolItemId,supplier_id:supplierId,quote_phase:'planning_tier',threshold_quantity:threshold,quantity:threshold,
     quoted_unit_price:quoted,delivery_cost:delivery,landed_unit_price:landed,customer_ceiling_price:ceiling,

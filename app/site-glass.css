@@ -232,16 +232,6 @@
   border-radius: 28px;
 }
 
-/* Mobile footer/nav remain light glass. */
-.site-glass-root [class*="app-mobile-nav"] {
-  color: var(--glass-ink) !important;
-  border-color: rgba(255,255,255,.72) !important;
-  background: rgba(244,242,248,.72) !important;
-  box-shadow: 0 -8px 24px rgba(38,47,77,.08), inset 0 1px 0 rgba(255,255,255,.78) !important;
-  backdrop-filter: blur(20px) saturate(138%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(138%) !important;
-}
-
 @media (max-width:640px) {
   .site-glass-root { background-attachment: scroll; }
   .site-glass-root .card,

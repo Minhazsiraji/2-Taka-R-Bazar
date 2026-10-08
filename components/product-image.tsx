@@ -13,10 +13,10 @@ export function ProductImage({src,name,variant='card',className='',eager=false}:
       ? 'aspect-[16/9] w-full rounded-xl p-1 sm:p-1.5'
       : 'aspect-[4/3] w-full rounded-xl p-1 sm:p-1.5'
   const label=(name||'Product').trim()||'Product'
-  return <div className={`flex items-center justify-center overflow-hidden border border-slate-200 bg-white ${frame} ${className}`}>
+  return <div className={`product-image-surface flex items-center justify-center overflow-hidden border border-slate-200 bg-white ${frame} ${className}`}>
     {src?<img
       src={src}
-      alt={`${label} product image`}
+      alt={`${label} product photo`}
       className="block h-full w-full object-contain"
       loading={eager?'eager':'lazy'}
       decoding="async"

@@ -76,16 +76,14 @@ test('own-product preview UX has clean encoding, readiness messaging and readabl
 })
 
 
-test('customer Pool card renders product images safely when present',()=>{
+test('customer Pool card renders product images safely through the shared component',()=>{
   const page=readFileSync(new URL('../app/pool/page.tsx',import.meta.url),'utf8')
-  assert.match(page,/product\?\.image_url&&/)
-  assert.match(page,/src=\{product\.image_url\}/)
-  assert.match(page,/alt=\{`\$\{product\.name\} product image`\}/)
-  assert.match(page,/aspect-\[4\/3\]/)
-  assert.match(page,/object-contain/)
-  assert.match(page,/style=\{\{width:'100%',height:'100%',objectFit:'contain'\}\}/)
-  assert.match(page,/loading="lazy"/)
-  assert.match(page,/product-image-surface/)
-  const surface=readFileSync(new URL('../app/site-theme-surface-fix.css',import.meta.url),'utf8')
-  assert.match(surface,/product-image-surface[\s\S]*background:#fff !important/)
+  const image=readFileSync(new URL('../components/product-image.tsx',import.meta.url),'utf8')
+  assert.match(page,/import \{ ProductImage \}/)
+  assert.match(page,/src=\{product\?\.image_url\}/)
+  assert.match(page,/className="cx-product-photo"/)
+  assert.match(image,/object-contain/)
+  assert.match(image,/loading=\{eager\?'eager':'lazy'\}/)
+  assert.match(image,/referrerPolicy="no-referrer"/)
+  assert.match(image,/bg-white/)
 })

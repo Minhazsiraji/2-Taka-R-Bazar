@@ -108,3 +108,68 @@ test('planning tiers do not by themselves prevent a safe return to Draft',()=>{
   assert.match(sql,/q\.quote_phase='final'/)
   assert.match(workflow,/hasFinalQuotes=poolQuotes\.some/)
 })
+
+
+test('supplier-backed pools require a 2 to 3 tier ladder before opening',()=>{
+  const policy=readFileSync(new URL('../supabase/migrations/20261007174500_pool_two_three_tier_policy.sql',import.meta.url),'utf8')
+  const action=readFileSync(new URL('../app/actions/pilot.ts',import.meta.url),'utf8')
+  const workflow=readFileSync(new URL('../app/admin/pools/workflow/page.tsx',import.meta.url),'utf8')
+  assert.match(policy,/not between 2 and 3/i)
+  assert.match(policy,/at most 3 planning price tiers/i)
+  assert.match(policy,/quantity threshold already exists/i)
+  assert.match(action,/existingTiers/)
+  assert.match(action,/length>=3/)
+  assert.match(workflow,/planningQuotes\.length<3/)
+  assert.match(workflow,/Configure 2–3 quantity tiers before opening/i)
+})
+
+test('customer Pool UI advances compactly from an unlocked tier to the next better tier',()=>{
+  const page=readFileSync(new URL('../app/pool/page.tsx',import.meta.url),'utf8')
+  const progress=readFileSync(new URL('../components/price-target-progress.tsx',import.meta.url),'utf8')
+  assert.match(page,/unlockedThreshold=Number\(unlock\.unlocked_threshold/)
+  assert.match(page,/unlockedThreshold=\{unlockedThreshold\}/)
+  assert.match(progress,/Next price tier/i)
+  assert.match(progress,/more →/i)
+  assert.match(progress,/save .*\/unit/i)
+  assert.match(page,/Share target/i)
+})
+
+test('mobile customer nav returns to the clean attached first-style treatment',()=>{
+  const css=readFileSync(new URL('../app/site-customer-experience.css',import.meta.url),'utf8')
+  assert.match(css,/Restore the original clean mobile navigation/i)
+  assert.match(css,/inset-inline:0/)
+  assert.match(css,/bottom:0/)
+  assert.match(css,/border-radius:12px 12px 0 0/)
+  assert.match(css,/app-mobile-nav-link\.is-active/)
+  assert.match(css,/box-shadow:none/)
+  assert.doesNotMatch(css,/left:8px/)
+})
+
+
+test('Pool cancellation cannot bypass the reasoned audit path',()=>{
+  const sql=readFileSync(new URL('../supabase/migrations/20261007183000_pool_cancellation_reason_hardening.sql',import.meta.url),'utf8')
+  const actions=readFileSync(new URL('../app/actions/admin.ts',import.meta.url),'utf8')
+  assert.match(sql,/Use admin_cancel_pool with a cancellation reason/i)
+  assert.match(sql,/Cancellation reason required/i)
+  assert.match(sql,/pool_cancelled_with_reason/i)
+  assert.match(sql,/pool_cancellation_reason_backfilled/i)
+  assert.match(sql,/status='cancelled'/i)
+  assert.match(actions,/supabase\.rpc\('admin_cancel_pool'/)
+})
+
+
+test('final customer UX prioritizes savings pulse, compact cards and honest delivery-separated savings',()=>{
+  const home=readFileSync(new URL('../app/home/page.tsx',import.meta.url),'utf8')
+  const pool=readFileSync(new URL('../app/pool/page.tsx',import.meta.url),'utf8')
+  const orders=readFileSync(new URL('../app/orders/page.tsx',import.meta.url),'utf8')
+  const savings=readFileSync(new URL('../app/savings/page.tsx',import.meta.url),'utf8')
+  const shell=readFileSync(new URL('../components/app-shell.tsx',import.meta.url),'utf8')
+  assert.match(home,/Savings pulse/i)
+  assert.match(home,/Best next saving move/i)
+  assert.match(pool,/Choose essentials, watch the price fall/i)
+  assert.match(orders,/Community pickup FREE/i)
+  assert.match(orders,/Home delivery ৳20 up to ৳1,000/i)
+  assert.match(savings,/Net saving this month/i)
+  assert.match(savings,/Product saving .* delivery/i)
+  assert.doesNotMatch(shell,/app-mobile-legal/)
+})
