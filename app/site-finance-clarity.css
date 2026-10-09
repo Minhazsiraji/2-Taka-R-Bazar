@@ -253,13 +253,13 @@ html[data-theme="dark"] body.site-glass-root main .finance-ops-surface > :is(sec
   border-color: #147e82 !important;
   box-shadow: 0 12px 30px rgba(6,58,66,.19) !important;
 }
-html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
   background: #ffffff !important;
   color: #123044 !important;
   border-color: rgba(18,117,126,.2) !important;
   box-shadow: 0 5px 20px rgba(17,52,62,.075) !important;
 }
-html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
   background: #142a36 !important;
   color: #e8f4f5 !important;
   border-color: #315262 !important;
@@ -462,8 +462,8 @@ body.site-glass-root .finance-ops-surface {
     4px 5px 9px rgba(67,224,231,.06),
     -3px 5px 8px rgba(146,116,232,.035);
 }
-html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap),
-body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap),
+body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
   position:relative !important;
   background: var(--finance-glass-face) !important;
   background-color: rgba(255,255,255,.12) !important;
@@ -542,7 +542,7 @@ body.site-glass-root main .finance-ops-surface .finance-glass-gate {
 }
 /* The header itself remains deep teal; only the secondary cards match
    the white pearl header. Dark mode uses translucent graphite instead. */
-html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
   background:linear-gradient(135deg,rgba(33,54,70,.88),rgba(15,32,43,.86)) !important;
   background-color:rgba(14,31,43,.55) !important;
   border:1px solid rgba(190,236,236,.19) !important;
@@ -602,7 +602,7 @@ body.site-glass-root main .finance-ops-surface .finance-ops-hero > div .finance-
 /* Desktop material parity: header and reporting cards must use identical
    blur strength, not the older 12px low-cost inner-card fallback. */
 @media (min-width: 768px) {
-  body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+  body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
     backdrop-filter:blur(24px) !important;
     -webkit-backdrop-filter:blur(24px) !important;
   }
@@ -626,7 +626,7 @@ html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(sect
   color:#123044 !important;
   min-height:0 !important;
 }
-body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
   border-radius:20px !important;
 }
 body.site-glass-root main .finance-ops-surface .finance-glass-gate {
