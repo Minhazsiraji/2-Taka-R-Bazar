@@ -41,6 +41,16 @@ export async function recordCommunityInbound(fd:FormData){
   revalidatePath('/community-ops');go(dayPath(day),'Inbound receipt recorded')
 }
 
+export async function recordCommunityStockAdjustment(fd:FormData){
+  const {supabase}=await requirePickupOperator();const day=t(fd,'day_id')
+  const {error}=await supabase.rpc('record_community_ops_stock_adjustment',{
+    p_day_id:day,p_product_id:t(fd,'product_id'),p_disposition:t(fd,'disposition'),
+    p_quantity:n(fd,'quantity'),p_reason:t(fd,'reason'),p_notes:t(fd,'notes')||null,
+  })
+  if(error)go(dayPath(day),error.message,'error')
+  revalidatePath('/community-ops');go(dayPath(day),'Stock disposition recorded')
+}
+
 export async function verifyCommunityOrder(fd:FormData){
   const {supabase}=await requirePickupOperator();const day=t(fd,'day_id'),order=t(fd,'order_id')
   const {error}=await supabase.rpc('verify_community_ops_order',{p_day_id:day,p_order_id:order,p_notes:t(fd,'notes')||null})
