@@ -102,9 +102,14 @@ create table public.finance_settlement_requests (
   reviewed_at timestamptz,
   created_at timestamptz not null default now()
 );
-create unique index finance_expenses_vendor_document_unique on public.finance_expenses(lower(btrim(vendor_name)),lower(btrim(document_reference)));
+-- Rejected drafts remain auditable but may be re-entered with corrected evidence.
+create unique index finance_expenses_vendor_document_unique on public.finance_expenses(lower(btrim(vendor_name)),lower(btrim(document_reference))) where status<>'rejected';
+-- A duplicated receipt under a different invoice/payee must not create a second payable.
+-- Legitimate invoice splits must use a future explicit split-allocation workflow.
+create unique index finance_expense_evidence_once on public.finance_expenses(evidence_sha256) where status<>'rejected';
 create unique index finance_settlement_one_live on public.finance_settlement_requests(expense_id) where status in ('pending','verified');
 create unique index finance_settlement_reference_live on public.finance_settlement_requests(payment_method,upper(btrim(payment_reference))) where status in ('pending','verified');
+create unique index finance_settlement_evidence_once on public.finance_settlement_requests(evidence_sha256) where status in ('pending','verified');
 create index finance_expenses_month_status on public.finance_expenses(incurred_on,status);
 create index finance_expenses_community_date on public.finance_expenses(community_id,incurred_on);
 create index finance_journals_date on public.finance_journals(posting_date);
@@ -215,6 +220,8 @@ create or replace function public.finance_submit_expense(
 declare v_actor uuid:=auth.uid(); v_id uuid; v_vendor text:=btrim(coalesce(p_vendor_name,'')); v_document text:=btrim(coalesce(p_document_reference,''));
 begin
  if not private.finance_authorized(v_actor) then raise exception 'Finance staff role required'; end if;
+ if p_amount is null or p_amount<=0 or p_amount>100000000 or round(p_amount,2)<>p_amount
+ then raise exception 'Expense amount must be a positive BDT value with no more than two decimal places'; end if;
  if p_incurred_on is null or p_incurred_on> (now() at time zone 'Asia/Dhaka')::date
  then raise exception 'Expense date cannot be in the future'; end if;
  perform private.finance_require_open(p_incurred_on);
@@ -246,6 +253,10 @@ begin
  if not found then raise exception 'Expense not found'; end if;
  if e.status<>'submitted' then raise exception 'Only submitted expense can be reviewed'; end if;
  if e.created_by=v_actor then raise exception 'Maker may not approve their own expense'; end if;
+ if coalesce(p_approve,false) and e.amount>5000 and not private.finance_super(v_actor)
+ then raise exception 'Large expense requires owner review'; end if;
+ if coalesce(p_approve,false) and e.amount>50000
+ then raise exception 'Large expense requires dual approval, not yet enabled'; end if;
  if not coalesce(p_approve,false) and char_length(btrim(coalesce(p_note,'')))<5
  then raise exception 'Rejection reason required'; end if;
  if p_approve then
