@@ -57,6 +57,18 @@ async function assertFinancialDesign(page,label) {
  assert.ok(summary.scroll<=summary.viewport+1,label+' overflows viewport')
  const panel=await page.locator('.finance-panel').first().evaluate(el=>getComputedStyle(el).backgroundColor)
  assert.notEqual(panel,'rgba(0, 0, 0, 0)',label+' surface is transparent')
+ const headGlass=await page.locator('.app-shell-header-bar').evaluate(el=>{
+  const z=getComputedStyle(el)
+  return {background:z.backgroundImage,border:z.borderTopColor,shadow:z.boxShadow,blur:z.backdropFilter}
+ })
+ const cardGlass=await page.locator('.finance-panel').first().evaluate(el=>{
+  const z=getComputedStyle(el)
+  return {background:z.backgroundImage,border:z.borderTopColor,shadow:z.boxShadow,blur:z.backdropFilter}
+ })
+ console.log('HEADER_GLASS_PARITY '+label+' '+JSON.stringify({head:headGlass,card:cardGlass}))
+ assert.ok(cardGlass.background.includes('linear-gradient'),label+' must have pearl glass gradient')
+ assert.ok(cardGlass.blur.includes('blur('),label+' must have frosted blur')
+ assert.ok(cardGlass.shadow!=='none',label+' must have molded glass shadow')
  console.log('PASS '+label+' financial brand contrast and layout')
 }
 
