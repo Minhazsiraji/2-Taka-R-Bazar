@@ -53,7 +53,7 @@ async function assertFinancialDesign(page,label) {
    titleColor:headCss?.color,scroll:document.documentElement.scrollWidth,viewport:innerWidth}
  })
  assert.ok(summary.gradient.includes('linear-gradient'),label+' hero lost its brand gradient')
- assert.equal(summary.titleColor,'rgb(255, 255, 255)',label+' heading should be white against dark hero')
+ assert.equal(summary.titleColor,'rgb(18, 48, 68)',label+' hero title should be dark ink on pearl glass')
  assert.ok(summary.height<390,label+' hero distorted: '+summary.height+'px')
  assert.ok(summary.scroll<=summary.viewport+1,label+' overflows viewport')
  const panel=await page.locator('.finance-panel').first().evaluate(el=>getComputedStyle(el).backgroundColor)
@@ -67,6 +67,18 @@ async function assertFinancialDesign(page,label) {
   return {background:z.backgroundImage,border:z.borderTopColor,shadow:z.boxShadow,blur:z.backdropFilter}
  })
  console.log('HEADER_GLASS_PARITY '+label+' '+JSON.stringify({head:headGlass,card:cardGlass}))
+ const heroGlass=await page.locator('.finance-ops-hero').evaluate(el=>{
+  const z=getComputedStyle(el)
+  return {background:z.backgroundImage,border:z.borderTopColor,shadow:z.boxShadow,blur:z.backdropFilter}
+ })
+ console.log('HERO_GLASS_PARITY '+label+' '+JSON.stringify({head:headGlass,hero:heroGlass}))
+ assert.equal(heroGlass.background,headGlass.background,label+' hero must share header glass gradient')
+ assert.equal(heroGlass.border,headGlass.border,label+' hero must share header pearl rim')
+ assert.equal(heroGlass.shadow,headGlass.shadow,label+' hero must share header shadow recipe')
+ assert.equal(cardGlass.background,headGlass.background,label+' content card must share header glass gradient')
+ assert.equal(cardGlass.border,headGlass.border,label+' content card must share header pearl rim')
+ assert.equal(cardGlass.shadow,headGlass.shadow,label+' content card must share header shadow recipe')
+
  assert.ok(cardGlass.background.includes('linear-gradient'),label+' must have pearl glass gradient')
  assert.ok(cardGlass.blur.includes('blur('),label+' must have frosted blur')
  assert.ok(cardGlass.shadow!=='none',label+' must have molded glass shadow')
