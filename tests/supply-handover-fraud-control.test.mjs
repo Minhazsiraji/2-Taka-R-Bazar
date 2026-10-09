@@ -90,3 +90,23 @@ test('server actions use guarded RPC workflows rather than direct supply-table w
   assert.match(actions,/admin_resolve_supply_variance/i)
   assert.doesNotMatch(actions,/\.from\('supply_/i)
 })
+
+
+test('external supplier dispatches require independent Admin authorization before sealing',()=>{
+  assert.match(migration,/External supplier dispatch requires Admin authorization before sealing/i)
+  assert.match(migration,/admin_authorize_supply_dispatch/i)
+  assert.match(migration,/supplier staff cannot authorize their own supplier dispatch/i)
+  assert.match(adminPage,/Authorize supplier dispatch/i)
+  assert.match(supplyPage,/Waiting for independent 2-TAKA-R-BAZAR Admin authorization/i)
+})
+
+test('Community Ops receiving is blind to sender declared counts until submission',()=>{
+  assert.match(communityPage,/Blind-count the physical batch independently/i)
+  assert.match(communityPage,/sender quantity hidden/i)
+  assert.doesNotMatch(communityPage,/Sender says/i)
+  assert.match(migration,/d\.status,null::integer,null::text,pr\.full_name/i)
+  assert.doesNotMatch(
+    migration.match(/create or replace function public\.get_my_inbound_supply_dispatches[\s\S]*?\$fn\$;/i)?.[0]??'',
+    /'dispatched_quantity'/
+  )
+})
