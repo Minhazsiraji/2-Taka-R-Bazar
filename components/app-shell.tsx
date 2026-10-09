@@ -37,7 +37,7 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
             <ThemeToggle className="cx-header-theme"/>
             <Suspense fallback={<NotificationBellFallback/>}><NotificationBell/></Suspense>
 
-            {isPickup&&<Link className="app-role-link hidden shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm md:inline-flex" href="/pickup-ops"><span aria-hidden="true">▣</span><span className="role-label">Pickup Ops</span></Link>}
+            {isPickup&&<Link className="app-role-link hidden shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm md:inline-flex" href="/community-ops"><span aria-hidden="true">▣</span><span className="role-label">Community Ops</span></Link>}
             {isAdmin&&<Link className="app-role-link hidden shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm md:inline-flex" href="/admin"><span aria-hidden="true">⚙</span><span className="role-label">Operations</span></Link>}
             {isSuperAdmin&&<Link className="app-role-link hidden shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm md:inline-flex" href="/super-admin"><span aria-hidden="true">♛</span><span className="role-label">Super Admin</span></Link>}
 
