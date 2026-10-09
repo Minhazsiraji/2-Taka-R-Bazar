@@ -57,7 +57,7 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
     ['Quotes awaiting PO',quote.length],['Pending PO approval',po.filter(x=>x.status==='submitted').length],
     ['Invoices for approval',bills.filter(x=>x.status==='submitted').length],
     ['Accepted cash not journalled',cash.length]
-   ].map(([name,count])=><div className="rounded-2xl border border-slate-200 bg-white p-4" key={String(name)}><p className="text-[10px] font-black uppercase text-slate-500">{name}</p><p className="mt-2 text-3xl font-black text-teal-800">{count}</p></div>)}
+   ].map(([name,count])=><div className="finance-panel rounded-2xl border border-slate-200 bg-white p-4" key={String(name)}><p className="text-[10px] font-black uppercase text-slate-500">{name}</p><p className="mt-2 text-3xl font-black text-teal-800">{count}</p></div>)}
   </div>
   <div className="grid gap-4 xl:grid-cols-2">
    <Panel heading="1 · Generate purchase order" detail="Selected, in-date final quote and frozen Pool quantity are required. Owner must independently approve.">
