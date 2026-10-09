@@ -9,7 +9,8 @@ type E = {
  id:string;category:string;description:string;vendor_name:string;document_reference:string;
  amount:number|string;incurred_on:string;community_id:string|null;campaign_code:string|null;
  status:string;created_by:string;reviewed_by:string|null;created_at:string;
- settlement_id:string|null;settlement_status:string|null
+ evidence_path:string; evidence_sha256:string;
+ settlement_id:string|null;settlement_status:string|null;settlement_evidence_path:string|null
 }
 type Line = {posted_at:string;posting_date:string;event_key:string;memo:string;account_code:string;account_title:string;debit:number|string;credit:number|string;community_id:string|null}
 type Summary = { month:string; posted_expenses:number|string; settled_cash_out:number|string; pending_count:number;payment_pending_count:number;by_category:{category:string;amount:number|string}[];profit_status:string }
@@ -27,10 +28,10 @@ const num=(v:unknown)=>Number(v??0)||0
 const bd=(v:unknown)=>'৳'+num(v).toLocaleString('en-BD',{minimumFractionDigits:2,maximumFractionDigits:2})
 const monthKey=(s:string)=>/^\d{4}-(0[1-9]|1[0-2])$/.test(s)?s:''
 const demoExpenses:E[]=[
- {id:'preview-1',category:'marketing_offline',description:'Community QR print campaign',vendor_name:'Example print partner',document_reference:'DEMO-QRP-101',amount:1200,incurred_on:'2026-10-04',community_id:null,campaign_code:'AMT-01',status:'settled',created_by:'demo',reviewed_by:'demo2',created_at:'2026-10-04',settlement_id:'settle1',settlement_status:'verified'},
- {id:'preview-2',category:'logistics',description:'Community point freight',vendor_name:'Example transport',document_reference:'DEMO-FRT-102',amount:880,incurred_on:'2026-10-05',community_id:null,campaign_code:null,status:'posted',created_by:'demo',reviewed_by:'demo2',created_at:'2026-10-05',settlement_id:null,settlement_status:null},
+ {id:'preview-1',category:'marketing_offline',description:'Community QR print campaign',vendor_name:'Example print partner',document_reference:'DEMO-QRP-101',amount:1200,incurred_on:'2026-10-04',community_id:null,campaign_code:'AMT-01',status:'settled',created_by:'demo',reviewed_by:'demo2',created_at:'2026-10-04',settlement_id:'settle1',settlement_status:'verified',evidence_path:'DEMO',evidence_sha256:'DEMO',settlement_evidence_path:'DEMO'},
+ {id:'preview-2',category:'logistics',description:'Community point freight',vendor_name:'Example transport',document_reference:'DEMO-FRT-102',amount:880,incurred_on:'2026-10-05',community_id:null,campaign_code:null,status:'posted',created_by:'demo',reviewed_by:'demo2',created_at:'2026-10-05',settlement_id:null,settlement_status:null,evidence_path:'DEMO',evidence_sha256:'DEMO',settlement_evidence_path:null,evidence_path:'DEMO',evidence_sha256:'DEMO',settlement_evidence_path:null},
  {id:'preview-3',category:'marketing_online',description:'Facebook location-targeted test',vendor_name:'Example ad provider',document_reference:'DEMO-ADS-103',amount:2000,incurred_on:'2026-10-06',community_id:null,campaign_code:'AMT-01',status:'submitted',created_by:'demo',reviewed_by:null,created_at:'2026-10-06',settlement_id:null,settlement_status:null},
- {id:'preview-4',category:'infrastructure',description:'Domain and digital services',vendor_name:'Example tech provider',document_reference:'DEMO-INF-104',amount:700,incurred_on:'2026-10-07',community_id:null,campaign_code:null,status:'settlement_requested',created_by:'demo',reviewed_by:'demo2',created_at:'2026-10-07',settlement_id:'settle4',settlement_status:'pending'}
+ {id:'preview-4',category:'infrastructure',description:'Domain and digital services',vendor_name:'Example tech provider',document_reference:'DEMO-INF-104',amount:700,incurred_on:'2026-10-07',community_id:null,campaign_code:null,status:'settlement_requested',created_by:'demo',reviewed_by:'demo2',created_at:'2026-10-07',settlement_id:'settle4',settlement_status:'pending',evidence_path:'DEMO',evidence_sha256:'DEMO',settlement_evidence_path:'DEMO'}
 ]
 const demoLedger:Line[]=[
  {posted_at:'2026-10-04',posting_date:'2026-10-04',event_key:'DEMO:accrual:1',memo:'Community QR print campaign',account_code:'6200',account_title:'Offline marketing',debit:1200,credit:0,community_id:null},
@@ -108,6 +109,15 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
  const next=new Date(Date.UTC(monthDate.getUTCFullYear(),monthDate.getUTCMonth()+1,1)).toISOString().slice(0,7)
  const monthTitle=monthDate.toLocaleDateString('en-GB',{month:'long',year:'numeric',timeZone:'UTC'})
  const drafts=rows.filter(x=>x.status==='submitted')
+ const evidenceLinks = new Map<string,string>()
+ if(!demo && !dbError) {
+  await Promise.all(rows.slice(0,100).flatMap(e=>[
+    e.evidence_path && user.supabase.storage.from('finance-evidence').createSignedUrl(e.evidence_path,300)
+      .then(({data})=>{if(data?.signedUrl)evidenceLinks.set(e.id,data.signedUrl)}),
+    e.settlement_evidence_path && user.supabase.storage.from('finance-evidence').createSignedUrl(e.settlement_evidence_path,300)
+      .then(({data})=>{if(data?.signedUrl)evidenceLinks.set('settlement:'+e.id,data.signedUrl)}),
+  ].filter(Boolean) as Promise<void>[]))
+ }
  const paymentQueue=rows.filter(x=>x.status==='settlement_requested')
  return <SuperAdminShell><div className="grid min-w-0 gap-5">
   <section className="relative overflow-hidden rounded-[26px] bg-[linear-gradient(117deg,#082b3e_0%,#0c5757_52%,#167c77_100%)] px-5 py-7 text-white shadow-[0_16px_45px_rgba(8,68,73,.22)] sm:p-8">
@@ -143,10 +153,11 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
      <label className="grid gap-1 text-xs font-bold text-slate-600">Incurred on<input name="incurred_on" type="date" defaultValue={new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'})} required className="w-full min-w-0 rounded-xl border border-slate-200 p-3 text-sm"/></label>
      <label className="col-span-2 grid gap-1 text-xs font-bold text-slate-600">Vendor / payee<input name="vendor_name" minLength={2} required className="rounded-xl border border-slate-200 p-3 text-sm"/></label>
      <label className="col-span-2 grid gap-1 text-xs font-bold text-slate-600">Invoice / receipt reference<input name="document_reference" minLength={3} required className="rounded-xl border border-slate-200 p-3 text-sm"/></label>
+     <label className="col-span-2 grid gap-1 text-xs font-bold text-slate-600">Original invoice or receipt — JPEG / PNG / PDF, max 5MB<input name="receipt_file" type="file" accept="image/jpeg,image/png,application/pdf" required className="rounded-xl border border-dashed border-teal-200 bg-teal-50 p-3 text-xs"/></label>
      <label className="grid gap-1 text-xs font-bold text-slate-600">Community<select name="community_id" className="min-w-0 rounded-xl border border-slate-200 bg-white p-3 text-sm"><option value="">Company shared</option>{(await user.supabase.from('communities').select('id,name').order('name')).data?.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
      <label className="grid gap-1 text-xs font-bold text-slate-600">Campaign code<input name="campaign_code" placeholder="Optional: AMT-01" className="w-full rounded-xl border border-slate-200 p-3 text-sm"/></label>
      <button className="col-span-2 rounded-xl bg-[#0c7772] px-4 py-3 text-sm font-black text-white shadow-lg shadow-teal-950/10 hover:bg-[#095f5b]">Submit expense for approval →</button>
-     <p className="col-span-2 text-xs leading-5 text-slate-500">Procurement is not an operating expense category. Invoice reference is metadata, not proof of a verified invoice. Attachment verification and procurement matching are later release gates.</p>
+     <p className="col-span-2 text-xs leading-5 text-slate-500">Procurement is not an operating expense category. Invoice reference is metadata, not proof of a verified invoice. Receipt bytes are hashed and privately stored; an approver must independently inspect evidence. Procurement matching is a later release gate.</p>
     </form>
    </Card>
    <Card>
@@ -154,6 +165,7 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
     {drafts.length?<div className="mt-4 space-y-3">{drafts.map(e=><div key={e.id} className="rounded-2xl border border-slate-200 p-4">
      <div className="flex flex-wrap items-center justify-between gap-2"><b>{e.vendor_name}</b><span className="font-black">{bd(e.amount)}</span></div>
      <p className="mt-1 text-sm text-slate-600">{e.description}</p><p className="mt-1 text-xs text-slate-400">{e.document_reference} · {e.incurred_on} · {labelFor(e.category)}</p>
+     {evidenceLinks.has(e.id)&&<a href={evidenceLinks.get(e.id)} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-bold text-teal-700 underline">View private receipt ↗</a>}
      {!demo&&<form action={reviewFinanceExpense} className="mt-3 flex flex-wrap gap-2"><input type="hidden" name="expense_id" value={e.id}/><input name="note" aria-label="Review note" placeholder="Decision note" className="min-w-0 flex-1 rounded-lg border border-slate-200 px-2 py-2 text-xs"/><button name="decision" value="approve" className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-black text-white">Approve & post</button><button name="decision" value="reject" className="rounded-lg bg-rose-50 px-3 py-2 text-xs font-black text-rose-700">Reject</button></form>}
     </div>)}</div>:<div className="mt-8 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-7 text-center text-sm text-slate-500">No expenses waiting for approval in this period.</div>}
     <div className="mt-5 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">Checker verification posts: <b>Dr operating expense / Cr payable</b>. No cash is presumed until verified settlement.</div>
@@ -164,14 +176,15 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
    <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[770px] text-left text-xs">
     <thead><tr className="border-b border-slate-200 text-[10px] uppercase tracking-widest text-slate-400"><th className="py-3">Incurred</th><th>Payee / document</th><th>Category</th><th className="text-right">Amount</th><th>Status</th><th className="pl-3">Next action</th></tr></thead>
     <tbody>{rows.map(e=><tr key={e.id} className="border-b border-slate-100 align-top last:border-0">
-      <td className="py-4 text-slate-500">{e.incurred_on}</td><td className="py-4"><b>{e.vendor_name}</b><p className="mt-1 max-w-48 truncate text-slate-400">{e.document_reference}</p></td><td className="py-4 text-slate-600">{labelFor(e.category)}</td><td className="py-4 text-right font-black">{bd(e.amount)}</td><td className="py-4">{pill(e.status)}</td><td className="py-3 pl-3">
+      <td className="py-4 text-slate-500">{e.incurred_on}</td><td className="py-4"><b>{e.vendor_name}</b><p className="mt-1 max-w-48 truncate text-slate-400">{e.document_reference}</p>{evidenceLinks.has(e.id)&&<a href={evidenceLinks.get(e.id)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-teal-700 underline">Receipt ↗</a>}</td><td className="py-4 text-slate-600">{labelFor(e.category)}</td><td className="py-4 text-right font-black">{bd(e.amount)}</td><td className="py-4">{pill(e.status)}</td><td className="py-3 pl-3">
         {e.status==='posted'&&!demo?<form action={requestFinanceSettlement} className="flex flex-wrap gap-1.5">
          <input type="hidden" name="expense_id" value={e.id}/>
          <select name="payment_method" className="rounded border border-slate-200 p-1.5"><option value="cash">Cash</option><option value="bank">Bank</option><option value="mobile">Mobile</option></select>
          <input name="payment_reference" minLength={4} required placeholder="Transfer reference" className="w-28 rounded border border-slate-200 p-1.5"/>
          <input name="payment_date" type="date" required defaultValue={new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'})} className="rounded border border-slate-200 p-1.5"/>
+         <input name="payment_proof" type="file" accept="image/jpeg,image/png,application/pdf" required aria-label="Payment proof" className="w-40 rounded border border-slate-200 p-1.5"/>
          <button className="rounded bg-slate-900 px-2 py-1.5 font-bold text-white">Request verify</button></form>:null}
-        {e.status==='settlement_requested'&&e.settlement_id&&!demo?<form action={reviewFinanceSettlement} className="flex flex-wrap gap-1.5"><input type="hidden" name="settlement_id" value={e.settlement_id}/><input name="note" aria-label="Payment verification note" placeholder="Verification note" className="w-28 rounded border border-slate-200 p-1.5"/><button name="decision" value="approve" className="rounded bg-emerald-600 px-2 py-1.5 font-bold text-white">Verify</button><button name="decision" value="reject" className="rounded bg-red-50 px-2 py-1.5 font-bold text-red-700">Reject</button></form>:null}
+        {e.status==='settlement_requested'&&e.settlement_id&&!demo?<form action={reviewFinanceSettlement} className="flex flex-wrap gap-1.5"><input type="hidden" name="settlement_id" value={e.settlement_id}/>{evidenceLinks.has('settlement:'+e.id)&&<a href={evidenceLinks.get('settlement:'+e.id)} target="_blank" rel="noopener noreferrer" className="self-center text-xs font-bold text-teal-700 underline">Proof ↗</a>}<input name="note" aria-label="Payment verification note" placeholder="Verification note" className="w-28 rounded border border-slate-200 p-1.5"/><button name="decision" value="approve" className="rounded bg-emerald-600 px-2 py-1.5 font-bold text-white">Verify</button><button name="decision" value="reject" className="rounded bg-red-50 px-2 py-1.5 font-bold text-red-700">Reject</button></form>:null}
         {(demo||e.status==='settled'||e.status==='rejected'||e.status==='submitted')&&<span className="text-slate-400">{demo?'Demo only':e.status==='submitted'?'Awaiting approval':'—'}</span>}
        </td>
      </tr>)}</tbody>
