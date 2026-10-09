@@ -1,11 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-import ts from 'typescript'
+import {stripTypeScriptTypes} from 'node:module'
 
 async function tsModule(path){
  const src=readFileSync(path,'utf8')
- const out=ts.transpileModule(src,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText
+ const out=stripTypeScriptTypes(src,{mode:'strip'})
  return import('data:text/javascript;base64,'+Buffer.from(out).toString('base64'))
 }
 const {calculateProfit,calculateCashBridge}=await tsModule('lib/finance/profit-trace.ts')
