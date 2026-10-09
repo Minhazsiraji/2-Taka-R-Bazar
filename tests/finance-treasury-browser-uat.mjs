@@ -45,6 +45,21 @@ async function visit(page,path,heading){
  await page.getByRole('heading',{name:heading}).first().waitFor({timeout:90000})
  assert.ok(!page.url().includes('/login'),'Unexpected login redirect '+path)
 }
+async function assertFinancialDesign(page,label) {
+ const summary=await page.locator('.finance-ops-hero').evaluate(el=>{
+  const css=getComputedStyle(el),title=el.querySelector('h1'),headCss=title?getComputedStyle(title):null
+  return {height:el.getBoundingClientRect().height,gradient:css.backgroundImage,
+   titleColor:headCss?.color,scroll:document.documentElement.scrollWidth,viewport:innerWidth}
+ })
+ assert.ok(summary.gradient.includes('linear-gradient'),label+' hero lost its brand gradient')
+ assert.equal(summary.titleColor,'rgb(255, 255, 255)',label+' heading should be white against dark hero')
+ assert.ok(summary.height<390,label+' hero distorted: '+summary.height+'px')
+ assert.ok(summary.scroll<=summary.viewport+1,label+' overflows viewport')
+ const panel=await page.locator('.finance-panel').first().evaluate(el=>getComputedStyle(el).backgroundColor)
+ assert.notEqual(panel,'rgba(0, 0, 0, 0)',label+' surface is transparent')
+ console.log('PASS '+label+' financial brand contrast and layout')
+}
+
 async function snapshot(page,label){
  for(const width of [1440,768,360]){
   await page.setViewportSize({width,height:900})
@@ -65,12 +80,15 @@ async function main(){
   await makerContext.addCookies(makerCookie)
   const owner=await ownerContext.newPage(),maker=await makerContext.newPage()
   await visit(owner,'/super-admin/finance','Finance intelligence')
+  await assertFinancialDesign(owner,'Finance')
   await snapshot(owner,'finance')
   console.log('PASS Finance Control 1440/768/360');stages++
   await visit(owner,'/super-admin/treasury','Cash flow & liquidity')
+  await assertFinancialDesign(owner,'Treasury')
   await snapshot(owner,'treasury')
   console.log('PASS Treasury 1440/768/360');stages++
   await visit(maker,'/admin/procurement','Procurement & reconciliation')
+  await assertFinancialDesign(maker,'Procurement')
   await snapshot(maker,'procurement')
   console.log('PASS Procurement 1440/768/360');stages++
   await visit(maker,'/admin/treasury','Treasury requests')
