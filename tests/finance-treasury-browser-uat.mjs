@@ -154,6 +154,25 @@ async function main(){
   await bars.nth(5).focus()
   assert.ok((await tip.innerText()).includes('Cash outflows'),'Keyboard focus must update tooltip series')
   console.log('PASS 12 vivid cash bars, exact BDT hover tooltip and keyboard focus');stages++
+  await visit(owner,'/super-admin/profit-breakdown?demo=1','Profit calculation breakdown')
+  await owner.getByRole('heading',{name:'Formula-by-formula profit bridge'}).waitFor({timeout:30000})
+  await owner.getByText('−৳2,980.00').first().waitFor({timeout:30000})
+  await owner.getByText('FINAL COMPANY NET PROFIT: BLOCKED',{exact:false}).waitFor()
+  await assertFinancialDesign(owner,'Profit breakdown')
+  await snapshot(owner,'profit-breakdown-amt-01')
+  console.log('PASS verified 95-unit supplier COGS, gross zero, operating loss, release blockers');stages++
+  await owner.goto(base+'/super-admin/profit-breakdown?demo=1&community=syn-amt-01&pool=syn-pool-amt-01&product=syn-oil-5l',{waitUntil:'domcontentloaded'})
+  await owner.getByText('Pool/product scope shows unit economics only',{exact:false}).waitFor({timeout:30000})
+  await owner.getByText('Not verified').first().waitFor({timeout:30000})
+  console.log('PASS community / pool / product filters refuse arbitrary overhead allocation');stages++
+  await visit(owner,'/super-admin/cash-bridge?demo=1','Cash Bridge — Profit is not Cash')
+  await owner.getByText('৳255,140.00').first().waitFor({timeout:30000})
+  await owner.getByText('৳193,200.00').first().waitFor({timeout:30000})
+  await owner.getByText('BOOK BRIDGE ARITHMETIC: PASS',{exact:false}).waitFor({timeout:30000})
+  await owner.getByText('BANK VERIFICATION: NOT CERTIFIED',{exact:false}).waitFor({timeout:30000})
+  await assertFinancialDesign(owner,'Cash bridge')
+  await snapshot(owner,'cash-bridge-synthetic')
+  console.log('PASS cash opening + receipts − expenses − debt = closing and unresolved bank certification');stages++
   await visit(maker,'/admin/procurement','Procurement & reconciliation')
   await assertFinancialDesign(maker,'Procurement')
   await snapshot(maker,'procurement')
