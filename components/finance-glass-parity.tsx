@@ -17,7 +17,7 @@ export function FinanceGlassParity() {
       const header = document.querySelector('.app-shell-header-bar')
       if (!header) return
       const style = window.getComputedStyle(header)
-      const blur = style.backdropFilter || style.webkitBackdropFilter
+      const blur = style.backdropFilter || style.getPropertyValue('-webkit-backdrop-filter')
       if (!blur || blur === 'none') return
       document.querySelectorAll<HTMLElement>(surfaces).forEach((element) => {
         element.style.setProperty('backdrop-filter', blur, 'important')
