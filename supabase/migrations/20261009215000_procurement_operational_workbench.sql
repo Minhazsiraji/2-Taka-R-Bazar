@@ -39,7 +39,7 @@ begin
   'bills',coalesce((select jsonb_agg(jsonb_build_object(
      'id',b.id,'po_id',b.po_id,'ref',b.invoice_reference,'vendor',s.business_name,
      'quantity',b.quantity,'amount',b.amount,'status',b.status,
-     'submitted_by',b.submitted_by,'reviewed_by',b.reviewed_by)
+     'submitted_by',b.submitted_by,'reviewed_by',b.reviewed_by,'evidence_path',b.evidence_path)
      order by b.created_at desc)
      from (select * from public.procurement_supplier_bills order by created_at desc limit 100) b
      join public.suppliers s on s.id=b.supplier_id),'[]'::jsonb),
