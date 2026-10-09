@@ -85,6 +85,18 @@ create table if not exists public.community_ops_inbound (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.community_ops_stock_adjustments (
+  id uuid primary key default gen_random_uuid(),
+  day_id uuid not null references public.community_ops_days(id) on delete cascade,
+  product_id uuid not null references public.products(id) on delete restrict,
+  disposition text not null check(disposition in ('retained_at_point','returned_to_office','damaged','missing','transfer_out','other')),
+  quantity integer not null check(quantity>0),
+  reason text not null,
+  notes text,
+  recorded_by uuid not null references auth.users(id) on delete restrict,
+  recorded_at timestamptz not null default now()
+);
+
 create table if not exists public.community_ops_cash_handovers (
   day_id uuid primary key references public.community_ops_days(id) on delete cascade,
   product_cod_submitted numeric(12,2) not null default 0 check(product_cod_submitted>=0),
@@ -107,14 +119,16 @@ create index if not exists community_ops_assignments_user_idx on public.communit
 create index if not exists community_ops_days_status_idx on public.community_ops_days(business_date desc,status,community_id);
 create index if not exists community_ops_day_orders_order_idx on public.community_ops_day_orders(order_id);
 create index if not exists community_ops_inbound_day_product_idx on public.community_ops_inbound(day_id,product_id);
+create index if not exists community_ops_stock_day_product_idx on public.community_ops_stock_adjustments(day_id,product_id);
 
 alter table public.community_ops_assignments enable row level security;
 alter table public.community_ops_days enable row level security;
 alter table public.community_ops_day_orders enable row level security;
 alter table public.community_ops_inbound enable row level security;
+alter table public.community_ops_stock_adjustments enable row level security;
 alter table public.community_ops_cash_handovers enable row level security;
 
-revoke all on public.community_ops_assignments,public.community_ops_days,public.community_ops_day_orders,public.community_ops_inbound,public.community_ops_cash_handovers from anon,authenticated,service_role;
+revoke all on public.community_ops_assignments,public.community_ops_days,public.community_ops_day_orders,public.community_ops_inbound,public.community_ops_stock_adjustments,public.community_ops_cash_handovers from anon,authenticated,service_role;
 
 create or replace function private.is_community_operator(p_user uuid,p_community uuid)
 returns boolean language sql stable security definer set search_path='' as $$
@@ -250,6 +264,32 @@ $$;
 revoke all on function public.record_community_ops_inbound(uuid,uuid,text,text,integer,integer,integer,integer,text,text,text) from public,anon,authenticated,service_role;
 grant execute on function public.record_community_ops_inbound(uuid,uuid,text,text,integer,integer,integer,integer,text,text,text) to authenticated;
 
+create or replace function public.record_community_ops_stock_adjustment(
+  p_day_id uuid,p_product_id uuid,p_disposition text,p_quantity integer,p_reason text,p_notes text default null
+)
+returns uuid language plpgsql security definer set search_path='' as $
+declare v_user uuid:=auth.uid(); d public.community_ops_days%rowtype; v_id uuid; v_reason text:=nullif(btrim(coalesce(p_reason,'')),'');
+begin
+  select * into d from public.community_ops_days where id=p_day_id for update;
+  if not found then raise exception 'Operations day not found'; end if;
+  if not private.is_community_operator(v_user,d.community_id) then raise exception 'Community assignment required'; end if;
+  if d.status<>'open' then raise exception 'Stock adjustments can only be recorded while the day is open'; end if;
+  if p_disposition not in ('retained_at_point','returned_to_office','damaged','missing','transfer_out','other') then raise exception 'Invalid stock disposition'; end if;
+  if coalesce(p_quantity,0)<=0 then raise exception 'Stock adjustment quantity must be positive'; end if;
+  if v_reason is null then raise exception 'Stock adjustment reason is required'; end if;
+  insert into public.community_ops_stock_adjustments(day_id,product_id,disposition,quantity,reason,notes,recorded_by)
+  values(p_day_id,p_product_id,p_disposition,p_quantity,v_reason,nullif(btrim(coalesce(p_notes,'')),''),v_user)
+  returning id into v_id;
+  insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
+  values(v_user,'community_ops_stock_adjusted','community_ops_stock_adjustment',v_id,jsonb_build_object(
+    'day_id',p_day_id,'product_id',p_product_id,'disposition',p_disposition,'quantity',p_quantity,'reason',v_reason
+  ));
+  return v_id;
+end;
+$;
+revoke all on function public.record_community_ops_stock_adjustment(uuid,uuid,text,integer,text,text) from public,anon,authenticated,service_role;
+grant execute on function public.record_community_ops_stock_adjustment(uuid,uuid,text,integer,text,text) to authenticated;
+
 create or replace function public.verify_community_ops_order(p_day_id uuid,p_order_id uuid,p_notes text default null)
 returns void language plpgsql security definer set search_path='' as $$
 declare v_user uuid:=auth.uid(); d public.community_ops_days%rowtype; o public.orders%rowtype;
@@ -382,7 +422,7 @@ grant execute on function public.record_community_ops_order_exception(uuid,uuid,
 create or replace function public.submit_community_ops_report(p_day_id uuid,p_report_note text default null)
 returns void language plpgsql security definer set search_path='' as $$
 declare
-  v_user uuid:=auth.uid(); d public.community_ops_days%rowtype; v_pending integer; v_bad_inbound integer;
+  v_user uuid:=auth.uid(); d public.community_ops_days%rowtype; v_pending integer; v_bad_inbound integer; v_stock_variance integer;
 begin
   select * into d from public.community_ops_days where id=p_day_id for update;
   if not found then raise exception 'Operations day not found'; end if;
@@ -404,6 +444,22 @@ begin
     and (i.received_quantity-i.damaged_quantity-i.returned_quantity)<>i.expected_quantity
     and nullif(btrim(coalesce(i.exception_reason,'')),'') is null;
   if v_bad_inbound>0 then raise exception 'Inbound variances require reasons'; end if;
+
+  select count(*) into v_stock_variance
+  from (
+    select p.id,
+      coalesce((select sum(i.received_quantity-i.damaged_quantity-i.returned_quantity) from public.community_ops_inbound i where i.day_id=p_day_id and i.product_id=p.id),0)
+      - coalesce(sum(case when m.state='completed' then oi.quantity else 0 end),0)
+      - coalesce((select sum(sa.quantity) from public.community_ops_stock_adjustments sa where sa.day_id=p_day_id and sa.product_id=p.id),0) as variance
+    from public.community_ops_day_orders m
+    join public.order_items oi on oi.order_id=m.order_id
+    join public.products p on p.id=oi.product_id
+    where m.day_id=p_day_id
+    group by p.id
+  ) s where s.variance<>0;
+  if v_stock_variance>0 then
+    raise exception '% product(s) still have stock variance. Account remaining/returned/damaged/missing stock before submitting.',v_stock_variance;
+  end if;
 
   update public.community_ops_days set status='submitted',report_note=nullif(btrim(coalesce(p_report_note,'')),''),
     submitted_at=now(),submitted_by=v_user,updated_at=now() where id=p_day_id;
@@ -599,7 +655,12 @@ begin
           'required_quantity',sum(oi.quantity),
           'fulfilled_quantity',sum(case when m.state='completed' then oi.quantity else 0 end),
           'exception_quantity',sum(case when m.state='exception' then oi.quantity else 0 end),
-          'inbound_received',coalesce((select sum(i.received_quantity-i.damaged_quantity-i.returned_quantity) from public.community_ops_inbound i where i.day_id=d.id and i.product_id=p2.id),0)
+          'inbound_received',coalesce((select sum(i.received_quantity-i.damaged_quantity-i.returned_quantity) from public.community_ops_inbound i where i.day_id=d.id and i.product_id=p2.id),0),
+          'stock_accounted',coalesce((select sum(sa.quantity) from public.community_ops_stock_adjustments sa where sa.day_id=d.id and sa.product_id=p2.id),0),
+          'stock_variance',
+            coalesce((select sum(i.received_quantity-i.damaged_quantity-i.returned_quantity) from public.community_ops_inbound i where i.day_id=d.id and i.product_id=p2.id),0)
+            - sum(case when m.state='completed' then oi.quantity else 0 end)
+            - coalesce((select sum(sa.quantity) from public.community_ops_stock_adjustments sa where sa.day_id=d.id and sa.product_id=p2.id),0)
         ) x
         from public.community_ops_day_orders m
         join public.order_items oi on oi.order_id=m.order_id
@@ -634,6 +695,14 @@ begin
         'exception_code',i.exception_code,'exception_reason',i.exception_reason,'notes',i.notes,'received_at',i.received_at
       ) order by i.received_at desc)
       from public.community_ops_inbound i join public.products p4 on p4.id=i.product_id where i.day_id=d.id
+    ),'[]'::jsonb),
+    'stock_adjustments',coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id',sa.id,'product_id',sa.product_id,'product_name',p5.name,'disposition',sa.disposition,
+        'quantity',sa.quantity,'reason',sa.reason,'notes',sa.notes,'recorded_at',sa.recorded_at
+      ) order by sa.recorded_at desc)
+      from public.community_ops_stock_adjustments sa join public.products p5 on p5.id=sa.product_id
+      where sa.day_id=d.id
     ),'[]'::jsonb),
     'cash_handover',(
       select case when h.day_id is null then null else jsonb_build_object(
