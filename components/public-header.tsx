@@ -3,7 +3,7 @@ import { BrandLogo } from '@/components/brand-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SITE_TAGLINE_BN, SITE_TAGLINE_EN } from '@/lib/site'
 
-export function PublicHeader({ actionHref = '/login', actionLabel = 'Sign in', actionLabelBn }: { actionHref?: string; actionLabel?: string; actionLabelBn?: string }) {
+export function PublicHeader({ actionHref = '/login', actionLabel = 'Sign in' }: { actionHref?: string; actionLabel?: string }) {
   return (
     <header className="public-glass-header flex items-center justify-between gap-3">
       <Link href="/" className="flex min-w-0 shrink items-center gap-2.5" aria-label="2-TAKA-R-BAZAR home">
@@ -16,7 +16,7 @@ export function PublicHeader({ actionHref = '/login', actionLabel = 'Sign in', a
       </Link>
       <div className="public-header-actions flex shrink-0 items-center gap-2">
         <ThemeToggle />
-        <Link href={actionHref} className="public-header-action btn-secondary shrink-0 px-4 text-center text-xs leading-tight sm:px-5 sm:text-sm"><span className="block">{actionLabel}</span>{actionLabelBn&&<span className="mt-0.5 block text-[10px] font-medium text-slate-500" lang="bn">{actionLabelBn}</span>}</Link>
+        <Link href={actionHref} className="public-header-action btn-secondary shrink-0 px-4 text-xs sm:px-5 sm:text-sm">{actionLabel}</Link>
       </div>
     </header>
   )
