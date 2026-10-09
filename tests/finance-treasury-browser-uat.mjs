@@ -75,12 +75,13 @@ async function assertFinancialDesign(page,label) {
  assert.equal(heroGlass.background,headGlass.background,label+' hero must share header glass gradient')
  assert.equal(heroGlass.border,headGlass.border,label+' hero must share header pearl rim')
  assert.equal(heroGlass.shadow,headGlass.shadow,label+' hero must share header shadow recipe')
+ assert.equal(heroGlass.blur,headGlass.blur,label+' hero must match header backdrop blur on desktop')
  assert.equal(cardGlass.background,headGlass.background,label+' content card must share header glass gradient')
  assert.equal(cardGlass.border,headGlass.border,label+' content card must share header pearl rim')
  assert.equal(cardGlass.shadow,headGlass.shadow,label+' content card must share header shadow recipe')
 
  assert.ok(cardGlass.background.includes('linear-gradient'),label+' must have pearl glass gradient')
- assert.ok(cardGlass.blur.includes('blur('),label+' must have frosted blur')
+ assert.equal(cardGlass.blur,headGlass.blur,label+' card must match header backdrop blur on desktop')
  assert.ok(cardGlass.shadow!=='none',label+' must have molded glass shadow')
  console.log('PASS '+label+' financial brand contrast and layout')
 }
@@ -127,7 +128,7 @@ async function main(){
   const month=await owner.locator('.finance-month-selector').evaluate(el=>({
    background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color
   }))
-  assert.equal(month.background,'rgba(1, 41, 52, 0.9)','Month control must have dark teal background')
+  assert.equal(month.background,'rgb(16, 61, 74)','Month control must have solid dark teal background')
   assert.equal(month.color,'rgb(255, 255, 255)','Month selector must have readable white text')
   await snapshot(owner,'finance-synthetic-branded')
   console.log('PASS Finance solid synthetic badge and readable month selector');stages++
