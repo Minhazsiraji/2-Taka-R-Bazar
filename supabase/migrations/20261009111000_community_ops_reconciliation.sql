@@ -267,7 +267,7 @@ grant execute on function public.record_community_ops_inbound(uuid,uuid,text,tex
 create or replace function public.record_community_ops_stock_adjustment(
   p_day_id uuid,p_product_id uuid,p_disposition text,p_quantity integer,p_reason text,p_notes text default null
 )
-returns uuid language plpgsql security definer set search_path='' as $
+returns uuid language plpgsql security definer set search_path='' as $stock$
 declare v_user uuid:=auth.uid(); d public.community_ops_days%rowtype; v_id uuid; v_reason text:=nullif(btrim(coalesce(p_reason,'')),'');
 begin
   select * into d from public.community_ops_days where id=p_day_id for update;
@@ -286,7 +286,7 @@ begin
   ));
   return v_id;
 end;
-$;
+$stock$;
 revoke all on function public.record_community_ops_stock_adjustment(uuid,uuid,text,integer,text,text) from public,anon,authenticated,service_role;
 grant execute on function public.record_community_ops_stock_adjustment(uuid,uuid,text,integer,text,text) to authenticated;
 
