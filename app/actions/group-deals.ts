@@ -71,3 +71,25 @@ export async function leaveGroupDeal(fd:FormData){
   revalidatePath('/group-deals');revalidatePath('/home')
   redirect(`/group-deals?notice=${encodeURIComponent(String(data??'Commitment updated.'))}`)
 }
+
+
+export async function requestFailedGroupDealInitialPrice(fd:FormData){
+  const {supabase}=await requireOnboardedUser()
+  const dealId=text(fd,'group_deal_id')
+  const quantity=Number(text(fd,'quantity'))
+  const note=text(fd,'note')
+  if(!dealId||!Number.isInteger(quantity)||quantity<1){
+    redirect('/group-deals?error=Choose+a+valid+quantity')
+  }
+  const {error}=await supabase.rpc('request_failed_group_deal_initial_price',{
+    p_group_deal_id:dealId,
+    p_quantity:quantity,
+    p_note:note||null,
+  })
+  if(error){
+    redirect(`/group-deals?error=${encodeURIComponent(error.message||'Could not send your request')}`)
+  }
+  revalidatePath('/group-deals')
+  revalidatePath('/notifications')
+  redirect('/group-deals?notice=Your+request+was+sent.+Our+team+will+contact+you.')
+}
