@@ -54,6 +54,10 @@ jobs:
         run: supabase start
       - name: Apply migrations from zero
         run: supabase db reset
+      - name: Synthetic supply handover E2E
+        env:
+          PGPASSWORD: postgres
+        run: psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/supply-handover-e2e.sql
       - name: Stop disposable Supabase
         if: always()
         run: supabase stop --no-backup
