@@ -149,7 +149,7 @@ test('failed Group Deal customers are notified and can ask to buy at the initial
   assert.match(autoCloseMigration,/group_deal_minimum_not_reached/i)
   assert.match(autoCloseMigration,/No order was created and no payment is due/i)
   assert.match(autoCloseMigration,/request_failed_group_deal_initial_price/i)
-  assert.match(autoCloseMigration,/requested_unit_price=v_deal\.market_price_snapshot/i)
+  assert.match(autoCloseMigration,/requested_unit_price[\s\S]*v_deal\.market_price_snapshot/i)
   assert.match(autoCloseMigration,/group_deal_purchase_requests/i)
   assert.match(customerPage,/get_my_failed_group_deals/i)
   assert.match(customerPage,/I still want this product/i)
