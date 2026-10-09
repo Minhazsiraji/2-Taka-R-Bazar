@@ -110,6 +110,32 @@ create index finance_expenses_community_date on public.finance_expenses(communit
 create index finance_journals_date on public.finance_journals(posting_date);
 create index finance_journal_lines_account on public.finance_journal_lines(account_code,journal_id);
 
+-- Require a balanced pair at transaction commit, even if a future writer is introduced.
+create or replace function private.finance_assert_balanced()
+returns trigger language plpgsql set search_path='' as $$
+declare v_journal uuid:=coalesce(new.journal_id,old.journal_id); v_count integer; v_delta numeric;
+begin
+ select count(*),coalesce(sum(debit-credit),0) into v_count,v_delta
+ from public.finance_journal_lines where journal_id=v_journal;
+ if v_count<2 or v_delta<>0 then raise exception 'Unbalanced finance journal %',v_journal; end if;
+ return null;
+end $$;
+revoke all on function private.finance_assert_balanced() from public,anon,authenticated;
+create constraint trigger finance_assert_balanced_on_commit
+after insert or update or delete on public.finance_journal_lines
+deferrable initially deferred for each row execute function private.finance_assert_balanced();
+
+create or replace function private.finance_reject_journal_mutation()
+returns trigger language plpgsql set search_path='' as $$
+begin
+ raise exception 'Posted finance journals are immutable: issue a correcting journal';
+end $$;
+revoke all on function private.finance_reject_journal_mutation() from public,anon,authenticated;
+create trigger finance_headers_immutable before update or delete on public.finance_journals
+for each row execute function private.finance_reject_journal_mutation();
+create trigger finance_lines_immutable before update or delete on public.finance_journal_lines
+for each row execute function private.finance_reject_journal_mutation();
+
 -- Private evidence: authentic stored file, hash, scoped uploader and reviewer access.
 insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
 values('finance-evidence','finance-evidence',false,5242880,array['image/jpeg','image/png','application/pdf'])
