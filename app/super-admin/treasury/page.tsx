@@ -30,7 +30,7 @@ const input='w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-
 const label='grid min-w-0 gap-1 text-xs font-bold text-slate-600'
 const txLabel=(v:string)=>v.replaceAll('_',' ').replace(/\b\w/g,x=>x.toUpperCase())
 function Card({children,className=''}:{children:React.ReactNode;className?:string}) {
- return <section className={'rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_10px_35px_rgba(2,6,23,.035)] '+className}>{children}</section>
+ return <section className={'finance-panel rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_10px_35px_rgba(2,6,23,.035)] '+className}>{children}</section>
 }
 function Metric({name,value,description,color='text-slate-950'}:{name:string;value:string;description:string;color?:string}){
  return <Card><p className="text-[10px] font-black uppercase tracking-[.16em] text-slate-500">{name}</p><p className={'mt-3 break-words text-2xl font-black tracking-tight '+color}>{value}</p><p className="mt-2 text-xs leading-5 text-slate-500">{description}</p></Card>
