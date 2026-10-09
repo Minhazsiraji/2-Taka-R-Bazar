@@ -11,6 +11,8 @@ const runtimeFix=fs.readFileSync('supabase/migrations/20261007143000_group_locat
 const joinAmbiguityFix=fs.readFileSync('supabase/migrations/20261007150000_join_group_deal_column_ambiguity_fix.sql','utf8')
 const groupProgress=fs.readFileSync('components/group-deal-unlock-progress.tsx','utf8')
 const nextConfig=fs.readFileSync('next.config.ts','utf8')
+const autoCloseMigration=fs.readFileSync('supabase/migrations/20261009093000_group_deal_auto_close_contact.sql','utf8')
+const adminPage=fs.readFileSync('app/admin/group-deals/page.tsx','utf8')
 
 test('Group Deals cannot unlock below five qualified buyers',()=>{
   assert.match(migration,/min_group_size integer not null default 5 check\(min_group_size>=5\)/i)
@@ -128,4 +130,39 @@ test('mobile Group Deal location requests automatically once when verification i
 test('security headers allow only same-origin geolocation while camera and microphone stay blocked',()=>{
   assert.match(nextConfig,/camera=\(\), microphone=\(\), geolocation=\(self\)/i)
   assert.doesNotMatch(nextConfig,/geolocation=\(\)/i)
+})
+
+
+test('expired Group Deals auto-lock or auto-cancel at the minimum buyer threshold',()=>{
+  assert.match(autoCloseMigration,/create or replace function private\.process_expired_group_deals/i)
+  assert.match(autoCloseMigration,/where status='open' and closes_at<=now\(\)/i)
+  assert.match(autoCloseMigration,/if v_buyers<d\.min_group_size then/i)
+  assert.match(autoCloseMigration,/cancellation_reason=v_reason/i)
+  assert.match(autoCloseMigration,/Minimum buyer threshold not reached/i)
+  assert.match(autoCloseMigration,/status='locked'/i)
+  assert.match(autoCloseMigration,/locked_buyer_count=v_buyers/i)
+  assert.match(autoCloseMigration,/locked_unit_price=v_price/i)
+  assert.match(autoCloseMigration,/cron\.schedule\([\s\S]*'2taka-group-deal-expiry'[\s\S]*'\* \* \* \* \*'/i)
+})
+
+test('failed Group Deal customers are notified and can ask to buy at the initial price',()=>{
+  assert.match(autoCloseMigration,/group_deal_minimum_not_reached/i)
+  assert.match(autoCloseMigration,/No order was created and no payment is due/i)
+  assert.match(autoCloseMigration,/request_failed_group_deal_initial_price/i)
+  assert.match(autoCloseMigration,/requested_unit_price=v_deal\.market_price_snapshot/i)
+  assert.match(autoCloseMigration,/group_deal_purchase_requests/i)
+  assert.match(customerPage,/get_my_failed_group_deals/i)
+  assert.match(customerPage,/I still want this product/i)
+  assert.match(customerPage,/Minimum buyer threshold was not reached/i)
+})
+
+test('failed-deal purchase requests create an admin follow-up queue and notifications',()=>{
+  assert.match(autoCloseMigration,/admin_get_group_deal_purchase_requests/i)
+  assert.match(autoCloseMigration,/admin_set_group_deal_purchase_request_status/i)
+  assert.match(autoCloseMigration,/group_deal_purchase_request/i)
+  assert.match(autoCloseMigration,/ur\.role in \('admin','super_admin'\)/i)
+  assert.match(adminPage,/Customers who still want the product/i)
+  assert.match(adminPage,/customer_phone/i)
+  assert.match(adminPage,/Contacted/i)
+  assert.match(adminPage,/Closed/i)
 })
