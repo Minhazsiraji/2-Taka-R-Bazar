@@ -112,3 +112,13 @@ test('Community Ops receiving is blind to sender declared counts until submissio
     /'dispatched_quantity'/
   )
 })
+
+
+test('duplicate supplier/store challan references are rejected',()=>{
+  assert.match(migration,/source_reference text not null/i)
+  assert.match(migration,/supply_dispatch_supplier_reference_uniq/i)
+  assert.match(migration,/supply_dispatch_location_reference_uniq/i)
+  assert.match(migration,/This source challan\/invoice\/transfer reference has already been used/i)
+  assert.match(supplyPage,/Source challan \/ invoice \/ transfer reference/i)
+  assert.match(actions,/p_source_reference/i)
+})
