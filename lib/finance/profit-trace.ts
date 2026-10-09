@@ -90,7 +90,7 @@ export function calculateCashBridge(input:CashBridgeInput){
  const outsideIn=round(cents(input.customerCod)+cents(input.deliveryCollections)+cents(input.ownerFinancingInflows)+cents(input.otherExternalReceipts))
  const outsideOut=round(cents(input.supplierPayments)+cents(input.operatingCashPayments)+cents(input.loanPrincipalPaid)+cents(input.financeCashPaid)+cents(input.otherExternalOutflows))
  const netMovement=round(cents(outsideIn)-cents(outsideOut))
- const computedClosing=round(cents(input.openingCash)+cents(netMovement))
+ const computedClosing=round(cents(input.openingCash)+signedCents(netMovement))
  const difference=round(cents(input.closingCash)-cents(computedClosing))
  return {...input,externalInflow:outsideIn,externalOutflow:outsideOut,netMovement,computedClosing,
   difference,reconciles:difference===0,cashStatus:difference===0&&input.cashAccountsReconciled?'BOOK_MATH_MATCHES_NOT_BANK_VERIFIED':'RECONCILIATION_REQUIRED',
