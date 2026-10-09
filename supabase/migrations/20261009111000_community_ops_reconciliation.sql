@@ -569,9 +569,8 @@ returns void language plpgsql security definer set search_path='' as $$
 declare v_user uuid:=auth.uid();
 begin
   if not private.is_ops(v_user) then raise exception 'Admin required'; end if;
-  if not exists(select 1 from public.user_roles where user_id=p_user_id and role='pickup_operator') then
-    raise exception 'User must have the pickup_operator role first';
-  end if;
+  if not exists(select 1 from public.profiles where id=p_user_id) then raise exception 'Officer profile not found'; end if;
+  insert into public.user_roles(user_id,role) values(p_user_id,'pickup_operator') on conflict do nothing;
   insert into public.community_ops_assignments(user_id,community_id,active,assigned_by,updated_at)
   values(p_user_id,p_community_id,true,v_user,now())
   on conflict(user_id,community_id) do update set active=true,assigned_by=v_user,updated_at=now();
