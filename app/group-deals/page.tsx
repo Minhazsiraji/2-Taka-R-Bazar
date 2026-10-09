@@ -6,7 +6,7 @@ import { GroupDealUnlockProgress } from '@/components/group-deal-unlock-progress
 import { ProductImage } from '@/components/product-image'
 import { ShareUnlockButton } from '@/components/share-unlock-button'
 import { SubmitButton } from '@/components/submit-button'
-import { joinGroupDeal, leaveGroupDeal } from '@/app/actions/group-deals'
+import { joinGroupDeal, leaveGroupDeal, requestFailedGroupDealInitialPrice } from '@/app/actions/group-deals'
 import { requireOnboardedUser } from '@/lib/auth'
 import { taka, shortDate } from '@/lib/format'
 
@@ -17,9 +17,10 @@ export const metadata: Metadata = { robots: { index: false, follow: false, noarc
 export default async function GroupDealsPage({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}){
   const {roles,supabase}=await requireOnboardedUser()
   const sp=await searchParams
-  const [{data:deals,error:dealError},{data:locationRows}]=await Promise.all([
+  const [{data:deals,error:dealError},{data:locationRows},{data:failedDeals,error:failedDealError}]=await Promise.all([
     supabase.rpc('get_my_group_deals'),
     supabase.rpc('get_my_location_status'),
+    supabase.rpc('get_my_failed_group_deals'),
   ])
   const location=locationRows?.[0] as any
 
@@ -34,6 +35,7 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
       {sp.error&&<div className="error">{sp.error}</div>}
       {sp.notice&&<div className="success">{sp.notice}</div>}
       {dealError&&<div className="error">Group Deals are temporarily unavailable.</div>}
+      {failedDealError&&<div className="error">Recent cancelled Group Deals are temporarily unavailable.</div>}
 
       {location?.verified
         ? <div className="cx-glass-subcard flex flex-wrap items-center justify-between gap-2 rounded-2xl px-4 py-3">
@@ -44,6 +46,44 @@ export default async function GroupDealsPage({searchParams}:{searchParams:Promis
             allowUatFallback={process.env.VERCEL_ENV==='preview'&&(roles.has('admin')||roles.has('super_admin'))}
             initialVerified={false}
           />}
+
+
+      {(failedDeals??[]).length>0&&<section className="grid gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-rose-600">Closed without unlock</p>
+          <h2 className="mt-1 text-xl font-black">Deals that missed the minimum buyer count</h2>
+          <p className="muted mt-1 text-sm">No order or payment was created. If you still want the product, you can ask our team about buying it at the original market/reference price.</p>
+        </div>
+        {(failedDeals??[]).map((deal:any)=><article className="card cx-glass-card min-w-0 p-4 sm:p-5" key={deal.deal_id}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 gap-3">
+              <ProductImage src={deal.image_url} name={deal.product_name} className="cx-product-photo"/>
+              <div className="min-w-0">
+                <span className="chip border-rose-200 bg-rose-50 text-rose-700">Cancelled</span>
+                <h3 className="mt-2 text-base font-black sm:text-lg">{deal.product_name}</h3>
+                <p className="muted mt-1 text-xs">{deal.brand?deal.brand+' · ':''}{deal.package_size}</p>
+                <p className="mt-1 text-xs font-bold text-slate-600">{deal.title}</p>
+              </div>
+            </div>
+            <div className="text-left sm:text-right">
+              <div className="text-xs font-bold text-slate-500">Initial price</div>
+              <div className="text-xl font-black">{taka(Number(deal.initial_price))}</div>
+            </div>
+          </div>
+          <div className="cx-glass-subcard mt-4 rounded-xl p-3">
+            <div className="text-sm font-black text-rose-700">{deal.cancellation_reason}</div>
+            <p className="muted mt-1 text-xs">The minimum verified-buyer threshold was not reached before the closing time. Your commitment was cancelled automatically, no order was created, and no payment is due.</p>
+          </div>
+          {deal.request_id
+            ? <div className="mt-4 flex flex-wrap items-center gap-2"><span className="chip border-emerald-200 bg-emerald-50 text-emerald-700">Request {String(deal.request_status).replaceAll('_',' ')}</span><span className="muted text-xs">Our team has your request and can contact you using your account details.</span></div>
+            : <form action={requestFailedGroupDealInitialPrice} className="mt-4 grid gap-3 rounded-xl border border-slate-200 p-3 sm:grid-cols-[120px_1fr_auto] sm:items-end">
+                <input type="hidden" name="group_deal_id" value={deal.deal_id}/>
+                <label><span className="label">Quantity</span><input className="input" type="number" name="quantity" min="1" max="100" defaultValue={deal.my_quantity||1} required/></label>
+                <label><span className="label">Note (optional)</span><input className="input" name="note" maxLength={500} placeholder="Any preferred contact time or note"/></label>
+                <SubmitButton>I still want this product</SubmitButton>
+              </form>}
+        </article>)}
+      </section>}
 
       {!deals?.length
         ? <div className="card cx-glass-card p-6 text-center"><h2 className="text-xl font-black">No Group Deal is open right now</h2><p className="muted mt-2 text-sm">New verified nearby opportunities will appear here when Operations opens them.</p></div>
