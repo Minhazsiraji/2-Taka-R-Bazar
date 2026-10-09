@@ -81,14 +81,14 @@ export function calculateProfit(input:ProfitInput,scope:ProfitScope={}):ProfitRe
 export type CashBridgeInput={
  openingCash:number;customerCod:number;deliveryCollections:number;supplierPayments:number;
  operatingCashPayments:number;loanPrincipalPaid:number;financeCashPaid:number;
- ownerFinancingInflows:number;otherExternalReceipts:number;internalTransfers:number;
+ ownerFinancingInflows:number;otherExternalReceipts:number;otherExternalOutflows:number;internalTransfers:number;
  closingCash:number;cashAccountsReconciled:boolean
 }
 export function calculateCashBridge(input:CashBridgeInput){
  const keys=(Object.keys(input) as (keyof CashBridgeInput)[]).filter(k=>k!=='cashAccountsReconciled')
  for(const k of keys)cents(input[k] as number)
  const outsideIn=round(cents(input.customerCod)+cents(input.deliveryCollections)+cents(input.ownerFinancingInflows)+cents(input.otherExternalReceipts))
- const outsideOut=round(cents(input.supplierPayments)+cents(input.operatingCashPayments)+cents(input.loanPrincipalPaid)+cents(input.financeCashPaid))
+ const outsideOut=round(cents(input.supplierPayments)+cents(input.operatingCashPayments)+cents(input.loanPrincipalPaid)+cents(input.financeCashPaid)+cents(input.otherExternalOutflows))
  const netMovement=round(cents(outsideIn)-cents(outsideOut))
  const computedClosing=round(cents(input.openingCash)+cents(netMovement))
  const difference=round(cents(input.closingCash)-cents(computedClosing))
