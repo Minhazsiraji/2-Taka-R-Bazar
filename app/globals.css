@@ -175,3 +175,48 @@ main :is(div,section,article,form,blockquote,details)[class*="rounded-"][class*=
  .access-editor{padding-top:.85rem}.role-editor-row{padding:.7rem}.role-action-btn{width:auto; min-width:5.25rem;}
 }
 @media (max-width:380px){.access-user-main{grid-template-columns:1fr;}}
+
+
+/* Unified footer: identical public/signed-in structure and guaranteed EN -> BN stacking. */
+.site-unified-footer {
+  border: 1px solid rgba(255,255,255,.82);
+  background: linear-gradient(145deg,rgba(255,255,255,.76),rgba(255,255,255,.54));
+  box-shadow: 0 16px 42px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.92);
+  -webkit-backdrop-filter: blur(18px) saturate(1.14);
+  backdrop-filter: blur(18px) saturate(1.14);
+}
+.site-footer-link {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 4px !important;
+  min-width: 0;
+  padding: 4px 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  color: rgb(71 85 105);
+  text-decoration: none !important;
+}
+.site-footer-link:hover { color: rgb(15 23 42); }
+.site-footer-link-en,
+.site-footer-link-bn {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 !important;
+  white-space: normal !important;
+}
+.site-footer-link-en {
+  font-size: 12px;
+  line-height: 1.25rem;
+  font-weight: 600;
+}
+.site-footer-link-bn {
+  font-size: 10px;
+  line-height: 1rem;
+  font-weight: 500;
+  color: rgb(100 116 139);
+}
