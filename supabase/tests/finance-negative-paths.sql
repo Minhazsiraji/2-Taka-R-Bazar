@@ -169,7 +169,7 @@ select ok(pg_temp.fails_with(
  $$select public.finance_request_settlement((select id from qa_expenses where label='corrected'),
  'bank','QA-BANK-TRANSFER-02',current_date,
  '00000000-0000-4000-8000-000000000911/transfer3.pdf',repeat('1',64))$$,
- 'P0001','Expense not approved for payment'),'Payment request while another is pending remains blocked by expense status');
+ '23505','finance_settlement_reference_live'),'Reused bank transfer reference blocked across different approved expenses');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000912',true);
 select is(public.finance_review_settlement((select id from qa_settlements where label='paid'),true,'Matched independent proof'),
  'verified','Independent final settlement verification posts cash movement');
