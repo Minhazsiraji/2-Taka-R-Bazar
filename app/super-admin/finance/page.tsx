@@ -80,7 +80,7 @@ function TrendChart({values}:{values:Trend[]}){
  const area=expense.length?expensePath+' L '+x(chartData.length-1).toFixed(1)+','+(h-marginB)+' L '+x(0).toFixed(1)+','+(h-marginB)+' Z':''
  const fmt=(m:string)=>new Date(m+'T12:00:00Z').toLocaleDateString('en-GB',{month:'short',timeZone:'UTC'})
  return <Card>
-  <div className="flex flex-wrap items-start justify-between gap-2"><div><h2 className="text-lg font-black">Operating expense trend</h2><p className="text-xs text-slate-500">Posted accruals against independently verified outgoing payments · six months</p></div><span className="rounded-lg bg-teal-50 px-3 py-1.5 text-[10px] font-bold text-teal-700">Ledger-backed</span></div>
+  <div className="flex flex-wrap items-start justify-between gap-2"><div><h2 className="text-lg font-black">Operating expense trend</h2><p className="text-xs text-slate-500">Posted accruals against independently verified outgoing payments · six months</p></div><span className="rounded-lg bg-teal-50 px-3 py-1.5 text-[10px] font-bold text-teal-700">Synthetic ledger chart</span></div>
   <div className="mt-5 flex flex-wrap gap-5 text-xs font-semibold text-slate-600"><span className="flex items-center gap-2"><i className="inline-block h-2.5 w-2.5 rounded-full bg-teal-500"/>Recognized expenses</span><span className="flex items-center gap-2"><i className="inline-block h-2.5 w-2.5 rounded-full bg-violet-500"/>Settled cash out</span></div>
   {chartData.length?<div className="mt-4 w-full overflow-x-auto"><svg viewBox="0 0 650 240" role="img" aria-label="Six-month trend for posted expenses and verified outgoing payments" className="h-auto min-w-[430px] w-full" preserveAspectRatio="xMidYMid meet">
     <defs><linearGradient id="finance-area-gradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#14b8a6" stopOpacity=".32"/><stop offset="100%" stopColor="#14b8a6" stopOpacity=".01"/></linearGradient></defs>
@@ -117,8 +117,8 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
  const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}).slice(0,7)
  const month=monthKey(query.month??'')||today
  const monthStart=month+'-01'
- const demo=query.demo==='1'
- const params=(nextMonth:string)=>'/super-admin/finance?month='+month+(demo?'&demo=1':'')
+ const demo=query.demo==='1'||(process.env.VERCEL_ENV==='preview'&&!(process.env.FINANCE_WRITES_ENABLED==='true'&&process.env.FINANCE_PREVIEW_SUPABASE_URL&&process.env.NEXT_PUBLIC_SUPABASE_URL===process.env.FINANCE_PREVIEW_SUPABASE_URL)&&query.demo!=='0')
+ const params=(nextMonth:string)=>'/super-admin/finance?month='+nextMonth+(demo?'&demo=1':'')
  let rows:E[]=[]
  let ledger:Line[]=[]
  let report:Summary|null=null
@@ -126,7 +126,7 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
  let dbError=''
  const isolated=process.env.VERCEL_ENV==='preview'&&process.env.FINANCE_WRITES_ENABLED==='true'&&Boolean(process.env.FINANCE_PREVIEW_SUPABASE_URL)&&process.env.NEXT_PUBLIC_SUPABASE_URL===process.env.FINANCE_PREVIEW_SUPABASE_URL&&!String(process.env.NEXT_PUBLIC_SUPABASE_URL).includes('sukabonfjcnaavjgjyuy')
  if(demo){
-  rows=demoExpenses;ledger=demoLedger
+  rows=month==='2026-10'?demoExpenses:[];ledger=month==='2026-10'?demoLedger:[]
   trend=[
    {month_start:'2026-05-01',posted_expenses:2200,settled_cash_out:1800},
    {month_start:'2026-06-01',posted_expenses:2800,settled_cash_out:2600},
@@ -135,7 +135,7 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
    {month_start:'2026-09-01',posted_expenses:3500,settled_cash_out:2900},
    {month_start:'2026-10-01',posted_expenses:2780,settled_cash_out:1200}
   ]
-  report={month:monthStart,posted_expenses:2780,settled_cash_out:1200,pending_count:1,payment_pending_count:2,by_category:[{category:'marketing_offline',amount:1200},{category:'logistics',amount:880},{category:'infrastructure',amount:700}],profit_status:'UNAVAILABLE_UNTIL_REVENUE_COGS_RECONCILED'}
+  report={month:monthStart,posted_expenses:month==='2026-10'?2780:0,settled_cash_out:month==='2026-10'?1200:0,pending_count:month==='2026-10'?1:0,payment_pending_count:month==='2026-10'?2:0,by_category:month==='2026-10'?[{category:'marketing_offline',amount:1200},{category:'logistics',amount:880},{category:'infrastructure',amount:700}]:[],profit_status:'UNAVAILABLE_UNTIL_REVENUE_COGS_RECONCILED'}
  } else {
   const [a,b,c,d]=await Promise.all([
    user.supabase.rpc('finance_report',{p_month:monthStart}),
@@ -175,7 +175,8 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
   {query.error&&<p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{query.error}</p>}
   {query.notice&&<p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">{query.notice}</p>}
   {dbError&&<div role="alert" className="finance-gate-notice rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">{dbError} <Link href={'/super-admin/finance?demo=1&month='+month} className="ml-1 font-black underline">Explore the clearly labeled UI demo →</Link></div>}
-  {demo&&<div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-sm font-bold text-violet-800">Simulation only — these records are invented examples. No customer, supplier, expense, revenue or profit data is being read or changed.</div>}
+  {demo&&<div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-sm font-bold text-violet-800">SYNTHETIC SCENARIO · AMT-01 community grocery business. All expenses, balances, journals, vendors and approvals are illustrative. Nothing is posted to real accounts.</div>}
+  {demo&&<nav aria-label="Synthetic scenario sections" className="finance-glass-gate flex flex-wrap items-center gap-2 rounded-xl p-3 text-xs font-black"><span className="mr-2 text-teal-900">AMT-01 · Connected demo</span><Link href="/super-admin/treasury?demo=1" className="rounded-lg border border-teal-200 px-3 py-2 text-teal-800">Cash flow & banks →</Link><Link href="/admin/procurement?demo=1" className="rounded-lg border border-teal-200 px-3 py-2 text-teal-800">Supplier procurement →</Link></nav>}
   {!isolated&&<div className="finance-protection-notice rounded-xl border border-slate-200 bg-slate-100 p-3 text-sm text-slate-700"><b>Financial mutation gate:</b> OFF. Approvals and payments cannot post to the Production database. An independent preview database and explicit environment confirmation are required.</div>}
   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
    <Metric name="Posted expenses" value={dbError?'—':bd(report?.posted_expenses)} sub="Ledger-backed, current period"/>
@@ -196,7 +197,7 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
      <label className="col-span-2 grid gap-1 text-xs font-bold text-slate-600">Vendor / payee<input name="vendor_name" minLength={2} required className="rounded-xl border border-slate-200 p-3 text-sm"/></label>
      <label className="col-span-2 grid gap-1 text-xs font-bold text-slate-600">Invoice / receipt reference<input name="document_reference" minLength={3} required className="rounded-xl border border-slate-200 p-3 text-sm"/></label>
      <label className="col-span-2 grid gap-1 text-xs font-bold text-slate-600">Original invoice or receipt — JPEG / PNG / PDF, max 1.5MB<input name="receipt_file" type="file" accept="image/jpeg,image/png,application/pdf" required className="rounded-xl border border-dashed border-teal-200 bg-teal-50 p-3 text-xs"/></label>
-     <label className="grid gap-1 text-xs font-bold text-slate-600">Community<select name="community_id" className="min-w-0 rounded-xl border border-slate-200 bg-white p-3 text-sm"><option value="">Company shared</option>{(await user.supabase.from('communities').select('id,name').order('name')).data?.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+     <label className="grid gap-1 text-xs font-bold text-slate-600">Community<select name="community_id" className="min-w-0 rounded-xl border border-slate-200 bg-white p-3 text-sm"><option value="">Company shared</option>{demo?<option value="synthetic-amt-01">AMT-01 (synthetic)</option>:(await user.supabase.from('communities').select('id,name').order('name')).data?.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
      <label className="grid gap-1 text-xs font-bold text-slate-600">Campaign code<input name="campaign_code" placeholder="Optional: AMT-01" className="w-full rounded-xl border border-slate-200 p-3 text-sm"/></label>
      <button disabled={!isolated||demo} title={!isolated?'Financial writes are locked on this hosted preview':undefined} className="col-span-2 rounded-xl bg-[#0c7772] px-4 py-3 text-sm font-black text-white shadow-lg shadow-teal-950/10 hover:bg-[#095f5b]">Submit expense for approval →</button>
      <p className="col-span-2 text-xs leading-5 text-slate-500">Procurement is not an operating expense category. Invoice reference is metadata, not proof of a verified invoice. Receipt bytes are hashed and privately stored; an approver must independently inspect evidence. Procurement matching is a later release gate.</p>
@@ -233,7 +234,7 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
    </table>{!rows.length&&<p className="p-5 text-sm text-slate-500">No recorded expenses for this month.</p>}</div>
   </Card>
   <Card>
-   <div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-lg font-black">General ledger explorer</h2><p className="text-xs text-slate-500">Double-entry transactions · reviewer traceable · no direct edit</p></div><span className="rounded-lg bg-teal-50 px-3 py-1 text-xs font-bold text-teal-700">Journal source of truth</span></div>
+   <div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-lg font-black">General ledger explorer</h2><p className="text-xs text-slate-500">Double-entry transactions · reviewer traceable · no direct edit</p></div><span className="rounded-lg bg-teal-50 px-3 py-1 text-xs font-bold text-teal-700">{demo?"Illustrative journals":"Journal source of truth"}</span></div>
    <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[650px] text-xs"><thead><tr className="border-b border-slate-200 text-left text-[10px] uppercase tracking-wider text-slate-400"><th className="py-3">Date</th><th>Journal</th><th>Account</th><th className="text-right">Debit</th><th className="text-right">Credit</th></tr></thead><tbody>{ledger.map((line,i)=><tr key={line.event_key+line.account_code+i} className="border-b border-slate-100"><td className="py-3 text-slate-500">{line.posting_date}</td><td className="max-w-40 truncate py-3" title={line.event_key}>{line.memo}</td><td className="py-3">{line.account_code} · {line.account_title}</td><td className="py-3 text-right font-semibold">{num(line.debit)?bd(line.debit):'—'}</td><td className="py-3 text-right font-semibold">{num(line.credit)?bd(line.credit):'—'}</td></tr>)}</tbody></table>{!ledger.length&&<p className="p-5 text-sm text-slate-500">No posted journals this period.</p>}</div>
   </Card>
   <div className="finance-glass-gate rounded-[22px] border border-sky-200 bg-sky-50 p-5"><h2 className="font-black text-sky-950">Financial assurance and release gates</h2><p className="mt-2 text-sm leading-6 text-slate-700">Expenses and verified disbursements are separate from order GMV. Procurement invoices, inventory COGS, customer settlements, bank statements, tax, refunds, allocation policy, audit evidence, and month-close must be reconciled before a company net-profit value is certified. The current finance foundation does not claim these later gates are complete.</p></div>
