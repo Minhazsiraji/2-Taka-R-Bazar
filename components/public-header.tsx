@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { BrandLogo } from '@/components/brand-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { SITE_TAGLINE_EN } from '@/lib/site'
+import { SITE_TAGLINE_BN, SITE_TAGLINE_EN } from '@/lib/site'
 
 export function PublicHeader({ actionHref = '/login', actionLabel = 'Sign in', actionLabelBn }: { actionHref?: string; actionLabel?: string; actionLabelBn?: string }) {
   return (
@@ -11,6 +11,7 @@ export function PublicHeader({ actionHref = '/login', actionLabel = 'Sign in', a
         <div className="hidden min-w-0 sm:block">
           <div className="truncate text-sm font-black tracking-tight">2-TAKA-R-BAZAR</div>
           <div className="truncate text-[10px] font-semibold tracking-wide text-slate-500">{SITE_TAGLINE_EN}</div>
+          <div className="truncate text-[9px] font-medium text-slate-400" lang="bn">{SITE_TAGLINE_BN}</div>
         </div>
       </Link>
       <div className="public-header-actions flex shrink-0 items-center gap-2">
