@@ -26,8 +26,8 @@ function outcome(kind:'notice'|'error', message:string):never {
 }
 async function storeFinanceEvidence(viewer:Awaited<ReturnType<typeof requireAdmin>>, fd:FormData, fieldName:string) {
   const file=fd.get(fieldName)
-  if (!(file instanceof File) || file.size===0 || file.size>5*1024*1024)
-    throw new Error('Upload a receipt/proof file up to 5 MB')
+  if (!(file instanceof File) || file.size===0 || file.size>1500000)
+    throw new Error('Upload a receipt/proof file up to 1.5 MB')
   const extension:Record<string,string>={'image/jpeg':'jpg','image/png':'png','application/pdf':'pdf'}
   const ext=extension[file.type]
   if(!ext) throw new Error('Only JPEG, PNG or PDF evidence is supported')
