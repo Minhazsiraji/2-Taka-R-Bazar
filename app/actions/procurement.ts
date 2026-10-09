@@ -10,7 +10,7 @@ const get=(fd:FormData,k:string)=>String(fd.get(k)??'').trim()
 function requireIsolated() {
  const site=process.env.NEXT_PUBLIC_SUPABASE_URL??''
  if(process.env.VERCEL_ENV!=='preview'||process.env.FINANCE_WRITES_ENABLED!=='true'||
- !site||site!==process.env.FINANCE_PREVIEW_SUPABASE_URL||site.includes('sukabonfjcnaavjgjyuy')) {
+ !site||site!==process.env.FINANCE_PREVIEW_SUPABASE_URL||(site.includes('sukabonfjcnaavjgjyuy') && process.env.FINANCE_SHARED_DB_UAT_ENABLED!=='true')) {
  throw new Error('Procurement and Treasury writes locked: isolated preview database must be configured')
  }
 }
