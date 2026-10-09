@@ -78,6 +78,25 @@ async function assertFinancialDesign(page,label) {
  assert.equal(heroGlass.background,headGlass.background,label+' hero must share header glass gradient')
  assert.equal(heroGlass.border,headGlass.border,label+' hero must share header pearl rim')
  assert.equal(heroGlass.shadow,headGlass.shadow,label+' hero must share header shadow recipe')
+ const blurDebug=await page.locator('.finance-ops-hero').first().evaluate(el=>{
+  const matching=[]
+  function scan(rules){
+   for(const r of rules){
+    if('cssRules'in r){try{scan(r.cssRules)}catch{}}
+    if(!('selectorText'in r)||!r.style)continue
+    const value=r.style.getPropertyValue('backdrop-filter')
+    if(!value)continue
+    try{if(el.matches(r.selectorText))matching.push({selector:r.selectorText.slice(0,260),value,priority:r.style.getPropertyPriority('backdrop-filter')})}catch{}
+   }
+  }
+  for(const sh of document.styleSheets){try{scan(sh.cssRules)}catch{}}
+  const computed=getComputedStyle(el)
+  return {tag:el.tagName,classes:el.className,style:el.getAttribute('style'),computed:computed.backdropFilter,
+   targetedOverride:el.matches('html body.site-glass-root main .finance-ops-surface.finance-ops-surface > section.finance-ops-hero.finance-ops-hero'),
+   perfRule:el.matches('.site-glass-root main :is(section,article,form,div)[class*="rounded-"]:not([class*="rounded-full"]):not(.card):not(.table-wrap):not(.finance-ops-hero)'),
+   matchedRules:matching.slice(-32)}
+ })
+ console.log('FINANCE_BLUR_CASCADE_DIAGNOSTIC '+label+' '+JSON.stringify(blurDebug))
  assert.equal(heroGlass.blur,headGlass.blur,label+' hero must match header backdrop blur on desktop')
  assert.equal(cardGlass.background,headGlass.background,label+' content card must share header glass gradient')
  assert.equal(cardGlass.border,headGlass.border,label+' content card must share header pearl rim')
