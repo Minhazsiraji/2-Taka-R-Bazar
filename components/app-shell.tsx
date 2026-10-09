@@ -58,6 +58,12 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
 
     <MobileCustomerNav/>
 
+    <footer className="app-mobile-legal mx-3 mb-[calc(5.75rem+env(safe-area-inset-bottom))] mt-4 rounded-2xl border border-cyan-200 bg-white/80 px-4 py-5 text-slate-700 shadow-sm md:hidden">
+      <div className="flex items-center gap-3"><BrandLogo size={38}/><div><div className="text-sm font-black">2-TAKA-R-BAZAR</div><div className="text-xs font-medium">Smart shopping. Real savings!</div><div className="text-xs">একসাথে কিনি, কম দামে পাই!</div></div></div>
+      <nav className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold" aria-label="Mobile legal and help">{LEGAL_LINKS.map(([href,label])=><Link key={href} href={href} className="underline-offset-2 hover:underline">{label}</Link>)}</nav>
+      <div className="mt-4 border-t border-slate-200 pt-3 text-xs leading-5"><span>© 2026 2-TAKA-R-BAZAR · Developed by </span><a className="underline" href="https://agentsiraji.com" target="_blank" rel="noreferrer">agentsiraji.com</a><span> · Contact: </span><a className="underline break-all" href="mailto:business@agentsiraji.com">business@agentsiraji.com</a></div>
+    </footer>
+
     <footer className="app-desktop-footer hidden bg-[#062747] text-white md:block">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-6 lg:grid-cols-[1.2fr_1fr_1fr]">
         <div>
