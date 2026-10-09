@@ -11,7 +11,7 @@ export const dynamic='force-dynamic'
 type Quote={id:string;product_name:string;supplier_name:string;pool_title:string;quantity:number;unit_cost:number;expiry:string|null;pool_status:string}
 type PO={id:string;code:string;supplier_id:string;supplier:string;product_id:string;product:string;quantity:number;unit_cost:number;value:number;received_quantity:number;status:string;created_by:string}
 type Dispatch={id:string;code:string;supplier_id:string;status:string;product_ids:string[]}
-type Bill={id:string;po_id:string;ref:string;vendor:string;quantity:number;amount:number;status:string;submitted_by:string}
+type Bill={id:string;po_id:string;ref:string;vendor:string;quantity:number;amount:number;status:string;submitted_by:string;evidence_path?:string}
 type Account={id:string;name:string;kind:string}
 type Receipt={day_id:string;date:string;community:string;product_cash:number;delivery_cash:number}
 type Data={selected_quotes:Quote[];purchase_orders:PO[];dispatches:Dispatch[];bills:Bill[];liquid_accounts:Account[];cash_receipts_pending:Receipt[]}
@@ -136,6 +136,18 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
     <label className="text-xs font-bold">Signed custody reference<input name="cash_custody_reference" minLength={4} required className={style}/></label>
     <button disabled={!isolated||demoMode} className="rounded-xl bg-teal-700 px-3 py-2.5 text-xs font-black text-white disabled:opacity-40">Post accepted cash to Treasury</button>
    </form>)}{!cash.length&&<p className="text-sm text-slate-500">No accepted Community cash handovers are awaiting a ledger entry.</p>}</div>
+  </Panel>
+  <Panel heading="Document center · generate, save, print or use manual proof" detail="Generate print-ready purchase orders and internal supplier bill copies. Print to PDF or download an HTML copy. Original supplier invoices remain independent evidence and must be uploaded before approval. If generation is unavailable, use a signed manual PO and upload the supplier-issued PDF/JPEG/PNG invoice in step 4; do not bypass approval or invoice checks.">
+   <p className="mb-3 rounded-lg bg-amber-50 p-3 text-xs text-amber-900">The generated supplier bill is an internal register, not a supplier-issued VAT/tax invoice. Keep the real supplier document and authorized approval record. Demo records do not create genuine evidence.</p>
+   <div className="grid gap-2 sm:grid-cols-2">
+    {po.map(x=><div key={x.id} className="rounded-xl border border-slate-200 p-3 text-xs"><b>{x.code} · {x.supplier}</b><p className="mt-1 text-slate-600">{x.product} · {taka(x.value)}</p>
+     <div className="mt-2 flex flex-wrap gap-3">{!demoMode&&<><a className="font-bold text-teal-800 underline" target="_blank" rel="noopener noreferrer" href={`/api/finance/documents/po/${x.id}`}>View / print PO</a><a className="font-bold text-teal-800 underline" href={`/api/finance/documents/po/${x.id}?download=1`}>Download PO</a></>}{demoMode&&<span className="text-violet-700">Synthetic PO · no evidentiary document</span>}</div>
+    </div>)}
+    {bills.map(x=><div key={x.id} className="rounded-xl border border-slate-200 p-3 text-xs"><b>{x.ref} · {x.vendor}</b><p className="mt-1 text-slate-600">{taka(x.amount)} · {x.status}</p>
+     <div className="mt-2 flex flex-wrap gap-3">{!demoMode&&<><a className="font-bold text-teal-800 underline" target="_blank" rel="noopener noreferrer" href={`/api/finance/documents/bill/${x.id}`}>Print register</a><a className="font-bold text-teal-800 underline" href={`/api/finance/documents/bill/${x.id}?download=1`}>Download register</a><a className="font-bold text-teal-800 underline" href={`/api/finance/documents/proof/${x.id}`}>Download original proof</a></>}{demoMode&&<span className="text-violet-700">Synthetic invoice · no real supplier file</span>}</div>
+    </div>)}
+   </div>
+   <p className="mt-3 text-xs text-slate-600">Manual fallback: prepare and sign documents offline; attach original supplier invoice as PDF/JPEG/PNG in step 4. For any additional manual PO or custody evidence, keep the signed original under controlled records until a dedicated linked upload register is available. No manual document may substitute for verified payment or physical receipt.</p>
   </Panel>
   <Panel heading="Immutable procurement audit trail" detail="Purchase orders and supplier bills remain linked to their source document, physical dispatch, approved finance journal and Treasury payment.">
    <div className="overflow-x-auto"><table className="w-full min-w-[610px] text-left text-xs"><thead><tr className="border-b border-slate-200 text-slate-500"><th className="py-3">PO</th><th>Supplier/product</th><th>Goods accepted</th><th>Cost</th><th>Status</th></tr></thead><tbody>{po.map(x=><tr key={x.id} className="border-b border-slate-100"><td className="py-3 font-black">{x.code}</td><td>{x.supplier} · {x.product}</td><td>{x.received_quantity} / {x.quantity}</td><td className="font-bold">{taka(x.value)}</td><td><span className={'rounded-lg px-2 py-1 font-black '+(x.status==='approved'?'bg-teal-50 text-teal-700':'bg-amber-50 text-amber-700')}>{x.status}</span></td></tr>)}</tbody></table>{!po.length&&<p className="p-5 text-center text-slate-500">No purchase orders created.</p>}</div>
