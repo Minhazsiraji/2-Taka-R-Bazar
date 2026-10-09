@@ -29,7 +29,7 @@ const PRIVATE_PATHS = [
   '/qr/',
 ]
 
-const PUBLIC_PATHS = ['/', '/about', '/terms', '/return-policy', '/refund-policy', '/faq', '/llms.txt']
+const PUBLIC_PATHS = ['/', '/about', '/privacy', '/terms', '/return-policy', '/refund-policy', '/faq', '/llms.txt']
 
 export default function robots(): MetadataRoute.Robots {
   return {
