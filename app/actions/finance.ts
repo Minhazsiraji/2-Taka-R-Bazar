@@ -32,6 +32,14 @@ async function storeFinanceEvidence(viewer:Awaited<ReturnType<typeof requireAdmi
   const ext=extension[file.type]
   if(!ext) throw new Error('Only JPEG, PNG or PDF evidence is supported')
   const content=Buffer.from(await file.arrayBuffer())
+  const hex=content.subarray(0,8).toString('hex')
+  const header=content.subarray(0,5).toString('ascii')
+  const valid=(
+    (ext==='jpg' && hex.startsWith('ffd8ff')) ||
+    (ext==='png' && hex.startsWith('89504e470d0a1a0a')) ||
+    (ext==='pdf' && header==='%PDF-')
+  )
+  if(!valid) throw new Error('File contents do not match the declared receipt format')
   const sha256=createHash('sha256').update(content).digest('hex')
   const storagePath=viewer.user.id+'/'+randomUUID()+'.'+ext
   const {error}=await viewer.supabase.storage.from('finance-evidence')
