@@ -218,8 +218,17 @@ returns void language plpgsql security definer set search_path='' as $fn$
 declare v_score integer;
 begin
   if p_user is null then return; end if;
-  insert into private.supply_actor_risk_profiles(user_id,risk_score,updated_at)
-  values(p_user,greatest(0,least(coalesce(p_points,0),100)),now())
+  insert into private.supply_actor_risk_profiles(
+    user_id,risk_score,failed_code_attempts,confirmed_variances,fraud_holds,trust_level,updated_at
+  )
+  values(
+    p_user,greatest(0,least(coalesce(p_points,0),100)),
+    case when p_event_type='handover_code_failed' then 1 else 0 end,
+    case when p_event_type='confirmed_variance' then 1 else 0 end,
+    case when p_event_type='fraud_hold' then 1 else 0 end,
+    case when coalesce(p_points,0)>=70 then 'restricted' when coalesce(p_points,0)>=40 then 'watch' else 'new' end,
+    now()
+  )
   on conflict(user_id) do update set
     risk_score=least(100,private.supply_actor_risk_profiles.risk_score+greatest(0,coalesce(p_points,0))),
     failed_code_attempts=private.supply_actor_risk_profiles.failed_code_attempts+
@@ -235,7 +244,7 @@ begin
       when v_score>=90 then 'blocked'
       when v_score>=70 then 'restricted'
       when v_score>=40 then 'watch'
-      when v_score<=10 then 'trusted'
+      when private.supply_actor_risk_profiles.trust_level='trusted' and v_score<=10 then 'trusted'
       else 'new'
     end
   where user_id=p_user;
@@ -585,9 +594,23 @@ begin
   if not found then raise exception 'Community operations day not found'; end if;
   if dday.community_id<>d.destination_community_id then raise exception 'Dispatch belongs to a different community'; end if;
   if not private.is_community_operator(v_user,dday.community_id) then raise exception 'Community assignment required'; end if;
-  if d.created_by=v_user or d.sealed_by=v_user or d.carrier_user_id=v_user then
+  if d.created_by=v_user or d.sealed_by=v_user or d.carrier_user_id=v_user
+     or (d.source_kind='supplier' and exists(
+          select 1 from public.supplier_memberships sm
+          where sm.supplier_id=d.source_supplier_id and sm.user_id=v_user and sm.active
+        ))
+     or (d.source_kind='2tbr_store' and exists(
+          select 1 from public.supply_location_memberships lm
+          where lm.location_id=d.source_location_id and lm.user_id=v_user and lm.active
+        )) then
+    update public.supply_dispatches
+      set status='security_hold',variance_reason='Separation of duties violation at receiving'
+      where id=d.id;
     perform private.raise_supply_risk(v_user,25,'separation_of_duties_violation',d.id,jsonb_build_object('stage','receive'));
-    raise exception 'Separation of duties violation: sender/carrier cannot receive the same dispatch';
+    perform private.notify_supply_admins('supply_security_hold','Supply dispatch blocked by separation-of-duties control',
+      d.dispatch_code||' was presented for receiving by a sender/source/carrier identity.',
+      '/admin/supply-control','supply:'||d.id::text||':sod-receive');
+    return 'security_hold';
   end if;
   if d.status not in ('sealed','in_transit') then raise exception 'Dispatch is not available for receiving'; end if;
   if p_observed_package_count is null or p_observed_package_count<0 then raise exception 'Observed package count is required'; end if;
@@ -792,16 +815,31 @@ begin
   if d.status not in ('variance','security_hold') then raise exception 'Dispatch is not awaiting Admin resolution'; end if;
   if v_user in (coalesce(d.created_by,'00000000-0000-0000-0000-000000000000'::uuid),
                 coalesce(d.received_by,'00000000-0000-0000-0000-000000000000'::uuid),
-                coalesce(d.carrier_user_id,'00000000-0000-0000-0000-000000000000'::uuid)) then
-    raise exception 'Independent Admin required: a sender, receiver or carrier cannot resolve the same dispatch';
+                coalesce(d.carrier_user_id,'00000000-0000-0000-0000-000000000000'::uuid))
+     or (d.source_kind='supplier' and exists(
+          select 1 from public.supplier_memberships sm where sm.supplier_id=d.source_supplier_id and sm.user_id=v_user and sm.active
+        ))
+     or (d.source_kind='2tbr_store' and exists(
+          select 1 from public.supply_location_memberships lm where lm.location_id=d.source_location_id and lm.user_id=v_user and lm.active
+        )) then
+    raise exception 'Independent Admin required: source staff, sender, receiver or carrier cannot resolve the same dispatch';
   end if;
-  if p_resolution not in ('accept_receiver_count','replacement_pending','return_entire_batch','fraud_hold','cancelled') then
+  if p_resolution not in ('accept_receiver_count','replacement_pending','return_entire_batch','fraud_hold','cancelled','reset_for_reseal') then
     raise exception 'Invalid resolution';
   end if;
   if p_responsibility not in ('source','receiver','carrier','none','unknown') then raise exception 'Invalid responsibility'; end if;
   if v_reason is null then raise exception 'Resolution reason is required'; end if;
 
-  if p_resolution='accept_receiver_count' then
+  if p_resolution='reset_for_reseal' then
+    if d.status<>'security_hold' then raise exception 'Only a security-held dispatch can be reset for resealing'; end if;
+    if d.received_by is not null then raise exception 'A dispatch with recorded receiver quantities cannot be reset; resolve the variance instead'; end if;
+    delete from private.supply_dispatch_secrets where dispatch_id=d.id;
+    update public.supply_dispatches set
+      status='draft',package_count=null,seal_reference=null,sealed_by=null,sealed_at=null,
+      carrier_acknowledged_at=null,variance_reason=null,resolution=p_resolution,resolution_reason=v_reason,
+      resolved_by=v_user,resolved_at=now()
+    where id=d.id;
+  elsif p_resolution='accept_receiver_count' then
     if d.received_by is null then raise exception 'No receiver count exists'; end if;
     if p_day_id is null then raise exception 'Community operations day is required to accept received stock'; end if;
     if not exists(select 1 from public.community_ops_days od where od.id=p_day_id and od.community_id=d.destination_community_id) then
