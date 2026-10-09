@@ -21,6 +21,8 @@ create index if not exists group_deal_purchase_requests_status_idx
   on public.group_deal_purchase_requests(status,created_at desc);
 create index if not exists group_deal_purchase_requests_customer_idx
   on public.group_deal_purchase_requests(customer_id,created_at desc);
+create index if not exists group_deals_open_closes_idx
+  on public.group_deals(closes_at,id) where status='open';
 
 alter table public.group_deal_purchase_requests enable row level security;
 revoke all on public.group_deal_purchase_requests from anon,authenticated,service_role;
@@ -418,6 +420,6 @@ exception when others then null; end $$;
 
 select cron.schedule(
   '2taka-group-deal-expiry',
-  '*/5 * * * *',
+  '* * * * *',
   $$select * from private.process_expired_group_deals();$$
 );
