@@ -165,7 +165,7 @@ select ok(pg_temp.expect_failure(
  $$select public.treasury_request_transaction('transfer',
     (select id from qa_accounts where label='A'),(select id from qa_accounts where label='A'),null,null,
     10000,0,0,current_date,'SAME-ACCOUNT-TRANSFER','Invalid self transfer detection')$$,
- 'source_account_id'),'Self-transfer cannot create false cash flow');
+ 'Transfer requires two distinct liquid accounts'),'Self-transfer cannot create false cash flow');
 insert into qa_tx(label,id)
 select 'overdraft',public.treasury_request_transaction('transfer',
     (select id from qa_accounts where label='A'),(select id from qa_accounts where label='B'),null,null,
