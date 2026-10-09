@@ -166,8 +166,7 @@ for each row execute function private.touch_updated_at();
 create or replace function private.can_manage_supply_source(p_user uuid,p_kind text,p_source uuid)
 returns boolean language sql stable security definer set search_path='' as $fn$
   select p_user is not null and (
-    private.is_ops(p_user)
-    or (
+    (
       p_kind='supplier' and exists(
         select 1 from public.supplier_memberships sm
         join public.suppliers s on s.id=sm.supplier_id
@@ -465,8 +464,11 @@ begin
   if not found then raise exception 'Dispatch not found'; end if;
   if d.source_kind<>'supplier' then raise exception 'Admin authorization is only required for external supplier dispatches'; end if;
   if d.status<>'draft' then raise exception 'Only a draft supplier dispatch can be authorized'; end if;
-  if exists(select 1 from public.supplier_memberships sm where sm.supplier_id=d.source_supplier_id and sm.user_id=v_user and sm.active) then
-    raise exception 'Independent Admin required: supplier staff cannot authorize their own supplier dispatch';
+  if d.created_by=v_user or exists(
+    select 1 from public.supplier_memberships sm
+    where sm.supplier_id=d.source_supplier_id and sm.user_id=v_user and sm.active
+  ) then
+    raise exception 'Independent Admin required: dispatch creator or supplier staff cannot authorize this supplier dispatch';
   end if;
   if not exists(select 1 from public.supply_dispatch_items where dispatch_id=d.id) then raise exception 'Dispatch has no products'; end if;
   update public.supply_dispatches set authorized_by=v_user,authorized_at=now(),authorization_note=v_note where id=d.id;
