@@ -120,3 +120,27 @@ export async function procurementPostCommunityCash(fd:FormData) {
  }catch(e){outcome(describe(e),'error')}
  outcome('Accepted COD and delivery-fee cash posted separately; revenue remains unrecognized until order/COGS reconciliation')
 }
+
+export async function procurementAttachDocument(fd:FormData) {
+ const viewer=await requireAdmin()
+ try {
+  requireIsolated()
+  const attachment=fd.get('document_file')
+  if(!(attachment instanceof File)||attachment.size<1||attachment.size>1_500_000)throw new Error('Select a document up to 1.5 MB')
+  const proof=await uploadDocument(viewer.supabase,viewer.user.id,new FormDataWithFile(attachment).data)
+  const {error}=await viewer.supabase.rpc('finance_attach_document',{
+   p_entity_type:get(fd,'entity_type'),p_entity_id:get(fd,'entity_id'),p_kind:get(fd,'document_kind'),
+   p_name:get(fd,'display_name'),p_path:proof.location,p_sha256:proof.digest
+  })
+  if(error) {
+   await viewer.supabase.storage.from('finance-evidence').remove([proof.location])
+   throw new Error(error.message)
+  }
+ }catch(e){outcome(describe(e),'error')}
+ outcome('Evidence attached permanently to the selected financial record')
+}
+
+class FormDataWithFile {
+ data:FormData
+ constructor(file:File){this.data=new FormData();this.data.set('invoice_file',file)}
+}
