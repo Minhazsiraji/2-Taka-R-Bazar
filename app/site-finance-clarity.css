@@ -720,3 +720,14 @@ html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-
   border-left-color:#30bdb6 !important;
   color:#ccebe7 !important;
 }
+
+
+/* Final glass-material cascade fix: historical site-wide hero selectors with
+   html[data-theme] and !important previously kept backdrop-filter: none.
+   Repeat the finance surface + hero classes to ensure exact header blur wins
+   in light, dark, and system theme without affecting other site routes. */
+html body.site-glass-root main .finance-ops-surface.finance-ops-surface > section.finance-ops-hero.finance-ops-hero,
+html body.site-glass-root main .finance-ops-surface.finance-ops-surface > header.finance-ops-hero.finance-ops-hero {
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+}
