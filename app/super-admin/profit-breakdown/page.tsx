@@ -69,7 +69,7 @@ export default async function ProfitBreakdown({searchParams}:{searchParams:Promi
  const eb= result?.grossProfit===null||result?.grossProfit===undefined||delivery===null||deliveryCost===null||op===null
   ?null:Math.round((result.grossProfit+delivery-deliveryCost-op)*100)/100
  const samePreview=(path:string)=>path+(demo?'?demo=1':'')
- return <SuperAdminShell><main className="finance-ops-surface grid min-w-0 gap-4">
+ return <SuperAdminShell><div className="finance-ops-surface grid min-w-0 gap-4">
   <section className="finance-ops-hero rounded-[23px] p-6">
    <div className="flex flex-wrap items-start justify-between gap-3">
     <div><p className="text-xs font-bold uppercase tracking-[.18em] text-teal-700">2-TAKA-R-BAZAR · OWNER FINANCE</p>
@@ -145,5 +145,5 @@ export default async function ProfitBreakdown({searchParams}:{searchParams:Promi
     <div className="mt-4 flex flex-wrap gap-2"><Link href={samePreview('/super-admin/cash-bridge')} className="rounded-lg bg-teal-800 px-3 py-2 text-xs font-bold text-white">See why Cash ≠ Profit →</Link><Link href={samePreview('/super-admin/finance')} className="rounded-lg border border-teal-500 px-3 py-2 text-xs font-bold text-teal-900">Back to expense approvals →</Link></div>
    </section>
   </>}
- </main></SuperAdminShell>
+ </div></SuperAdminShell>
 }
