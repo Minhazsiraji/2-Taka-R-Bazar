@@ -40,7 +40,7 @@ function Movements({data}:{data:Trend[]}){
  return <Card>
   <div className="flex flex-wrap items-start justify-between gap-3">
    <div><h2 className="text-lg font-black">Cash movements</h2><p className="mt-1 text-xs text-slate-500">Six-month posted cash activity · management reporting</p></div>
-   <span className="finance-verified-badge rounded-lg px-3 py-1.5 text-xs font-bold">Ledger-backed</span>
+   <span className="finance-verified-badge rounded-lg px-3 py-1.5 text-xs font-bold">Illustrative ledger · demo data</span>
   </div>
   <TreasuryCashMovementChart data={data}/>
   <p className="mt-3 text-xs leading-5 text-slate-500">Transfers between company accounts and non-cash card charges are excluded. Card-bill cash movements and loan interest require final IAS 7 classification.</p>
@@ -50,7 +50,7 @@ const demoSummary:Summary={
  cash_total:193200,restricted_cash:0,unrestricted_cash:193200,minimum_reserve:100000,
  contractual_outflows_14d:20000,contractual_inflows_14d:0,deployable_cash:73200,
  card_outstanding:6000,card_unused_limit:24000,loan_and_private_borrowing_outstanding:53000,
- total_financing_liabilities:59000,pending_treasury_requests:0,unmatched_statement_lines:1,
+ total_financing_liabilities:59000,pending_treasury_requests:2,unmatched_statement_lines:2,
  cashflow_status:'MANAGEMENT_ONLY_OPERATIONS_AND_BANK_RECONCILIATION_PENDING',
  accounts:[
  {id:'demo-a',name:'Operating Bank A',kind:'bank',institution:'Sample Bank A',last_four:'1234',balance:101200,restricted:0,credit_limit:null,active:true},
@@ -63,22 +63,39 @@ const demoSummary:Summary={
  {id:'demo-private',lender:'Private lender',kind:'private_borrowing',outstanding:8000,original_principal:15000,apr:0,due_day:null,maturity_date:null}]
 }
 const demoTransactions:Tx[]=[
- {id:'demo-1',kind:'transfer',amount:10000,business_date:'2026-10-09',external_reference:'DEMO-TRANSFER',memo:'Operating to procurement bank',status:'posted',requested_by:'demo-maker',approved_by:'demo-checker',created_at:'2026-10-09',source_account_id:'demo-a',target_account_id:'demo-b',facility_id:null,expense_id:null,interest_amount:0,fee_amount:0,matched_source:true,matched_target:true},
- {id:'demo-2',kind:'loan_repay',amount:10000,business_date:'2026-10-09',external_reference:'DEMO-REPAY',memo:'Principal plus finance cost',status:'posted',requested_by:'demo-maker',approved_by:'demo-checker',created_at:'2026-10-09',source_account_id:'demo-a',target_account_id:null,facility_id:'demo-loan',expense_id:null,interest_amount:500,fee_amount:100,matched_source:false,matched_target:false},
- {id:'demo-3',kind:'expense_card',amount:3000,business_date:'2026-10-09',external_reference:'DEMO-CARD',memo:'Approved office expense on credit card',status:'posted',requested_by:'demo-maker',approved_by:'demo-checker',created_at:'2026-10-09',source_account_id:null,target_account_id:'demo-card',facility_id:null,expense_id:'demo-expense',interest_amount:0,fee_amount:0,matched_source:false,matched_target:false}
+ {id:'demo-1',kind:'transfer',amount:10000,business_date:'2026-10-02',external_reference:'SYN-TRANSFER-001',memo:'Operations float transferred to procurement bank',status:'posted',requested_by:'synthetic-maker',approved_by:'synthetic-checker',created_at:'2026-10-02',source_account_id:'demo-a',target_account_id:'demo-b',facility_id:null,expense_id:null,interest_amount:0,fee_amount:0,matched_source:true,matched_target:true},
+ {id:'demo-2',kind:'loan_repay',amount:10000,business_date:'2026-10-03',external_reference:'SYN-EMI-002',memo:'Bank loan principal + interest and processing fee',status:'posted',requested_by:'synthetic-maker',approved_by:'synthetic-checker',created_at:'2026-10-03',source_account_id:'demo-a',target_account_id:null,facility_id:'demo-loan',expense_id:null,interest_amount:500,fee_amount:100,matched_source:true,matched_target:false},
+ {id:'demo-3',kind:'expense_card',amount:3000,business_date:'2026-10-04',external_reference:'SYN-CARD-003',memo:'Approved office expense purchased by company credit card',status:'posted',requested_by:'synthetic-maker',approved_by:'synthetic-checker',created_at:'2026-10-04',source_account_id:null,target_account_id:'demo-card',facility_id:null,expense_id:'demo-expense',interest_amount:0,fee_amount:0,matched_source:false,matched_target:false},
+ {id:'demo-4',kind:'supplier_payment',amount:9000,business_date:'2026-10-05',external_reference:'SYN-VENDOR-004',memo:'Partial demonstration of goods-received supplier settlement',status:'posted',requested_by:'synthetic-maker',approved_by:'synthetic-checker',created_at:'2026-10-05',source_account_id:'demo-b',target_account_id:null,facility_id:null,expense_id:null,interest_amount:0,fee_amount:0,matched_source:true,matched_target:false},
+ {id:'demo-5',kind:'expense_cash',amount:1200,business_date:'2026-10-06',external_reference:'SYN-QR-PRINT-005',memo:'Community QR poster printing paid from office cash',status:'posted',requested_by:'synthetic-maker',approved_by:'synthetic-checker',created_at:'2026-10-06',source_account_id:'demo-cash',target_account_id:null,facility_id:null,expense_id:'preview-1',interest_amount:0,fee_amount:0,matched_source:false,matched_target:false},
+ {id:'demo-6',kind:'supplier_payment',amount:20000,business_date:'2026-10-09',external_reference:'SYN-AP-PENDING-006',memo:'Supplier invoice matched to independently verified stock, awaiting approval',status:'pending',requested_by:'synthetic-maker',approved_by:null,created_at:'2026-10-09',source_account_id:'demo-b',target_account_id:null,facility_id:null,expense_id:null,interest_amount:0,fee_amount:0,matched_source:false,matched_target:false},
+ {id:'demo-7',kind:'transfer',amount:7500,business_date:'2026-10-09',external_reference:'SYN-TRANSFER-PENDING-007',memo:'Reserve allocation awaiting independent maker-checker sign-off',status:'pending',requested_by:'synthetic-maker',approved_by:null,created_at:'2026-10-09',source_account_id:'demo-a',target_account_id:'demo-c',facility_id:null,expense_id:null,interest_amount:0,fee_amount:0,matched_source:false,matched_target:false}
+]
+const demoStatements:Statement[]=[
+ {id:'syn-st-1',account_id:'demo-a',external_line_id:'SYN-ST-20261002-001',statement_date:'2026-10-02',signed_amount:-10000,reference:'SYN-TRANSFER-001',matched_transaction_id:'demo-1',imported_by:'synthetic-maker',matched_by:'synthetic-checker'},
+ {id:'syn-st-2',account_id:'demo-b',external_line_id:'SYN-ST-20261002-002',statement_date:'2026-10-02',signed_amount:10000,reference:'SYN-TRANSFER-001',matched_transaction_id:'demo-1',imported_by:'synthetic-maker',matched_by:'synthetic-checker'},
+ {id:'syn-st-3',account_id:'demo-a',external_line_id:'SYN-ST-20261008-003',statement_date:'2026-10-08',signed_amount:-950,reference:'SYN-UNKNOWN-BANK-FEE',matched_transaction_id:null,imported_by:'synthetic-maker',matched_by:null},
+ {id:'syn-st-4',account_id:'demo-b',external_line_id:'SYN-ST-20261009-004',statement_date:'2026-10-09',signed_amount:-1250,reference:'SYN-UNMATCHED-SUPPLIER',matched_transaction_id:null,imported_by:'synthetic-maker',matched_by:null}
 ]
 const demoTrends:Trend[]=['2026-05-01','2026-06-01','2026-07-01','2026-08-01','2026-09-01','2026-10-01'].map((m,i)=>({
- month_start:m,operating_outflow:[0,0,15000,22000,17000,1200][i],
+ month_start:m,operating_inflow:[12000,16000,24000,18000,26000,18000][i],operating_outflow:[5000,8000,15000,22000,17000,1200][i],
  financing_inflow:[0,0,150000,0,20000,30000][i],financing_outflow:[0,0,0,12000,15000,13000][i],
  unallocated_card_bill:[0,0,0,1000,2000,2000][i],other_unallocated_interest:[0,0,0,0,0,600][i],
  net_cash_movement:[0,0,135000,-35000,-14000,13200][i]
 }))
-const demoForecast:Forecast[]=[{id:'demo-f1',due_date:'2026-10-16',expected_cash_change:-20000,event_kind:'supplier_payment',confidence:'contractual',description:'Approved supplier invoice due',source_reference:'DEMO-SUPPLIER',status:'open'}]
+const demoForecast:Forecast[]=[
+ {id:'demo-f1',due_date:'2026-10-16',expected_cash_change:-20000,event_kind:'supplier_payment',confidence:'contractual',description:'AMT-01 cooking oil supplier invoice',source_reference:'SYN-AP-2026-101',status:'open'},
+ {id:'demo-f2',due_date:'2026-10-18',expected_cash_change:32000,event_kind:'customer_collection',confidence:'provisional',description:'Expected next AMT-01 community COD pickup',source_reference:'SYN-POOL-AMT-01',status:'open'},
+ {id:'demo-f3',due_date:'2026-10-21',expected_cash_change:-8500,event_kind:'logistics',confidence:'provisional',description:'Delivery partner and packaging forecast',source_reference:'SYN-OPS-PLAN',status:'open'},
+ {id:'demo-f4',due_date:'2026-10-25',expected_cash_change:-2500,event_kind:'marketing',confidence:'provisional',description:'Building QR and referral campaign',source_reference:'SYN-CAMPAIGN-02',status:'open'},
+ {id:'demo-f5',due_date:'2026-11-05',expected_cash_change:-11600,event_kind:'loan_due',confidence:'contractual',description:'Illustrative business loan scheduled payment',source_reference:'SYN-LOAN-EMI',status:'open'},
+ {id:'demo-f6',due_date:'2026-11-15',expected_cash_change:43000,event_kind:'customer_collection',confidence:'provisional',description:'Forecast next community grocery collection',source_reference:'SYN-POOL-NOV',status:'open'}
+]
 
 export default async function TreasuryOwner({searchParams}:{searchParams:Promise<{demo?:string;error?:string;notice?:string}>}){
  const {supabase}=await requireSuperAdmin()
  const q=await searchParams
- const demo=q.demo==='1'
+ const demo=q.demo==='1'||(process.env.VERCEL_ENV==='preview'&&!Boolean(process.env.FINANCE_WRITES_ENABLED==='true'&&process.env.FINANCE_PREVIEW_SUPABASE_URL&&process.env.NEXT_PUBLIC_SUPABASE_URL===process.env.FINANCE_PREVIEW_SUPABASE_URL)&&q.demo!=='0')
  const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'})
  const month=today.slice(0,7)+'-01'
  const isolated=process.env.VERCEL_ENV==='preview'&&process.env.FINANCE_WRITES_ENABLED==='true'&&
@@ -88,7 +105,7 @@ export default async function TreasuryOwner({searchParams}:{searchParams:Promise
  let summary:Summary|null=null,transactions:Tx[]=[],statements:Statement[]=[],forecasts:Forecast[]=[],trends:Trend[]=[]
  let dbError=''
  if(demo){
-   summary=demoSummary;transactions=demoTransactions;forecasts=demoForecast;trends=demoTrends
+   summary=demoSummary;transactions=demoTransactions;statements=demoStatements;forecasts=demoForecast;trends=demoTrends
  }else{
    const [s,t,b,f,c]=await Promise.all([
     supabase.rpc('treasury_dashboard',{p_today:today}),
@@ -109,12 +126,12 @@ export default async function TreasuryOwner({searchParams}:{searchParams:Promise
       <p className="mt-2 max-w-xl text-sm leading-6 text-teal-100">One financial source of truth. Multiple bank accounts, cash, loans and cards — reconciled with maker-checker approvals.</p>
      </div><span className="finance-hero-badge rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-[11px] font-bold">{demo?'SYNTHETIC · NO REAL ACCOUNTS':isolated?'ISOLATED PREVIEW':'WRITES LOCKED'}</span>
     </div>
-    <div className="finance-hero-actions relative mt-6 flex flex-wrap gap-3"><Link href="/super-admin/finance" className="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-bold">Finance & profit →</Link><Link href="/admin/treasury" className="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-bold">Finance staff request desk →</Link><Link href="/super-admin/treasury?demo=1" className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-teal-800">Explore synthetic demo</Link></div>
+    <div className="finance-hero-actions relative mt-6 flex flex-wrap gap-3"><Link href={demo?"/super-admin/finance?demo=1":"/super-admin/finance"} className="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-bold">Finance & profit →</Link><Link href={demo?"/admin/treasury?demo=1":"/admin/treasury"} className="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-bold">Finance staff request desk →</Link><Link href="/super-admin/treasury?demo=1" className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-teal-800">Explore synthetic demo</Link></div>
    </section>
    {q.error&&<div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{q.error}</div>}
    {q.notice&&<div role="status" className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm font-semibold text-teal-900">{q.notice}</div>}
    {dbError&&<div className="finance-gate-notice rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{dbError} <Link href="/super-admin/treasury?demo=1" className="font-black underline">Open synthetic design demo</Link></div>}
-   {demo&&<div className="rounded-xl border border-purple-200 bg-purple-50 p-3 text-sm font-semibold text-purple-800">Illustrative entries only. These are not your actual bank accounts, liabilities, profit or financial statements.</div>}
+   {demo&&<div className="rounded-xl border border-purple-200 bg-purple-50 p-3 text-sm font-semibold text-purple-800">SYNTHETIC SCENARIO · AMT-01 community grocery buying: sample bank accounts, invoices, cash collections, approvals and forecasts. All figures are invented, read-only and NOT connected to real bank statements.</div>}
    {!isolated&&<div className="finance-protection-notice rounded-xl bg-slate-200/60 p-3 text-xs text-slate-700"><b>Production protection:</b> All cash-changing actions require an isolated Preview database. No transaction can be posted to the live Supabase instance from this branch.</div>}
    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
     <Metric name="Total book cash" value={dbError?'—':taka(summary?.cash_total)} description="Banks, wallet, office/community cash; excludes unused card credit"/>
