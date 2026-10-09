@@ -153,7 +153,7 @@ test('failed Group Deal customers are notified and can ask to buy at the initial
   assert.match(autoCloseMigration,/group_deal_purchase_requests/i)
   assert.match(customerPage,/get_my_failed_group_deals/i)
   assert.match(customerPage,/I still want this product/i)
-  assert.match(customerPage,/Minimum buyer threshold was not reached/i)
+  assert.match(customerPage,/minimum verified-buyer threshold was not reached/i)
 })
 
 test('failed-deal purchase requests create an admin follow-up queue and notifications',()=>{
