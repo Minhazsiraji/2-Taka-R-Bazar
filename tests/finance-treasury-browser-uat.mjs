@@ -59,8 +59,9 @@ async function assertFinancialDesign(page,label) {
  assert.equal(summary.titleColor,'rgb(18, 48, 68)',label+' hero title should be dark ink on pearl glass')
  assert.ok(summary.height<390,label+' hero distorted: '+summary.height+'px')
  assert.ok(summary.scroll<=summary.viewport+1,label+' overflows viewport')
- const panel=await page.locator('.finance-panel').first().evaluate(el=>getComputedStyle(el).backgroundColor)
- assert.notEqual(panel,'rgba(0, 0, 0, 0)',label+' surface is transparent')
+ const panel=await page.locator('.finance-panel').first().evaluate(el=>{const z=getComputedStyle(el);return {gradient:z.backgroundImage,border:z.borderTopColor}})
+ assert.ok(panel.gradient.includes('linear-gradient'),label+' glass panel must have nonempty material gradient')
+ assert.notEqual(panel.border,'rgba(0, 0, 0, 0)',label+' glass panel must have visible rim')
  const headGlass=await page.locator('.app-shell-header-bar').evaluate(el=>{
   const z=getComputedStyle(el)
   return {background:z.backgroundImage,border:z.borderTopColor,shadow:z.boxShadow,blur:z.backdropFilter}
