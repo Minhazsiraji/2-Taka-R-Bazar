@@ -37,7 +37,7 @@ export async function createSupplyDispatch(fd:FormData){
   try{items=dispatchItems(fd)}catch(e:any){go('/supply',e.message,'error')}
   const sourceKind=t(fd,'source_kind'),sourceId=t(fd,'source_id')
   const {data,error}=await supabase.rpc('create_supply_dispatch',{
-    p_source_kind:sourceKind,p_source_id:sourceId,p_destination_community_id:t(fd,'community_id'),
+    p_source_kind:sourceKind,p_source_id:sourceId,p_source_reference:t(fd,'source_reference'),p_destination_community_id:t(fd,'community_id'),
     p_items:items,p_notes:t(fd,'notes')||null,
   })
   if(error)go('/supply',error.message,'error')
