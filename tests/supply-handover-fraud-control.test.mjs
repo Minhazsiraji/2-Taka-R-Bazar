@@ -29,7 +29,7 @@ test('sealed dispatch quantities are immutable and protected by a one-time hashe
 
 test('separation of duties blocks sender carrier receiver self-verification',()=>{
   assert.match(migration,/Dispatch creator cannot also be the carrier/i)
-  assert.match(migration,/sender\/carrier cannot receive the same dispatch/i)
+  assert.match(migration,/Separation of duties violation at receiving/i)
   assert.match(migration,/Independent Admin required: source staff, sender, receiver or carrier cannot resolve the same dispatch/i)
 })
 
