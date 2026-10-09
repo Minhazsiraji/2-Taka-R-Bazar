@@ -8,6 +8,7 @@ import {
   startCommunityOpsDay,refreshCommunityOpsManifest,recordCommunityInbound,recordCommunityStockAdjustment,verifyCommunityOrder,
   completeCommunityOrder,recordCommunityOrderException,submitCommunityOpsReport,submitCommunityCashHandover,
 } from '@/app/actions/community-ops'
+import { receiveSupplyDispatch } from '@/app/actions/supply'
 
 export const dynamic='force-dynamic'
 
@@ -25,7 +26,14 @@ export default async function CommunityOpsPage({searchParams}:{searchParams:Prom
     supabase.rpc('get_my_community_ops_days'),
   ])
   let detail:any=null
-  if(sp.day){const {data}=await supabase.rpc('get_community_ops_day',{p_day_id:sp.day});detail=data}
+  let supplyDispatches:any[]=[]
+  if(sp.day){
+    const [{data},{data:supplyRows}]=await Promise.all([
+      supabase.rpc('get_community_ops_day',{p_day_id:sp.day}),
+      supabase.rpc('get_my_inbound_supply_dispatches',{p_day_id:sp.day}),
+    ])
+    detail=data;supplyDispatches=supplyRows??[]
+  }
   const d=detail?.day,summary=detail?.summary??{},products=detail?.products??[],orders=detail?.orders??[],inbound=detail?.inbound??[],stockAdjustments=detail?.stock_adjustments??[],handover=detail?.cash_handover
 
   return <AppShell roles={roles}><div className="grid gap-5">
@@ -54,6 +62,33 @@ export default async function CommunityOpsPage({searchParams}:{searchParams:Prom
           <div className="rounded-xl bg-slate-50 p-3"><div className="card-title">Ready unresolved</div><b className="text-xl">{summary.pending_orders??0}</b><div className="muted text-xs">{summary.pickup_orders??0} pickup · {summary.home_delivery_orders??0} home</div></div>
         </div>
         {d.status==='open'&&<form action={refreshCommunityOpsManifest} className="mt-4"><input type="hidden" name="day_id" value={d.id}/><SubmitButton className="btn-secondary">Refresh manifest</SubmitButton></form>}
+      </section>
+
+      <section className="grid gap-3">
+        <div><div className="card-title">Verified source handover</div><h2 className="section-title">Supplier / 2TBR Store dispatches</h2><p className="muted text-sm">Blind-count the physical batch independently. Sender-declared package, seal and quantity values are hidden until after submission. Only an exact database match becomes verified stock automatically.</p></div>
+        {supplyDispatches.length===0?<div className="card muted">No sealed supply dispatch is waiting for this community.</div>:supplyDispatches.map((sd:any)=><article className={'card '+(sd.status==='security_hold'?'border-rose-300':sd.status==='variance'?'border-amber-300':'')} key={sd.dispatch_id}>
+          <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="text-xl font-black">{sd.dispatch_code}</h3><p className="muted">{sd.source_name}{sd.carrier_name?' · Carrier '+sd.carrier_name:''}</p><p className="muted text-xs">Blind receiving · do not ask the sender for their declared counts before you finish your physical count.</p></div><span className="chip capitalize">{String(sd.status).replaceAll('_',' ')}</span></div>
+          {sd.variance_reason&&<div className="error mt-3">{sd.variance_reason}</div>}
+          {['sealed','in_transit'].includes(sd.status)&&d.status==='open'&&<form action={receiveSupplyDispatch} className="mt-4 grid gap-3">
+            <input type="hidden" name="day_id" value={d.id}/><input type="hidden" name="dispatch_id" value={sd.dispatch_id}/>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <label><span className="label">One-time handover code</span><input className="input font-mono uppercase tracking-widest" name="handover_code" autoComplete="one-time-code" required placeholder="8-character code"/></label>
+              <label><span className="label">Observed package count</span><input className="input" type="number" min="0" name="observed_package_count" required/></label>
+              <label><span className="label">Observed seal reference</span><input className="input" name="observed_seal_reference" placeholder="Enter exactly what you physically see"/></label>
+            </div>
+            <div className="grid gap-2">{(sd.items??[]).map((i:any)=><div className="grid gap-2 rounded-xl bg-slate-50 p-3 sm:grid-cols-[1fr_130px_120px_120px]" key={i.product_id}>
+              <input type="hidden" name="product_id" value={i.product_id}/>
+              <div><b>{i.product_name}</b><div className="muted text-xs">{i.package_size} · sender quantity hidden</div></div>
+              <label><span className="label">Received</span><input className="input" type="number" min="0" name="received_quantity" required/></label>
+              <label><span className="label">Damaged</span><input className="input" type="number" min="0" name="damaged_quantity" defaultValue="0" required/></label>
+              <label><span className="label">Returned</span><input className="input" type="number" min="0" name="returned_quantity" defaultValue="0" required/></label>
+            </div>)}</div>
+            <input className="input" name="receiver_note" placeholder="Receiving note / packaging condition / evidence reference"/>
+            <SubmitButton>Verify physical handover</SubmitButton>
+          </form>}
+          {sd.status==='variance'&&<div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-bold text-amber-900">This batch is blocked from verified Community Ops stock until an independent Admin resolves the variance.</div>}
+          {sd.status==='security_hold'&&<div className="mt-3 rounded-xl bg-rose-50 p-3 text-sm font-bold text-rose-900">Security hold: do not distribute this batch until Admin review.</div>}
+        </article>)}
       </section>
 
       <section className="grid gap-3">
