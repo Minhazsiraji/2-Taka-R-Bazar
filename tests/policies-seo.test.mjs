@@ -125,3 +125,16 @@ test('action buttons stay English-only and footer stacks Bangla under English',(
   assert.match(appShell,/grid-cols-2/)
   assert.match(appShell,/grid-cols-3/)
 })
+
+
+test('footer legal labels use hard stacked containers and action links stay English-only',()=>{
+  const publicFooter=read('components/public-footer.tsx')
+  const appShell=read('components/app-shell.tsx')
+  const publicHome=read('app/page.tsx')
+  const memberHome=read('app/home/page.tsx')
+  assert.match(publicFooter,/<div className="whitespace-normal">\{labelEn\}<\/div><div className="mt-1/)
+  assert.match(appShell,/<div>\{labelEn\}<\/div><div className="mt-1/)
+  assert.doesNotMatch(publicHome,/About the model →<\/span>/)
+  assert.doesNotMatch(publicHome,/Read FAQ →<\/span>/)
+  assert.doesNotMatch(memberHome,/View all → <span/)
+})
