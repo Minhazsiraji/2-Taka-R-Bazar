@@ -29,6 +29,7 @@ create table if not exists public.supply_location_memberships (
 create table if not exists public.supply_dispatches (
   id uuid primary key default gen_random_uuid(),
   dispatch_code text not null unique default ('DSP-'||upper(substr(replace(gen_random_uuid()::text,'-',''),1,10))),
+  source_reference text not null,
   source_kind text not null check(source_kind in ('supplier','2tbr_store')),
   source_supplier_id uuid references public.suppliers(id) on delete restrict,
   source_location_id uuid references public.supply_locations(id) on delete restrict,
@@ -136,6 +137,12 @@ create index if not exists supply_location_memberships_user_idx
   on public.supply_location_memberships(user_id,active);
 create index if not exists supply_dispatch_destination_status_idx
   on public.supply_dispatches(destination_community_id,status,created_at desc);
+create unique index if not exists supply_dispatch_supplier_reference_uniq
+  on public.supply_dispatches(source_supplier_id,lower(source_reference))
+  where source_kind='supplier';
+create unique index if not exists supply_dispatch_location_reference_uniq
+  on public.supply_dispatches(source_location_id,lower(source_reference))
+  where source_kind='2tbr_store';
 create index if not exists supply_dispatch_source_supplier_idx
   on public.supply_dispatches(source_supplier_id,status,created_at desc) where source_supplier_id is not null;
 create index if not exists supply_dispatch_source_location_idx
@@ -357,7 +364,7 @@ revoke all on function public.get_supply_source_products(text,uuid) from public,
 grant execute on function public.get_supply_source_products(text,uuid) to authenticated;
 
 create or replace function public.create_supply_dispatch(
-  p_source_kind text,p_source_id uuid,p_destination_community_id uuid,p_items jsonb,p_notes text default null
+  p_source_kind text,p_source_id uuid,p_source_reference text,p_destination_community_id uuid,p_items jsonb,p_notes text default null
 )
 returns uuid language plpgsql security definer set search_path='' as $fn$
 declare
@@ -365,15 +372,26 @@ declare
   v_count integer:=0; v_distinct integer:=0;
 begin
   if not private.can_manage_supply_source(v_user,p_source_kind,p_source_id) then raise exception 'Dispatch permission required'; end if;
+  if nullif(btrim(coalesce(p_source_reference,'')),'') is null or length(btrim(p_source_reference))>120 then
+    raise exception 'Source challan/invoice/transfer reference is required and must be 120 characters or fewer';
+  end if;
+  if (p_source_kind='supplier' and exists(
+        select 1 from public.supply_dispatches where source_supplier_id=p_source_id and lower(source_reference)=lower(btrim(p_source_reference))
+      ))
+     or (p_source_kind='2tbr_store' and exists(
+        select 1 from public.supply_dispatches where source_location_id=p_source_id and lower(source_reference)=lower(btrim(p_source_reference))
+      )) then
+    raise exception 'This source challan/invoice/transfer reference has already been used';
+  end if;
   if not exists(select 1 from public.communities where id=p_destination_community_id and active) then raise exception 'Destination community is inactive or missing'; end if;
   if jsonb_typeof(p_items)<>'array' or jsonb_array_length(p_items)=0 or jsonb_array_length(p_items)>50 then
     raise exception 'Dispatch must contain 1 to 50 products';
   end if;
 
   insert into public.supply_dispatches(
-    source_kind,source_supplier_id,source_location_id,destination_community_id,created_by,notes
+    source_reference,source_kind,source_supplier_id,source_location_id,destination_community_id,created_by,notes
   ) values(
-    p_source_kind,
+    btrim(p_source_reference),p_source_kind,
     case when p_source_kind='supplier' then p_source_id else null end,
     case when p_source_kind='2tbr_store' then p_source_id else null end,
     p_destination_community_id,v_user,nullif(btrim(coalesce(p_notes,'')),'')
@@ -402,14 +420,14 @@ begin
   if v_count<>v_distinct then raise exception 'Duplicate products are not allowed in one dispatch'; end if;
 
   insert into public.supply_chain_events(dispatch_id,actor_user_id,event_type,event_status,metadata)
-  values(v_id,v_user,'dispatch_created','draft',jsonb_build_object('item_count',v_count,'destination_community_id',p_destination_community_id));
+  values(v_id,v_user,'dispatch_created','draft',jsonb_build_object('item_count',v_count,'destination_community_id',p_destination_community_id,'source_reference',btrim(p_source_reference)));
   insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
   values(v_user,'supply_dispatch_created','supply_dispatch',v_id,jsonb_build_object('source_kind',p_source_kind,'item_count',v_count));
   return v_id;
 end;
 $fn$;
-revoke all on function public.create_supply_dispatch(text,uuid,uuid,jsonb,text) from public,anon,authenticated,service_role;
-grant execute on function public.create_supply_dispatch(text,uuid,uuid,jsonb,text) to authenticated;
+revoke all on function public.create_supply_dispatch(text,uuid,text,uuid,jsonb,text) from public,anon,authenticated,service_role;
+grant execute on function public.create_supply_dispatch(text,uuid,text,uuid,jsonb,text) to authenticated;
 
 create or replace function public.seal_supply_dispatch(
   p_dispatch_id uuid,p_package_count integer,p_seal_reference text default null
@@ -523,12 +541,12 @@ grant execute on function public.carrier_acknowledge_supply_dispatch(uuid) to au
 
 create or replace function public.get_my_supply_dispatches()
 returns table(
-  dispatch_id uuid,dispatch_code text,source_kind text,source_name text,destination_name text,status text,
+  dispatch_id uuid,dispatch_code text,source_reference text,source_kind text,source_name text,destination_name text,status text,
   package_count integer,seal_reference text,carrier_user_id uuid,authorized_at timestamptz,authorization_note text,created_at timestamptz,sealed_at timestamptz,
   received_at timestamptz,variance_reason text,resolution text,items jsonb
 )
 language sql stable security definer set search_path='' as $fn$
-  select d.id,d.dispatch_code,d.source_kind,
+  select d.id,d.dispatch_code,d.source_reference,d.source_kind,
     private.supply_source_name(d.source_kind,d.source_supplier_id,d.source_location_id),
     c.name,d.status,d.package_count,d.seal_reference,d.carrier_user_id,d.authorized_at,d.authorization_note,d.created_at,d.sealed_at,d.received_at,d.variance_reason,d.resolution,
     (select coalesce(jsonb_agg(jsonb_build_object(
@@ -782,7 +800,7 @@ grant execute on function public.admin_get_supply_locations() to authenticated;
 
 create or replace function public.admin_get_supply_dispatches(p_limit integer default 200)
 returns table(
-  dispatch_id uuid,dispatch_code text,source_kind text,source_name text,destination_name text,status text,
+  dispatch_id uuid,dispatch_code text,source_reference text,source_kind text,source_name text,destination_name text,status text,
   created_by uuid,creator_name text,carrier_user_id uuid,carrier_name text,received_by uuid,receiver_name text,
   package_count integer,observed_package_count integer,seal_reference text,observed_seal_reference text,
   authorized_by uuid,authorized_at timestamptz,authorization_note text,
@@ -793,7 +811,7 @@ language plpgsql stable security definer set search_path='' as $fn$
 begin
   if not private.is_ops(auth.uid()) then raise exception 'Admin required'; end if;
   return query
-  select d.id,d.dispatch_code,d.source_kind,private.supply_source_name(d.source_kind,d.source_supplier_id,d.source_location_id),
+  select d.id,d.dispatch_code,d.source_reference,d.source_kind,private.supply_source_name(d.source_kind,d.source_supplier_id,d.source_location_id),
     c.name,d.status,d.created_by,pc.full_name,d.carrier_user_id,pca.full_name,d.received_by,pr.full_name,
     d.package_count,d.observed_package_count,d.seal_reference,d.observed_seal_reference,d.authorized_by,d.authorized_at,d.authorization_note,d.variance_reason,d.resolution,d.resolution_reason,
     d.created_at,d.sealed_at,d.received_at,
