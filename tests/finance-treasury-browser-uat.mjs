@@ -46,6 +46,7 @@ async function visit(page,path,heading){
  assert.ok(!page.url().includes('/login'),'Unexpected login redirect '+path)
 }
 async function assertFinancialDesign(page,label) {
+ await page.waitForFunction(()=>{const h=document.querySelector('.finance-ops-hero');return Boolean(h&&h.isConnected&&getComputedStyle(h).backgroundImage.includes('linear-gradient'))},null,{timeout:20000})
  const summary=await page.locator('.finance-ops-hero').evaluate(el=>{
   const css=getComputedStyle(el),title=el.querySelector('h1'),headCss=title?getComputedStyle(title):null
   return {height:el.getBoundingClientRect().height,gradient:css.backgroundImage,
