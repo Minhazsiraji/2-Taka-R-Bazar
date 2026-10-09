@@ -5,7 +5,7 @@ import { SubmitButton } from '@/components/submit-button'
 import { requireAdmin } from '@/lib/auth'
 import {
   adminCreateSupplyLocation,adminAssignSupplyLocationMember,adminLinkSupplierSupplyAccount,
-  adminAssignSupplyCarrier,adminResolveSupplyVariance,
+  adminAuthorizeSupplyDispatch,adminAssignSupplyCarrier,adminResolveSupplyVariance,
 } from '@/app/actions/supply'
 
 export const dynamic='force-dynamic'
@@ -76,6 +76,8 @@ export default async function SupplyControlAdmin({searchParams}:{searchParams:Pr
           {d.variance_reason&&<div className="error mt-3">{d.variance_reason}</div>}
           {d.resolution&&<div className="success mt-3">Resolution: {String(d.resolution).replaceAll('_',' ')} · {d.resolution_reason}</div>}
 
+          {d.source_kind==='supplier'&&d.status==='draft'&&!d.authorized_at&&<form action={adminAuthorizeSupplyDispatch} className="mt-4 grid gap-2 rounded-xl border border-cyan-200 bg-cyan-50 p-3 sm:grid-cols-[1fr_auto] sm:items-end"><input type="hidden" name="dispatch_id" value={d.dispatch_id}/><label><span className="label">Authorization note</span><input className="input" name="note" placeholder="PO/procurement reference / approval basis"/></label><SubmitButton>Authorize supplier dispatch</SubmitButton></form>}
+          {d.source_kind==='supplier'&&d.authorized_at&&<div className="success mt-3">Supplier dispatch independently authorized · {new Date(d.authorized_at).toLocaleString('en-BD')}{d.authorization_note?' · '+d.authorization_note:''}</div>}
           {d.status==='draft'||d.status==='sealed'?<form action={adminAssignSupplyCarrier} className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end"><input type="hidden" name="dispatch_id" value={d.dispatch_id}/><select className="input" name="user_id" required><option value="">Assign authenticated carrier (optional)</option>{(profiles??[]).filter((p:any)=>p.id!==d.created_by).map((p:any)=><option value={p.id} key={p.id}>{p.full_name||p.phone||p.email||p.id}</option>)}</select><SubmitButton className="btn-secondary">Assign carrier</SubmitButton></form>:null}
 
           {['variance','security_hold'].includes(d.status)&&<form action={adminResolveSupplyVariance} className="mt-4 grid gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 lg:grid-cols-4">
