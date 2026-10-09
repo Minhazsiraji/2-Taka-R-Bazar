@@ -90,11 +90,14 @@ async function main(){
   // The deployed screenshots showed milky pills and bars; verify the actual
   // computed styles AND hover label, not just presence of HTML/classes.
   await visit(owner,'/super-admin/finance?demo=1','Finance intelligence')
+  await owner.locator('.finance-hero-badge').waitFor({state:'visible',timeout:20000})
+  await owner.waitForTimeout(150)
   const badge=await owner.locator('.finance-hero-badge').evaluate(el=>({
    background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color
   }))
   assert.equal(badge.background,'rgb(195, 247, 239)','Finance synthetic badge must have a solid high-contrast background')
   assert.equal(badge.color,'rgb(6, 63, 67)','Finance synthetic badge must have dark readable text')
+  await owner.locator('.finance-month-selector').waitFor({state:'visible',timeout:20000})
   const month=await owner.locator('.finance-month-selector').evaluate(el=>({
    background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color
   }))
