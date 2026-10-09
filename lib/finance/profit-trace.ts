@@ -65,7 +65,7 @@ export function calculateProfit(input:ProfitInput,scope:ProfitScope={}):ProfitRe
  const deliveryRevenue=scoped?null:round(cents(input.deliveryRevenue))
  const deliveryCost=scoped||input.deliveryActualCost===null?null:round(cents(input.deliveryActualCost))
  const financeCosts=scoped?null:round(cents(input.financeCosts))
- const profitBeforeTax=canCalculate?round(cents(grossProfit!)+cents(deliveryRevenue!)-cents(deliveryCost!)-cents(op!)-cents(financeCosts!)):null
+ const profitBeforeTax=canCalculate?round(signedCents(grossProfit!)+cents(deliveryRevenue!)-cents(deliveryCost!)-cents(op!)-cents(financeCosts!)):null
  if(input.deliveryActualCost===null)blockers.push('Actual delivery operating cost is incomplete')
  const tax=profitBeforeTax!==null&&input.taxRate!==null&&input.taxRate>=0&&input.taxRate<=1
   ?round(Math.round(Math.max(0,signedCents(profitBeforeTax))*input.taxRate)):null
