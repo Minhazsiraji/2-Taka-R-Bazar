@@ -41,6 +41,7 @@ export const demoCashBridge:CashBridgeInput={
  financeCashPaid:600,
  ownerFinancingInflows:0,
  otherExternalReceipts:0,
+ otherExternalOutflows:0,
  internalTransfers:10000,
  closingCash:193200,
  cashAccountsReconciled:false
