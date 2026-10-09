@@ -39,8 +39,8 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
  const d=(data??{selected_quotes:[],purchase_orders:[],dispatches:[],bills:[],liquid_accounts:[],cash_receipts_pending:[]}) as Data
  const quote=d.selected_quotes??[],po=d.purchase_orders??[],dispatch=d.dispatches??[],bills=d.bills??[],accounts=d.liquid_accounts??[],cash=d.cash_receipts_pending??[]
  const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'})
- return <AdminShell><div className="grid min-w-0 gap-4">
-  <header className="rounded-[27px] bg-[linear-gradient(125deg,#062c41_0%,#0b5b5d_52%,#16a085_100%)] p-6 text-white shadow-lg">
+ return <AdminShell><div className="finance-ops-surface grid min-w-0 gap-4">
+  <header className="finance-ops-hero rounded-[27px] bg-[linear-gradient(125deg,#062c41_0%,#0b5b5d_52%,#16a085_100%)] p-6 text-white shadow-lg">
    <p className="text-[10px] font-black uppercase tracking-[.22em] text-cyan-200">SUPPLIER COST · PHYSICAL STOCK · ACCOUNTING</p>
    <h1 className="mt-2 text-3xl font-black tracking-tight">Procurement & reconciliation</h1>
    <p className="mt-2 max-w-xl text-sm text-teal-100">One controlled trail: negotiated supplier quote → approved purchase order → verified handover → invoice match → Treasury bank settlement.</p>
@@ -49,7 +49,7 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
   {q.error&&<div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{q.error}</div>}
   {q.notice&&<div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{q.notice}</div>}
   {demoMode&&<div className="rounded-xl bg-violet-50 p-3 text-xs font-bold text-violet-800">Illustrative synthetic values. These do not represent a real order, supplier payment or supplier price.</div>}
-  {(error||!isolated)&&<div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+  {(error||!isolated)&&<div className="finance-gate-notice rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
     <b>Controlled Preview:</b> Supplier finance writes remain locked until an isolated approved Supabase Preview database is connected. Customer Production transactions remain untouched.
    </div>}
   <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
