@@ -39,6 +39,9 @@ create table if not exists public.supply_dispatches (
   seal_reference text,
   carrier_user_id uuid references auth.users(id) on delete set null,
   carrier_acknowledged_at timestamptz,
+  authorized_by uuid references auth.users(id) on delete set null,
+  authorized_at timestamptz,
+  authorization_note text,
   created_by uuid not null references auth.users(id) on delete restrict,
   sealed_by uuid references auth.users(id) on delete set null,
   sealed_at timestamptz,
@@ -422,6 +425,9 @@ begin
   v_source=case when d.source_kind='supplier' then d.source_supplier_id else d.source_location_id end;
   if not private.can_manage_supply_source(v_user,d.source_kind,v_source) then raise exception 'Dispatch permission required'; end if;
   if d.status<>'draft' then raise exception 'Only a draft dispatch can be sealed'; end if;
+  if d.source_kind='supplier' and d.authorized_at is null then
+    raise exception 'External supplier dispatch requires Admin authorization before sealing';
+  end if;
   if p_package_count is null or p_package_count<1 or p_package_count>10000 then raise exception 'Package count must be between 1 and 10000'; end if;
   if not exists(select 1 from public.supply_dispatch_items where dispatch_id=d.id) then raise exception 'Dispatch has no products'; end if;
 
@@ -449,6 +455,32 @@ end;
 $fn$;
 revoke all on function public.seal_supply_dispatch(uuid,integer,text) from public,anon,authenticated,service_role;
 grant execute on function public.seal_supply_dispatch(uuid,integer,text) to authenticated;
+
+create or replace function public.admin_authorize_supply_dispatch(p_dispatch_id uuid,p_note text default null)
+returns void language plpgsql security definer set search_path='' as $fn$
+declare v_user uuid:=auth.uid(); d public.supply_dispatches%rowtype; v_note text:=nullif(btrim(coalesce(p_note,'')),'');
+begin
+  if not private.is_ops(v_user) then raise exception 'Admin required'; end if;
+  select * into d from public.supply_dispatches where id=p_dispatch_id for update;
+  if not found then raise exception 'Dispatch not found'; end if;
+  if d.source_kind<>'supplier' then raise exception 'Admin authorization is only required for external supplier dispatches'; end if;
+  if d.status<>'draft' then raise exception 'Only a draft supplier dispatch can be authorized'; end if;
+  if exists(select 1 from public.supplier_memberships sm where sm.supplier_id=d.source_supplier_id and sm.user_id=v_user and sm.active) then
+    raise exception 'Independent Admin required: supplier staff cannot authorize their own supplier dispatch';
+  end if;
+  if not exists(select 1 from public.supply_dispatch_items where dispatch_id=d.id) then raise exception 'Dispatch has no products'; end if;
+  update public.supply_dispatches set authorized_by=v_user,authorized_at=now(),authorization_note=v_note where id=d.id;
+  insert into public.supply_chain_events(dispatch_id,actor_user_id,event_type,event_status,metadata)
+  values(d.id,v_user,'supplier_dispatch_authorized','draft',jsonb_build_object('note',v_note));
+  insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
+  values(v_user,'supply_dispatch_authorized','supply_dispatch',d.id,jsonb_build_object('note',v_note));
+  perform private.enqueue_notification(d.created_by,'supply_authorized','Supplier dispatch authorized',
+    d.dispatch_code||' was authorized by 2-TAKA-R-BAZAR and can now be sealed.',
+    '/supply','supply:'||d.id::text||':authorized','normal',null,null);
+end;
+$fn$;
+revoke all on function public.admin_authorize_supply_dispatch(uuid,text) from public,anon,authenticated,service_role;
+grant execute on function public.admin_authorize_supply_dispatch(uuid,text) to authenticated;
 
 create or replace function public.admin_assign_supply_carrier(p_dispatch_id uuid,p_user_id uuid)
 returns void language plpgsql security definer set search_path='' as $fn$
@@ -490,13 +522,13 @@ grant execute on function public.carrier_acknowledge_supply_dispatch(uuid) to au
 create or replace function public.get_my_supply_dispatches()
 returns table(
   dispatch_id uuid,dispatch_code text,source_kind text,source_name text,destination_name text,status text,
-  package_count integer,seal_reference text,carrier_user_id uuid,created_at timestamptz,sealed_at timestamptz,
+  package_count integer,seal_reference text,carrier_user_id uuid,authorized_at timestamptz,authorization_note text,created_at timestamptz,sealed_at timestamptz,
   received_at timestamptz,variance_reason text,resolution text,items jsonb
 )
 language sql stable security definer set search_path='' as $fn$
   select d.id,d.dispatch_code,d.source_kind,
     private.supply_source_name(d.source_kind,d.source_supplier_id,d.source_location_id),
-    c.name,d.status,d.package_count,d.seal_reference,d.carrier_user_id,d.created_at,d.sealed_at,d.received_at,d.variance_reason,d.resolution,
+    c.name,d.status,d.package_count,d.seal_reference,d.carrier_user_id,d.authorized_at,d.authorization_note,d.created_at,d.sealed_at,d.received_at,d.variance_reason,d.resolution,
     (select coalesce(jsonb_agg(jsonb_build_object(
       'product_id',di.product_id,'product_name',p.name,'package_size',p.package_size,'quantity',di.dispatched_quantity
     ) order by p.name),'[]'::jsonb)
@@ -530,10 +562,9 @@ begin
   return query
   select d.id,d.dispatch_code,d.source_kind,
     private.supply_source_name(d.source_kind,d.source_supplier_id,d.source_location_id),
-    d.status,d.package_count,d.seal_reference,pr.full_name,d.sealed_at,
+    d.status,null::integer,null::text,pr.full_name,d.sealed_at,
     (select coalesce(jsonb_agg(jsonb_build_object(
       'product_id',di.product_id,'product_name',p.name,'package_size',p.package_size,
-      'dispatched_quantity',di.dispatched_quantity,
       'received_quantity',dr.received_quantity,'damaged_quantity',dr.damaged_quantity,'returned_quantity',dr.returned_quantity
     ) order by p.name),'[]'::jsonb)
      from public.supply_dispatch_items di
@@ -752,6 +783,7 @@ returns table(
   dispatch_id uuid,dispatch_code text,source_kind text,source_name text,destination_name text,status text,
   created_by uuid,creator_name text,carrier_user_id uuid,carrier_name text,received_by uuid,receiver_name text,
   package_count integer,observed_package_count integer,seal_reference text,observed_seal_reference text,
+  authorized_by uuid,authorized_at timestamptz,authorization_note text,
   variance_reason text,resolution text,resolution_reason text,created_at timestamptz,sealed_at timestamptz,received_at timestamptz,
   items jsonb
 )
@@ -761,7 +793,7 @@ begin
   return query
   select d.id,d.dispatch_code,d.source_kind,private.supply_source_name(d.source_kind,d.source_supplier_id,d.source_location_id),
     c.name,d.status,d.created_by,pc.full_name,d.carrier_user_id,pca.full_name,d.received_by,pr.full_name,
-    d.package_count,d.observed_package_count,d.seal_reference,d.observed_seal_reference,d.variance_reason,d.resolution,d.resolution_reason,
+    d.package_count,d.observed_package_count,d.seal_reference,d.observed_seal_reference,d.authorized_by,d.authorized_at,d.authorization_note,d.variance_reason,d.resolution,d.resolution_reason,
     d.created_at,d.sealed_at,d.received_at,
     (select coalesce(jsonb_agg(jsonb_build_object(
       'product_id',di.product_id,'product_name',p.name,'package_size',p.package_size,
