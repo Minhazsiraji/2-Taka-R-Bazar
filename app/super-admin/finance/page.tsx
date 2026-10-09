@@ -29,8 +29,8 @@ const bd=(v:unknown)=>'৳'+num(v).toLocaleString('en-BD',{minimumFractionDigits
 const monthKey=(s:string)=>/^\d{4}-(0[1-9]|1[0-2])$/.test(s)?s:''
 const demoExpenses:E[]=[
  {id:'preview-1',category:'marketing_offline',description:'Community QR print campaign',vendor_name:'Example print partner',document_reference:'DEMO-QRP-101',amount:1200,incurred_on:'2026-10-04',community_id:null,campaign_code:'AMT-01',status:'settled',created_by:'demo',reviewed_by:'demo2',created_at:'2026-10-04',settlement_id:'settle1',settlement_status:'verified',evidence_path:'DEMO',evidence_sha256:'DEMO',settlement_evidence_path:'DEMO'},
- {id:'preview-2',category:'logistics',description:'Community point freight',vendor_name:'Example transport',document_reference:'DEMO-FRT-102',amount:880,incurred_on:'2026-10-05',community_id:null,campaign_code:null,status:'posted',created_by:'demo',reviewed_by:'demo2',created_at:'2026-10-05',settlement_id:null,settlement_status:null,evidence_path:'DEMO',evidence_sha256:'DEMO',settlement_evidence_path:null,evidence_path:'DEMO',evidence_sha256:'DEMO',settlement_evidence_path:null},
- {id:'preview-3',category:'marketing_online',description:'Facebook location-targeted test',vendor_name:'Example ad provider',document_reference:'DEMO-ADS-103',amount:2000,incurred_on:'2026-10-06',community_id:null,campaign_code:'AMT-01',status:'submitted',created_by:'demo',reviewed_by:null,created_at:'2026-10-06',settlement_id:null,settlement_status:null},
+ {id:'preview-2',category:'logistics',description:'Community point freight',vendor_name:'Example transport',document_reference:'DEMO-FRT-102',amount:880,incurred_on:'2026-10-05',community_id:null,campaign_code:null,status:'posted',created_by:'demo',reviewed_by:'demo2',created_at:'2026-10-05',settlement_id:null,settlement_status:null,evidence_path:'DEMO',evidence_sha256:'DEMO',settlement_evidence_path:null},
+ {id:'preview-3',category:'marketing_online',description:'Facebook location-targeted test',vendor_name:'Example ad provider',document_reference:'DEMO-ADS-103',amount:2000,incurred_on:'2026-10-06',community_id:null,campaign_code:'AMT-01',status:'submitted',created_by:'demo',reviewed_by:null,created_at:'2026-10-06',settlement_id:null,settlement_status:null,evidence_path:'DEMO',evidence_sha256:'DEMO',settlement_evidence_path:null},
  {id:'preview-4',category:'infrastructure',description:'Domain and digital services',vendor_name:'Example tech provider',document_reference:'DEMO-INF-104',amount:700,incurred_on:'2026-10-07',community_id:null,campaign_code:null,status:'settlement_requested',created_by:'demo',reviewed_by:'demo2',created_at:'2026-10-07',settlement_id:'settle4',settlement_status:'pending',evidence_path:'DEMO',evidence_sha256:'DEMO',settlement_evidence_path:'DEMO'}
 ]
 const demoLedger:Line[]=[
@@ -86,7 +86,7 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
  const month=monthKey(query.month??'')||today
  const monthStart=month+'-01'
  const demo=query.demo==='1'
- const params=month=>'/super-admin/finance?month='+month+(demo?'&demo=1':'')
+ const params=(nextMonth:string)=>'/super-admin/finance?month='+month+(demo?'&demo=1':'')
  let rows:E[]=[]
  let ledger:Line[]=[]
  let report:Summary|null=null
