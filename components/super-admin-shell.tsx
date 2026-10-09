@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { BrandLogo } from '@/components/brand-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { FinanceGlassParity } from '@/components/finance-glass-parity'
 
 const executiveLinks = [['/super-admin','Executive dashboard'],['/super-admin/finance','Finance intelligence'],['/super-admin/treasury','Treasury & cash flow'],['/super-admin/profit-breakdown','Profit breakdown'],['/super-admin/cash-bridge','Cash bridge'],['/super-admin/money-analytics','My Money analytics'],['/super-admin/payments','Payments & cash'],['/super-admin/access','Users & access'],['/super-admin/audit','Audit trail']]
 const operationsLinks = [['/admin','Operations dashboard'],['/admin/communities','Communities'],['/admin/customers','Customers'],['/admin/products','Products'],['/admin/market-prices','Market prices'],['/admin/suppliers','Suppliers'],['/admin/procurement','Procurement & AP'],['/admin/pools','Pools'],['/admin/commitments','Commitments'],['/admin/orders','Orders'],['/admin/deliveries','Home deliveries'],['/admin/pickup-points','Pickup points'],['/admin/savings','Savings'],['/admin/feedback','Feedback'],['/admin/issues','Issues']]
@@ -26,6 +27,7 @@ export function SuperAdminShell({children}:{children:React.ReactNode}) {
         </div>
       </div>
     </header>
+    <FinanceGlassParity />
     <div className="mx-auto w-full max-w-6xl min-w-0 px-3 py-4 sm:px-5 sm:py-5">
       <details className="mb-4 w-full max-w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-sm xl:hidden"><summary className="cursor-pointer list-none rounded-xl bg-slate-100 px-3 py-3 text-sm font-black text-slate-800">☰ Super Admin sections</summary><div className="mt-4 min-w-0"><Navigation mobile/></div></details>
       <div className="grid w-full max-w-full min-w-0 gap-4 xl:grid-cols-[245px_minmax(0,1fr)]"><aside className="hidden h-fit rounded-2xl border border-slate-200 bg-white p-3 shadow-sm xl:sticky xl:top-20 xl:block"><Navigation/></aside><main className="w-full max-w-full min-w-0 overflow-x-hidden">{children}</main></div>
