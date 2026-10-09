@@ -160,7 +160,7 @@ begin
  if jsonb_typeof(p_lines)<>'array' or jsonb_array_length(p_lines)<2 or jsonb_array_length(p_lines)>8
  then raise exception 'Treasury journal must have 2 to 8 lines'; end if;
  insert into public.finance_journals(event_key,source_type,source_id,posting_date,memo,posted_by)
- values(p_key,'treasury_transaction',p_source,p_date,p_memo,p_actor) returning id into v_id;
+ values(p_key,case when p_key like 'treasury:open:%' then 'treasury_opening' else 'treasury_transaction' end,p_source,p_date,p_memo,p_actor) returning id into v_id;
  for x in select value from jsonb_array_elements(p_lines) loop
    v_code=x->>'account';v_debit=coalesce((x->>'debit')::numeric,0);
    v_credit=coalesce((x->>'credit')::numeric,0);
@@ -207,7 +207,7 @@ begin
         jsonb_build_array(jsonb_build_object('account',v_code,'debit',p_opening_balance),
                           jsonb_build_object('account','3100','credit',p_opening_balance)),v_actor);
     end if;
-    update public.finance_journals set source_type='treasury_opening' where id=v_post;
+
  end if;
  insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
  values(v_actor,'treasury_account_created','treasury_account',v_id,
@@ -240,7 +240,7 @@ begin
    v_post=private.treasury_post('treasury:open:facility:'||v_id,v_id,p_open_date,'Opening documented borrowing',
      jsonb_build_array(jsonb_build_object('account','3100','debit',p_opening_outstanding),
                        jsonb_build_object('account',v_code,'credit',p_opening_outstanding)),v_actor);
-   update public.finance_journals set source_type='treasury_opening' where id=v_post;
+
  end if;
  insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
  values(v_actor,'treasury_facility_created','treasury_facility',v_id,
