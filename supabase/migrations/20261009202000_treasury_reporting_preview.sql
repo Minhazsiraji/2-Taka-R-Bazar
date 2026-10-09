@@ -179,3 +179,24 @@ begin
 end $$;
 revoke all on function public.finance_report(date) from public,anon,authenticated;
 grant execute on function public.finance_report(date) to authenticated;
+
+
+-- Limited request metadata for operations staff. No company-wide balances, debt outstanding, or bank statements.
+create or replace function public.treasury_request_options()
+returns jsonb language plpgsql stable security definer set search_path='' as $$
+begin
+ if not private.finance_authorized(auth.uid()) then raise exception 'Finance role required'; end if;
+ return jsonb_build_object(
+  'accounts',coalesce((select jsonb_agg(jsonb_build_object('id',id,'name',name,'kind',account_kind,
+   'institution',institution,'last_four',last_four) order by name)
+   from public.treasury_accounts where active),'[]'::jsonb),
+  'facilities',coalesce((select jsonb_agg(jsonb_build_object('id',id,'lender',lender,'kind',facility_kind)
+   order by lender) from public.treasury_facilities where active),'[]'::jsonb),
+  'approved_expenses',coalesce((select jsonb_agg(jsonb_build_object('id',id,'description',description,
+    'vendor',vendor_name,'amount',amount) order by created_at desc)
+    from (select id,description,vendor_name,amount,created_at from public.finance_expenses
+          where status='posted' order by created_at desc limit 100) e),'[]'::jsonb)
+ );
+end $$;
+revoke all on function public.treasury_request_options() from public,anon,authenticated;
+grant execute on function public.treasury_request_options() to authenticated;
