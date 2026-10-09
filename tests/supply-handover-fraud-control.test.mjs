@@ -14,6 +14,8 @@ test('supply actors are authenticated and scoped to supplier or internal locatio
   assert.match(migration,/private\.can_manage_supply_source/i)
   assert.match(migration,/sm\.role in \('owner','manager'\)/i)
   assert.match(migration,/lm\.role in \('manager','storekeeper'\)/i)
+  const manageFn=migration.match(/create or replace function private\.can_manage_supply_source[\s\S]*?\$fn\$;/i)?.[0]??''
+  assert.doesNotMatch(manageFn,/private\.is_ops\(p_user\)/i)
   assert.match(migration,/revoke all on public\.supply_locations,public\.supply_location_memberships,public\.supply_dispatches/i)
 })
 
@@ -95,7 +97,7 @@ test('server actions use guarded RPC workflows rather than direct supply-table w
 test('external supplier dispatches require independent Admin authorization before sealing',()=>{
   assert.match(migration,/External supplier dispatch requires Admin authorization before sealing/i)
   assert.match(migration,/admin_authorize_supply_dispatch/i)
-  assert.match(migration,/supplier staff cannot authorize their own supplier dispatch/i)
+  assert.match(migration,/dispatch creator or supplier staff cannot authorize this supplier dispatch/i)
   assert.match(adminPage,/Authorize supplier dispatch/i)
   assert.match(supplyPage,/Waiting for independent 2-TAKA-R-BAZAR Admin authorization/i)
 })
