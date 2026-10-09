@@ -30,7 +30,7 @@ test('sealed dispatch quantities are immutable and protected by a one-time hashe
 test('separation of duties blocks sender carrier receiver self-verification',()=>{
   assert.match(migration,/Dispatch creator cannot also be the carrier/i)
   assert.match(migration,/sender\/carrier cannot receive the same dispatch/i)
-  assert.match(migration,/Independent Admin required: a sender, receiver or carrier cannot resolve the same dispatch/i)
+  assert.match(migration,/Independent Admin required: source staff, sender, receiver or carrier cannot resolve the same dispatch/i)
 })
 
 test('Community Ops independently counts package seal and every product',()=>{
@@ -57,6 +57,7 @@ test('invalid codes trigger persisted fraud signals and a security hold',()=>{
   assert.match(migration,/five_invalid_handover_codes/i)
   assert.match(migration,/status='security_hold'/i)
   assert.match(migration,/private\.supply_actor_risk_profiles/i)
+  assert.match(migration,/Separation of duties violation at receiving/i)
   assert.match(adminPage,/Fraud & risk signals/i)
 })
 
@@ -65,6 +66,7 @@ test('variance resolution is independent, reasoned and responsibility-aware',()=
   assert.match(migration,/replacement_pending/i)
   assert.match(migration,/return_entire_batch/i)
   assert.match(migration,/fraud_hold/i)
+  assert.match(migration,/reset_for_reseal/i)
   assert.match(migration,/Resolution reason is required/i)
   assert.match(migration,/p_responsibility not in \('source','receiver','carrier','none','unknown'\)/i)
   assert.match(migration,/reliability_status=.*watch/i)
