@@ -28,8 +28,8 @@ test('preview mutating server actions fail closed on production or unapproved da
 })
 
 test('expense creation and approval enforce maker checker, evidence metadata and ledger posting',()=>{
- assert.match(migration,/finance_expenses_vendor_doc_uniq/)
- assert.match(migration,/document_reference text not null check/)
+ assert.match(migration,/finance_expenses_vendor_document_unique/)
+ assert.match(migration,/document_reference text not null check/)\n assert.match(migration,/finance-evidence/)\n assert.match(migration,/evidence_sha256 text not null check/)\n assert.match(migration,/storage\.objects where bucket_id='finance-evidence'/)
  assert.match(migration,/if e\.created_by=v_actor then raise exception 'Maker may not approve their own expense'/)
  assert.match(migration,/if e\.status<>'submitted' then raise exception/)
  assert.match(migration,/finance:accrual:/)
@@ -49,7 +49,7 @@ test('balanced journal primitives are idempotent and enforce exact debit and cre
 
 test('settlement verification requires independent reviewer and proof before crediting cash',()=>{
  assert.match(migration,/if s\.requested_by=v_actor then raise exception/)
- assert.match(migration,/payment_reference text not null check/)
+ assert.match(migration,/payment_reference text not null check/)\n assert.match(migration,/finance_settlement_one_live/)\n assert.match(migration,/finance_settlement_reference_live/)
  assert.match(migration,/payment_method,payment_reference/)
  assert.match(migration,/if e\.status<>'settlement_requested' then/)
  assert.match(migration,/finance:settlement:/)
