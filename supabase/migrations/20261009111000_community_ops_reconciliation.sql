@@ -726,7 +726,7 @@ grant execute on function public.get_community_ops_day(uuid) to authenticated;
 
 create or replace function public.admin_get_community_ops_assignments()
 returns table(user_id uuid,operator_name text,operator_phone text,community_id uuid,community_name text,active boolean)
-language plpgsql stable security definer set search_path='' as $
+language plpgsql stable security definer set search_path='' as $assign$
 begin
   if not private.is_ops(auth.uid()) then raise exception 'Admin required'; end if;
   return query
@@ -736,7 +736,7 @@ begin
   left join public.profiles pr on pr.id=a.user_id
   order by c.name,pr.full_name;
 end;
-$;
+$assign$;
 revoke all on function public.admin_get_community_ops_assignments() from public,anon,authenticated,service_role;
 grant execute on function public.admin_get_community_ops_assignments() to authenticated;
 
