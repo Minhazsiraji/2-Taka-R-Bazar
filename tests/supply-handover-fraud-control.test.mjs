@@ -21,7 +21,7 @@ test('sealed dispatch quantities are immutable and protected by a one-time hashe
   assert.match(migration,/supply_dispatch_items/i)
   assert.match(migration,/Only a draft dispatch can be sealed/i)
   assert.match(migration,/extensions\.digest\(v_code,'sha256'\)/i)
-  assert.match(migration,/expires_at.*24 hours/i)
+  assert.match(migration,/expires_at[\s\S]*24 hours/i)
   assert.match(migration,/consumed_at/i)
   assert.match(supplyPage,/Seal & generate code/i)
   assert.match(supplyPage,/one-time receiving code/i)
