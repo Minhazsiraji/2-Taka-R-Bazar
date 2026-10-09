@@ -6,7 +6,7 @@ import { requireAdmin, requireSuperAdmin } from '@/lib/auth'
 
 // An ordinary Vercel Preview URL may inherit the live Supabase connection.
 // Refuse ALL writes unless explicitly connected to a separate, approved finance test database.
-export function requireIsolatedTreasuryDatabase() {
+function requireIsolatedTreasuryDatabase() {
   const current = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   const approved = process.env.FINANCE_PREVIEW_SUPABASE_URL ?? ''
   if (process.env.VERCEL_ENV !== 'preview' ||
