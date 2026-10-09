@@ -85,3 +85,19 @@ export async function linkSupplierAccount(fd:FormData){
   if(error)fail(error.message)
   done('Supplier account access linked.')
 }
+
+
+export async function setGroupDealPurchaseRequestStatus(fd:FormData){
+  const {supabase}=await requireAdmin()
+  const requestId=t(fd,'request_id')
+  const status=t(fd,'status')
+  const note=t(fd,'admin_note')
+  if(!requestId||!status)fail('Choose a request and status')
+  const {error}=await supabase.rpc('admin_set_group_deal_purchase_request_status',{
+    p_request_id:requestId,
+    p_status:status,
+    p_admin_note:note||null,
+  })
+  if(error)fail(error.message)
+  done('Customer purchase request updated.')
+}
