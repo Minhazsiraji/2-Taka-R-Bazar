@@ -83,7 +83,7 @@ export default async function LandingPage() {
 
   return (
     <main className="min-h-screen bg-white text-black">
-      <PublicHeader actionHref="/login" actionLabel="Sign in" actionLabelBn="সাইন ইন" />
+      <PublicHeader actionHref="/login" actionLabel="Sign in" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <div className="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-12">
         <div className="grid items-stretch gap-6 lg:grid-cols-2">
@@ -94,7 +94,7 @@ export default async function LandingPage() {
             <p className="mt-2 text-sm font-semibold leading-6 text-slate-600" lang="bn">একসাথে কিনুন। পুলের আসল দাম দিন। সাশ্রয় নিজের কাছে রাখুন।</p>
             <p className="mt-5 text-lg leading-8 text-slate-600">Buy through Community Pools that combine household demand, or nearby Group Deals where verified neighbours unlock prices together. You see the relevant price before confirming a purchase.</p>
             <p className="mt-2 text-[13px] leading-6 text-slate-500 sm:text-sm" lang="bn">Community Pool-এ পরিবারের চাহিদা একত্র হয়, আর Group Deal-এ কাছাকাছি verified প্রতিবেশীরা একসাথে দাম unlock করেন। কেনার আগে আপনি সংশ্লিষ্ট চূড়ান্ত দাম দেখতে পারবেন।</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row"><Link className="btn-primary text-center" href="/signup"><span className="block">Join the community pool</span><span className="block text-[11px] font-medium" lang="bn">কমিউনিটি পুলে যোগ দিন</span></Link><Link className="btn-secondary text-center" href="/login"><span className="block">Sign in</span><span className="block text-[11px] font-medium text-slate-500" lang="bn">সাইন ইন</span></Link></div>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row"><Link className="btn-primary text-center" href="/signup">Join the community pool</Link><Link className="btn-secondary text-center" href="/login">Sign in</Link></div>
             <div className="public-rule mt-8 rounded-2xl bg-black p-5 text-white"><p className="text-sm text-white/65">Our rule</p><p className="text-[11px] text-white/55" lang="bn">আমাদের নীতি</p><p className="mt-1 text-xl font-black">No hidden order. No fake saving.</p><p className="mt-1 text-[13px] text-white/75" lang="bn">গোপন অর্ডার নয়। ভুয়া সাশ্রয় নয়।</p></div>
           </section>
           <section className="flex min-w-0 flex-col overflow-hidden rounded-[28px] border border-black/10 bg-slate-50 lg:min-h-[540px]">

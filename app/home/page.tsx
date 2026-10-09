@@ -214,7 +214,7 @@ export default async function HomePage(){
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href={mission.href} className="btn-primary min-h-10 px-4 text-center"><span className="block">Open opportunity</span><span className="block text-[10px] font-medium" lang="bn">সুযোগটি দেখুন</span></Link>
+          <Link href={mission.href} className="btn-primary min-h-10 px-4 text-center">Open opportunity</Link>
           <ShareUnlockButton
             title="2-TAKA-R-BAZAR saving target"
             text={mission.kind==='group'
@@ -234,7 +234,7 @@ export default async function HomePage(){
               ? 'Home delivery · '+taka((readyOrder as any).delivery_fee??0)
               : 'FREE community pickup · '+((readyOrder.pickup_points as any)?.name??'Pickup point')}</p>
           </div>
-          <Link className="btn-primary min-h-10 px-4 text-center" href="/orders"><span className="block">Track order</span><span className="block text-[10px] font-medium" lang="bn">অর্ডার ট্র্যাক করুন</span></Link>
+          <Link className="btn-primary min-h-10 px-4 text-center" href="/orders">Track order</Link>
         </div>
       </section>}
 

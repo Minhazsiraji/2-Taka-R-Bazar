@@ -9,7 +9,7 @@ export function PolicyPage({titleEn,titleBn,summaryEn,summaryBn,sections}:{
   titleEn:string; titleBn:string; summaryEn:string; summaryBn:string; sections:PolicySection[]
 }) {
   return <main className="min-h-screen bg-slate-50 text-slate-950">
-    <PublicHeader actionHref="/" actionLabel="Home" actionLabelBn="হোম" />
+    <PublicHeader actionHref="/" actionLabel="Home" />
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">2-TAKA-R-BAZAR · Pilot policy</p>
