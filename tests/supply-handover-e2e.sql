@@ -473,7 +473,7 @@ values('a0000000-0000-0000-0000-000000000002','super_admin') on conflict do noth
 
 insert into public.pools(id,community_id,title,status,created_by)
 values('f1000000-0000-4000-8000-000000000001',
- '11111111-1111-1111-1111-111111111111','E2E procurement cost-linked pool','ordered',
+ '11111111-1111-1111-1111-111111111111','E2E procurement cost-linked pool','pricing',
  'a0000000-0000-0000-0000-000000000001');
 insert into public.pool_items(id,pool_id,product_id,benchmark_price_snapshot,final_customer_price,
  frozen_committed_quantity,active)
@@ -489,6 +489,7 @@ values('f3000000-0000-4000-8000-000000000001',
  true,current_date+30,990);
 update public.pool_items set selected_supplier_quote_id='f3000000-0000-4000-8000-000000000001'
 where id='f2000000-0000-4000-8000-000000000001';
+update public.pools set status='ordered' where id='f1000000-0000-4000-8000-000000000001';
 
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
 insert into e2e_state values ('matched_po',public.procurement_submit_po(
