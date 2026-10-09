@@ -244,3 +244,50 @@ html[data-theme="dark"] body.site-glass-root details .super-admin-nav-link:hover
   background: #1d555a !important;
   border-color: #46b6b1 !important;
 }
+
+
+/* Specificity firewall: legacy site CSS targets every rounded div/section
+   using multiple :not() selectors and !important. Override only the named
+   financial components at higher specificity, not the entire application. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface > :is(section,header).finance-ops-hero[class*="rounded-"]:not(.card):not(.table-wrap),
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface > :is(section,header).finance-ops-hero[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: linear-gradient(116deg,#09283b 0%,#0b4d56 51%,#087d77 100%) !important;
+  border-color: #147e82 !important;
+  box-shadow: 0 12px 30px rgba(6,58,66,.19) !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #ffffff !important;
+  color: #123044 !important;
+  border-color: rgba(18,117,126,.2) !important;
+  box-shadow: 0 5px 20px rgba(17,52,62,.075) !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #142a36 !important;
+  color: #e8f4f5 !important;
+  border-color: #315262 !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,.22) !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-gate-notice[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #fff6df !important;
+  border-color: #f2cc86 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-gate-notice[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #332917 !important;
+  border-color: #815f30 !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-protection-notice[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #e8f6f5 !important;
+  border-color: #a9cfd0 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-protection-notice[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #153039 !important;
+  border-color: #285b5e !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-empty-state[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #edf6f6 !important;
+  border-color: #b0c9c9 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-empty-state[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #17343d !important;
+  border-color: #2a6971 !important;
+}
