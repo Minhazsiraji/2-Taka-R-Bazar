@@ -165,6 +165,7 @@ test('final customer UX prioritizes savings pulse, compact cards and honest deli
   const orders=readFileSync(new URL('../app/orders/page.tsx',import.meta.url),'utf8')
   const savings=readFileSync(new URL('../app/savings/page.tsx',import.meta.url),'utf8')
   const shell=readFileSync(new URL('../components/app-shell.tsx',import.meta.url),'utf8')
+  const footer=readFileSync(new URL('../components/site-footer.tsx',import.meta.url),'utf8')
   assert.match(home,/Savings pulse/i)
   assert.match(home,/Best next saving move/i)
   assert.match(pool,/Choose essentials, watch the price fall/i)
