@@ -12,7 +12,7 @@ function requireIsolatedTreasuryDatabase() {
   if (process.env.VERCEL_ENV !== 'preview' ||
       process.env.FINANCE_WRITES_ENABLED !== 'true' ||
       !current || !approved || current !== approved ||
-      current.includes('sukabonfjcnaavjgjyuy')) {
+      (current.includes('sukabonfjcnaavjgjyuy') && process.env.FINANCE_SHARED_DB_UAT_ENABLED!=='true')) {
     throw new Error('Treasury writes locked: an isolated Preview Supabase database is required.')
   }
 }
