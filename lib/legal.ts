@@ -3,9 +3,10 @@ export const POLICY_EFFECTIVE_DATE_EN = '5 October 2026'
 export const POLICY_EFFECTIVE_DATE_BN = '৫ অক্টোবর ২০২৬'
 
 export const LEGAL_LINKS = [
-  ['/about', 'About / পরিচিতি'],
-  ['/terms', 'Terms & Conditions / শর্তাবলি'],
-  ['/return-policy', 'Return Policy / রিটার্ন নীতি'],
-  ['/refund-policy', 'Refund Policy / রিফান্ড নীতি'],
-  ['/faq', 'FAQ / প্রশ্নোত্তর'],
+  ['/about', 'About', 'পরিচিতি'],
+  ['/privacy', 'Privacy', 'গোপনীয়তা'],
+  ['/terms', 'Terms & Conditions', 'শর্তাবলি'],
+  ['/return-policy', 'Return Policy', 'রিটার্ন নীতি'],
+  ['/refund-policy', 'Refund Policy', 'রিফান্ড নীতি'],
+  ['/faq', 'FAQ', 'প্রশ্নোত্তর'],
 ] as const
