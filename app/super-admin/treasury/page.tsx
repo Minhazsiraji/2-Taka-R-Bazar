@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { SuperAdminShell } from '@/components/super-admin-shell'
 import { requireSuperAdmin } from '@/lib/auth'
+import { TreasuryCashMovementChart } from '@/components/treasury-cash-movement-chart'
 import { treasuryAddAccount, treasuryAddFacility, treasuryReviewTransaction, treasuryMatchStatement, treasuryAddForecast, treasurySetReserve } from '@/app/actions/treasury'
 
 export const dynamic='force-dynamic'
@@ -36,26 +37,14 @@ function Metric({name,value,description,color='text-slate-950'}:{name:string;val
  return <Card><p className="text-[10px] font-black uppercase tracking-[.16em] text-slate-500">{name}</p><p className={'mt-3 break-words text-2xl font-black tracking-tight '+color}>{value}</p><p className="mt-2 text-xs leading-5 text-slate-500">{description}</p></Card>
 }
 function Movements({data}:{data:Trend[]}){
- const values=data.slice(-6)
- const ceiling=Math.max(1,...values.flatMap(x=>[n(x.financing_inflow)+n(x.operating_inflow),n(x.operating_outflow)+n(x.financing_outflow)+n(x.unallocated_card_bill)+n(x.other_unallocated_interest)]))
  return <Card>
-   <div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-lg font-black">Cash movements</h2><p className="mt-1 text-xs text-slate-500">Six-month actual posted movements · management classification</p></div><span className="rounded-lg bg-cyan-50 px-3 py-1 text-[10px] font-black text-cyan-700">Ledger-backed</span></div>
-   <div className="mt-5 flex flex-wrap gap-4 text-xs font-semibold text-slate-500">
-    <span><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-teal-500"/>Operating + financing inflows</span>
-    <span><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-indigo-400"/>Cash outflows</span>
-   </div>
-   {values.length?<div className="mt-4 flex h-48 items-end gap-3 rounded-xl bg-slate-50 p-4">{values.map(v=>{
-    const incoming=n(v.financing_inflow)+n(v.operating_inflow),outgoing=n(v.operating_outflow)+n(v.financing_outflow)+n(v.unallocated_card_bill)+n(v.other_unallocated_interest)
-    return <div key={v.month_start} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
-     <div className="flex h-full w-full items-end justify-center gap-1">
-      <div title={'In: '+taka(incoming)} className="w-[37%] min-w-1 rounded-t-md bg-gradient-to-t from-teal-700 to-teal-300" style={{height:Math.max(2,incoming/ceiling*100)+'%'}}/>
-      <div title={'Out: '+taka(outgoing)} className="w-[37%] min-w-1 rounded-t-md bg-gradient-to-t from-indigo-600 to-indigo-300" style={{height:Math.max(2,outgoing/ceiling*100)+'%'}}/>
-     </div>
-     <span className="text-[10px] font-bold text-slate-500">{fmt(v.month_start)}</span>
-    </div>
-   })}</div>:<div className="finance-empty-state mt-4 flex min-h-36 items-center justify-center rounded-xl px-5 py-6 text-center text-sm font-medium text-slate-600">No verified cash movements in this environment. Open the synthetic demo to view the example charts.</div>}
-   <p className="mt-3 text-xs leading-5 text-slate-500">Transfers between company accounts and non-cash credit-card charges are excluded. Credit-card bill cash flows and interest still require final IAS 7 policy allocation.</p>
-  </Card>
+  <div className="flex flex-wrap items-start justify-between gap-3">
+   <div><h2 className="text-lg font-black">Cash movements</h2><p className="mt-1 text-xs text-slate-500">Six-month posted cash activity · management reporting</p></div>
+   <span className="finance-verified-badge rounded-lg px-3 py-1.5 text-xs font-bold">Ledger-backed</span>
+  </div>
+  <TreasuryCashMovementChart data={data}/>
+  <p className="mt-3 text-xs leading-5 text-slate-500">Transfers between company accounts and non-cash card charges are excluded. Card-bill cash movements and loan interest require final IAS 7 classification.</p>
+ </Card>
 }
 const demoSummary:Summary={
  cash_total:193200,restricted_cash:0,unrestricted_cash:193200,minimum_reserve:100000,
@@ -114,14 +103,14 @@ export default async function TreasuryOwner({searchParams}:{searchParams:Promise
  const accounts=summary?.accounts??[],debts=summary?.facilities??[],pending=transactions.filter(x=>x.status==='pending')
  const byId=new Map(accounts.map(a=>[a.id,a]))
  return <SuperAdminShell><div className="finance-ops-surface grid min-w-0 gap-4">
-   <header className="finance-ops-hero relative overflow-hidden rounded-[27px] bg-[linear-gradient(115deg,#092a3d_0%,#10585d_55%,#138c81_100%)] px-5 py-7 text-white shadow-xl shadow-teal-950/10 sm:p-7">
+   <section className="finance-ops-hero relative overflow-hidden rounded-[27px] bg-[linear-gradient(115deg,#092a3d_0%,#10585d_55%,#138c81_100%)] px-5 py-7 text-white shadow-xl shadow-teal-950/10 sm:p-7">
     <div className="relative flex flex-wrap items-start justify-between gap-3">
      <div><p className="text-[11px] font-black uppercase tracking-[.25em] text-cyan-200">2-TAKA-R-BAZAR · TREASURY</p><h1 className="mt-2 text-3xl font-black tracking-tight">Cash flow & liquidity</h1>
       <p className="mt-2 max-w-xl text-sm leading-6 text-teal-100">One financial source of truth. Multiple bank accounts, cash, loans and cards — reconciled with maker-checker approvals.</p>
-     </div><span className="rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-[11px] font-bold">{demo?'SYNTHETIC · NO REAL ACCOUNTS':isolated?'ISOLATED PREVIEW':'WRITES LOCKED'}</span>
+     </div><span className="finance-hero-badge rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-[11px] font-bold">{demo?'SYNTHETIC · NO REAL ACCOUNTS':isolated?'ISOLATED PREVIEW':'WRITES LOCKED'}</span>
     </div>
-    <div className="relative mt-6 flex flex-wrap gap-3"><Link href="/super-admin/finance" className="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-bold">Finance & profit →</Link><Link href="/admin/treasury" className="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-bold">Finance staff request desk →</Link><Link href="/super-admin/treasury?demo=1" className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-teal-800">Explore synthetic demo</Link></div>
-   </header>
+    <div className="finance-hero-actions relative mt-6 flex flex-wrap gap-3"><Link href="/super-admin/finance" className="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-bold">Finance & profit →</Link><Link href="/admin/treasury" className="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-bold">Finance staff request desk →</Link><Link href="/super-admin/treasury?demo=1" className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-teal-800">Explore synthetic demo</Link></div>
+   </section>
    {q.error&&<div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{q.error}</div>}
    {q.notice&&<div role="status" className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm font-semibold text-teal-900">{q.notice}</div>}
    {dbError&&<div className="finance-gate-notice rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{dbError} <Link href="/super-admin/treasury?demo=1" className="font-black underline">Open synthetic design demo</Link></div>}
