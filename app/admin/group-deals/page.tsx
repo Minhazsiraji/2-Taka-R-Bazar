@@ -2,7 +2,7 @@ import { AdminShell } from '@/components/admin-shell'
 import { SubmitButton } from '@/components/submit-button'
 import { Flash } from '@/components/flash'
 import { requireAdmin } from '@/lib/auth'
-import { createGroupDeal, linkSupplierAccount, linkSupplierProduct, setGroupDealStatus, updateCommunityGeo } from '@/app/actions/group-deal-admin'
+import { createGroupDeal, linkSupplierAccount, linkSupplierProduct, setGroupDealStatus, setGroupDealPurchaseRequestStatus, updateCommunityGeo } from '@/app/actions/group-deal-admin'
 import { taka } from '@/lib/format'
 
 export const dynamic='force-dynamic'
@@ -10,12 +10,13 @@ export const dynamic='force-dynamic'
 export default async function GroupDealAdminPage({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}){
   const {supabase}=await requireAdmin()
   const sp=await searchParams
-  const [{data:products},{data:communities},{data:suppliers},{data:profiles},{data:deals}]=await Promise.all([
+  const [{data:products},{data:communities},{data:suppliers},{data:profiles},{data:deals},{data:purchaseRequests}]=await Promise.all([
     supabase.from('products').select('id,name,brand,package_size,sku').eq('active',true).order('name'),
     supabase.from('communities').select('*').order('sort_order'),
     supabase.from('suppliers').select('id,business_name,reliability_status').eq('active',true).order('business_name'),
     supabase.from('profiles').select('id,full_name,phone').order('created_at',{ascending:false}).limit(300),
     supabase.from('group_deals').select('*,products(name,brand,package_size,sku),group_deal_tiers(buyer_threshold,customer_unit_price),group_deal_communities(community_id)').order('created_at',{ascending:false}),
+    supabase.rpc('admin_get_group_deal_purchase_requests'),
   ])
 
   return <AdminShell><div className="grid gap-5">
@@ -58,6 +59,23 @@ export default async function GroupDealAdminPage({searchParams}:{searchParams:Pr
       <form action={linkSupplierProduct} className="card grid gap-3 p-4"><div><div className="card-title">Supplier catalog</div><h2 className="text-xl font-black">Link supplier → product</h2></div><select className="input" name="supplier_id" required><option value="">Supplier</option>{suppliers?.map((s:any)=><option key={s.id} value={s.id}>{s.business_name}</option>)}</select><select className="input" name="product_id" required><option value="">Product</option>{products?.map((p:any)=><option key={p.id} value={p.id}>{p.name} · {p.sku}</option>)}</select><select className="input" name="relationship_type" defaultValue="supplier"><option value="manufacturer">Manufacturer</option><option value="distributor">Distributor</option><option value="supplier">Supplier</option><option value="vendor">Vendor</option></select><input className="input" name="supplier_sku" placeholder="Supplier SKU (optional)"/><SubmitButton>Link product</SubmitButton></form>
 
       <form action={linkSupplierAccount} className="card grid gap-3 p-4"><div><div className="card-title">Supplier login</div><h2 className="text-xl font-black">Link signed-in account → supplier</h2></div><select className="input" name="supplier_id" required><option value="">Supplier</option>{suppliers?.map((s:any)=><option key={s.id} value={s.id}>{s.business_name}</option>)}</select><select className="input" name="user_id" required><option value="">Customer/account</option>{profiles?.map((p:any)=><option key={p.id} value={p.id}>{p.full_name||'Unnamed'} · {p.phone||p.id}</option>)}</select><select className="input" name="role" defaultValue="analyst"><option value="owner">Owner</option><option value="manager">Manager</option><option value="analyst">Analyst</option></select><SubmitButton>Grant supplier access</SubmitButton></form>
+    </section>
+
+
+    <section className="card p-4 sm:p-5">
+      <div className="card-title">Failed deal follow-up</div>
+      <h2 className="mt-1 text-xl font-black">Customers who still want the product</h2>
+      <p className="muted mt-1 text-sm">These requests come from Group Deals automatically cancelled because the minimum buyer threshold was not reached. The requested price is the deal's original market/reference price.</p>
+      {(purchaseRequests??[]).length===0
+        ? <div className="muted mt-4 rounded-xl border border-slate-200 p-4 text-sm">No failed-deal purchase requests yet.</div>
+        : <div className="mt-4 grid gap-3">{(purchaseRequests??[]).map((req:any)=><form action={setGroupDealPurchaseRequestStatus} className="grid gap-3 rounded-xl border border-slate-200 p-4 lg:grid-cols-[1.4fr_.8fr_.8fr_1fr_auto] lg:items-end" key={req.request_id}>
+            <input type="hidden" name="request_id" value={req.request_id}/>
+            <div><div className="font-black">{req.product_name}</div><div className="muted text-xs">{req.deal_title}</div><div className="mt-1 text-xs">{req.customer_name||'Customer'} · {req.customer_phone||'No phone'}</div>{req.customer_note&&<div className="mt-1 text-xs text-slate-600">Note: {req.customer_note}</div>}</div>
+            <div><span className="label">Requested</span><div className="font-black">{req.requested_quantity} × {taka(Number(req.requested_unit_price))}</div></div>
+            <label><span className="label">Status</span><select className="input" name="status" defaultValue={req.request_status}><option value="requested">Requested</option><option value="contacted">Contacted</option><option value="closed">Closed</option><option value="cancelled">Cancelled</option></select></label>
+            <label><span className="label">Admin note</span><input className="input" name="admin_note" defaultValue={req.admin_note??''} placeholder="Call outcome / next step"/></label>
+            <SubmitButton>Update</SubmitButton>
+          </form>)}</div>}
     </section>
 
     <section>
