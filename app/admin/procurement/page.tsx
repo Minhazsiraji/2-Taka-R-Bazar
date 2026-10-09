@@ -18,19 +18,40 @@ type Data={selected_quotes:Quote[];purchase_orders:PO[];dispatches:Dispatch[];bi
 const style='min-w-0 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm'
 const taka=(value:number)=>'৳'+Number(value||0).toLocaleString('en-BD',{maximumFractionDigits:2,minimumFractionDigits:2})
 const demo:Data={
- selected_quotes:[{id:'synthetic-quote',product_name:'5 L Cooking Oil',supplier_name:'Sample Oil Supplier',pool_title:'AMT-01 Oct Pool',quantity:100,unit_cost:950,expiry:'2026-10-25',pool_status:'ordered'}],
- purchase_orders:[{id:'synthetic-po',code:'PO-SAMPLE-01',supplier_id:'synthetic-supplier',supplier:'Sample Oil Supplier',product_id:'synthetic-product',product:'Cooking Oil 5L',quantity:100,unit_cost:950,value:95000,received_quantity:95,status:'approved',created_by:'synthetic-user'}],
- dispatches:[{id:'synthetic-dispatch',code:'DSP-SAMPLE-01',supplier_id:'synthetic-supplier',status:'verified',product_ids:['synthetic-product']}],
- bills:[{id:'synthetic-bill',po_id:'synthetic-po',ref:'INV-SAMPLE-001',vendor:'Sample Oil Supplier',quantity:95,amount:90250,status:'posted',submitted_by:'synthetic-user'}],
- liquid_accounts:[{id:'synthetic-bank',name:'Operating Bank A',kind:'bank'},{id:'synthetic-cash',name:'AMT-01 Custody Cash',kind:'cash'}],
- cash_receipts_pending:[{day_id:'synthetic-day',date:'2026-10-09',community:'AMT-01',product_cash:16000,delivery_cash:360}]
+ selected_quotes:[
+  {id:'syn-quote-sugar',product_name:'Sugar 1 kg',supplier_name:'Sample Essential Foods',pool_title:'AMT-01 October grocery pool',quantity:50,unit_cost:130,expiry:'2026-10-25',pool_status:'ordered'},
+  {id:'syn-quote-noodles',product_name:'Noodles 8-pack',supplier_name:'Example FMCG Distributor',pool_title:'Savar DOHS October pool',quantity:120,unit_cost:72,expiry:'2026-10-23',pool_status:'ordered'}
+ ],
+ purchase_orders:[
+  {id:'syn-po-oil',code:'SYN-PO-OIL-001',supplier_id:'syn-supplier-oil',supplier:'Sample Oil Supplier',product_id:'syn-product-oil',product:'Cooking Oil 5 L',quantity:100,unit_cost:950,value:95000,received_quantity:95,status:'approved',created_by:'synthetic-maker'},
+  {id:'syn-po-rice',code:'SYN-PO-RICE-002',supplier_id:'syn-supplier-rice',supplier:'Sample Rice Mill',product_id:'syn-product-rice',product:'Miniket Rice 10 kg',quantity:80,unit_cost:1120,value:89600,received_quantity:0,status:'submitted',created_by:'synthetic-maker'},
+  {id:'syn-po-flour',code:'SYN-PO-FLOUR-003',supplier_id:'syn-supplier-flour',supplier:'Example Flour Trading',product_id:'syn-product-flour',product:'Atta 1 kg',quantity:60,unit_cost:55,value:3300,received_quantity:60,status:'approved',created_by:'synthetic-maker'}
+ ],
+ dispatches:[
+  {id:'syn-dispatch-oil',code:'SYN-DSP-OIL-001',supplier_id:'syn-supplier-oil',status:'verified',product_ids:['syn-product-oil']},
+  {id:'syn-dispatch-flour',code:'SYN-DSP-FLOUR-002',supplier_id:'syn-supplier-flour',status:'verified',product_ids:['syn-product-flour']}
+ ],
+ bills:[
+  {id:'syn-bill-oil-a',po_id:'syn-po-oil',ref:'SYN-INV-OIL-70',vendor:'Sample Oil Supplier',quantity:70,amount:66500,status:'settled',submitted_by:'synthetic-maker'},
+  {id:'syn-bill-oil-b',po_id:'syn-po-oil',ref:'SYN-INV-OIL-25',vendor:'Sample Oil Supplier',quantity:25,amount:23750,status:'posted',submitted_by:'synthetic-maker'},
+  {id:'syn-bill-flour',po_id:'syn-po-flour',ref:'SYN-INV-FLOUR-60',vendor:'Example Flour Trading',quantity:60,amount:3300,status:'submitted',submitted_by:'synthetic-maker'}
+ ],
+ liquid_accounts:[
+  {id:'demo-a',name:'Operating Bank A · 1234',kind:'bank'},
+  {id:'demo-b',name:'Procurement Bank B · 5678',kind:'bank'},
+  {id:'demo-cash',name:'Community custody cash · AMT-01',kind:'cash'}
+ ],
+ cash_receipts_pending:[
+  {day_id:'syn-cod-amt',date:'2026-10-08',community:'Amin Model Town (AMT-01)',product_cash:16000,delivery_cash:360},
+  {day_id:'syn-cod-dohs',date:'2026-10-09',community:'Savar DOHS',product_cash:9500,delivery_cash:140}
+ ]
 }
 function Panel({heading,detail,children}:{heading:string;detail:string;children:React.ReactNode}){
  return <section className="finance-panel rounded-[23px] border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-lg font-black text-slate-950">{heading}</h2><p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p><div className="mt-4">{children}</div></section>
 }
 export default async function ProcurementControl({searchParams}:{searchParams:Promise<{demo?:string;error?:string;notice?:string}>}){
  const {supabase}=await requireAdmin()
- const q=await searchParams,demoMode=q.demo==='1'
+ const q=await searchParams,demoMode=q.demo==='1'||(process.env.VERCEL_ENV==='preview'&&!(process.env.FINANCE_WRITES_ENABLED==='true'&&process.env.FINANCE_PREVIEW_SUPABASE_URL&&process.env.NEXT_PUBLIC_SUPABASE_URL===process.env.FINANCE_PREVIEW_SUPABASE_URL)&&q.demo!=='0')
  const isolated=process.env.VERCEL_ENV==='preview'&&process.env.FINANCE_WRITES_ENABLED==='true'&&
   Boolean(process.env.FINANCE_PREVIEW_SUPABASE_URL)&&
   process.env.NEXT_PUBLIC_SUPABASE_URL===process.env.FINANCE_PREVIEW_SUPABASE_URL&&
@@ -48,7 +69,8 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
   </section>
   {q.error&&<div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{q.error}</div>}
   {q.notice&&<div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{q.notice}</div>}
-  {demoMode&&<div className="rounded-xl bg-violet-50 p-3 text-xs font-bold text-violet-800">Illustrative synthetic values. These do not represent a real order, supplier payment or supplier price.</div>}
+  {demoMode&&<div className="rounded-xl bg-violet-50 p-3 text-xs font-bold text-violet-800">SYNTHETIC SCENARIO · AMT-01 and Savar DOHS pools: example quotes, purchase orders, dispatches, supplier invoices, and COD cash awaiting custody posting. Demo actions are disabled; real data is not modified.</div>}
+  {demoMode&&<nav aria-label="Synthetic scenario sections" className="finance-glass-gate flex flex-wrap gap-2 rounded-xl p-3 text-xs font-black"><span className="mr-2 text-teal-900">AMT-01 · Connected demo</span><Link href="/super-admin/finance?demo=1" className="rounded-lg border border-teal-200 px-3 py-2 text-teal-800">Finance expenses →</Link><Link href="/super-admin/treasury?demo=1" className="rounded-lg border border-teal-200 px-3 py-2 text-teal-800">Treasury balances →</Link></nav>}
   {(error||!isolated)&&<div className="finance-gate-notice rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
     <b>Controlled Preview:</b> Supplier finance writes remain locked until an isolated approved Supabase Preview database is connected. Customer Production transactions remain untouched.
    </div>}
