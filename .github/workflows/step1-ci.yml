@@ -2,7 +2,7 @@ name: Step 1 CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/treasury-cashflow-preview-20261009]
   pull_request:
     branches: [main]
   workflow_dispatch:
