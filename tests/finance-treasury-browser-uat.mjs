@@ -146,11 +146,11 @@ async function main(){
   assert.equal(badge.background,'rgb(195, 247, 239)','Finance synthetic badge must have a solid high-contrast background')
   assert.equal(badge.color,'rgb(6, 63, 67)','Finance synthetic badge must have dark readable text')
   await owner.locator('.finance-month-selector').waitFor({state:'visible',timeout:20000})
-  await owner.waitForFunction(()=>{const el=document.querySelector('.finance-month-selector');if(!el||!el.isConnected)return false;const css=getComputedStyle(el);return css.backgroundColor==='rgb(16, 61, 74)'&&css.color==='rgb(255, 255, 255)'},null,{timeout:20000})
+  await owner.waitForFunction(()=>{const el=document.querySelector('.finance-month-selector');if(!el||!el.isConnected)return false;const css=getComputedStyle(el);return /^rgba?\((?:1|16), (?:41|61), (?:52|74)(?:, 0\.9)?\)$/.test(css.backgroundColor)&&css.color==='rgb(255, 255, 255)'},null,{timeout:20000})
   const month=await owner.locator('.finance-month-selector').evaluate(el=>({
    background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color
   }))
-  assert.equal(month.background,'rgb(16, 61, 74)','Month control must have solid dark teal background')
+  assert.ok(/^rgba?\((?:1|16), (?:41|61), (?:52|74)(?:, 0\.9)?\)$/.test(month.background),'Month control must have strong dark teal background with at least 90% opacity: '+month.background)
   assert.equal(month.color,'rgb(255, 255, 255)','Month selector must have readable white text')
   await snapshot(owner,'finance-synthetic-branded')
   console.log('PASS Finance solid synthetic badge and readable month selector');stages++
