@@ -161,9 +161,8 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
   ].filter(Boolean) as Promise<void>[]))
  }
  const paymentQueue=rows.filter(x=>x.status==='settlement_requested')
- return <SuperAdminShell><div className="grid min-w-0 gap-5">
-  <section className="relative overflow-hidden rounded-[26px] bg-[linear-gradient(117deg,#082b3e_0%,#0c5757_52%,#167c77_100%)] px-5 py-7 text-white shadow-[0_16px_45px_rgba(8,68,73,.22)] sm:p-8">
-   <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full border-[40px] border-white/5"/><div className="pointer-events-none absolute -bottom-20 right-20 h-44 w-44 rounded-full bg-teal-300/10 blur-xl"/>
+ return <SuperAdminShell><div className="finance-ops-surface grid min-w-0 gap-5">
+  <section className="finance-ops-hero relative overflow-hidden rounded-[26px] bg-[linear-gradient(117deg,#082b3e_0%,#0c5757_52%,#167c77_100%)] px-5 py-7 text-white shadow-[0_16px_45px_rgba(8,68,73,.22)] sm:p-8">
    <div className="relative flex flex-wrap items-start justify-between gap-3">
     <div><p className="text-[10px] font-black uppercase tracking-[.28em] text-teal-200">2-TAKA-R-BAZAR · OWNER FINANCE</p><h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Finance intelligence</h1><p className="mt-2 max-w-xl text-sm text-teal-100">Controlled expenses, independent approvals, auditable transactions, and a clear path to reconciled net profit.</p></div>
     <span className="rounded-full border border-white/30 bg-white/10 px-3 py-1.5 text-[11px] font-bold">{demo?'SYNTHETIC DEMO':isolated?'ISOLATED PREVIEW':'PREVIEW · WRITES LOCKED'}</span>
@@ -175,14 +174,14 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
   </section>
   {query.error&&<p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{query.error}</p>}
   {query.notice&&<p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">{query.notice}</p>}
-  {dbError&&<div role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">{dbError} <Link href={'/super-admin/finance?demo=1&month='+month} className="ml-1 font-black underline">Explore the clearly labeled UI demo →</Link></div>}
+  {dbError&&<div role="alert" className="finance-gate-notice rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">{dbError} <Link href={'/super-admin/finance?demo=1&month='+month} className="ml-1 font-black underline">Explore the clearly labeled UI demo →</Link></div>}
   {demo&&<div className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-sm font-bold text-violet-800">Simulation only — these records are invented examples. No customer, supplier, expense, revenue or profit data is being read or changed.</div>}
-  {!isolated&&<div className="rounded-xl border border-slate-200 bg-slate-100 p-3 text-sm text-slate-700"><b>Financial mutation gate:</b> OFF. Approvals and payments cannot post to the Production database. An independent preview database and explicit environment confirmation are required.</div>}
+  {!isolated&&<div className="finance-protection-notice rounded-xl border border-slate-200 bg-slate-100 p-3 text-sm text-slate-700"><b>Financial mutation gate:</b> OFF. Approvals and payments cannot post to the Production database. An independent preview database and explicit environment confirmation are required.</div>}
   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-   <Metric name="Posted expenses" value={bd(report?.posted_expenses)} sub="Ledger-backed, current period"/>
-   <Metric name="Payment outflows" value={bd(report?.settled_cash_out)} sub="Approved expense settlements" accent="text-teal-700"/>
-   <Metric name="Approval queue" value={String(report?.pending_count??0)} sub="Submitted expenses awaiting independent review" accent="text-amber-700"/>
-   <Metric name="Payment queue" value={String(report?.payment_pending_count??0)} sub="Approved costs awaiting verified settlement" accent="text-violet-700"/>
+   <Metric name="Posted expenses" value={dbError?'—':bd(report?.posted_expenses)} sub="Ledger-backed, current period"/>
+   <Metric name="Payment outflows" value={dbError?'—':bd(report?.settled_cash_out)} sub="Approved expense settlements" accent="text-teal-700"/>
+   <Metric name="Approval queue" value={dbError?'—':String(report?.pending_count??0)} sub="Submitted expenses awaiting independent review" accent="text-amber-700"/>
+   <Metric name="Payment queue" value={dbError?'—':String(report?.payment_pending_count??0)} sub="Approved costs awaiting verified settlement" accent="text-violet-700"/>
   </div>
   <TrendChart values={trend}/>
   <div className="grid gap-4 lg:grid-cols-2"><CostBreakdown rows={report?.by_category??[]}/><CategoryBars rows={report?.by_category??[]}/></div>
