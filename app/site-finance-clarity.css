@@ -577,3 +577,25 @@ html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-
     -webkit-backdrop-filter:blur(12px) saturate(120%) !important;
   }
 }
+
+
+/* Semantic hero controls also need a theme-agnostic fallback. When ThemeToggle
+   leaves html[data-theme] unset, the older attribute-based selector wins and
+   turns the badges transparent; use a more specific route-owned token. */
+body.site-glass-root main .finance-ops-surface .finance-ops-hero > div .finance-hero-badge[class*="rounded-full"] {
+  display:inline-flex !important;align-items:center !important;justify-content:center !important;
+  min-height:32px !important;
+  color:#063f43 !important;
+  background:#c3f7ef !important;
+  border:1px solid #74e3d7 !important;
+  border-radius:999px !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero > div .finance-month-selector[class*="rounded-"] {
+  color:#ffffff !important;
+  background:rgba(1,41,52,.90) !important;
+  border:1px solid rgba(208,253,245,.7) !important;
+  text-align:center !important;
+  box-shadow:none !important;
+}
