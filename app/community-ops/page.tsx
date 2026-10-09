@@ -5,7 +5,7 @@ import { SubmitButton } from '@/components/submit-button'
 import { requirePickupOperator } from '@/lib/auth'
 import { taka } from '@/lib/format'
 import {
-  startCommunityOpsDay,refreshCommunityOpsManifest,recordCommunityInbound,verifyCommunityOrder,
+  startCommunityOpsDay,refreshCommunityOpsManifest,recordCommunityInbound,recordCommunityStockAdjustment,verifyCommunityOrder,
   completeCommunityOrder,recordCommunityOrderException,submitCommunityOpsReport,submitCommunityCashHandover,
 } from '@/app/actions/community-ops'
 
@@ -26,7 +26,7 @@ export default async function CommunityOpsPage({searchParams}:{searchParams:Prom
   ])
   let detail:any=null
   if(sp.day){const {data}=await supabase.rpc('get_community_ops_day',{p_day_id:sp.day});detail=data}
-  const d=detail?.day,summary=detail?.summary??{},products=detail?.products??[],orders=detail?.orders??[],inbound=detail?.inbound??[],handover=detail?.cash_handover
+  const d=detail?.day,summary=detail?.summary??{},products=detail?.products??[],orders=detail?.orders??[],inbound=detail?.inbound??[],stockAdjustments=detail?.stock_adjustments??[],handover=detail?.cash_handover
 
   return <AppShell roles={roles}><div className="grid gap-5">
     <section><div className="card-title">Community Operations Officer</div><h1 className="text-3xl font-black">Community fulfilment & reconciliation</h1><p className="muted mt-1">Receive goods, verify customer orders, hand over or deliver, keep Product COD and Home Delivery cash separate, record exceptions, and close only after Admin/Accounts accepts the cash.</p></section>
@@ -59,7 +59,7 @@ export default async function CommunityOpsPage({searchParams}:{searchParams:Prom
       <section className="grid gap-3">
         <div><div className="card-title">Product requirement & inbound</div><h2 className="section-title">Receive and reconcile products</h2><p className="muted text-sm">Any net quantity variance requires a reason.</p></div>
         {products.map((p:any)=><article className="card" key={p.product_id}>
-          <div className="flex justify-between gap-3"><div><h3 className="font-black">{p.product_name}</h3><p className="muted text-sm">{p.package_size}</p></div><div className="text-right text-sm"><div>Required <b>{p.required_quantity}</b></div><div>Net inbound <b>{p.inbound_received}</b></div></div></div>
+          <div className="flex justify-between gap-3"><div><h3 className="font-black">{p.product_name}</h3><p className="muted text-sm">{p.package_size}</p></div><div className="text-right text-sm"><div>Required <b>{p.required_quantity}</b></div><div>Net inbound <b>{p.inbound_received}</b></div><div>Stock accounted <b>{p.stock_accounted??0}</b></div><div className={Number(p.stock_variance)===0?'text-emerald-700':'text-rose-700'}>Variance <b>{p.stock_variance??0}</b></div></div></div>
           {d.status==='open'&&<form action={recordCommunityInbound} className="mt-4 grid gap-2 lg:grid-cols-4">
             <input type="hidden" name="day_id" value={d.id}/><input type="hidden" name="product_id" value={p.product_id}/>
             <label><span className="label">Source</span><select className="input" name="source_type"><option value="supplier">Supplier</option><option value="2tbr_store">2TBR Store</option><option value="delivery_agent">Delivery Agent</option><option value="transfer">Transfer</option><option value="return">Return</option><option value="other">Other</option></select></label>
@@ -73,8 +73,10 @@ export default async function CommunityOpsPage({searchParams}:{searchParams:Prom
             <label className="lg:col-span-3"><span className="label">Receiving note</span><input className="input" name="notes"/></label>
             <SubmitButton>Record receipt</SubmitButton>
           </form>}
+          {d.status==='open'&&Number(p.stock_variance)!==0&&<form action={recordCommunityStockAdjustment} className="mt-3 grid gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 md:grid-cols-4"><input type="hidden" name="day_id" value={d.id}/><input type="hidden" name="product_id" value={p.product_id}/><label><span className="label">Stock disposition</span><select className="input" name="disposition" required><option value="retained_at_point">Retained at point</option><option value="returned_to_office">Returned to office</option><option value="damaged">Damaged</option><option value="missing">Missing</option><option value="transfer_out">Transferred out</option><option value="other">Other</option></select></label><label><span className="label">Quantity</span><input className="input" type="number" min="1" name="quantity" defaultValue={Math.abs(Number(p.stock_variance))||1} required/></label><label><span className="label">Reason</span><input className="input" name="reason" required placeholder="Why this stock remains/left/damaged/missing"/></label><label><span className="label">Note</span><input className="input" name="notes"/></label><div className="md:col-span-4"><SubmitButton className="btn-secondary">Account stock variance</SubmitButton></div></form>}
         </article>)}
         {inbound.length>0&&<details className="card"><summary className="cursor-pointer font-black">Inbound history ({inbound.length})</summary><div className="mt-3 grid gap-2">{inbound.map((i:any)=><div className="rounded-xl bg-slate-50 p-3 text-sm" key={i.id}><b>{i.product_name}</b> · {i.source_type}<div className="muted">Expected {i.expected_quantity} · Received {i.received_quantity} · Damaged {i.damaged_quantity} · Returned {i.returned_quantity}</div>{i.exception_reason&&<div className="text-amber-700">{i.exception_reason}</div>}</div>)}</div></details>}
+        {stockAdjustments.length>0&&<details className="card"><summary className="cursor-pointer font-black">Stock disposition history ({stockAdjustments.length})</summary><div className="mt-3 grid gap-2">{stockAdjustments.map((s:any)=><div className="rounded-xl bg-slate-50 p-3 text-sm" key={s.id}><b>{s.product_name}</b> · {String(s.disposition).replaceAll('_',' ')} · {s.quantity}<div className="muted">{s.reason}</div></div>)}</div></details>}
       </section>
 
       <section className="grid gap-3">
