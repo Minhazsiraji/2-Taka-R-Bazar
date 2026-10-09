@@ -137,7 +137,7 @@ export default async function LandingPage() {
             <div className="rounded-2xl bg-white p-5"><b>3. Confirm after price</b><p className="mt-1 text-[12px] font-semibold text-slate-500" lang="bn">৩. দাম দেখে নিশ্চিত করুন</p><p className="muted mt-2">A commitment becomes an order only after you accept the final price.</p><p className="mt-1 text-[12px] leading-5 text-slate-500" lang="bn">Final price গ্রহণ করার পরই commitment একটি order-এ পরিণত হয়।</p></div>
             <div className="rounded-2xl bg-white p-5"><b>4. Verify the savings</b><p className="mt-1 text-[12px] font-semibold text-slate-500" lang="bn">৪. সাশ্রয় যাচাই করুন</p><p className="muted mt-2">Product savings are credited only after successful fulfilment; delivery is separate.</p><p className="mt-1 text-[12px] leading-5 text-slate-500" lang="bn">Successful fulfilment-এর পর product saving যোগ হয়; delivery charge আলাদা।</p></div>
           </div>
-          <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2"><Link href="/about" className="font-black underline"><span>About the model →</span><span className="ml-1 text-[12px] font-semibold text-slate-500" lang="bn">মডেল সম্পর্কে</span></Link><Link href="/faq" className="font-black underline"><span>Read FAQ →</span><span className="ml-1 text-[12px] font-semibold text-slate-500" lang="bn">প্রশ্নোত্তর</span></Link></div>
+          <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2"><Link href="/about" className="font-black underline">About the model →</Link><Link href="/faq" className="font-black underline">Read FAQ →</Link></div>
         </section>
       </div>
       <PublicFooter />
