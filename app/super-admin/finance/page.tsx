@@ -13,6 +13,7 @@ type E = {
  settlement_id:string|null;settlement_status:string|null;settlement_evidence_path:string|null
 }
 type Line = {posted_at:string;posting_date:string;event_key:string;memo:string;account_code:string;account_title:string;debit:number|string;credit:number|string;community_id:string|null}
+type Trend = {month_start:string;posted_expenses:number|string;settled_cash_out:number|string}
 type Summary = { month:string; posted_expenses:number|string; settled_cash_out:number|string; pending_count:number;payment_pending_count:number;by_category:{category:string;amount:number|string}[];profit_status:string }
 const CATEGORY=[
  ['logistics','Logistics & delivery','#0ea5e9'],
@@ -64,6 +65,37 @@ function CostBreakdown({rows}:{rows:{category:string;amount:number|string}[]}){
   </div>
  </Card>
 }
+function TrendChart({values}:{values:Trend[]}){
+ const chartData=values.length?values:[]
+ const max=Math.max(1,...chartData.flatMap(x=>[num(x.posted_expenses),num(x.settled_cash_out)]))
+ const w=650,h=240,marginL=24,marginR=20,marginT=24,marginB=40
+ const iw=w-marginL-marginR,ih=h-marginT-marginB
+ const x=(i:number)=>marginL+iw*(chartData.length<=1?0.5:i/(chartData.length-1))
+ const y=(v:number)=>marginT+ih*(1-Math.max(0,v)/max)
+ const line=(key:'posted_expenses'|'settled_cash_out')=>chartData.map((d,i)=>[x(i),y(num(d[key]))] as const)
+ const expense=line('posted_expenses'),cash=line('settled_cash_out')
+ const pathFor=(coords:readonly (readonly [number,number])[])=>coords.length?'M '+coords.map(([cx,cy])=>cx.toFixed(1)+','+cy.toFixed(1)).join(' L '):''
+ const expensePath=pathFor(expense)
+ const cashPath=pathFor(cash)
+ const area=expense.length?expensePath+' L '+x(chartData.length-1).toFixed(1)+','+(h-marginB)+' L '+x(0).toFixed(1)+','+(h-marginB)+' Z':''
+ const fmt=(m:string)=>new Date(m+'T12:00:00Z').toLocaleDateString('en-GB',{month:'short',timeZone:'UTC'})
+ return <Card>
+  <div className="flex flex-wrap items-start justify-between gap-2"><div><h2 className="text-lg font-black">Operating expense trend</h2><p className="text-xs text-slate-500">Posted accruals against independently verified outgoing payments · six months</p></div><span className="rounded-lg bg-teal-50 px-3 py-1.5 text-[10px] font-bold text-teal-700">Ledger-backed</span></div>
+  <div className="mt-5 flex flex-wrap gap-5 text-xs font-semibold text-slate-600"><span className="flex items-center gap-2"><i className="inline-block h-2.5 w-2.5 rounded-full bg-teal-500"/>Recognized expenses</span><span className="flex items-center gap-2"><i className="inline-block h-2.5 w-2.5 rounded-full bg-violet-500"/>Settled cash out</span></div>
+  {chartData.length?<div className="mt-4 w-full overflow-x-auto"><svg viewBox="0 0 650 240" role="img" aria-label="Six-month trend for posted expenses and verified outgoing payments" className="h-auto min-w-[430px] w-full" preserveAspectRatio="xMidYMid meet">
+    <defs><linearGradient id="finance-area-gradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#14b8a6" stopOpacity=".32"/><stop offset="100%" stopColor="#14b8a6" stopOpacity=".01"/></linearGradient></defs>
+    {Array.from({length:5},(_,i)=>{const yy=marginT+i*ih/4;return <g key={i}><line x1={marginL} y1={yy} x2={w-marginR} y2={yy} stroke="#e2e8f0" strokeDasharray="4 6"/><text x={marginL} y={yy-6} textAnchor="start" fontSize="10" fill="#94a3b8">{bd(max*(1-i/4))}</text></g>})}
+    {area&&<path d={area} fill="url(#finance-area-gradient)"/>}
+    <path d={expensePath} fill="none" stroke="#0d9488" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"/>
+    <path d={cashPath} fill="none" stroke="#8b5cf6" strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round" strokeDasharray="7 5"/>
+    {expense.map(([cx,cy],i)=><circle key={'e'+i} cx={cx} cy={cy} r={4.3} stroke="white" strokeWidth="2" fill="#0d9488"><title>{fmt(chartData[i].month_start)} expenses: {bd(chartData[i].posted_expenses)}</title></circle>)}
+    {cash.map(([cx,cy],i)=><circle key={'c'+i} cx={cx} cy={cy} r={3.8} stroke="white" strokeWidth="2" fill="#8b5cf6"><title>{fmt(chartData[i].month_start)} settled: {bd(chartData[i].settled_cash_out)}</title></circle>)}
+    {chartData.map((d,i)=><text key={d.month_start} x={x(i)} y={h-16} textAnchor="middle" fontSize="12" fontWeight="600" fill="#64748b">{fmt(d.month_start)}</text>)}
+   </svg></div>:<p className="mt-8 rounded-xl bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">No monthly trend data available yet.</p>}
+  <p className="mt-1 text-xs text-slate-500">A payment is not an expense twice. Outstanding supplier bills and invoiced procurement require separate reconciliation.</p>
+ </Card>
+}
+
 function CategoryBars({rows}:{rows:{category:string;amount:number|string}[]}){
  const vals=CATEGORY.map(([k,name,color])=>({k,name,color,value:num(rows.find(x=>x.category===k)?.amount)}))
  const max=Math.max(1,...vals.map(x=>x.value))
@@ -90,19 +122,29 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
  let rows:E[]=[]
  let ledger:Line[]=[]
  let report:Summary|null=null
+ let trend:Trend[]=[]
  let dbError=''
  const isolated=process.env.VERCEL_ENV==='preview'&&process.env.FINANCE_WRITES_ENABLED==='true'&&Boolean(process.env.FINANCE_PREVIEW_SUPABASE_URL)&&process.env.NEXT_PUBLIC_SUPABASE_URL===process.env.FINANCE_PREVIEW_SUPABASE_URL&&!String(process.env.NEXT_PUBLIC_SUPABASE_URL).includes('sukabonfjcnaavjgjyuy')
  if(demo){
   rows=demoExpenses;ledger=demoLedger
+  trend=[
+   {month_start:'2026-05-01',posted_expenses:2200,settled_cash_out:1800},
+   {month_start:'2026-06-01',posted_expenses:2800,settled_cash_out:2600},
+   {month_start:'2026-07-01',posted_expenses:2100,settled_cash_out:3100},
+   {month_start:'2026-08-01',posted_expenses:3900,settled_cash_out:3300},
+   {month_start:'2026-09-01',posted_expenses:3500,settled_cash_out:2900},
+   {month_start:'2026-10-01',posted_expenses:2780,settled_cash_out:1200}
+  ]
   report={month:monthStart,posted_expenses:2780,settled_cash_out:1200,pending_count:1,payment_pending_count:2,by_category:[{category:'marketing_offline',amount:1200},{category:'logistics',amount:880},{category:'infrastructure',amount:700}],profit_status:'UNAVAILABLE_UNTIL_REVENUE_COGS_RECONCILED'}
  } else {
-  const [a,b,c]=await Promise.all([
+  const [a,b,c,d]=await Promise.all([
    user.supabase.rpc('finance_report',{p_month:monthStart}),
    user.supabase.rpc('finance_list_expenses',{p_month:monthStart}),
    user.supabase.rpc('finance_ledger',{p_month:monthStart}),
+   user.supabase.rpc('finance_expense_trend',{p_month:monthStart}),
   ])
-  if(a.error||b.error||c.error){dbError='Finance schema is not available in this environment. Preview code has not been installed on an isolated database.'}
-  else {report=a.data as Summary;rows=(b.data??[]) as E[];ledger=(c.data??[]) as Line[]}
+  if(a.error||b.error||c.error||d.error){dbError='Finance schema is not available in this environment. Preview code has not been installed on an isolated database.'}
+  else {report=a.data as Summary;rows=(b.data??[]) as E[];ledger=(c.data??[]) as Line[];trend=(d.data??[]) as Trend[]}
  }
  const monthDate=new Date(monthStart+'T12:00:00Z')
  const previous=new Date(Date.UTC(monthDate.getUTCFullYear(),monthDate.getUTCMonth()-1,1)).toISOString().slice(0,7)
@@ -142,6 +184,7 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
    <Metric name="Approval queue" value={String(report?.pending_count??0)} sub="Submitted expenses awaiting independent review" accent="text-amber-700"/>
    <Metric name="Payment queue" value={String(report?.payment_pending_count??0)} sub="Approved costs awaiting verified settlement" accent="text-violet-700"/>
   </div>
+  <TrendChart values={trend}/>
   <div className="grid gap-4 lg:grid-cols-2"><CostBreakdown rows={report?.by_category??[]}/><CategoryBars rows={report?.by_category??[]}/></div>
   <section className="grid gap-4 lg:grid-cols-[.9fr_1.1fr]">
    <Card>
