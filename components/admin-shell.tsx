@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { BrandLogo } from '@/components/brand-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 
-const links = [['/admin','Dashboard'],['/admin/notifications','Notifications'],['/admin/communities','Communities'],['/admin/customers','Customers'],['/admin/products','Products'],['/admin/own-products','2-TAKA-R-BAZAR Products'],['/admin/market-prices','Market prices'],['/admin/suppliers','Suppliers'],['/admin/group-deals','Group Deals'],['/admin/pools','Pools'],['/admin/commitments','Commitments'],['/admin/orders','Orders'],['/admin/deliveries','Home deliveries'],['/admin/community-ops','Community Ops'],['/admin/pickup-points','Pickup points'],['/admin/savings','Savings'],['/admin/feedback','Feedback'],['/admin/issues','Issues']]
+const links = [['/admin','Dashboard'],['/admin/notifications','Notifications'],['/admin/communities','Communities'],['/admin/customers','Customers'],['/admin/products','Products'],['/admin/own-products','2-TAKA-R-BAZAR Products'],['/admin/market-prices','Market prices'],['/admin/suppliers','Suppliers'],['/admin/supply-control','Supply Control'],['/admin/group-deals','Group Deals'],['/admin/pools','Pools'],['/admin/commitments','Commitments'],['/admin/orders','Orders'],['/admin/deliveries','Home deliveries'],['/admin/community-ops','Community Ops'],['/admin/pickup-points','Pickup points'],['/admin/savings','Savings'],['/admin/feedback','Feedback'],['/admin/issues','Issues']]
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   return <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50">
