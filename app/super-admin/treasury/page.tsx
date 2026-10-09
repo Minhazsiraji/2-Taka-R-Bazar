@@ -44,7 +44,7 @@ function Movements({data}:{data:Trend[]}){
     <span><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-teal-500"/>Operating + financing inflows</span>
     <span><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-indigo-400"/>Cash outflows</span>
    </div>
-   <div className="mt-4 flex h-48 items-end gap-3 rounded-xl bg-slate-50 p-4">{values.map(v=>{
+   {values.length?<div className="mt-4 flex h-48 items-end gap-3 rounded-xl bg-slate-50 p-4">{values.map(v=>{
     const incoming=n(v.financing_inflow)+n(v.operating_inflow),outgoing=n(v.operating_outflow)+n(v.financing_outflow)+n(v.unallocated_card_bill)+n(v.other_unallocated_interest)
     return <div key={v.month_start} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
      <div className="flex h-full w-full items-end justify-center gap-1">
@@ -53,7 +53,7 @@ function Movements({data}:{data:Trend[]}){
      </div>
      <span className="text-[10px] font-bold text-slate-500">{fmt(v.month_start)}</span>
     </div>
-   })}</div>
+   })}</div>:<div className="finance-empty-state mt-4 flex min-h-36 items-center justify-center rounded-xl px-5 py-6 text-center text-sm font-medium text-slate-600">No verified cash movements in this environment. Open the synthetic demo to view the example charts.</div>}
    <p className="mt-3 text-xs leading-5 text-slate-500">Transfers between company accounts and non-cash credit-card charges are excluded. Credit-card bill cash flows and interest still require final IAS 7 policy allocation.</p>
   </Card>
 }
@@ -113,9 +113,8 @@ export default async function TreasuryOwner({searchParams}:{searchParams:Promise
  }
  const accounts=summary?.accounts??[],debts=summary?.facilities??[],pending=transactions.filter(x=>x.status==='pending')
  const byId=new Map(accounts.map(a=>[a.id,a]))
- return <SuperAdminShell><div className="grid min-w-0 gap-4">
-   <header className="relative overflow-hidden rounded-[27px] bg-[linear-gradient(115deg,#092a3d_0%,#10585d_55%,#138c81_100%)] px-5 py-7 text-white shadow-xl shadow-teal-950/10 sm:p-7">
-    <div className="pointer-events-none absolute -right-12 -top-20 h-64 w-64 rounded-full border-[30px] border-white/5"/>
+ return <SuperAdminShell><div className="finance-ops-surface grid min-w-0 gap-4">
+   <header className="finance-ops-hero relative overflow-hidden rounded-[27px] bg-[linear-gradient(115deg,#092a3d_0%,#10585d_55%,#138c81_100%)] px-5 py-7 text-white shadow-xl shadow-teal-950/10 sm:p-7">
     <div className="relative flex flex-wrap items-start justify-between gap-3">
      <div><p className="text-[11px] font-black uppercase tracking-[.25em] text-cyan-200">2-TAKA-R-BAZAR · TREASURY</p><h1 className="mt-2 text-3xl font-black tracking-tight">Cash flow & liquidity</h1>
       <p className="mt-2 max-w-xl text-sm leading-6 text-teal-100">One financial source of truth. Multiple bank accounts, cash, loans and cards — reconciled with maker-checker approvals.</p>
@@ -125,16 +124,16 @@ export default async function TreasuryOwner({searchParams}:{searchParams:Promise
    </header>
    {q.error&&<div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{q.error}</div>}
    {q.notice&&<div role="status" className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm font-semibold text-teal-900">{q.notice}</div>}
-   {dbError&&<div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{dbError} <Link href="/super-admin/treasury?demo=1" className="font-black underline">Open synthetic design demo</Link></div>}
+   {dbError&&<div className="finance-gate-notice rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">{dbError} <Link href="/super-admin/treasury?demo=1" className="font-black underline">Open synthetic design demo</Link></div>}
    {demo&&<div className="rounded-xl border border-purple-200 bg-purple-50 p-3 text-sm font-semibold text-purple-800">Illustrative entries only. These are not your actual bank accounts, liabilities, profit or financial statements.</div>}
-   {!isolated&&<div className="rounded-xl bg-slate-200/60 p-3 text-xs text-slate-700"><b>Production protection:</b> All cash-changing actions require an isolated Preview database. No transaction can be posted to the live Supabase instance from this branch.</div>}
+   {!isolated&&<div className="finance-protection-notice rounded-xl bg-slate-200/60 p-3 text-xs text-slate-700"><b>Production protection:</b> All cash-changing actions require an isolated Preview database. No transaction can be posted to the live Supabase instance from this branch.</div>}
    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-    <Metric name="Total book cash" value={taka(summary?.cash_total)} description="Banks, wallet, office/community cash; excludes unused card credit"/>
-    <Metric name="Unrestricted cash" value={taka(summary?.unrestricted_cash)} color="text-teal-700" description="After legally or operationally restricted balances"/>
-    <Metric name="Deployable cash" value={taka(summary?.deployable_cash)} color="text-emerald-700" description="After 14-day contractual outflows and minimum reserve"/>
-    <Metric name="Business debt" value={taka(summary?.loan_and_private_borrowing_outstanding)} description="Bank and private loans principal outstanding"/>
-    <Metric name="Card obligations" value={taka(summary?.card_outstanding)} color="text-violet-700" description={'Available card credit: '+taka(summary?.card_unused_limit)+' (not cash)'}/>
-    <Metric name="Unmatched bank lines" value={String(summary?.unmatched_statement_lines??0)} color="text-amber-700" description="Book balance is not certified by external statements"/>
+    <Metric name="Total book cash" value={dbError?'—':taka(summary?.cash_total)} description="Banks, wallet, office/community cash; excludes unused card credit"/>
+    <Metric name="Unrestricted cash" value={dbError?'—':taka(summary?.unrestricted_cash)} color="text-teal-700" description="After legally or operationally restricted balances"/>
+    <Metric name="Deployable cash" value={dbError?'—':taka(summary?.deployable_cash)} color="text-emerald-700" description="After 14-day contractual outflows and minimum reserve"/>
+    <Metric name="Business debt" value={dbError?'—':taka(summary?.loan_and_private_borrowing_outstanding)} description="Bank and private loans principal outstanding"/>
+    <Metric name="Card obligations" value={dbError?'—':taka(summary?.card_outstanding)} color="text-violet-700" description={'Available card credit: '+taka(summary?.card_unused_limit)+' (not cash)'}/>
+    <Metric name="Unmatched bank lines" value={dbError?'—':String(summary?.unmatched_statement_lines??0)} color="text-amber-700" description="Book balance is not certified by external statements"/>
    </div>
    <div className="grid gap-4 lg:grid-cols-[1.05fr_.95fr]">
     <Movements data={trends}/>
