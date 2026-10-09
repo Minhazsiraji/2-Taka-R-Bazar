@@ -48,7 +48,7 @@ export default async function CashBridgePage({searchParams}:{searchParams:Promis
  }
  const v=raw?calculateCashBridge(raw):null
  const link=(p:string)=>p+(demo?'?demo=1':'')
- return <SuperAdminShell><main className="finance-ops-surface grid min-w-0 gap-4">
+ return <SuperAdminShell><div className="finance-ops-surface grid min-w-0 gap-4">
   <section className="finance-ops-hero rounded-[24px] p-6">
    <div className="flex flex-wrap items-start justify-between gap-3"><div>
     <p className="text-xs font-extrabold uppercase tracking-[.2em] text-teal-700">2-TAKA-R-BAZAR · TREASURY</p>
@@ -130,5 +130,5 @@ export default async function CashBridgePage({searchParams}:{searchParams:Promis
     <Link href={link('/super-admin/profit-breakdown')} className="mt-4 inline-flex rounded-xl bg-teal-800 px-4 py-3 text-xs font-black text-white">Open profit calculation →</Link>
    </section>
   </>}
- </main></SuperAdminShell>
+ </div></SuperAdminShell>
 }
