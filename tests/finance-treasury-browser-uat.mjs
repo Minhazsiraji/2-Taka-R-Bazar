@@ -87,6 +87,40 @@ async function main(){
   await assertFinancialDesign(owner,'Treasury')
   await snapshot(owner,'treasury')
   console.log('PASS Treasury 1440/768/360');stages++
+  // The deployed screenshots showed milky pills and bars; verify the actual
+  // computed styles AND hover label, not just presence of HTML/classes.
+  await visit(owner,'/super-admin/finance?demo=1','Finance intelligence')
+  const badge=await owner.locator('.finance-hero-badge').evaluate(el=>({
+   background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color
+  }))
+  assert.equal(badge.background,'rgb(195, 247, 239)','Finance synthetic badge must have a solid high-contrast background')
+  assert.equal(badge.color,'rgb(6, 63, 67)','Finance synthetic badge must have dark readable text')
+  const month=await owner.locator('.finance-month-selector').evaluate(el=>({
+   background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color
+  }))
+  assert.equal(month.background,'rgba(1, 41, 52, 0.9)','Month control must have dark teal background')
+  assert.equal(month.color,'rgb(255, 255, 255)','Month selector must have readable white text')
+  await snapshot(owner,'finance-synthetic-branded')
+  console.log('PASS Finance solid synthetic badge and readable month selector');stages++
+  await visit(owner,'/super-admin/treasury?demo=1','Cash flow & liquidity')
+  await assertFinancialDesign(owner,'Treasury synthetic')
+  const bars=owner.locator('.finance-cash-svg rect[role="img"]')
+  assert.equal(await bars.count(),12,'6 months must show 2 focusable bars each')
+  assert.equal(await bars.nth(4).getAttribute('fill'),'#0F8B8D','Inflow should be vivid teal SVG')
+  assert.equal(await bars.nth(5).getAttribute('fill'),'#4F46E5','Outflow should be vivid indigo SVG')
+  await bars.nth(4).hover()
+  const tip=owner.getByTestId('cash-chart-tooltip')
+  await tip.waitFor({timeout:10000})
+  const words=await tip.innerText()
+  assert.ok(words.includes('Jul 2026'),'Tooltip should display hovered month')
+  assert.ok(words.includes('150,000.00'),'Tooltip should contain exact BDT amount')
+  const tipStyle=await tip.evaluate(el=>({background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color}))
+  assert.equal(tipStyle.background,'rgb(16, 52, 67)','Tooltip must be solid dark teal')
+  assert.equal(tipStyle.color,'rgb(255, 255, 255)','Tooltip must be readable white')
+  await snapshot(owner,'treasury-synthetic-with-hover')
+  await bars.nth(5).focus()
+  assert.ok((await tip.innerText()).includes('Cash outflows'),'Keyboard focus must update tooltip series')
+  console.log('PASS 12 vivid cash bars, exact BDT hover tooltip and keyboard focus');stages++
   await visit(maker,'/admin/procurement','Procurement & reconciliation')
   await assertFinancialDesign(maker,'Procurement')
   await snapshot(maker,'procurement')
