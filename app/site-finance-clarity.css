@@ -213,3 +213,34 @@ html[data-theme="dark"] body.site-glass-root main .finance-ops-surface form butt
   body.site-glass-root main .finance-ops-surface .finance-ops-hero { padding: 1.1rem !important; }
   body.site-glass-root main .finance-ops-surface .finance-panel { padding: 1rem !important; }
 }
+
+
+/* Super Admin route navigation uses the same ink/teal brand, with clear
+   default, hover and keyboard-focus states. This is not a global store reset. */
+body.site-glass-root aside .super-admin-nav-link,
+body.site-glass-root details .super-admin-nav-link {
+  color: #184151 !important;
+  background: rgba(249,254,253,.9) !important;
+  border: 1px solid #b3d9d9 !important;
+  box-shadow: none !important;
+  line-height: 1.45;
+}
+body.site-glass-root aside .super-admin-nav-link:hover,
+body.site-glass-root details .super-admin-nav-link:hover {
+  color: #045f68 !important;
+  background: #e6faf6 !important;
+  border-color: #47bab0 !important;
+  box-shadow: 0 2px 9px rgba(6,112,116,.12) !important;
+}
+html[data-theme="dark"] body.site-glass-root aside .super-admin-nav-link,
+html[data-theme="dark"] body.site-glass-root details .super-admin-nav-link {
+  color: #d4edf0 !important;
+  background: #16343e !important;
+  border-color: #376976 !important;
+}
+html[data-theme="dark"] body.site-glass-root aside .super-admin-nav-link:hover,
+html[data-theme="dark"] body.site-glass-root details .super-admin-nav-link:hover {
+  color: #e9fffc !important;
+  background: #1d555a !important;
+  border-color: #46b6b1 !important;
+}
