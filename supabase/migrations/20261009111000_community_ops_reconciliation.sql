@@ -407,6 +407,11 @@ begin
     handled_at=now(),handled_by=v_user,updated_at=now()
   where day_id=p_day_id and order_id=p_order_id;
   if not found then raise exception 'Order is not in this day manifest'; end if;
+  if (v_product+v_delivery)>0 then
+    insert into public.payment_records(order_id,status,method,reference_number,amount,recorded_by,notes)
+    values(p_order_id,'payment_pending','community_ops_exception_cash','community-ops-exception:'||p_day_id::text,
+      v_product+v_delivery,v_user,'Cash physically received during an unresolved Community Ops exception; do not treat as fully paid until Admin resolves the exception.');
+  end if;
   insert into public.operational_issues(order_id,pool_id,reported_by,issue_type,description,status)
   values(p_order_id,o.pool_id,v_user,'community_ops_'||v_code,v_reason,'open') returning id into v_issue;
   insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
