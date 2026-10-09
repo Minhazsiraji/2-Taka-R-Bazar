@@ -120,6 +120,16 @@ export async function adminLinkSupplierSupplyAccount(fd:FormData){
   go('/admin/supply-control','Supplier account linked')
 }
 
+export async function adminAuthorizeSupplyDispatch(fd:FormData){
+  const {supabase}=await requireAdmin()
+  const {error}=await supabase.rpc('admin_authorize_supply_dispatch',{
+    p_dispatch_id:t(fd,'dispatch_id'),p_note:t(fd,'note')||null,
+  })
+  if(error)go('/admin/supply-control',error.message,'error')
+  revalidatePath('/admin/supply-control');revalidatePath('/supply')
+  go('/admin/supply-control','Supplier dispatch authorized for sealing')
+}
+
 export async function adminAssignSupplyCarrier(fd:FormData){
   const {supabase}=await requireAdmin()
   const {error}=await supabase.rpc('admin_assign_supply_carrier',{
