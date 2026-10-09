@@ -40,7 +40,7 @@ const demoLedger:Line[]=[
  {posted_at:'2026-10-04',posting_date:'2026-10-04',event_key:'DEMO:settlement:1',memo:'QR printing paid',account_code:'2000',account_title:'Approved expenses payable',debit:1200,credit:0,community_id:null},
  {posted_at:'2026-10-04',posting_date:'2026-10-04',event_key:'DEMO:settlement:1',memo:'QR printing paid',account_code:'1000',account_title:'Cash on hand',debit:0,credit:1200,community_id:null}
 ]
-function Card({children,className=''}:{children:React.ReactNode;className?:string}){return <div className={'rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_10px_35px_rgba(2,6,23,0.035)] '+className}>{children}</div>}
+function Card({children,className=''}:{children:React.ReactNode;className?:string}){return <div className={'finance-panel rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_10px_35px_rgba(2,6,23,0.035)] '+className}>{children}</div>}
 function Metric({name,value,sub,accent='text-slate-950'}:{name:string;value:string;sub:string;accent?:string}){
  return <Card><p className="text-[11px] font-bold uppercase tracking-[.15em] text-slate-500">{name}</p><p className={'mt-3 break-words text-2xl font-black tracking-tight sm:text-3xl '+accent}>{value}</p><p className="mt-2 text-xs leading-5 text-slate-500">{sub}</p></Card>
 }
