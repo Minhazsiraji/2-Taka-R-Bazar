@@ -6,7 +6,7 @@ import { NotificationBell } from '@/components/notification-bell'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { MobileCustomerNav } from '@/components/mobile-customer-nav'
 import { LEGAL_LINKS } from '@/lib/legal'
-import { SITE_TAGLINE_EN } from '@/lib/site'
+import { SITE_TAGLINE_BN, SITE_TAGLINE_EN } from '@/lib/site'
 
 const customerNav = [
   ['/home', 'Home'], ['/pool', 'Pools'], ['/group-deals', 'Group Deals'], ['/orders', 'Orders'], ['/savings', 'Savings'],
@@ -32,6 +32,7 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
             <div className="hidden sm:block">
               <div className="text-sm font-black tracking-tight">2-TAKA-R-BAZAR</div>
               <div className="text-[10px] font-semibold tracking-wide text-slate-500">{SITE_TAGLINE_EN}</div>
+              <div className="text-[9px] font-medium text-slate-400" lang="bn">{SITE_TAGLINE_BN}</div>
             </div>
           </Link>
 
@@ -67,7 +68,7 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
     <footer className="app-desktop-footer hidden bg-[#062747] text-white md:block">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-6 lg:grid-cols-[1.2fr_1fr_1fr]">
         <div>
-          <div className="flex items-center gap-3"><BrandLogo size={44}/><div><div className="font-black">2-TAKA-R-BAZAR</div><div className="text-xs text-slate-400">{SITE_TAGLINE_EN}</div></div></div>
+          <div className="flex items-center gap-3"><BrandLogo size={44}/><div><div className="font-black">2-TAKA-R-BAZAR</div><div className="text-xs text-slate-400">{SITE_TAGLINE_EN}</div><div className="text-[10px] text-slate-500" lang="bn">{SITE_TAGLINE_BN}</div></div></div>
           <p className="mt-3 max-w-sm text-xs leading-5 text-slate-400">Community-powered grocery pooling with verified local benchmarks, FREE community collection, optional home delivery, and transparent product savings.</p>
         </div>
         <div>
