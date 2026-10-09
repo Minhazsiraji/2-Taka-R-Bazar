@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/auth'
 import {
  procurementCreatePO,procurementReviewPO,procurementLinkDispatch,
  procurementSubmitBill,procurementReviewBill,procurementRequestPayment,
- procurementPostCommunityCash
+ procurementPostCommunityCash,procurementAttachDocument
 } from '@/app/actions/procurement'
 
 export const dynamic='force-dynamic'
@@ -57,6 +57,8 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
   process.env.NEXT_PUBLIC_SUPABASE_URL===process.env.FINANCE_PREVIEW_SUPABASE_URL&&
   !String(process.env.NEXT_PUBLIC_SUPABASE_URL).includes('sukabonfjcnaavjgjyuy')
  const {data,error}=demoMode?{data:demo,error:null}:await supabase.rpc('procurement_workbench')
+ const {data:attachmentData}=demoMode?{data:[]}:await supabase.rpc('finance_document_attachment_index')
+ const attachments=(Array.isArray(attachmentData)?attachmentData:[]) as Array<{id:string;entity_type:string;entity_id:string;kind:string;name:string;uploaded_at:string}>
  const d=(data??{selected_quotes:[],purchase_orders:[],dispatches:[],bills:[],liquid_accounts:[],cash_receipts_pending:[]}) as Data
  const quote=d.selected_quotes??[],po=d.purchase_orders??[],dispatch=d.dispatches??[],bills=d.bills??[],accounts=d.liquid_accounts??[],cash=d.cash_receipts_pending??[]
  const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'})
@@ -146,6 +148,20 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
     {bills.map(x=><div key={x.id} className="rounded-xl border border-slate-200 p-3 text-xs"><b>{x.ref} · {x.vendor}</b><p className="mt-1 text-slate-600">{taka(x.amount)} · {x.status}</p>
      <div className="mt-2 flex flex-wrap gap-3">{!demoMode&&<><a className="font-bold text-teal-800 underline" target="_blank" rel="noopener noreferrer" href={`/api/finance/documents/bill/${x.id}`}>Print register</a><a className="font-bold text-teal-800 underline" href={`/api/finance/documents/bill/${x.id}?download=1`}>Download register</a><a className="font-bold text-teal-800 underline" href={`/api/finance/documents/proof/${x.id}`}>Download original proof</a></>}{demoMode&&<span className="text-violet-700">Synthetic invoice · no real supplier file</span>}</div>
     </div>)}
+   </div>
+   <div className="mt-4 rounded-xl border border-teal-200 bg-teal-50/30 p-3">
+    <p className="mb-2 text-sm font-black text-teal-900">Attach signed manual documents / generated PDF evidence</p>
+    <form action={procurementAttachDocument} className="grid gap-2" encType="multipart/form-data">
+     <div className="grid gap-2 sm:grid-cols-2">
+      <label className="text-xs font-bold">Record type<select name="entity_type" className={style} required><option value="po">Purchase order</option><option value="bill">Supplier bill</option></select></label>
+      <label className="text-xs font-bold">Evidence category<select name="document_kind" className={style} required><option value="signed_po">Signed purchase order</option><option value="supplier_invoice">Supplier invoice</option><option value="goods_receipt">Goods received proof</option><option value="delivery_note">Supplier delivery note</option><option value="other">Other linked proof</option></select></label>
+     </div>
+     <label className="text-xs font-bold">Select record (copy UUID from its displayed identifier list)<select name="entity_id" className={style} required><option value="">Choose PO or bill</option>{po.map(x=><option key={x.id} value={x.id}>PO · {x.code} · {x.supplier}</option>)}{bills.map(x=><option key={x.id} value={x.id}>BILL · {x.ref} · {x.vendor}</option>)}</select></label>
+     <label className="text-xs font-bold">Document description<input className={style} name="display_name" minLength={3} maxLength={140} required placeholder="Signed PO, receipt no. 123, original paper scan"/></label>
+     <label className="text-xs font-bold">Upload PDF, JPG or PNG (up to 1.5 MB)<input className={style} name="document_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required/></label>
+     <button disabled={demoMode||!isolated} className="rounded-xl bg-teal-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40">Save immutable evidence to record</button>
+    </form>
+    <div className="mt-3 space-y-1">{attachments.map(a=><div key={a.id} className="flex flex-wrap justify-between gap-2 border-t border-teal-100 py-2 text-xs"><span>{a.name} · {a.kind} · {a.entity_type} · {a.uploaded_at?.slice(0,10)}</span><a className="font-black text-teal-800 underline" href={`/api/finance/attachments/${a.id}`}>Download original</a></div>)}{!attachments.length&&<p className="text-xs text-slate-600">No additional signed documents attached.</p>}</div>
    </div>
    <p className="mt-3 text-xs text-slate-600">Manual fallback: prepare and sign documents offline; attach original supplier invoice as PDF/JPEG/PNG in step 4. For any additional manual PO or custody evidence, keep the signed original under controlled records until a dedicated linked upload register is available. No manual document may substitute for verified payment or physical receipt.</p>
   </Panel>
