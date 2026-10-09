@@ -32,7 +32,7 @@ export default async function SupplierPortalPage(){
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
         <Link href="/home" className="flex items-center gap-2"><BrandLogo size={42}/><div><div className="font-black">Supplier Portal</div><div className="text-xs text-slate-500">2-TAKA-R-BAZAR demand network</div></div></Link>
-        <div className="flex items-center gap-2"><ThemeToggle/><Link href="/home" className="btn-secondary">Customer app</Link></div>
+        <div className="flex items-center gap-2"><ThemeToggle/><Link href="/supply" className="btn-secondary">Supply handover</Link><Link href="/home" className="btn-secondary">Customer app</Link></div>
       </div>
     </header>
     <main className="mx-auto grid max-w-6xl gap-5 px-4 py-5">
