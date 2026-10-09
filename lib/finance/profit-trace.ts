@@ -5,7 +5,7 @@ export type SaleLine={
  productId:string;productName:string;orderCount:number;quantity:number;
  benchmarkUnit:number;customerUnit:number;
  acceptedInvoiceQuantity:number;verifiedLandedUnit:number|null;
- invoiceRef:string;isCompleted:boolean;isPaymentReconciled:boolean;
+ invoiceRef:string;recordedSaleRevenue?:number;recordedCustomerSaving?:number;isCompleted:boolean;isPaymentReconciled:boolean;
  isRefundClear:boolean
 }
 export type ExpenseLine={category:string;amount:number;source:string}
@@ -28,6 +28,7 @@ export type ProfitResult={
 }
 const cents=(n:number)=>{if(!Number.isFinite(n)||n<0)throw new Error('Nonnegative finite BDT amount required');return Math.round(n*100)}
 const round=(c:number)=>Math.round(c)/100
+const signedCents=(n:number)=>{if(!Number.isFinite(n))throw new Error('Finite BDT amount required');return Math.round(n*100)}
 const sum=(items:number[])=>items.reduce((a,b)=>a+b,0)
 export function calculateProfit(input:ProfitInput,scope:ProfitScope={}):ProfitResult{
  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month))throw new Error('Invalid accounting month')
@@ -36,14 +37,16 @@ export function calculateProfit(input:ProfitInput,scope:ProfitScope={}):ProfitRe
  const blockers:string[]=[]
  const rows=chosen.map(l=>{
   if(!Number.isInteger(l.quantity)||l.quantity<0||!Number.isInteger(l.acceptedInvoiceQuantity)||l.acceptedInvoiceQuantity<0)throw new Error('Invalid physical inventory quantity')
-  const sold=cents(l.customerUnit)*l.quantity,benchmark=cents(l.benchmarkUnit)*l.quantity
+  const sold=l.recordedSaleRevenue===undefined?cents(l.customerUnit)*l.quantity:cents(l.recordedSaleRevenue)
+  const benchmark=cents(l.benchmarkUnit)*l.quantity
+  const saving=l.recordedCustomerSaving===undefined?Math.max(0,benchmark-sold):cents(l.recordedCustomerSaving)
   const covered=l.isCompleted&&l.isRefundClear&&l.verifiedLandedUnit!==null&&l.acceptedInvoiceQuantity>=l.quantity
   if(!l.isCompleted)blockers.push(l.productName+': completed fulfillment missing')
   if(!l.isRefundClear)blockers.push(l.productName+': refund or return unresolved')
   if(!l.isPaymentReconciled)blockers.push(l.productName+': customer collection is not bank/COD reconciled')
   if(l.verifiedLandedUnit===null||l.acceptedInvoiceQuantity<l.quantity)blockers.push(l.productName+': approved invoice and accepted inventory do not cover sold units')
   const cost=covered?cents(l.verifiedLandedUnit!)*l.quantity:null
-  return {...l,saleRevenue:round(sold),benchmarkValue:round(benchmark),customerSaving:round(Math.max(0,benchmark-sold)),
+  return {...l,saleRevenue:round(sold),benchmarkValue:round(benchmark),customerSaving:round(saving),
    cogs:cost===null?null:round(cost),grossProfit:cost===null?null:round(sold-cost),covered}
  })
  if(!rows.length)blockers.push('No fulfilled product order matches selected scope and month')
@@ -65,11 +68,11 @@ export function calculateProfit(input:ProfitInput,scope:ProfitScope={}):ProfitRe
  const profitBeforeTax=canCalculate?round(cents(grossProfit!)+cents(deliveryRevenue!)-cents(deliveryCost!)-cents(op!)-cents(financeCosts!)):null
  if(input.deliveryActualCost===null)blockers.push('Actual delivery operating cost is incomplete')
  const tax=profitBeforeTax!==null&&input.taxRate!==null&&input.taxRate>=0&&input.taxRate<=1
-  ?round(Math.round(Math.max(0,cents(profitBeforeTax))*input.taxRate)):null
+  ?round(Math.round(Math.max(0,signedCents(profitBeforeTax))*input.taxRate)):null
  if(input.taxRate===null)blockers.push('Income-tax computation not configured')
  // Never represent this as certified net profit until actual close journals,
  // refunds, allocations, payments, tax and controls have independent signoff.
- const illustrativeNetProfit=tax!==null&&profitBeforeTax!==null?round(cents(profitBeforeTax)-cents(tax)):null
+ const illustrativeNetProfit=tax!==null&&profitBeforeTax!==null?round(signedCents(profitBeforeTax)-cents(tax)):null
  return {lines:rows,quantity:sum(rows.map(r=>r.quantity)),productRevenue,customerSaving,cogs,grossProfit,
   deliveryRevenue,deliveryCost,operatingExpenses:op,financeCosts,profitBeforeTax,tax,illustrativeNetProfit,
   certifiedNetProfit:null,status:input.isSynthetic?'SYNTHETIC_ILLUSTRATION':'RECONCILIATION_REQUIRED',
