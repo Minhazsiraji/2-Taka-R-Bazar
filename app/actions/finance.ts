@@ -1,5 +1,6 @@
 'use server'
 
+import { createHash, randomUUID } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin, requireSuperAdmin } from '@/lib/auth'
@@ -23,16 +24,33 @@ function outcome(kind:'notice'|'error', message:string):never {
   revalidatePath(path)
   redirect(path + '?' + kind + '=' + encodeURIComponent(message))
 }
+async function storeFinanceEvidence(viewer:Awaited<ReturnType<typeof requireAdmin>>, fd:FormData, fieldName:string) {
+  const file=fd.get(fieldName)
+  if (!(file instanceof File) || file.size===0 || file.size>5*1024*1024)
+    throw new Error('Upload a receipt/proof file up to 5 MB')
+  const extension:Record<string,string>={'image/jpeg':'jpg','image/png':'png','application/pdf':'pdf'}
+  const ext=extension[file.type]
+  if(!ext) throw new Error('Only JPEG, PNG or PDF evidence is supported')
+  const content=Buffer.from(await file.arrayBuffer())
+  const sha256=createHash('sha256').update(content).digest('hex')
+  const storagePath=viewer.user.id+'/'+randomUUID()+'.'+ext
+  const {error}=await viewer.supabase.storage.from('finance-evidence')
+    .upload(storagePath,content,{contentType:file.type,upsert:false})
+  if(error) throw new Error('Evidence upload failed: '+error.message)
+  return {storagePath,sha256}
+}
 function errorText(e:unknown) { return e instanceof Error ? e.message : 'Finance operation could not complete' }
 
 export async function createFinanceExpense(fd:FormData) {
   await requireAdmin()
   try {
     assertIsolatedFinancePreview()
-    const { supabase } = await requireAdmin()
+    const viewer = await requireAdmin()
+    const { supabase } = viewer
     const amount = Number(field(fd,'amount'))
     if (!Number.isFinite(amount) || amount<=0 || amount>100000000)
       throw new Error('Enter a valid positive expense amount')
+    const proof=await storeFinanceEvidence(viewer,fd,'receipt_file')
     const {error} = await supabase.rpc('finance_submit_expense', {
       p_category:field(fd,'category'),
       p_description:field(fd,'description'),
@@ -40,6 +58,8 @@ export async function createFinanceExpense(fd:FormData) {
       p_document_reference:field(fd,'document_reference'),
       p_amount:amount,
       p_incurred_on:date(fd,'incurred_on'),
+      p_evidence_path:proof.storagePath,
+      p_evidence_sha256:proof.sha256,
       p_community_id:field(fd,'community_id') || null,
       p_campaign_code:field(fd,'campaign_code') || null,
     })
@@ -65,12 +85,16 @@ export async function requestFinanceSettlement(fd:FormData) {
   await requireSuperAdmin()
   try {
     assertIsolatedFinancePreview()
-    const {supabase} = await requireSuperAdmin()
+    const viewer = await requireSuperAdmin()
+    const {supabase}=viewer
+    const proof=await storeFinanceEvidence(viewer,fd,'payment_proof')
     const {error} = await supabase.rpc('finance_request_settlement',{
       p_expense_id:field(fd,'expense_id'),
       p_payment_method:field(fd,'payment_method'),
       p_payment_reference:field(fd,'payment_reference'),
       p_payment_date:date(fd,'payment_date'),
+      p_evidence_path:proof.storagePath,
+      p_evidence_sha256:proof.sha256,
     })
     if(error) throw new Error(error.message)
   } catch(e) { outcome('error',errorText(e)) }
