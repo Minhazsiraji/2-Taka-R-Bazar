@@ -23,8 +23,7 @@ body.site-glass-root main .finance-ops-surface .finance-ops-hero {
   background: linear-gradient(116deg,#09283b 0%,#0b4d56 51%,#087d77 100%) !important;
   color: #ffffff !important;
   box-shadow: 0 12px 30px rgba(6,58,66,.19) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  /* Glass blur is supplied by the later shared header-parity rule. */
 }
 
 /* The old ".site-glass-root header > div" turns the header's children
