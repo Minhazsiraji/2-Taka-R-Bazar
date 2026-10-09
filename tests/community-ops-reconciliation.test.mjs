@@ -15,7 +15,7 @@ test('community operations access is community-scoped and fail-closed',()=>{
   assert.match(migration,/a\.user_id=p_user and a\.community_id=p_community and a\.active/i)
   assert.match(migration,/alter table public\.community_ops_days enable row level security/i)
   assert.match(migration,/revoke all on public\.community_ops_assignments,public\.community_ops_days/i)
-  assert.match(migration,/User must have the pickup_operator role first/i)
+  assert.match(migration,/insert into public\.user_roles\(user_id,role\) values\(p_user_id,'pickup_operator'\) on conflict do nothing/i)
 })
 
 test('manifest snapshots account-wise cash and payment mode separately',()=>{
