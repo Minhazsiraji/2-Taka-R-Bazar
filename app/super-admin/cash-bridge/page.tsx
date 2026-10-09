@@ -27,7 +27,7 @@ export default async function CashBridgePage({searchParams}:{searchParams:Promis
  if(demo){
   raw=month==='2026-10'?{...demoCashBridge,unmatchedStatements:2,unclassifiedOutflow:0,
    grossBankDebits:26360,grossBankCredits:88300}:{...demoCashBridge,openingCash:0,closingCash:0,customerCod:0,deliveryCollections:0,
-   supplierPayments:0,operatingCashPayments:0,loanPrincipalPaid:0,financeCashPaid:0,ownerFinancingInflows:0,otherExternalReceipts:0,internalTransfers:0,
+   supplierPayments:0,operatingCashPayments:0,loanPrincipalPaid:0,financeCashPaid:0,ownerFinancingInflows:0,otherExternalReceipts:0,otherExternalOutflows:0,internalTransfers:0,
    cashAccountsReconciled:false,unmatchedStatements:0,unclassifiedOutflow:0,grossBankDebits:0,grossBankCredits:0}
  }else{
   const {data,error}=await supabase.rpc('treasury_cash_bridge_source',{p_month:month+'-01'})
@@ -39,7 +39,7 @@ export default async function CashBridgePage({searchParams}:{searchParams:Promis
     customerCod:Number(x.customerCod??0),deliveryCollections:Number(x.deliveryCollections??0),
     supplierPayments:Number(x.supplierPayments??0),operatingCashPayments:Number(x.operatingCashPayments??0),
     loanPrincipalPaid:Number(x.loanPrincipalPaid??0),financeCashPaid:Number(x.financeCashPaid??0),
-    ownerFinancingInflows:Number(x.ownerFinancingInflows??0),otherExternalReceipts:Number(x.otherExternalReceipts??0),
+    ownerFinancingInflows:Number(x.ownerFinancingInflows??0),otherExternalReceipts:Number(x.otherExternalReceipts??0),otherExternalOutflows:Number(x.unclassifiedOutflow??0),
     internalTransfers:Number(x.internalTransfers??0),cashAccountsReconciled:false,
     grossBankDebits:Number(x.grossBankDebits??0),grossBankCredits:Number(x.grossBankCredits??0),
     unclassifiedOutflow:Number(x.unclassifiedOutflow??0),unmatchedStatements:Number(x.unmatchedStatements??0)
@@ -99,6 +99,7 @@ export default async function CashBridgePage({searchParams}:{searchParams:Promis
       <Detail name="Operating cash disbursements" amount={v.operatingCashPayments} note="Cash paid for already recognized expenses; not a second cost."/>
       <Detail name="Loan principal repaid" amount={v.loanPrincipalPaid} note="Reduces debt; excludes Profit & Loss expense."/>
       <Detail name="Finance interest and fees paid" amount={v.financeCashPaid} note="Financing outflow; recognize financial cost once by approved policy."/>
+      <Detail name="Other/unclassified outgoing book cash" amount={v.otherExternalOutflows} note="Retained to make the book bridge reconcile; classification and independent source evidence still required."/>
      </div>
     </div>
     <div className="mt-4 rounded-xl border border-teal-200 bg-teal-50/70 px-4 py-4">
