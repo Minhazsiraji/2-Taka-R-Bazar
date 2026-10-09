@@ -5,13 +5,9 @@ import { BrandLogo } from '@/components/brand-logo'
 import { NotificationBell } from '@/components/notification-bell'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { MobileCustomerNav } from '@/components/mobile-customer-nav'
-import { LEGAL_LINKS } from '@/lib/legal'
 import { SITE_TAGLINE_BN, SITE_TAGLINE_EN } from '@/lib/site'
+import { SiteFooter } from '@/components/site-footer'
 
-const customerNav = [
-  ['/home', 'Home'], ['/pool', 'Pools'], ['/group-deals', 'Group Deals'], ['/orders', 'Orders'], ['/savings', 'Savings'],
-  ['/community', 'Community'], ['/pickup', 'Pickup'], ['/profile', 'Profile'], ['/notifications', 'Notifications'], ['/supplier', 'Supplier Portal'],
-]
 const primaryNav = [['/home', 'Home'], ['/pool', 'Pools'], ['/group-deals', 'Group Deals'], ['/orders', 'Orders'], ['/savings', 'Savings']]
 
 function NotificationBellFallback(){
@@ -59,33 +55,6 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
 
     <MobileCustomerNav/>
 
-    <footer className="app-mobile-legal mx-3 mb-[calc(5.75rem+env(safe-area-inset-bottom))] mt-4 rounded-2xl border border-cyan-200 bg-white/80 px-4 py-5 text-slate-700 shadow-sm md:hidden">
-      <div className="flex items-center gap-3"><BrandLogo size={38}/><div><div className="text-sm font-black">2-TAKA-R-BAZAR</div><div className="text-xs font-medium">Smart shopping. Real savings!</div><div className="text-xs">একসাথে কিনি, কম দামে পাই!</div></div></div>
-      <nav className="mt-4 grid grid-cols-2 gap-x-6 gap-y-5 text-xs font-semibold" aria-label="Mobile legal and help">{LEGAL_LINKS.map(([href,labelEn,labelBn])=><Link key={href} href={href} className="min-w-0 rounded-lg px-1 py-1 text-left leading-tight underline-offset-2 hover:underline"><div>{labelEn}</div><div className="mt-1 text-[10px] font-medium leading-4 text-slate-500" lang="bn">{labelBn}</div></Link>)}</nav>
-      <div className="mt-4 border-t border-slate-200 pt-3 text-xs leading-5"><span>© 2026 2-TAKA-R-BAZAR · Developed by </span><a className="underline" href="https://agentsiraji.com" target="_blank" rel="noreferrer">agentsiraji.com</a><span> · Contact: </span><a className="underline break-all" href="mailto:business@agentsiraji.com">business@agentsiraji.com</a></div>
-    </footer>
-
-    <footer className="app-desktop-footer hidden bg-[#062747] text-white md:block">
-      <div className="mx-auto grid max-w-6xl gap-8 px-5 py-6 lg:grid-cols-[1.2fr_1fr_1fr]">
-        <div>
-          <div className="flex items-center gap-3"><BrandLogo size={44}/><div><div className="font-black">2-TAKA-R-BAZAR</div><div className="text-xs text-slate-400">{SITE_TAGLINE_EN}</div><div className="text-[10px] text-slate-500" lang="bn">{SITE_TAGLINE_BN}</div></div></div>
-          <p className="mt-3 max-w-sm text-xs leading-5 text-slate-400">Community-powered grocery pooling with verified local benchmarks, FREE community collection, optional home delivery, and transparent product savings.</p>
-        </div>
-        <div>
-          <div className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-200">Shop</div>
-          <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-1.5 text-xs">{customerNav.slice(0,4).map(([href,label])=><Link key={href} href={href} className="text-slate-300 hover:text-white">{label}</Link>)}</div>
-        </div>
-        <div>
-          <div className="text-[10px] font-black uppercase tracking-[0.16em] text-sky-200">Account & community</div>
-          <div className="mt-3 grid grid-cols-2 gap-1.5 text-xs">{customerNav.slice(4).map(([href,label])=><Link key={href} href={href} className="text-slate-300 hover:text-white">{label}</Link>)}</div>
-        </div>
-      </div>
-      <div className="border-t border-white/10">
-        <div className="mx-auto grid max-w-6xl gap-4 px-5 py-4 text-[11px] text-slate-400 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>© 2026 2-TAKA-R-BAZAR · Developed by: <a href="https://agentsiraji.com" target="_blank" rel="noreferrer" className="hover:text-white">agentsiraji.com</a> · Contact: <a href="mailto:business@agentsiraji.com" className="hover:text-white">business@agentsiraji.com</a></div>
-          <nav className="grid grid-cols-3 gap-x-8 gap-y-4" aria-label="Legal and help">{LEGAL_LINKS.map(([href,labelEn,labelBn])=><Link key={href} href={href} className="min-w-[110px] rounded-lg px-1 py-1 text-left leading-tight hover:text-white"><div>{labelEn}</div><div className="mt-1 text-[9px] leading-4 text-slate-500" lang="bn">{labelBn}</div></Link>)}</nav>
-        </div>
-      </div>
-    </footer>
+    <SiteFooter withMobileNavOffset />
   </div>
 }
