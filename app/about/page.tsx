@@ -47,7 +47,7 @@ export default function AboutPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
-      <PublicHeader actionHref="/" actionLabel="Home" actionLabelBn="হোম" />
+      <PublicHeader actionHref="/" actionLabel="Home" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
