@@ -246,7 +246,7 @@ export default async function HomePage(){
             <h2 className="mt-1 text-xl font-black sm:text-2xl">Community pools</h2>
             <p className="mt-0.5 text-[12px] font-semibold text-slate-500" lang="bn">কমিউনিটি পুল</p>
           </div>
-          <Link href="/pool" className="text-sm font-black text-cyan-700">View all → <span className="text-[11px] font-semibold" lang="bn">সব দেখুন</span></Link>
+          <Link href="/pool" className="text-sm font-black text-cyan-700">View all →</Link>
         </div>
 
         {pools.length?<div className="cx-list-grid">{pools.slice(0,4).map((pool:any)=>{
@@ -282,7 +282,7 @@ export default async function HomePage(){
       {openDeals.length>0&&<section>
         <div className="mb-3 flex items-end justify-between gap-3">
           <div><p className="text-[10px] font-black uppercase tracking-[.16em] text-sky-700">Nearby</p><p className="text-[10px] font-semibold text-sky-700" lang="bn">কাছাকাছি</p><h2 className="mt-1 text-xl font-black sm:text-2xl">Neighbour deals</h2><p className="mt-0.5 text-[12px] font-semibold text-slate-500" lang="bn">প্রতিবেশীদের ডিল</p></div>
-          <Link href="/group-deals" className="text-sm font-black text-cyan-700">View all → <span className="text-[11px] font-semibold" lang="bn">সব দেখুন</span></Link>
+          <Link href="/group-deals" className="text-sm font-black text-cyan-700">View all →</Link>
         </div>
         <div className="cx-list-grid">{openDeals.slice(0,2).map((deal:any)=>{
           const price=Number(deal.current_price??0)
