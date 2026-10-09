@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { BrandLogo } from '@/components/brand-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 
-const executiveLinks = [['/super-admin','Executive dashboard'],['/super-admin/money-analytics','My Money analytics'],['/super-admin/payments','Payments & cash'],['/super-admin/access','Users & access'],['/super-admin/audit','Audit trail']]
+const executiveLinks = [['/super-admin','Executive dashboard'],['/super-admin/finance','Finance intelligence'],['/super-admin/money-analytics','My Money analytics'],['/super-admin/payments','Payments & cash'],['/super-admin/access','Users & access'],['/super-admin/audit','Audit trail']]
 const operationsLinks = [['/admin','Operations dashboard'],['/admin/communities','Communities'],['/admin/customers','Customers'],['/admin/products','Products'],['/admin/market-prices','Market prices'],['/admin/suppliers','Suppliers'],['/admin/pools','Pools'],['/admin/commitments','Commitments'],['/admin/orders','Orders'],['/admin/deliveries','Home deliveries'],['/admin/pickup-points','Pickup points'],['/admin/savings','Savings'],['/admin/feedback','Feedback'],['/admin/issues','Issues']]
 
 function Navigation({ mobile=false }:{mobile?:boolean}) {
