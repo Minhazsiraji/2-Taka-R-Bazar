@@ -16,7 +16,7 @@ export type ProfitInput={
  journalSalesPosted:boolean;bankCollectionsMatched:boolean;
  inventoryLedgerMatched:boolean;taxPolicyVerified:boolean;isSynthetic:boolean
 }
-export type ProfitScope={poolId?:string;productId?:string}
+export type ProfitScope={communityId?:string;poolId?:string;productId?:string}
 export type ProfitResult={
  lines:(SaleLine&{saleRevenue:number;benchmarkValue:number;customerSaving:number;cogs:number|null;grossProfit:number|null;covered:boolean})[];
  quantity:number;productRevenue:number;customerSaving:number;cogs:number|null;
@@ -32,8 +32,8 @@ const signedCents=(n:number)=>{if(!Number.isFinite(n))throw new Error('Finite BD
 const sum=(items:number[])=>items.reduce((a,b)=>a+b,0)
 export function calculateProfit(input:ProfitInput,scope:ProfitScope={}):ProfitResult{
  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month))throw new Error('Invalid accounting month')
- const chosen=input.lines.filter(x=>(!scope.poolId||x.poolId===scope.poolId)&&(!scope.productId||x.productId===scope.productId))
- const scoped=Boolean(scope.poolId||scope.productId)
+ const chosen=input.lines.filter(x=>(!scope.communityId||x.communityId===scope.communityId)&&(!scope.poolId||x.poolId===scope.poolId)&&(!scope.productId||x.productId===scope.productId))
+ const scoped=Boolean(scope.communityId||scope.poolId||scope.productId)
  const blockers:string[]=[]
  const rows=chosen.map(l=>{
   if(!Number.isInteger(l.quantity)||l.quantity<0||!Number.isInteger(l.acceptedInvoiceQuantity)||l.acceptedInvoiceQuantity<0)throw new Error('Invalid physical inventory quantity')
