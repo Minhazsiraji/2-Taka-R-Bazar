@@ -139,14 +139,14 @@ async function main(){
   // computed styles AND hover label, not just presence of HTML/classes.
   await visit(owner,'/super-admin/finance?demo=1','Finance intelligence')
   await owner.locator('.finance-hero-badge').waitFor({state:'visible',timeout:20000})
-  await owner.waitForFunction(()=>{const el=document.querySelector('.finance-hero-badge');return Boolean(el&&el.isConnected&&getComputedStyle(el).backgroundColor&&getComputedStyle(el).color)},null,{timeout:20000})
+  await owner.waitForFunction(()=>{const el=document.querySelector('.finance-hero-badge');if(!el||!el.isConnected)return false;const css=getComputedStyle(el);return css.backgroundColor==='rgb(195, 247, 239)'&&css.color==='rgb(6, 63, 67)'},null,{timeout:20000})
   const badge=await owner.locator('.finance-hero-badge').evaluate(el=>({
    background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color
   }))
   assert.equal(badge.background,'rgb(195, 247, 239)','Finance synthetic badge must have a solid high-contrast background')
   assert.equal(badge.color,'rgb(6, 63, 67)','Finance synthetic badge must have dark readable text')
   await owner.locator('.finance-month-selector').waitFor({state:'visible',timeout:20000})
-  await owner.waitForFunction(()=>{const el=document.querySelector('.finance-month-selector');return Boolean(el&&el.isConnected&&getComputedStyle(el).backgroundColor&&getComputedStyle(el).color)},null,{timeout:20000})
+  await owner.waitForFunction(()=>{const el=document.querySelector('.finance-month-selector');if(!el||!el.isConnected)return false;const css=getComputedStyle(el);return css.backgroundColor==='rgb(16, 61, 74)'&&css.color==='rgb(255, 255, 255)'},null,{timeout:20000})
   const month=await owner.locator('.finance-month-selector').evaluate(el=>({
    background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color
   }))
