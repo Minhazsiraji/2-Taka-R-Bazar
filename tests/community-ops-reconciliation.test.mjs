@@ -55,7 +55,12 @@ test('inbound reconciliation supports supplier store delivery agent transfer ret
   assert.match(migration,/Inbound variance requires an exception reason/i)
   assert.match(migration,/damaged_quantity/i)
   assert.match(migration,/returned_quantity/i)
+  assert.match(migration,/community_ops_stock_adjustments/i)
+  assert.match(migration,/retained_at_point/i)
+  assert.match(migration,/returned_to_office/i)
+  assert.match(migration,/product\(s\) still have stock variance/i)
   assert.match(officerPage,/Receive and reconcile products/i)
+  assert.match(officerPage,/Account stock variance/i)
 })
 
 test('daily report and cash handover are gated before Admin close',()=>{
@@ -89,6 +94,7 @@ test('Community Ops is reachable from officer and Admin navigation',()=>{
 test('server actions use guarded RPCs instead of direct financial table writes',()=>{
   assert.match(actions,/requirePickupOperator/i)
   assert.match(actions,/requireAdmin/i)
+  assert.match(actions,/record_community_ops_stock_adjustment/i)
   assert.match(actions,/complete_community_ops_order/i)
   assert.match(actions,/record_community_ops_order_exception/i)
   assert.match(actions,/admin_accept_community_ops_cash/i)
