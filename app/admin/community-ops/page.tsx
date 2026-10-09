@@ -12,17 +12,15 @@ export default async function AdminCommunityOpsPage({searchParams}:{searchParams
   const {supabase}=await requireAdmin();const sp=await searchParams
   const [
     {data:communities},
-    {data:roles},
+    {data:operators},
     {data:assignments},
     {data:days},
   ]=await Promise.all([
     supabase.from('communities').select('id,name,active').eq('active',true).order('sort_order'),
-    supabase.from('user_roles').select('user_id').eq('role','pickup_operator'),
+    supabase.from('profiles').select('id,full_name,phone,email').not('onboarding_completed_at','is',null).order('full_name').limit(500),
     supabase.rpc('admin_get_community_ops_assignments'),
     supabase.rpc('admin_get_community_ops_days',{p_limit:200}),
   ])
-  const operatorIds=(roles??[]).map((r:any)=>r.user_id)
-  const {data:operators}=operatorIds.length?await supabase.from('profiles').select('id,full_name,phone,email').in('id',operatorIds):{data:[] as any[]}
 
   return <AdminShell><div className="grid gap-5">
     <section><div className="card-title">Community Operations</div><h1 className="text-3xl font-black">Live community reconciliation</h1><p className="muted mt-1">Monitor goods, customer handover, Product COD, Home Delivery fees, officer reports, exceptions and office cash handover community by community.</p></section>
@@ -31,7 +29,7 @@ export default async function AdminCommunityOpsPage({searchParams}:{searchParams
     <section className="grid gap-4 xl:grid-cols-2">
       <form action={assignCommunityOperator} className="card grid gap-3">
         <h2 className="section-title">Assign Community Operations Officer</h2>
-        <p className="muted text-sm">The user must already have the pickup_operator role. Assignment limits their operational scope to the selected community.</p>
+        <p className="muted text-sm">Choose an onboarded user. The system grants the Community Operations role automatically and limits their operational scope to the selected community.</p>
         <select className="input" name="user_id" required><option value="">Officer</option>{(operators??[]).map((o:any)=><option key={o.id} value={o.id}>{o.full_name||o.phone||o.email||o.id}</option>)}</select>
         <select className="input" name="community_id" required><option value="">Community</option>{(communities??[]).map((c:any)=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
         <SubmitButton>Assign community</SubmitButton>
