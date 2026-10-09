@@ -88,8 +88,8 @@ function TrendChart({values}:{values:Trend[]}){
     {area&&<path d={area} fill="url(#finance-area-gradient)"/>}
     <path d={expensePath} fill="none" stroke="#0d9488" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"/>
     <path d={cashPath} fill="none" stroke="#8b5cf6" strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round" strokeDasharray="7 5"/>
-    {expense.map(([cx,cy],i)=><circle key={'e'+i} cx={cx} cy={cy} r={4.3} stroke="white" strokeWidth="2" fill="#0d9488"><title>{fmt(chartData[i].month_start)} expenses: {bd(chartData[i].posted_expenses)}</title></circle>)}
-    {cash.map(([cx,cy],i)=><circle key={'c'+i} cx={cx} cy={cy} r={3.8} stroke="white" strokeWidth="2" fill="#8b5cf6"><title>{fmt(chartData[i].month_start)} settled: {bd(chartData[i].settled_cash_out)}</title></circle>)}
+    {expense.map(([cx,cy],i)=><circle key={'e'+i} cx={cx} cy={cy} r={4.3} stroke="white" strokeWidth="2" fill="#0d9488"><title>{`${fmt(chartData[i].month_start)} expenses: ${bd(chartData[i].posted_expenses)}`}</title></circle>)}
+    {cash.map(([cx,cy],i)=><circle key={'c'+i} cx={cx} cy={cy} r={3.8} stroke="white" strokeWidth="2" fill="#8b5cf6"><title>{`${fmt(chartData[i].month_start)} settled: ${bd(chartData[i].settled_cash_out)}`}</title></circle>)}
     {chartData.map((d,i)=><text key={d.month_start} x={x(i)} y={h-16} textAnchor="middle" fontSize="12" fontWeight="600" fill="#64748b">{fmt(d.month_start)}</text>)}
    </svg></div>:<p className="mt-8 rounded-xl bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">No monthly trend data available yet.</p>}
   <p className="mt-1 text-xs text-slate-500">A payment is not an expense twice. Outstanding supplier bills and invoiced procurement require separate reconciliation.</p>
