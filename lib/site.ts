@@ -5,4 +5,4 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://2takarbaza
 export const SITE_DESCRIPTION = 'Community grocery buying in Bangladesh through Community Pools and nearby Group Deals, with transparent price benchmarks, final-price confirmation, flexible fulfilment, and verified product savings.'
 export const PILOT_AREA = 'Amin Model Town, Pollibiddut, Savar, Bangladesh'
 export const PUBLIC_CONTACT_EMAIL = 'business@agentsiraji.com'
-export const SEO_UPDATED_AT = '2026-10-08T00:00:00+06:00'
+export const SEO_UPDATED_AT = '2026-10-09T00:00:00+06:00'

@@ -164,24 +164,29 @@ export default async function HomePage(){
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
           <div className="min-w-0">
             <div className="cx-compact-strip">
-              <span className="cx-compact-chip">📍 {community?.name??'Your community'}</span>
-              <span className="cx-compact-chip">👥 {summary?.household_count??0} households</span>
+              <span className="cx-compact-chip">📍 {community?.name??'Your community'} <span className="ml-1 text-[10px] font-medium text-slate-500" lang="bn">আপনার কমিউনিটি</span></span>
+              <span className="cx-compact-chip">👥 {summary?.household_count??0} households <span className="ml-1 text-[10px] font-medium text-slate-500" lang="bn">পরিবার</span></span>
             </div>
             <p className="mt-4 text-xs font-black uppercase tracking-[.16em] text-cyan-700">Savings pulse</p>
+            <p className="mt-1 text-[10px] font-semibold text-cyan-700" lang="bn">সাশ্রয়ের আপডেট</p>
             <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-4xl">Your community is buying smarter.</h1>
+            <p className="mt-1 text-[13px] font-semibold leading-6 text-slate-600" lang="bn">আপনার কমিউনিটি আরও স্মার্টভাবে বাজার করছে।</p>
             <p className="muted mt-2 max-w-2xl text-sm">See what is close to a lower price, commit only what you need, and keep delivery separate from product savings.</p>
+            <p className="mt-1 max-w-2xl text-[12px] leading-5 text-slate-500" lang="bn">কোন পণ্য কম দামের কাছাকাছি আছে দেখুন, যতটুকু দরকার ততটুকুই commit করুন, আর delivery cost-কে product saving থেকে আলাদা রাখুন।</p>
           </div>
 
           <Link href="/savings" className="cx-saving-stat">
             <div className="text-[10px] font-black uppercase tracking-[.14em] text-emerald-700">You saved this month</div>
+            <div className="text-[10px] font-semibold text-emerald-700" lang="bn">এই মাসে আপনার সাশ্রয়</div>
             <div className="mt-1 text-3xl font-black text-emerald-700">{taka(thisMonth)}</div>
             <div className="mt-1 text-xs font-bold text-slate-500">{taka(lifetime)} lifetime verified saving →</div>
+            <div className="mt-0.5 text-[10px] font-medium text-slate-500" lang="bn">মোট verified saving</div>
           </Link>
         </div>
 
         <div className="cx-opportunity-grid">
-          <OpportunityCard href="/pool" title="Pools" count={pools.length}/>
-          <OpportunityCard href="/group-deals" title="Group Deals" count={openDeals.length}/>
+          <OpportunityCard href="/pool" title="Pools / পুল" count={pools.length}/>
+          <OpportunityCard href="/group-deals" title="Group Deals / গ্রুপ ডিল" count={openDeals.length}/>
         </div>
       </section>
 
@@ -189,6 +194,7 @@ export default async function HomePage(){
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-[.16em] text-emerald-700">Best next saving move</p>
+            <p className="text-[10px] font-semibold text-emerald-700" lang="bn">পরবর্তী সেরা সাশ্রয়ের সুযোগ</p>
             <h2 className="mt-1 text-lg font-black sm:text-xl">{mission.title}</h2>
             <p className="muted mt-1 text-xs sm:text-sm">{mission.subtitle}</p>
           </div>
@@ -208,7 +214,7 @@ export default async function HomePage(){
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href={mission.href} className="btn-primary min-h-10 px-4">Open opportunity</Link>
+          <Link href={mission.href} className="btn-primary min-h-10 px-4 text-center"><span className="block">Open opportunity</span><span className="block text-[10px] font-medium" lang="bn">সুযোগটি দেখুন</span></Link>
           <ShareUnlockButton
             title="2-TAKA-R-BAZAR saving target"
             text={mission.kind==='group'
@@ -222,13 +228,13 @@ export default async function HomePage(){
       {readyOrder&&<section className="card cx-glass-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="card-title">Ready now</div>
+            <div className="card-title">Ready now <span className="ml-1 text-[11px] font-medium text-slate-500" lang="bn">এখন প্রস্তুত</span></div>
             <h2 className="mt-1 text-lg font-black">{readyOrder.order_code}</h2>
             <p className="muted mt-1 text-sm">{(readyOrder as any).fulfillment_method==='home_delivery'
               ? 'Home delivery · '+taka((readyOrder as any).delivery_fee??0)
               : 'FREE community pickup · '+((readyOrder.pickup_points as any)?.name??'Pickup point')}</p>
           </div>
-          <Link className="btn-primary min-h-10 px-4" href="/orders">Track order</Link>
+          <Link className="btn-primary min-h-10 px-4 text-center" href="/orders"><span className="block">Track order</span><span className="block text-[10px] font-medium" lang="bn">অর্ডার ট্র্যাক করুন</span></Link>
         </div>
       </section>}
 
@@ -236,9 +242,11 @@ export default async function HomePage(){
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[.16em] text-sky-700">Shop now</p>
+            <p className="text-[10px] font-semibold text-sky-700" lang="bn">এখনই কিনুন</p>
             <h2 className="mt-1 text-xl font-black sm:text-2xl">Community pools</h2>
+            <p className="mt-0.5 text-[12px] font-semibold text-slate-500" lang="bn">কমিউনিটি পুল</p>
           </div>
-          <Link href="/pool" className="text-sm font-black text-cyan-700">View all →</Link>
+          <Link href="/pool" className="text-sm font-black text-cyan-700">View all → <span className="text-[11px] font-semibold" lang="bn">সব দেখুন</span></Link>
         </div>
 
         {pools.length?<div className="cx-list-grid">{pools.slice(0,4).map((pool:any)=>{
@@ -268,13 +276,13 @@ export default async function HomePage(){
               <div className="price-target-track mt-2 h-2 overflow-hidden"><div className="price-target-fill h-full" style={{width:String(Math.min(100,Math.round(stats.bestNext.progress*100)))+'%'}}/></div>
             </div>}
           </article>
-        })}</div>:<div className="card cx-glass-card p-6 text-center"><h3 className="text-lg font-black">No open pool right now</h3><p className="muted mt-2 text-sm">The next community buying opportunity will appear here.</p></div>}
+        })}</div>:<div className="card cx-glass-card p-6 text-center"><h3 className="text-lg font-black">No open pool right now</h3><p className="mt-1 text-[12px] font-semibold text-slate-500" lang="bn">এখন কোনো open pool নেই</p><p className="muted mt-2 text-sm">The next community buying opportunity will appear here.</p><p className="mt-1 text-[12px] text-slate-500" lang="bn">পরবর্তী community buying opportunity এখানে দেখা যাবে।</p></div>}
       </section>
 
       {openDeals.length>0&&<section>
         <div className="mb-3 flex items-end justify-between gap-3">
-          <div><p className="text-[10px] font-black uppercase tracking-[.16em] text-sky-700">Nearby</p><h2 className="mt-1 text-xl font-black sm:text-2xl">Neighbour deals</h2></div>
-          <Link href="/group-deals" className="text-sm font-black text-cyan-700">View all →</Link>
+          <div><p className="text-[10px] font-black uppercase tracking-[.16em] text-sky-700">Nearby</p><p className="text-[10px] font-semibold text-sky-700" lang="bn">কাছাকাছি</p><h2 className="mt-1 text-xl font-black sm:text-2xl">Neighbour deals</h2><p className="mt-0.5 text-[12px] font-semibold text-slate-500" lang="bn">প্রতিবেশীদের ডিল</p></div>
+          <Link href="/group-deals" className="text-sm font-black text-cyan-700">View all → <span className="text-[11px] font-semibold" lang="bn">সব দেখুন</span></Link>
         </div>
         <div className="cx-list-grid">{openDeals.slice(0,2).map((deal:any)=>{
           const price=Number(deal.current_price??0)
@@ -289,8 +297,8 @@ export default async function HomePage(){
               <span className="chip">{joined?'Joined':'Open'}</span>
             </div>
             <div className="mt-3 flex items-end justify-between gap-3">
-              <div><span className="muted text-xs">Current price</span><div className="text-xl font-black text-emerald-700">{price?taka(price):'Unlocking'}</div></div>
-              {next>0&&<div className="text-right"><span className="muted text-xs">Next</span><div className="font-black">{progressBuyers}/{next} buyers</div><div className="text-xs font-black text-emerald-700">{remaining} more → {taka(Number(deal.next_price))}</div></div>}
+              <div><span className="muted text-xs">Current price</span><span className="ml-1 text-[10px] text-slate-500" lang="bn">বর্তমান দাম</span><div className="text-xl font-black text-emerald-700">{price?taka(price):'Unlocking'}</div></div>
+              {next>0&&<div className="text-right"><span className="muted text-xs">Next</span><span className="ml-1 text-[10px] text-slate-500" lang="bn">পরবর্তী</span><div className="font-black">{progressBuyers}/{next} buyers</div><div className="text-xs font-black text-emerald-700">{remaining} more → {taka(Number(deal.next_price))}</div></div>}
             </div>
           </article>
         })}</div>

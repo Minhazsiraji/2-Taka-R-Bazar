@@ -30,6 +30,7 @@ ${SITE_NAME} is a community grocery-buying platform with two customer buying mod
 ## Public reference pages
 - Home: ${SITE_URL}/
 - About: ${SITE_URL}/about
+- Privacy Policy: ${SITE_URL}/privacy
 - FAQ: ${SITE_URL}/faq
 - Terms & Conditions: ${SITE_URL}/terms
 - Return Policy: ${SITE_URL}/return-policy

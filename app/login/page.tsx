@@ -10,12 +10,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const previewMode = process.env.VERCEL_ENV === 'preview'
 
   return <main className="min-h-screen bg-slate-50 text-black">
-    <PublicHeader actionHref="/signup" actionLabel="Join the community pool" />
+    <PublicHeader actionHref="/signup" actionLabel="Join the community pool" actionLabelBn="কমিউনিটি পুলে যোগ দিন" />
     <div className="mx-auto flex min-h-[calc(100vh-81px)] max-w-6xl items-center justify-center px-4 py-10">
       <section className="card w-full max-w-md p-6 sm:p-8">
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-black">Sign in</h1>
-          <p className="muted mt-2">Use your Bangladesh mobile number. We’ll send a 6-digit OTP.</p>
+          <p className="mt-1 text-sm font-semibold text-slate-600" lang="bn">সাইন ইন করুন</p>
+          <p className="muted mt-3">Use your Bangladesh mobile number. We’ll send a 6-digit OTP.</p>
+          <p className="mt-1 text-[12px] leading-5 text-slate-500" lang="bn">আপনার বাংলাদেশি মোবাইল নম্বর দিন। আমরা ৬ সংখ্যার একটি OTP পাঠাব।</p>
         </div>
 
         {notice && <div className="success mb-4">{notice}</div>}
@@ -29,10 +31,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
         <form action={requestLoginOtp} className="grid gap-4">
           <BdPhoneInput />
-          <SubmitButton>Send OTP</SubmitButton>
+          <SubmitButton><span className="block">Send OTP</span><span className="block text-[11px] font-medium" lang="bn">OTP পাঠান</span></SubmitButton>
         </form>
 
-        <p className="mt-5 text-center text-sm text-slate-600">New here? <Link className="font-bold text-black underline underline-offset-4" href="/signup">Join the community pool</Link></p>
+        <p className="mt-5 text-center text-sm text-slate-600">New here? <Link className="font-bold text-black underline underline-offset-4" href="/signup">Join the community pool</Link><span className="mt-1 block text-[12px] text-slate-500" lang="bn">নতুন? <Link className="font-bold text-black underline underline-offset-4" href="/signup">কমিউনিটি পুলে যোগ দিন</Link></span></p>
       </section>
     </div>
     <PublicFooter />
