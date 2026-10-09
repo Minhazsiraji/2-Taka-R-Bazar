@@ -1,0 +1,74 @@
+name: Finance and Treasury isolated browser UAT
+on:
+  push:
+    branches: [feat/finance-treasury-integrated-20261009]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-uat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start disposable local Supabase (NOT a hosted project)
+        run: supabase start
+      - name: Apply all current migrations from scratch
+        run: supabase db reset
+      - name: Install project and pinned UAT-only browser tooling
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --package-lock=false playwright@1.56.0
+          npx playwright install --with-deps chromium
+      - name: Real browser UAT against disposable synthetic database
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -a
+          source <(supabase status --env --output-format text)
+          set +a
+          : "${API_URL:?Supabase local API missing}"
+          : "${ANON_KEY:?Supabase local anon key missing}"
+          : "${SERVICE_ROLE_KEY:?Supabase local service key missing}"
+          echo "::add-mask::${SERVICE_ROLE_KEY}"
+          echo "::add-mask::${ANON_KEY}"
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
+          export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$ANON_KEY"
+          export LOCAL_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          export FINANCE_PREVIEW_SUPABASE_URL="$API_URL"
+          export FINANCE_WRITES_ENABLED=true
+          export VERCEL_ENV=preview
+          export NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000
+          npm run dev -- --hostname 127.0.0.1 >/tmp/2tbr-local-next.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          ONLINE=false
+          for i in $(seq 1 90); do
+            if curl -fsS --max-time 3 http://127.0.0.1:3000/login -o /dev/null; then ONLINE=true; break; fi
+            sleep 2
+          done
+          if [ "$ONLINE" != true ]; then
+            tail -n 80 /tmp/2tbr-local-next.log
+            exit 1
+          fi
+          node tests/finance-treasury-browser-uat.mjs || { tail -n 80 /tmp/2tbr-local-next.log; exit 1; }
+      - name: Publish only synthetic UAT screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finance-treasury-procurement-synthetic-browser-screenshots
+          path: artifacts/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Destroy disposable local Supabase
+        if: always()
+        run: supabase stop --no-backup
