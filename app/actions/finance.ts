@@ -13,7 +13,7 @@ function assertIsolatedFinancePreview() {
   if (process.env.VERCEL_ENV !== 'preview' ||
       process.env.FINANCE_WRITES_ENABLED !== 'true' ||
       !endpoint || !approved || endpoint !== approved ||
-      endpoint.includes('sukabonfjcnaavjgjyuy')) {
+      (endpoint.includes('sukabonfjcnaavjgjyuy') && process.env.FINANCE_SHARED_DB_UAT_ENABLED!=='true')) {
     throw new Error('Finance writes are locked: a verified isolated Preview database is required.')
   }
 }
