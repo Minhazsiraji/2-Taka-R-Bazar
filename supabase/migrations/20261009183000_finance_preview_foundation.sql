@@ -100,8 +100,8 @@ create table public.finance_settlement_requests (
   reviewed_by uuid references auth.users(id) on delete set null,
   review_note text,
   reviewed_at timestamptz,
-  created_at timestamptz not null default now(),
-  );
+  created_at timestamptz not null default now()
+);
 create unique index finance_expenses_vendor_document_unique on public.finance_expenses(lower(btrim(vendor_name)),lower(btrim(document_reference)));
 create unique index finance_settlement_one_live on public.finance_settlement_requests(expense_id) where status in ('pending','verified');
 create unique index finance_settlement_reference_live on public.finance_settlement_requests(payment_method,upper(btrim(payment_reference))) where status in ('pending','verified');
