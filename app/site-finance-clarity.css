@@ -291,3 +291,157 @@ html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,p
   background: #17343d !important;
   border-color: #2a6971 !important;
 }
+
+
+/* FINANCIAL REPORT V2: fixed brand controls, chart uses SVG primitives so
+   generic "div[class*=rounded-]" glass skins cannot repaint bars. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-hero-badge,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-hero-badge {
+  display:inline-flex !important;align-items:center !important;justify-content:center !important;
+  min-height:32px !important;
+  color:#063f43 !important;background:#c3f7ef !important;
+  border:1px solid #74e3d7 !important;border-radius:999px !important;
+  text-shadow:none !important;box-shadow:none !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-month-selector,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-month-selector {
+  color:#ffffff !important;
+  background:rgba(1,41,52,.90) !important;
+  border:1px solid rgba(208,253,245,.7) !important;
+  box-shadow:none !important;
+  text-align:center !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-hero-actions,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-hero-actions {
+  border:none !important;background:transparent !important;
+  box-shadow:none !important;border-radius:0 !important;padding:0 !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(.finance-hero-actions,.finance-hero-bottom) > a,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(.finance-hero-actions,.finance-hero-bottom) > a {
+  color:#f5fffd !important;
+  background:#155564 !important;
+  border-color:#8de8db !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-ops-hero > div,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero > div {
+  min-height:0 !important;position:relative !important;
+  border:0 !important;background:transparent !important;
+  box-shadow:none !important;backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+/* High-density reports are deliberately opaque even though Storefront uses glass. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel,
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface section.finance-panel,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface section.finance-panel {
+  background-image:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel {
+  background-color:#ffffff !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel {
+  background-color:#142a36 !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-verified-badge {
+  color:#075d60 !important;
+  background:#d8f8f4 !important;
+  border:1px solid #9be4da !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-verified-badge {
+  color:#cefffb !important;
+  background:#105255 !important;
+  border-color:#4caeac !important;
+}
+
+/* Chart controls and tooltip must remain vivid on white and dark backgrounds. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-chart-block,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-chart-block {
+  display:block!important; min-width:0!important;
+  color:inherit!important;
+  background:none!important;box-shadow:none!important;
+  border:0!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-legend {
+  display:flex!important;gap:8px 22px!important;flex-wrap:wrap!important;
+  margin-top:18px!important;align-items:center!important;
+  color:#25495a!important;font-size:12px!important;font-weight:700!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-legend > span {
+  display:inline-flex!important;align-items:center!important;gap:8px!important;
+  color:#25495a!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-legend-dot {
+  display:inline-block!important;width:12px!important;height:12px!important;
+  border-radius:3px!important;flex-shrink:0!important;box-shadow:none!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-inflow {
+  background:#0f8b8d!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-outflow {
+  background:#4f46e5!important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-chart-plot {
+  margin-top:14px!important;padding:8px 12px 10px!important;
+  background:#f5f9fa!important;border:1px solid #cfdee2!important;
+  border-radius:14px!important;box-shadow:none!important;
+  overflow:visible!important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-chart-plot {
+  margin-top:14px!important;padding:8px 12px 10px!important;
+  background:#172f3b!important;border:1px solid #3c5867!important;
+  border-radius:14px!important;box-shadow:none!important;
+  overflow:visible!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-cash-svg {
+  width:100%!important;height:auto!important;max-height:260px!important;display:block!important;
+  overflow:visible!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-cash-svg rect[role="img"] {
+  cursor:crosshair!important;
+  filter:none!important;
+  transition:opacity .12s ease!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-cash-svg rect[role="img"]:focus-visible {
+  outline:2px solid #0f8b8d;
+  outline-offset:2px;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-popover-zone {
+  min-height:74px!important;
+  background:none!important;
+  border:0!important;box-shadow:none!important;
+  margin:0 auto!important;max-width:100%!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-popover {
+  display:flex!important;flex-wrap:wrap!important;align-items:center!important;
+  gap:6px 14px!important;
+  padding:11px 13px!important;
+  border-radius:10px!important;
+  color:#ffffff!important;
+  border:1px solid #4caeb0!important;
+  background:#103443!important;
+  box-shadow:0 9px 22px rgba(8,36,51,.2)!important;
+  font-size:13px!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-popover :is(strong,b,span) {
+  color:#ffffff!important;
+  text-shadow:none!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-popover b {
+  font-variant-numeric:tabular-nums!important;
+  font-size:15px!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-help {
+  margin:8px 0 0!important;
+  color:#3e5a68!important;
+  font-size:12px!important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-chart-help,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-chart-legend,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-chart-legend > span {
+  color:#cee2e8!important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-cash-svg text {
+  fill:#d5e9ed!important;
+}
