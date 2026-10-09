@@ -146,7 +146,7 @@ async function main(){
   await tip.waitFor({timeout:10000})
   const words=await tip.innerText()
   assert.ok(words.includes('Jul 2026'),'Tooltip should display hovered month')
-  assert.ok(words.includes('150,000.00'),'Tooltip should contain exact BDT amount')
+  assert.ok(words.includes('174,000.00'),'Tooltip should sum July synthetic operating receipts 24,000 plus financing 150,000')
   const tipStyle=await tip.evaluate(el=>({background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color}))
   assert.equal(tipStyle.background,'rgb(16, 52, 67)','Tooltip must be solid dark teal')
   assert.equal(tipStyle.color,'rgb(255, 255, 255)','Tooltip must be readable white')
