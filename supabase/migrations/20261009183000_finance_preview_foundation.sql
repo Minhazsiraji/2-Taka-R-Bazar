@@ -336,7 +336,7 @@ begin
  if p_month is null then raise exception 'Month required'; end if;
  select jsonb_build_object(
   'month',v_start,
-  'posted_expenses',coalesce((select sum(l.debit) from public.finance_journal_lines l
+  'posted_expenses',coalesce((select sum(l.debit-l.credit) from public.finance_journal_lines l
     join public.finance_journals j on j.id=l.journal_id
     join public.finance_accounts a on a.code=l.account_code and a.kind='expense'
     where j.posting_date>=v_start and j.posting_date<(v_start+interval '1 month')::date),0),
@@ -373,7 +373,12 @@ begin
  return query select e.id,e.category,e.description,e.vendor_name,e.document_reference,
   e.amount,e.incurred_on,e.community_id,e.campaign_code,e.evidence_path,e.evidence_sha256,e.status,e.created_by,e.reviewed_by,
   e.created_at,s.id,s.status,s.evidence_path
- from public.finance_expenses e left join public.finance_settlement_requests s on s.expense_id=e.id
+ from public.finance_expenses e
+ left join lateral (
+  select s0.* from public.finance_settlement_requests s0
+  where s0.expense_id=e.id
+  order by s0.created_at desc,s0.id desc limit 1
+ ) s on true
  where e.incurred_on>=v_start and e.incurred_on<(v_start+interval '1 month')::date
  order by e.created_at desc limit 500;
 end $$;
