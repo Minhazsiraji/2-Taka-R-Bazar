@@ -101,7 +101,7 @@ export default async function TreasuryOwner({searchParams}:{searchParams:Promise
  const isolated=process.env.VERCEL_ENV==='preview'&&process.env.FINANCE_WRITES_ENABLED==='true'&&
   Boolean(process.env.FINANCE_PREVIEW_SUPABASE_URL)&&
   process.env.NEXT_PUBLIC_SUPABASE_URL===process.env.FINANCE_PREVIEW_SUPABASE_URL&&
-  !String(process.env.NEXT_PUBLIC_SUPABASE_URL).includes('sukabonfjcnaavjgjyuy')
+  (!String(process.env.NEXT_PUBLIC_SUPABASE_URL).includes('sukabonfjcnaavjgjyuy')||process.env.FINANCE_SHARED_DB_UAT_ENABLED==='true')
  let summary:Summary|null=null,transactions:Tx[]=[],statements:Statement[]=[],forecasts:Forecast[]=[],trends:Trend[]=[]
  let dbError=''
  if(demo){
