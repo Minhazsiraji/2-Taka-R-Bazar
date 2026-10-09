@@ -23,7 +23,8 @@ begin
  with sold as (
   select oi.pool_item_id, oi.product_id, o.pool_id,p.community_id,
    o.id order_id,oi.quantity,oi.unit_price,oi.benchmark_price_snapshot,
-   o.payment_status
+   o.payment_status,
+   not exists(select 1 from public.payment_records pr where pr.order_id=o.id and pr.status='refunded') refund_clear
   from public.orders o
   join public.pools p on p.id=o.pool_id
   join public.order_items oi on oi.order_id=o.id
@@ -51,7 +52,7 @@ begin
    min(oi.benchmark_price_snapshot) as benchmark_unit,
    coalesce(inv.verified_qty,0) invoice_qty,inv.invoice_unit,
    bool_and(oi.payment_status in ('paid_manually','cash_on_pickup')) payment_recorded,
-   bool_and(not exists (select 1 from public.payment_records pr where pr.order_id=oi.order_id and pr.status='refunded')) refund_clear,
+   bool_and(oi.refund_clear) refund_clear,
    count(distinct oi.unit_price) uniform_sale_price,
    count(distinct oi.benchmark_price_snapshot) uniform_benchmark_price
   from sold oi
