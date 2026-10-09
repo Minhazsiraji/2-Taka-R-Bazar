@@ -10,6 +10,7 @@ import './site-theme-mobile.css'
 import './site-theme-admin.css'
 import './site-theme-surface-fix.css'
 import './site-customer-experience.css'
+import './site-finance-clarity.css'
 import { PwaRegister } from '@/components/pwa-register'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE_EN, SITE_URL } from '@/lib/site'
 
