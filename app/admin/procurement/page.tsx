@@ -55,7 +55,7 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
  const isolated=process.env.VERCEL_ENV==='preview'&&process.env.FINANCE_WRITES_ENABLED==='true'&&
   Boolean(process.env.FINANCE_PREVIEW_SUPABASE_URL)&&
   process.env.NEXT_PUBLIC_SUPABASE_URL===process.env.FINANCE_PREVIEW_SUPABASE_URL&&
-  !String(process.env.NEXT_PUBLIC_SUPABASE_URL).includes('sukabonfjcnaavjgjyuy')
+  (!String(process.env.NEXT_PUBLIC_SUPABASE_URL).includes('sukabonfjcnaavjgjyuy')||process.env.FINANCE_SHARED_DB_UAT_ENABLED==='true')
  const {data,error}=demoMode?{data:demo,error:null}:await supabase.rpc('procurement_workbench')
  const {data:attachmentData}=demoMode?{data:[]}:await supabase.rpc('finance_document_attachment_index')
  const attachments=(Array.isArray(attachmentData)?attachmentData:[]) as Array<{id:string;entity_type:string;entity_id:string;kind:string;name:string;uploaded_at:string}>
