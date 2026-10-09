@@ -599,3 +599,13 @@ body.site-glass-root main .finance-ops-surface .finance-ops-hero > div .finance-
   text-align:center !important;
   box-shadow:none !important;
 }
+
+
+/* Desktop material parity: header and reporting cards must use identical
+   blur strength, not the older 12px low-cost inner-card fallback. */
+@media (min-width: 768px) {
+  body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+    backdrop-filter:blur(24px) !important;
+    -webkit-backdrop-filter:blur(24px) !important;
+  }
+}
