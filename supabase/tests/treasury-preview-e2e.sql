@@ -97,8 +97,10 @@ insert into qa_tx(label,id) values
     null,(select id from qa_accounts where label='C'),null,null,
     5000,0,0,current_date,'OWNER-CAP-5000','Owner increased working capital fund'));
 select is((select count(*)::integer from qa_tx),8,'All eight distinct treasury transaction types submitted');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000951',true);
 select is((select (public.treasury_dashboard(current_date)->>'cash_total')::numeric),180000::numeric,
  'Pending transfers and repayments NEVER affect available posted cash');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000952',true);
 select ok(pg_temp.expect_failure(
  format('select public.treasury_review_transaction(%L::uuid,true,%L)',(select id from qa_tx where label='transfer'),'Approve own request'),
  'Treasury reviewer requires Super Admin'),'Ordinary maker cannot approve even their own transaction');
