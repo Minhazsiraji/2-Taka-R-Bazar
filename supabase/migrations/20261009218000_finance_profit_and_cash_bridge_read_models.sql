@@ -51,6 +51,7 @@ begin
    min(oi.benchmark_price_snapshot) as benchmark_unit,
    coalesce(inv.verified_qty,0) invoice_qty,inv.invoice_unit,
    bool_and(oi.payment_status in ('paid_manually','cash_on_pickup')) payment_recorded,
+   bool_and(not exists (select 1 from public.payment_records pr where pr.order_id=oi.order_id and pr.status='refunded')) refund_clear,
    count(distinct oi.unit_price) uniform_sale_price,
    count(distinct oi.benchmark_price_snapshot) uniform_benchmark_price
   from sold oi
@@ -68,8 +69,9 @@ begin
   'orderCount',l.order_count,'quantity',l.quantity,
   'benchmarkUnit',l.benchmark_unit,'customerUnit',l.customer_unit,
   'acceptedInvoiceQuantity',l.invoice_qty,'verifiedLandedUnit',l.invoice_unit,
+  'recordedSaleRevenue',l.sale_revenue,'recordedCustomerSaving',l.customer_saving,
   'invoiceRef','independently_approved_supplier_invoice_aggregate',
-  'isCompleted',true,'isPaymentReconciled',false,'isRefundClear',true,
+  'isCompleted',true,'isPaymentReconciled',false,'isRefundClear',l.refund_clear,
   'sourceNote',case when l.uniform_sale_price>1 or l.uniform_benchmark_price>1
     then 'Multiple customer/benchmark prices: use order-level amounts, not a single unit quote'
     else 'Invoice unit cost is an approved invoice average, not an inventory-lot allocation' end
