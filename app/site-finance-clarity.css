@@ -609,3 +609,114 @@ body.site-glass-root main .finance-ops-surface .finance-ops-hero > div .finance-
     -webkit-backdrop-filter:blur(24px) !important;
   }
 }
+
+
+/* HEADER-TO-DASHBOARD PARITY (user-approved): all TOP-LEVEL Finance / Treasury /
+   Procurement hero and report surfaces are the same pearl glass as Super
+   Admin's app-shell-header-bar. Dark teal is an accent for actions, not the
+   opaque background of the hero. Scoped: customer pages are untouched. */
+body.site-glass-root main .finance-ops-surface :is(section,header).finance-ops-hero[class*="rounded-"]:not(.card):not(.table-wrap),
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(section,header).finance-ops-hero[class*="rounded-"]:not(.card):not(.table-wrap) {
+  position:relative !important;
+  background:var(--finance-glass-face) !important;
+  background-color:rgba(255,255,255,.12) !important;
+  border:1px solid var(--finance-glass-rim) !important;
+  border-radius:20px !important;
+  box-shadow:var(--finance-glass-depth) !important;
+  backdrop-filter:blur(24px) !important;
+  -webkit-backdrop-filter:blur(24px) !important;
+  color:#123044 !important;
+  min-height:0 !important;
+}
+body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+  border-radius:20px !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-glass-gate {
+  border-radius:20px !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(h1,h2,h3,strong,b),
+body.site-glass-root main .finance-ops-surface .finance-ops-hero div :is(h1,h2,h3,strong,b) {
+  color:#123044 !important;
+  text-shadow:none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(p,div p),
+body.site-glass-root main .finance-ops-surface .finance-ops-hero p:first-child {
+  color:#426075 !important;
+  text-shadow:none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero p[class*="uppercase"] {
+  color:#0b7774 !important;
+  font-weight:800 !important;
+  text-shadow:none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-hero-badge {
+  color:#07414a !important;
+  background:#c3f7ef !important;
+  border:1px solid #74e3d7 !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(.finance-hero-actions,.finance-hero-bottom) > a {
+  color:#ffffff !important;
+  background:#0a6d70 !important;
+  border:1px solid #056e71 !important;
+  text-shadow:none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(.finance-hero-actions,.finance-hero-bottom) > a:hover {
+  color:#ffffff !important;
+  background:#075458 !important;
+  border-color:#086e71 !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-month-selector {
+  color:#ffffff !important;
+  background:#103d4a !important;
+  border:1px solid #0a6171 !important;
+}
+/* The product/brand hero and all sections share one glass face but semantic
+   notices retain amber/teal edge labels, never broad solid warning blocks. */
+body.site-glass-root main .finance-ops-surface .finance-gate-notice[class*="rounded-"] {
+  background:var(--finance-glass-face) !important;
+  border:1px solid var(--finance-glass-rim) !important;
+  border-left:4px solid #ce8a22 !important;
+  box-shadow:var(--finance-glass-depth) !important;
+  backdrop-filter:blur(24px) !important;
+  -webkit-backdrop-filter:blur(24px) !important;
+  color:#8b440e !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-protection-notice[class*="rounded-"] {
+  background:var(--finance-glass-face) !important;
+  border:1px solid var(--finance-glass-rim) !important;
+  border-left:4px solid #0b9696 !important;
+  box-shadow:var(--finance-glass-depth) !important;
+  backdrop-filter:blur(24px) !important;
+  -webkit-backdrop-filter:blur(24px) !important;
+  color:#29495a !important;
+}
+/* Dark mode: hero and panels match the dark shell's frosted material.
+   We preserve semantic contrast and don't force white-on-pearl. */
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(section,header).finance-ops-hero[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background:linear-gradient(135deg,rgba(33,54,70,.88),rgba(15,32,43,.86)) !important;
+  background-color:rgba(14,31,43,.55) !important;
+  border-color:rgba(190,236,236,.19) !important;
+  box-shadow:0 16px 36px rgba(0,0,0,.22),inset 0 1px 0 rgba(225,255,255,.12),inset -1px -1px 0 rgba(71,219,220,.12) !important;
+  color:#f4ffff !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(h1,h2,h3,strong,b) {
+  color:#f4ffff !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero p {
+  color:#bedce0 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero p[class*="uppercase"] {
+  color:#9ff3e9 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-gate-notice[class*="rounded-"] {
+  background:linear-gradient(135deg,rgba(32,53,67,.86),rgba(14,30,43,.86)) !important;
+  border-color:#344f5e !important;
+  border-left-color:#dbaa52 !important;
+  color:#ffdeae !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-protection-notice[class*="rounded-"] {
+  background:linear-gradient(135deg,rgba(32,53,67,.86),rgba(14,30,43,.86)) !important;
+  border-color:#344f5e !important;
+  border-left-color:#30bdb6 !important;
+  color:#ccebe7 !important;
+}
