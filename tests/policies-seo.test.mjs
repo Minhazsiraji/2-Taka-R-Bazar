@@ -17,13 +17,13 @@ test('customer confirmation requires current policy acceptance',()=>{
 })
 
 test('bilingual legal pages and footer links exist',()=>{
-  for(const file of ['app/terms/page.tsx','app/return-policy/page.tsx','app/refund-policy/page.tsx']){
+  for(const file of ['app/privacy/page.tsx','app/terms/page.tsx','app/return-policy/page.tsx','app/refund-policy/page.tsx']){
     const content=read(file)
     assert.match(content,/titleBn/)
     assert.match(content,/summaryBn/)
   }
   const links=read('lib/legal.ts')
-  assert.match(links,/\/about/);assert.match(links,/\/terms/);assert.match(links,/\/return-policy/);assert.match(links,/\/refund-policy/)
+  assert.match(links,/\/about/);assert.match(links,/\/privacy/);assert.match(links,/\/terms/);assert.match(links,/\/return-policy/);assert.match(links,/\/refund-policy/)
 })
 
 test('public SEO AEO GEO discovery assets are present',()=>{
@@ -39,7 +39,7 @@ test('public SEO AEO GEO discovery assets are present',()=>{
   assert.match(site,/SITE_TAGLINE_EN = 'Smart shopping\. Real savings!'/)
   assert.match(site,/SITE_TAGLINE_BN = 'একসাথে কিনি, কম দামে পাই!'/)
   assert.match(site,/Community Pools and nearby Group Deals/)
-  assert.match(site,/SEO_UPDATED_AT = '2026-10-08T00:00:00\+06:00'/)
+  assert.match(site,/SEO_UPDATED_AT = '2026-10-09T00:00:00\+06:00'/)
   assert.match(layout,/title: \{ default: \`\$\{SITE_NAME\} \| \$\{SITE_TAGLINE_EN\}\`/)
   assert.doesNotMatch(layout,/Community Grocery Pooling in Savar/)
   assert.doesNotMatch(layout,/alternates:\s*\{\s*canonical:/)
@@ -67,10 +67,12 @@ test('public SEO AEO GEO discovery assets are present',()=>{
   assert.match(robots,/\/qr\//)
   assert.match(sitemap,/SEO_UPDATED_AT/)
   assert.match(sitemap,/\/about/)
+  assert.match(sitemap,/\/privacy/)
   assert.match(sitemap,/refund-policy/)
   assert.match(llms,/two customer buying modes/i)
   assert.match(llms,/Group Deals/)
   assert.match(llms,/Community QR links/)
+  assert.match(llms,/Privacy Policy/)
   assert.match(llms,/SITE_URL/)
   assert.match(proxy,/X-Robots-Tag/)
   assert.match(proxy,/noindex, nofollow, noarchive/)
@@ -86,4 +88,21 @@ test('public SEO AEO GEO discovery assets are present',()=>{
   assert.match(read('app/about/page.tsx'),/Community Pools and Group Deals/)
   assert.match(read('app/faq/page.tsx'),/difference between a Community Pool and a Group Deal/)
   assert.match(read('app/faq/page.tsx'),/community QR code/)
+})
+
+
+test('first-touch bilingual UX keeps English primary and Bangla compact',()=>{
+  const login=read('app/login/page.tsx')
+  const publicHome=read('app/page.tsx')
+  const memberHome=read('app/home/page.tsx')
+  const about=read('app/about/page.tsx')
+  const policy=read('components/policy-page.tsx')
+  assert.match(login,/সাইন ইন করুন/)
+  assert.match(login,/OTP পাঠান/)
+  assert.match(publicHome,/কীভাবে কাজ করে/)
+  assert.match(publicHome,/কমিউনিটি পুলে যোগ দিন/)
+  assert.match(memberHome,/আপনার কমিউনিটি আরও স্মার্টভাবে বাজার করছে/)
+  assert.match(about,/কার জন্য তৈরি\?/)
+  assert.match(policy,/text-\[13px\]/)
+  assert.match(read('app/privacy/page.tsx'),/গোপনীয়তা নীতি/)
 })
