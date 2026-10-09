@@ -22,7 +22,7 @@ type Tx={id:string;kind:string;source_account_id:string|null;target_account_id:s
 type Statement={id:string;account_id:string;external_line_id:string;statement_date:string;signed_amount:number|string;
  reference:string;matched_transaction_id:string|null;imported_by:string;matched_by:string|null}
 type Forecast={id:string;due_date:string;expected_cash_change:number|string;event_kind:string;confidence:string;description:string;source_reference:string;status:string}
-type Trend={month_start:string;operating_outflow:number|string;financing_inflow:number|string;financing_outflow:number|string;unallocated_card_bill:number|string;other_unallocated_interest:number|string;net_cash_movement:number|string}
+type Trend={month_start:string;operating_inflow?:number|string;operating_outflow:number|string;financing_inflow:number|string;financing_outflow:number|string;unallocated_card_bill:number|string;other_unallocated_interest:number|string;net_cash_movement:number|string}
 const n=(x:unknown)=>Number(x??0)||0
 const taka=(v:unknown)=>'৳'+n(v).toLocaleString('en-BD',{minimumFractionDigits:2,maximumFractionDigits:2})
 const fmt=(v:string)=>new Date(v+'T12:00:00Z').toLocaleDateString('en-GB',{month:'short',timeZone:'UTC'})
@@ -37,15 +37,15 @@ function Metric({name,value,description,color='text-slate-950'}:{name:string;val
 }
 function Movements({data}:{data:Trend[]}){
  const values=data.slice(-6)
- const ceiling=Math.max(1,...values.flatMap(x=>[n(x.financing_inflow),n(x.operating_outflow)+n(x.financing_outflow)+n(x.unallocated_card_bill)+n(x.other_unallocated_interest)]))
+ const ceiling=Math.max(1,...values.flatMap(x=>[n(x.financing_inflow)+n(x.operating_inflow),n(x.operating_outflow)+n(x.financing_outflow)+n(x.unallocated_card_bill)+n(x.other_unallocated_interest)]))
  return <Card>
    <div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-lg font-black">Cash movements</h2><p className="mt-1 text-xs text-slate-500">Six-month actual posted movements · management classification</p></div><span className="rounded-lg bg-cyan-50 px-3 py-1 text-[10px] font-black text-cyan-700">Ledger-backed</span></div>
    <div className="mt-5 flex flex-wrap gap-4 text-xs font-semibold text-slate-500">
-    <span><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-teal-500"/>Financing inflows</span>
+    <span><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-teal-500"/>Operating + financing inflows</span>
     <span><span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-indigo-400"/>Cash outflows</span>
    </div>
    <div className="mt-4 flex h-48 items-end gap-3 rounded-xl bg-slate-50 p-4">{values.map(v=>{
-    const incoming=n(v.financing_inflow),outgoing=n(v.operating_outflow)+n(v.financing_outflow)+n(v.unallocated_card_bill)+n(v.other_unallocated_interest)
+    const incoming=n(v.financing_inflow)+n(v.operating_inflow),outgoing=n(v.operating_outflow)+n(v.financing_outflow)+n(v.unallocated_card_bill)+n(v.other_unallocated_interest)
     return <div key={v.month_start} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
      <div className="flex h-full w-full items-end justify-center gap-1">
       <div title={'In: '+taka(incoming)} className="w-[37%] min-w-1 rounded-t-md bg-gradient-to-t from-teal-700 to-teal-300" style={{height:Math.max(2,incoming/ceiling*100)+'%'}}/>
