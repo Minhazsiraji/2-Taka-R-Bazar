@@ -2,7 +2,7 @@
 -- Executed by supabase test db in the disposable GitHub Actions Supabase stack.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(13);
+select plan(15);
 
 select has_table('public','finance_expenses','Expense source table exists');
 select has_table('public','finance_journals','Posted financial journals exist');
