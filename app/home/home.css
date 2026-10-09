@@ -178,7 +178,7 @@
   filter: drop-shadow(0 12px 18px rgba(47,45,65,.16));
 }
 
-.home-liquid-route footer {
+.home-liquid-route .app-desktop-footer {
   position: relative;
   z-index: 4;
 }
@@ -234,7 +234,7 @@
   .home-liquid-route .glass-secondary { transition: none !important; transform: none !important; }
 }
 
-.home-liquid-route footer {
+.home-liquid-route .app-desktop-footer {
   margin: 18px auto 22px;
   width: min(96%, 1450px);
   overflow: hidden;
@@ -254,13 +254,13 @@
   -webkit-backdrop-filter: blur(24px) saturate(1.22) !important;
 }
 
-.home-liquid-route footer [class*="text-slate-"] { color: #66617c !important; }
-.home-liquid-route footer [class*="text-sky-"] { color: #6358b7 !important; }
-.home-liquid-route footer [class*="border-white"] { border-color: rgba(104,92,145,.12) !important; }
-.home-liquid-route footer a:hover { color: #4f46e5 !important; }
+.home-liquid-route .app-desktop-footer [class*="text-slate-"] { color: #66617c !important; }
+.home-liquid-route .app-desktop-footer [class*="text-sky-"] { color: #6358b7 !important; }
+.home-liquid-route .app-desktop-footer [class*="border-white"] { border-color: rgba(104,92,145,.12) !important; }
+.home-liquid-route .app-desktop-footer a:hover { color: #4f46e5 !important; }
 
 @media (max-width:767px) {
-  .home-liquid-route footer { display: none !important; }
+  .home-liquid-route .app-desktop-footer { display: none !important; }
 }
 
 /* Reference-match pass: near-clear molded glass + capsule controls */
