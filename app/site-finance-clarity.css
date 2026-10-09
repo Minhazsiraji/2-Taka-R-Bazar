@@ -445,3 +445,134 @@ html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-
 html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-cash-svg text {
   fill:#d5e9ed!important;
 }
+
+
+/* FINANCIAL DASHBOARD GLASS PARITY — exact light glass material from
+   .app-shell-header-bar (site-glass-v3.css). User-approved header is the
+   source of truth. All primary finance, treasury, procurement panels share
+   its gradient, white rim, layered shadow, blur and aqua/violet edge glints.
+   This intentionally supersedes the older opaque-card patch above. */
+body.site-glass-root .finance-ops-surface {
+  --finance-glass-face: linear-gradient(135deg,rgba(255,255,255,.42),rgba(242,240,250,.28));
+  --finance-glass-rim: rgba(255,255,255,.94);
+  --finance-glass-depth:
+    0 16px 40px rgba(36,43,70,.10),
+    inset 0 1.5px 0 rgba(255,255,255,.97),
+    inset 1px 0 0 rgba(255,255,255,.58),
+    inset -1px -1px 0 rgba(67,224,231,.16),
+    inset 0 -2px 0 rgba(146,116,232,.045),
+    4px 5px 9px rgba(67,224,231,.06),
+    -3px 5px 8px rgba(146,116,232,.035);
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap),
+body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: var(--finance-glass-face) !important;
+  background-color: rgba(255,255,255,.12) !important;
+  border: 1px solid var(--finance-glass-rim) !important;
+  box-shadow: var(--finance-glass-depth) !important;
+  backdrop-filter: blur(24px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
+  border-radius: 22px !important;
+  color: #133448 !important;
+  overflow: hidden;
+  isolation: isolate;
+}
+/* Pearl-glass edge refracts light, rather than a white fill. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel::after {
+  content:"";
+  pointer-events:none;
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  z-index:0;
+  background:
+    linear-gradient(90deg,transparent 0%,rgba(151,119,235,.11) 18%,transparent 38%,transparent 68%,rgba(65,226,232,.17) 88%,transparent 100%) bottom/100% 2px no-repeat,
+    linear-gradient(180deg,transparent 0%,transparent 60%,rgba(65,226,232,.15) 82%,transparent 100%) right/2px 100% no-repeat,
+    linear-gradient(90deg,rgba(255,255,255,.75),rgba(255,255,255,.18) 56%,transparent 100%) top/100% 1px no-repeat;
+}
+body.site-glass-root main .finance-ops-surface .finance-panel > * {
+  position:relative;
+  z-index:1;
+}
+/* Avoid clipping the SVG tooltip: the tooltip is inside the chart panel. */
+body.site-glass-root main .finance-ops-surface .finance-panel .finance-chart-popover-zone {
+  position:relative;
+  z-index:2;
+}
+/* Keep all figures and labels legible on translucent glass. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel :is(h2,h3,strong,b) {
+  color:#132f41;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel :is(p,span)[class*="text-slate-"] {
+  color:#435c71 !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel p[class*="font-black"] {
+  color:#123448 !important;
+}
+/* Do not repaint financial semantic amount colors (risk, liquidity, inflows). */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel .text-teal-700 { color:#066772 !important; }
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel .text-emerald-700 { color:#087054 !important; }
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel .text-violet-700 { color:#6136ab !important; }
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel .text-amber-700 { color:#995600 !important; }
+/* Forms and action buttons stay usable while the panel itself is translucent. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel :is(input:not([type="checkbox"]),select,textarea) {
+  background:rgba(255,255,255,.76) !important;
+  border:1px solid rgba(106,151,160,.68) !important;
+  color:#14374a !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8) !important;
+  backdrop-filter:blur(5px) !important;
+  -webkit-backdrop-filter:blur(5px) !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel :is(input,textarea)::placeholder {
+  color:#527084 !important;
+}
+/* Secondary controls and nested areas use weaker glass so there aren't
+   opaque white rectangles floating inside the primary card. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel :is(div,form,section)[class*="rounded-"]:not(.finance-chart-popover):not(.finance-hero-badge):not(.finance-chart-plot) {
+  background-color:rgba(255,255,255,.10);
+}
+/* Border/glass for major audit-gate notice cards; maintain colored alerts
+   for schema-not-installed and Production-protection warnings. */
+body.site-glass-root main .finance-ops-surface .finance-glass-gate {
+  border:1px solid rgba(255,255,255,.94) !important;
+  background:var(--finance-glass-face) !important;
+  box-shadow:var(--finance-glass-depth) !important;
+  backdrop-filter:blur(24px) saturate(145%) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%) !important;
+  color:#294353 !important;
+}
+/* The header itself remains deep teal; only the secondary cards match
+   the white pearl header. Dark mode uses translucent graphite instead. */
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,section,article).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background:linear-gradient(135deg,rgba(33,54,70,.88),rgba(15,32,43,.86)) !important;
+  background-color:rgba(14,31,43,.55) !important;
+  border:1px solid rgba(190,236,236,.19) !important;
+  box-shadow:0 16px 36px rgba(0,0,0,.22),inset 0 1px 0 rgba(225,255,255,.12),inset -1px -1px 0 rgba(71,219,220,.12) !important;
+  backdrop-filter:blur(24px) saturate(135%) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(135%) !important;
+  border-radius:22px !important;
+  color:#e8f4f5 !important;
+  overflow:hidden;
+  isolation:isolate;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel::after {
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border-radius:inherit;z-index:0;
+  border:1px solid rgba(255,255,255,.06);
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel :is(p,span)[class*="text-slate-"] {color:#b9d0dd !important;}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel :is(input:not([type="checkbox"]),select,textarea) {
+  background:rgba(12,29,39,.68) !important;
+  color:#f0fcff !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-glass-gate {
+  background:linear-gradient(135deg,rgba(32,53,67,.86),rgba(14,30,43,.86)) !important;
+  border-color:rgba(203,243,238,.19) !important;
+  color:#d1e3ed !important;
+}
+@media (max-width: 767px) {
+  body.site-glass-root main .finance-ops-surface .finance-panel {
+    backdrop-filter:blur(12px) saturate(120%) !important;
+    -webkit-backdrop-filter:blur(12px) saturate(120%) !important;
+  }
+}
