@@ -26,7 +26,7 @@ const demo:Data={
  cash_receipts_pending:[{day_id:'synthetic-day',date:'2026-10-09',community:'AMT-01',product_cash:16000,delivery_cash:360}]
 }
 function Panel({heading,detail,children}:{heading:string;detail:string;children:React.ReactNode}){
- return <section className="rounded-[23px] border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-lg font-black text-slate-950">{heading}</h2><p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p><div className="mt-4">{children}</div></section>
+ return <section className="finance-panel rounded-[23px] border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-lg font-black text-slate-950">{heading}</h2><p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p><div className="mt-4">{children}</div></section>
 }
 export default async function ProcurementControl({searchParams}:{searchParams:Promise<{demo?:string;error?:string;notice?:string}>}){
  const {supabase}=await requireAdmin()
