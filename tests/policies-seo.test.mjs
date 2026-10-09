@@ -138,3 +138,20 @@ test('footer legal labels use hard stacked containers and action links stay Engl
   assert.doesNotMatch(publicHome,/Read FAQ →<\/span>/)
   assert.doesNotMatch(memberHome,/View all → <span/)
 })
+
+
+test('all public and signed-in pages share one footer implementation with forced EN-BN stacking',()=>{
+  const publicFooter=read('components/public-footer.tsx')
+  const siteFooter=read('components/site-footer.tsx')
+  const appShell=read('components/app-shell.tsx')
+  const css=read('app/globals.css')
+  assert.match(publicFooter,/SiteFooter/)
+  assert.match(appShell,/SiteFooter withMobileNavOffset/)
+  assert.match(siteFooter,/site-footer-link-en/)
+  assert.match(siteFooter,/site-footer-link-bn/)
+  assert.match(css,/\.site-footer-link\s*\{[\s\S]*display:\s*flex\s*!important/)
+  assert.match(css,/flex-direction:\s*column\s*!important/)
+  assert.match(css,/\.site-footer-link-en,[\s\S]*\.site-footer-link-bn[\s\S]*display:\s*block\s*!important/)
+  assert.doesNotMatch(appShell,/app-desktop-footer/)
+  assert.doesNotMatch(appShell,/app-mobile-legal/)
+})
