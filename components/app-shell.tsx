@@ -60,7 +60,7 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
 
     <footer className="app-mobile-legal mx-3 mb-[calc(5.75rem+env(safe-area-inset-bottom))] mt-4 rounded-2xl border border-cyan-200 bg-white/80 px-4 py-5 text-slate-700 shadow-sm md:hidden">
       <div className="flex items-center gap-3"><BrandLogo size={38}/><div><div className="text-sm font-black">2-TAKA-R-BAZAR</div><div className="text-xs font-medium">Smart shopping. Real savings!</div><div className="text-xs">একসাথে কিনি, কম দামে পাই!</div></div></div>
-      <nav className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold" aria-label="Mobile legal and help">{LEGAL_LINKS.map(([href,label])=><Link key={href} href={href} className="underline-offset-2 hover:underline">{label}</Link>)}</nav>
+      <nav className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold" aria-label="Mobile legal and help">{LEGAL_LINKS.map(([href,labelEn,labelBn])=><Link key={href} href={href} className="leading-tight underline-offset-2 hover:underline"><span className="block">{labelEn}</span><span className="block text-[10px] font-medium text-slate-500" lang="bn">{labelBn}</span></Link>)}</nav>
       <div className="mt-4 border-t border-slate-200 pt-3 text-xs leading-5"><span>© 2026 2-TAKA-R-BAZAR · Developed by </span><a className="underline" href="https://agentsiraji.com" target="_blank" rel="noreferrer">agentsiraji.com</a><span> · Contact: </span><a className="underline break-all" href="mailto:business@agentsiraji.com">business@agentsiraji.com</a></div>
     </footer>
 
@@ -82,7 +82,7 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-3 text-[11px] text-slate-400">
           <div>© 2026 2-TAKA-R-BAZAR · Developed by: <a href="https://agentsiraji.com" target="_blank" rel="noreferrer" className="hover:text-white">agentsiraji.com</a> · Contact: <a href="mailto:business@agentsiraji.com" className="hover:text-white">business@agentsiraji.com</a></div>
-          <nav className="flex flex-wrap gap-x-4 gap-y-2" aria-label="Legal and help">{LEGAL_LINKS.map(([href,label])=><Link key={href} href={href} className="hover:text-white">{label}</Link>)}</nav>
+          <nav className="flex flex-wrap gap-x-4 gap-y-2" aria-label="Legal and help">{LEGAL_LINKS.map(([href,labelEn,labelBn])=><Link key={href} href={href} className="leading-tight hover:text-white"><span className="block">{labelEn}</span><span className="block text-[9px] text-slate-500" lang="bn">{labelBn}</span></Link>)}</nav>
         </div>
       </div>
     </footer>
