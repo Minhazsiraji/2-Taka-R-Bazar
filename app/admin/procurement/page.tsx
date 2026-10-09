@@ -40,12 +40,12 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
  const quote=d.selected_quotes??[],po=d.purchase_orders??[],dispatch=d.dispatches??[],bills=d.bills??[],accounts=d.liquid_accounts??[],cash=d.cash_receipts_pending??[]
  const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'})
  return <AdminShell><div className="finance-ops-surface grid min-w-0 gap-4">
-  <header className="finance-ops-hero rounded-[27px] bg-[linear-gradient(125deg,#062c41_0%,#0b5b5d_52%,#16a085_100%)] p-6 text-white shadow-lg">
+  <section className="finance-ops-hero rounded-[27px] bg-[linear-gradient(125deg,#062c41_0%,#0b5b5d_52%,#16a085_100%)] p-6 text-white shadow-lg">
    <p className="text-[10px] font-black uppercase tracking-[.22em] text-cyan-200">SUPPLIER COST · PHYSICAL STOCK · ACCOUNTING</p>
    <h1 className="mt-2 text-3xl font-black tracking-tight">Procurement & reconciliation</h1>
    <p className="mt-2 max-w-xl text-sm text-teal-100">One controlled trail: negotiated supplier quote → approved purchase order → verified handover → invoice match → Treasury bank settlement.</p>
    <div className="mt-4 flex flex-wrap gap-2"><Link href="/super-admin/treasury?demo=1" className="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-bold">Treasury command center ↗</Link><Link href="/super-admin/finance?demo=1" className="rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-xs font-bold">Finance intelligence ↗</Link><Link href="/admin/procurement?demo=1" className="rounded-xl bg-white px-3 py-2 text-xs font-black text-teal-800">Synthetic walkthrough</Link></div>
-  </header>
+  </section>
   {q.error&&<div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{q.error}</div>}
   {q.notice&&<div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{q.notice}</div>}
   {demoMode&&<div className="rounded-xl bg-violet-50 p-3 text-xs font-bold text-violet-800">Illustrative synthetic values. These do not represent a real order, supplier payment or supplier price.</div>}
