@@ -651,6 +651,22 @@ $$;
 revoke all on function public.get_community_ops_day(uuid) from public,anon,authenticated,service_role;
 grant execute on function public.get_community_ops_day(uuid) to authenticated;
 
+create or replace function public.admin_get_community_ops_assignments()
+returns table(user_id uuid,operator_name text,operator_phone text,community_id uuid,community_name text,active boolean)
+language plpgsql stable security definer set search_path='' as $
+begin
+  if not private.is_ops(auth.uid()) then raise exception 'Admin required'; end if;
+  return query
+  select a.user_id,pr.full_name,pr.phone,a.community_id,c.name,a.active
+  from public.community_ops_assignments a
+  join public.communities c on c.id=a.community_id
+  left join public.profiles pr on pr.id=a.user_id
+  order by c.name,pr.full_name;
+end;
+$;
+revoke all on function public.admin_get_community_ops_assignments() from public,anon,authenticated,service_role;
+grant execute on function public.admin_get_community_ops_assignments() to authenticated;
+
 create or replace function public.admin_get_community_ops_days(p_limit integer default 100)
 returns table(
   day_id uuid,community_id uuid,community_name text,business_date date,status text,operator_name text,
