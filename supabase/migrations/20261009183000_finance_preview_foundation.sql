@@ -91,6 +91,8 @@ create table public.finance_settlement_requests (
   expense_id uuid not null references public.finance_expenses(id) on delete restrict,
   payment_method text not null check(payment_method in ('cash','bank','mobile')),
   payment_reference text not null check(char_length(btrim(payment_reference))>=4),
+  evidence_path text not null,
+  evidence_sha256 text not null check(evidence_sha256 ~ '^[0-9a-f]{64}$'),
   account_code text not null references public.finance_accounts(code) on delete restrict,
   payment_date date not null,
   status text not null default 'pending' check(status in ('pending','rejected','verified')),
@@ -241,7 +243,8 @@ revoke all on function public.finance_review_expense(uuid,boolean,text) from pub
 grant execute on function public.finance_review_expense(uuid,boolean,text) to authenticated;
 
 create or replace function public.finance_request_settlement(
- p_expense_id uuid,p_payment_method text,p_payment_reference text,p_payment_date date
+ p_expense_id uuid,p_payment_method text,p_payment_reference text,p_payment_date date,
+ p_evidence_path text,p_evidence_sha256 text
 ) returns uuid language plpgsql security definer set search_path='' as $$
 declare v_actor uuid:=auth.uid(); e public.finance_expenses%rowtype; v_id uuid; v_account text;
 begin
@@ -251,12 +254,16 @@ begin
  if p_payment_date is null or p_payment_date>(now() at time zone 'Asia/Dhaka')::date
  then raise exception 'Future payment not allowed'; end if;
  perform private.finance_require_open(p_payment_date);
+ if p_evidence_path is null or left(p_evidence_path,length(v_actor::text)+1)<>v_actor::text||'/' or
+    p_evidence_sha256 is null or p_evidence_sha256 !~ '^[0-9a-f]{64}$' or
+    not exists(select 1 from storage.objects where bucket_id='finance-evidence' and name=p_evidence_path)
+ then raise exception 'Verified payment evidence upload required'; end if;
  v_account:=case p_payment_method when 'cash' then '1000' when 'bank' then '1010'
   when 'mobile' then '1020' else null end;
  if v_account is null then raise exception 'Payment method invalid'; end if;
  insert into public.finance_settlement_requests(expense_id,payment_method,payment_reference,
-   account_code,payment_date,requested_by)
- values(e.id,p_payment_method,btrim(p_payment_reference),v_account,p_payment_date,v_actor)
+   account_code,payment_date,requested_by,evidence_path,evidence_sha256)
+ values(e.id,p_payment_method,btrim(p_payment_reference),v_account,p_payment_date,v_actor,p_evidence_path,p_evidence_sha256)
  returning id into v_id;
  update public.finance_expenses set status='settlement_requested',updated_at=now() where id=e.id;
  insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
@@ -264,8 +271,8 @@ begin
  jsonb_build_object('method',p_payment_method,'reference',p_payment_reference));
  return v_id;
 end $$;
-revoke all on function public.finance_request_settlement(uuid,text,text,date) from public,anon,authenticated;
-grant execute on function public.finance_request_settlement(uuid,text,text,date) to authenticated;
+revoke all on function public.finance_request_settlement(uuid,text,text,date,text,text) from public,anon,authenticated;
+grant execute on function public.finance_request_settlement(uuid,text,text,date,text,text) to authenticated;
 
 create or replace function public.finance_review_settlement(p_id uuid,p_approve boolean,p_note text)
 returns text language plpgsql security definer set search_path='' as $$
@@ -331,7 +338,7 @@ returns table (
  id uuid, category text, description text, vendor_name text, document_reference text,
  amount numeric, incurred_on date, community_id uuid, campaign_code text, evidence_path text, evidence_sha256 text,
  status text, created_by uuid, reviewed_by uuid, created_at timestamptz,
- settlement_id uuid, settlement_status text
+ settlement_id uuid, settlement_status text, settlement_evidence_path text
 ) language plpgsql stable security definer set search_path='' as $$
 declare v_start date:=date_trunc('month',p_month::timestamp)::date;
 begin
@@ -339,7 +346,7 @@ begin
  if p_month is null then raise exception 'Month required'; end if;
  return query select e.id,e.category,e.description,e.vendor_name,e.document_reference,
   e.amount,e.incurred_on,e.community_id,e.campaign_code,e.evidence_path,e.evidence_sha256,e.status,e.created_by,e.reviewed_by,
-  e.created_at,s.id,s.status
+  e.created_at,s.id,s.status,s.evidence_path
  from public.finance_expenses e left join public.finance_settlement_requests s on s.expense_id=e.id
  where e.incurred_on>=v_start and e.incurred_on<(v_start+interval '1 month')::date
  order by e.created_at desc limit 500;
