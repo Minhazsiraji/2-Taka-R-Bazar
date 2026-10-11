@@ -37,3 +37,18 @@ test('private evidence download requires authenticated finance workbench and ori
  assert.match(route,/no-store/)
  assert.match(route,/nosniff/)
 })
+
+test('download produces a real PDF, not HTML, with accurate figures',async()=>{
+ const {renderFinancePdf}=await import('data:text/javascript;base64,'+Buffer.from(stripTypeScriptTypes(readFileSync('lib/finance/printable-pdf.ts','utf8'),{mode:'strip'}).replace("import type {PrintableRecord} from './printable-document'","")).toString('base64'))
+ const pdf=renderFinancePdf(sample)
+ assert.equal(pdf.subarray(0,8).toString('latin1'),'%PDF-1.4')
+ assert.match(pdf.toString('latin1'),/11400\.00/)
+ assert.match(pdf.toString('latin1'),/PO-001/)
+ assert.match(pdf.toString('latin1'),/SUBMITTED|APPROVED/)
+ assert.match(pdf.toString('latin1'),/%%EOF/)
+ assert.throws(()=>renderFinancePdf({...sample,amount:11401}),/Invalid document/)
+ const route=readFileSync('app/api/finance/documents/[kind]/[id]/route.ts','utf8')
+ assert.match(route,/application\/pdf/)
+ assert.match(route,/\.pdf/)
+ assert.doesNotMatch(route,/filename=.*\.html/)
+})
