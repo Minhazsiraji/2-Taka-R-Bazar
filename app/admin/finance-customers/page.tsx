@@ -1,0 +1,38 @@
+import Link from 'next/link'
+import {AdminShell} from '@/components/admin-shell'
+import {requireAdmin} from '@/lib/auth'
+import {CustomerSaleForm,CustomerCreditForm,type Source,type Lot,type Sale} from '@/components/finance-customer-forms'
+import {reviewCustomerEvent,requestCustomerCash,requestCustomerCod,reviewCustomerCod} from '@/app/actions/finance-customer'
+export const dynamic='force-dynamic'
+type Event=Sale&{kind:string;status:string;reason:string}
+type Cod={id:string;sale_id:string;status:string;product_amount:number;delivery_amount:number}
+export default async function CustomerFinancePage({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}){
+ const {supabase}=await requireAdmin();const q=await searchParams;const {data,error}=await supabase.rpc('finance_customer_workbench')
+ const d=(data??{}) as {sources?:Source[];lots?:Lot[];events?:Event[];liquid_accounts?:Array<{id:string;name:string}>;cod_allocations?:Cod[];cod_sources?:Array<{day_id:string;date:string;community:string;unallocated_products:number;unallocated_delivery:number}>}
+ const sales=d.events?.filter(e=>e.kind==='sale'&&e.status==='posted')??[]
+ const site=process.env.NEXT_PUBLIC_SUPABASE_URL??''
+ const enabled=process.env.VERCEL_ENV==='preview'&&process.env.FINANCE_WRITES_ENABLED==='true'&&Boolean(site)&&site===process.env.FINANCE_PREVIEW_SUPABASE_URL&&(!site.includes('sukabonfjcnaavjgjyuy')||process.env.FINANCE_SHARED_DB_UAT_ENABLED==='true')
+ const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}),input='w-full min-w-0 rounded-lg border p-2 text-sm'
+ return <AdminShell><div className="mx-auto grid w-full max-w-5xl gap-4 p-4"><h1 className="text-2xl font-bold">Customer revenue, inventory & refunds</h1>
+  <nav className="flex flex-wrap gap-3 text-sm"><Link href="/super-admin/finance" className="underline">Finance intelligence</Link><Link href="/admin/procurement" className="underline">Supplier cost layers</Link><Link href="/super-admin/treasury" className="underline">Treasury approvals</Link></nav>
+  {(error||q.error)&&<p role="alert" className="rounded-lg bg-rose-50 p-3">{q.error??error?.message}</p>}{q.notice&&<p role="status" className="rounded-lg bg-teal-50 p-3">{q.notice}</p>}
+  {!enabled&&<p>Financial writes are locked. Completed customer operations remain available independently.</p>}
+  <section className="grid gap-3 rounded-xl border p-4"><h2 className="text-lg font-bold">Recognize completed customer sale</h2><CustomerSaleForm sources={d.sources??[]} lots={d.lots??[]} disabled={!enabled}/></section>
+  <section className="grid gap-3 rounded-xl border p-4"><h2 className="text-lg font-bold">Independent revenue / credit review</h2>{d.events?.map(e=><div key={e.id} className="rounded-lg border p-3 text-sm"><p className="font-bold">{e.label} · {e.kind} · {e.status}</p><p>Products BDT {e.product_amount} · delivery BDT {e.delivery_amount} · {e.reason}</p><a className="underline" href={`/api/finance/originals/customer_event/${e.id}`}>Download original proof</a>
+   {e.status==='pending'&&<form action={reviewCustomerEvent} className="mt-2 grid gap-2"><input type="hidden" name="event_id" value={e.id}/><input type="hidden" name="kind" value={e.kind}/><label>Independent review reason<input name="reason" required minLength={10} className={input}/></label><div className="flex gap-2"><button name="decision" value="approve" disabled={!enabled} className="rounded-lg border p-2">Approve customer accounting</button><button name="decision" value="reject" disabled={!enabled} className="rounded-lg border p-2">Reject customer accounting</button></div></form>}
+  </div>)}</section>
+  <section className="grid gap-3 rounded-xl border p-4"><h2 className="text-lg font-bold">Customer credit note / physical return</h2><CustomerCreditForm sales={sales} disabled={!enabled} today={today}/></section>
+  <section className="grid gap-3 rounded-xl border p-4"><h2 className="text-lg font-bold">Actual collection or authorized refund</h2><p className="text-xs">Treasury approves these requests independently. Original payment proof and remaining AR/refund payable are required. Never enter cash already held in accepted COD custody again.</p>
+   <form action={requestCustomerCash} className="grid gap-2" encType="multipart/form-data"><label>Posted sale<select name="sale_id" required className={input}><option value="">Choose source sale</option>{sales.map(s=><option key={s.id} value={s.id}>{s.label} · AR {s.receivable} · refund due {s.refund_payable}</option>)}</select></label>
+    <label>Cash operation<select name="cash_kind" className={input}><option value="customer_receipt">Actual customer collection</option><option value="customer_refund">Pay approved customer refund</option></select></label>
+    <label>Physical account<select name="account_id" required className={input}><option value="">Choose liquid account</option>{d.liquid_accounts?.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
+    <label>BDT amount<input name="amount" required type="number" min=".01" step=".01" className={input}/></label><label>Payment date<input name="business_date" required type="date" defaultValue={today} className={input}/></label>
+    <label>Bank / cash reference<input name="reference" required minLength={4} className={input}/></label><label>Original payment proof<input name="original_file" required type="file" accept=".pdf,.jpg,.jpeg,.png" className={input}/></label><button disabled={!enabled} className="rounded-lg border p-3 font-bold">Request customer cash movement</button>
+   </form>
+  </section>
+  <section className="grid gap-3 rounded-xl border p-4"><h2 className="text-lg font-bold">Allocate accepted COD custody to customer AR</h2>
+   <form action={requestCustomerCod} className="grid gap-2"><label>Posted order sale<select name="sale_id" className={input} required><option value="">Choose order sale</option>{sales.filter(s=>s.receivable>0).map(s=><option key={s.id} value={s.id}>{s.label} · AR {s.receivable}</option>)}</select></label><label>Accepted custody source<select name="day_id" className={input} required><option value="">Choose accepted COD day</option>{d.cod_sources?.map(c=><option key={c.day_id} value={c.day_id}>{c.community} · {c.date} · product {c.unallocated_products} · delivery {c.unallocated_delivery}</option>)}</select></label><button disabled={!enabled} className="rounded-lg border p-2">Request COD allocation</button></form>
+   {d.cod_allocations?.map(c=><div key={c.id} className="rounded-lg border p-3 text-sm"><p>{c.status} · product BDT {c.product_amount} · delivery BDT {c.delivery_amount}</p>{c.status==='pending'&&<form action={reviewCustomerCod} className="mt-2 grid gap-2"><input type="hidden" name="cod_id" value={c.id}/><label>Independent custody / source review<input name="reason" required minLength={10} className={input}/></label><div className="flex gap-2"><button name="decision" value="approve" disabled={!enabled} className="rounded-lg border p-2">Approve COD allocation</button><button name="decision" value="reject" disabled={!enabled} className="rounded-lg border p-2">Reject COD allocation</button></div></form>}</div>)}
+  </section>
+ </div></AdminShell>
+}

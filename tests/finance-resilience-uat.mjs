@@ -40,7 +40,7 @@ const dbContainer=execFileSync('docker',['ps','--filter','name=supabase_db_','--
 assert.match(dbContainer,/^supabase_db_[a-zA-Z0-9_-]+$/)
 const image=execFileSync('docker',['inspect','--format','{{.Config.Image}}',dbContainer],{encoding:'utf8'}).trim()
 const backup='/tmp/issue57-restore/database.dump'
-writeFileSync(backup,execFileSync('docker',['exec',dbContainer,'pg_dump','-U','postgres','-d','postgres','-Fc','--no-owner'],{stdio:'pipe'}))
+writeFileSync(backup,execFileSync('docker',['exec',dbContainer,'pg_dump','-U','postgres','-d','postgres','-Fc','--no-owner'],{stdio:'pipe',maxBuffer:256*1024*1024}))
 const roles=execFileSync('docker',['exec',dbContainer,'pg_dumpall','-U','postgres','--roles-only'],{encoding:'utf8',stdio:'pipe'}).replace(/^CREATE ROLE postgres;\n/m,'')
 writeFileSync('/tmp/issue57-restore/roles.sql',roles)
 const fingerprint=`select md5(string_agg(row_hash,'' order by row_hash)) from (

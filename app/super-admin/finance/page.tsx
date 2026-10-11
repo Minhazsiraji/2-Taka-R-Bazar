@@ -172,7 +172,7 @@ export default async function FinancePage({searchParams}:{searchParams:Promise<{
     <div className="flex gap-2"><Link href={params(previous)} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-black hover:bg-white/20" aria-label="Previous month">←</Link><div className="finance-month-selector rounded-xl border border-white/30 bg-white/15 px-4 py-2 text-sm font-bold">{monthTitle}</div><Link href={params(next)} className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-black hover:bg-white/20" aria-label="Next month">→</Link></div>
    </div>
   </section>
-  <Link href="/admin/finance-attribution" className="rounded-lg border p-3 text-sm font-bold">Expense attribution & campaign budgets →</Link>
+  <Link href="/admin/finance-customers" className="underline">Customer accounting</Link> <Link href="/super-admin/finance-report" className="underline">Integrated report and close</Link> <Link href="/admin/finance-attribution" className="rounded-lg border p-3 text-sm font-bold">Expense attribution & campaign budgets →</Link>
   {query.error&&<p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{query.error}</p>}
   {query.notice&&<p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">{query.notice}</p>}
   {dbError&&<div role="alert" className="finance-gate-notice rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">{dbError} <Link href={'/super-admin/finance?demo=1&month='+month} className="ml-1 font-black underline">Explore the clearly labeled UI demo →</Link></div>}
