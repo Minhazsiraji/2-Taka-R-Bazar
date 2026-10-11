@@ -5,7 +5,7 @@ import Link from 'next/link'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {chooseAreaByLocation,formatPrice} from '@/lib/storefront'
 
-export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string}){
+export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean}){
  const [area,setArea]=useState('')
  const [search,setSearch]=useState('')
  const [gpsBusy,setGpsBusy]=useState(false)
@@ -39,6 +39,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn}:
     <a href="#how-it-works">How it works</a>
     <Link href={authenticated?'/home':'/signup'}>{authenticated?'My dashboard':'Join community'}</Link>
    </nav>
+   {!catalogAvailable&&<p role="alert" className="mt-5 rounded-xl border border-amber-300/60 p-4 text-sm font-semibold">Storefront offers are being configured. Browse the site now; live product quotes will appear only after the verified catalog is connected.</p>}
    <div className="mt-5 flex flex-wrap items-end gap-3">
     <label className="min-w-[190px] flex-1"><span className="mb-1 block text-xs font-bold">Your community / area</span>
      <select className="input w-full" value={area} onChange={e=>{setArea(e.target.value);setGpsMessage('')}}>
@@ -80,9 +81,9 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn}:
     const href=offer.offer_kind==='GROUP_DEAL'?groupHref:poolHref
     const hasPrice=Number(offer.confirmed_price)>0
     return <article key={offer.offer_kind+offer.offer_id+offer.community_id} className="flex min-w-0 flex-col rounded-3xl border border-black/10 bg-white p-4">
-     <div className="relative flex h-48 items-center justify-center overflow-hidden rounded-2xl bg-white/30">{offer.image_url?<img src={offer.image_url} alt={offer.product_name} loading="lazy" className="h-full w-full object-contain"/>:<img src="/grocery-hero-glass.svg" alt="" className="h-44 w-full object-contain"/>}
-      <span className="absolute left-2 top-2 rounded-full border border-teal-200 bg-white/95 px-3 py-1 text-xs font-bold text-teal-700">{offer.offer_kind==='GROUP_DEAL'?'Group Deal':'Pool'}</span></div>
-     <h3 className="mt-3 line-clamp-2 text-lg font-black">{offer.product_name}</h3>
+     <Link href={`/shop/${offer.product_id}?area=${offer.community_id}`} className="relative flex h-48 items-center justify-center overflow-hidden rounded-2xl bg-white/30" aria-label={`View details for ${offer.product_name}`}>{offer.image_url?<img src={offer.image_url} alt={offer.product_name} loading="lazy" className="h-full w-full object-contain"/>:<img src="/grocery-hero-glass.svg" alt="" className="h-44 w-full object-contain"/>}
+      <span className="absolute left-2 top-2 rounded-full border border-teal-200 bg-white/95 px-3 py-1 text-xs font-bold text-teal-700">{offer.offer_kind==='GROUP_DEAL'?'Group Deal':'Pool'}</span></Link>
+     <h3 className="mt-3 line-clamp-2 text-lg font-black"><Link href={`/shop/${offer.product_id}?area=${offer.community_id}`}>{offer.product_name}</Link></h3>
      <p className="mt-1 text-xs text-slate-500">{[offer.brand,offer.package_size].filter(Boolean).join(' · ')}</p>
      <p className="mt-2 text-xs text-slate-500">{areas.find(a=>a.community_id===offer.community_id)?.community_name??'Local community'}</p>
      <div className="mt-3 grid grid-cols-2 gap-3">
@@ -90,6 +91,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn}:
       <div className="rounded-xl border border-teal-200 p-3"><p className="text-xs font-bold text-teal-700">Group Buy</p><p className="mt-2 text-lg font-black text-teal-700">{formatPrice(offer.confirmed_price??offer.upcoming_price)}</p><p className="mt-1 text-xs text-slate-500">{hasPrice?'Published / unlocked':'Target or price pending'}</p></div>
      </div>
      <p className="mt-3 text-xs text-slate-500">{offer.buyer_count} qualified joined · {offer.quantity_joined} units requested{offer.next_threshold? ` · Next threshold ${offer.next_threshold} buyers`:''}</p>
+     {offer.next_threshold&&offer.next_threshold>0&&<div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-label="Verified buyers towards next price tier" aria-valuemin={0} aria-valuemax={offer.next_threshold} aria-valuenow={Math.min(offer.buyer_count,offer.next_threshold)}><div className="h-full rounded-full bg-teal-600" style={{width:`${Math.min(100,Math.round(100*offer.buyer_count/offer.next_threshold))}%`}}/></div>}
      <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
       <button type="button" disabled aria-disabled="true" title="Individual checkout is not released yet" className="cursor-not-allowed rounded-xl border border-slate-200 px-2 py-3 text-xs font-black opacity-60">Buy Alone · Soon</button>
       <Link href={href} className="btn-primary flex items-center justify-center text-center text-xs">{authenticated?'Join / View group':'Sign in to join'}</Link>

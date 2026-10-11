@@ -23,10 +23,11 @@ export default async function Page(){
   supabase.rpc('get_public_storefront_offers',{p_community_id:null}),
   supabase.rpc('get_public_own_product_showcase',{p_product_id:null,p_featured_only:true}),
  ])
- const authenticated=Boolean(claims.data.claims?.sub)
+ const authenticated=Boolean(claims.data?.claims?.sub)
  const areas=(areasRes.data??[]) as StorefrontArea[]
  const offers=(offersRes.data??[]) as StorefrontOffer[]
  const featured=(featuredRes.data??[]) as ShowcaseProduct[]
+ const catalogAvailable=!areasRes.error&&!offersRes.error
  const schema={
   '@context':'https://schema.org',
   '@graph':[
@@ -43,7 +44,7 @@ export default async function Page(){
  return <main className="min-h-screen bg-white text-black">
   <PublicHeader actionHref={authenticated?'/home':'/login'} actionLabel={authenticated?'My dashboard':'Sign in'}/>
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
-  <PublicMarketplace areas={areas} offers={offers} authenticated={authenticated} howLabelBn="কীভাবে কাজ করে"/>
+  <PublicMarketplace areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} howLabelBn="কীভাবে কাজ করে"/>
   {featured.length>0&&<section className="mx-auto mb-10 max-w-6xl px-5 md:px-8">
    <div className="mb-4"><p className="text-xs font-bold uppercase tracking-[.15em] text-teal-700">Our own & exclusive products</p><h2 className="mt-2 text-2xl font-black">Explore the 2-TAKA-R-BAZAR collection</h2></div>
    <div className="overflow-hidden rounded-[28px] border border-black/10 bg-white"><FeaturedProductsCarousel products={featured}/></div>
