@@ -24,7 +24,7 @@ test('banner removed and community panel compact, with GPS/manual fallback',()=>
  assert.doesNotMatch(market,/Storefront offers are being configured/)
  assert.match(market,/market-location-panel/)
  assert.match(market,/getCurrentPosition/)
- assert.match(market,/selectArea\(e.target.value\)/)
+ assert.match(market,/onChange=\{selectArea\}/)
  assert.match(css,/market-location-panel/)
 })
 test('illustrated sample product data only appears on Preview or in development',()=>{

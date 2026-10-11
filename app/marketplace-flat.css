@@ -915,7 +915,7 @@ html[data-theme="dark"] body.site-glass-root .market-language-toggle button[aria
 .site-glass-root .public-marketplace-flat .market-location-panel .market-location-intro,
 .site-glass-root .public-marketplace-flat .market-location-panel .market-location-control{
  display:block!important;width:auto!important;max-width:100%!important;
- min-width:0!important;overflow-wrap:anywhere!important;overflow:hidden!important;
+ min-width:0!important;overflow-wrap:anywhere!important;overflow:visible!important;
  background:transparent!important;border:0!important;
  box-shadow:none!important;backdrop-filter:none!important;padding:0!important;
 }

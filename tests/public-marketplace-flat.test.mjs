@@ -49,7 +49,7 @@ test('header search and auto-location use guest-only browser matching with manua
  assert.match(catalog,/chooseAreaByLocation\(areas/)
  assert.match(catalog,/manualSelected\.current/)
  assert.match(catalog,/nearestAreas\.map/)
- assert.match(catalog,/onChange=\{e=>selectArea\(e\.target\.value\)\}/)
+ assert.match(catalog,/onChange=\{selectArea\}/)
  assert.match(catalog,/Joining requires verified eligibility|joining a Group Deal still needs secure location|Joining requires verified eligibility/i)
  assert.doesNotMatch(catalog,/watchPosition\(/)
  assert.doesNotMatch(catalog,/localStorage\.setItem\(/)

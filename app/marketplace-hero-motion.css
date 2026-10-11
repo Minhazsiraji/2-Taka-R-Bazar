@@ -1,5 +1,5 @@
 /* Motion hero + polished shared controls. ADDITIVE: never replace approved pearl backgrounds or transparent cards. */
-body.site-glass-root main.public-marketplace-flat{
+body.site-glass-root:has(main.public-marketplace-flat){
  --gloss-rim:rgba(255,255,255,.95);
  --gloss-inner:rgba(255,255,255,.40);
  --gloss-shadow:rgba(37,58,81,.065);
@@ -113,52 +113,38 @@ body.site-glass-root main.public-marketplace-flat .market-location-panel{
  background:transparent!important;
  box-shadow:inset 0 1px 0 var(--gloss-inner),0 2px 10px var(--gloss-shadow)!important;
 }
-body.site-glass-root main.public-marketplace-flat .market-location-panel select{
- border:1px solid var(--gloss-rim)!important;
- box-shadow:inset 0 1px 0 var(--gloss-inner),0 1px 6px var(--gloss-shadow)!important;
- border-radius:999px!important;
-}
-body.site-glass-root main.public-marketplace-flat .market-location-panel select:focus-visible{
- outline:2px solid #0cb6b1!important;outline-offset:2px;
-}
+/* One rim belongs to the button; the language wrapper is layout only. */
 body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-language-toggle{
- padding:2px!important;background:transparent!important;
- border:1px solid rgba(255,255,255,.88)!important;
- box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 6px rgba(25,37,57,.07)!important;
- border-radius:999px!important;
+ padding:0!important;background:transparent!important;border:0!important;
+ box-shadow:none!important;border-radius:999px!important;
 }
 body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-single-language{
- min-width:38px;min-height:39px;padding:7px 9px!important;
+ min-width:43px;min-height:42px;padding:7px 9px!important;
  font-size:.73rem!important;font-weight:850!important;white-space:nowrap;
  background:transparent!important;color:#086a72!important;
 }
 body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-single-language:focus-visible{
  outline:2px solid #0cb6b1;outline-offset:2px;
 }
-/* The product mosaic shows only editorially selected items: one hero + two minis. */
+/* Equal vertical slots in the selected editorial order, with no empty rows. */
 body.site-glass-root main.public-marketplace-flat .market-pool-thumbnails{
- display:grid!important;
- grid-template-columns:repeat(2,minmax(0,1fr));
- grid-template-rows:minmax(0,1fr) minmax(0,1fr);
- gap:7px;padding:3px!important;align-items:stretch!important;
- height:188px;max-height:188px;overflow:hidden;
- border:0!important;border-radius:11px!important;
- background:transparent!important;
+ display:grid!important;grid-template-columns:minmax(0,1fr);
+ grid-auto-rows:86px;gap:7px;padding:3px!important;
+ align-items:start!important;height:auto;max-height:none;overflow:visible;
+ border:0!important;border-radius:11px!important;background:transparent!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-pool-thumbnails>a{
- display:flex;align-items:center;justify-content:center;
+ display:flex;align-items:center;justify-content:center;height:86px;
  border:1px solid var(--gloss-rim);border-radius:11px;
+ box-shadow:inset 0 1px 0 var(--gloss-inner),0 1px 5px var(--gloss-shadow);
  background:transparent!important;overflow:hidden;min-width:0;
-}
-body.site-glass-root main.public-marketplace-flat .market-pool-thumbnails>a.market-pool-main-thumbnail{
- grid-column:1;grid-row:1/span 2;
-}
-body.site-glass-root main.public-marketplace-flat .market-pool-thumbnails>a.market-pool-small-thumbnail{
- grid-column:2;
 }
 body.site-glass-root main.public-marketplace-flat .market-pool-thumbnails>a img{
  display:block;height:100%!important;max-height:100%!important;width:100%;
  object-fit:contain!important;transition:transform .2s ease;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-image-fallback{
+ padding:8px;text-align:center;color:var(--market-muted);font-size:.75rem;
 }
 @media(hover:hover) and (pointer:fine){
  body.site-glass-root main.public-marketplace-flat .market-pool-thumbnails>a:hover img{transform:scale(1.045)}
@@ -231,13 +217,13 @@ body.site-glass-root:has(main.public-marketplace-flat) .market-mobile-nav-panel{
   min-height:39px!important;padding:7px 8px!important;font-size:.72rem!important;
  }
  body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-single-language{
-  min-width:34px!important;min-height:35px!important;padding:6px!important;
+  min-width:42px!important;min-height:42px!important;padding:6px!important;
  }
  body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-search{
   margin:0 0 8px!important;
  }
  body.site-glass-root main.public-marketplace-flat .market-pool-thumbnails{
-  height:142px!important;max-height:142px!important;gap:5px!important;
+  grid-auto-rows:78px;gap:6px!important;
  }
 }
 @media(max-width:380px){
@@ -248,7 +234,7 @@ body.site-glass-root:has(main.public-marketplace-flat) .market-mobile-nav-panel{
   min-height:290px;
  }
 }
-html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat{
+html[data-theme="dark"] body.site-glass-root:has(main.public-marketplace-flat){
  --gloss-rim:rgba(190,221,234,.34);
  --gloss-inner:rgba(208,243,244,.13);
  --gloss-shadow:rgba(0,0,0,.17);
@@ -273,9 +259,8 @@ html[data-theme="dark"] body.site-glass-root:has(main.public-marketplace-flat) .
 
 /* Product/Pool detail pages reuse the same single compact language control. */
 body.site-glass-root main.public-marketplace-flat .market-pool-detail-header .market-language-toggle{
- border-radius:999px!important;border:1px solid var(--gloss-rim,rgba(255,255,255,.88))!important;
- background:transparent!important;padding:2px!important;
- box-shadow:inset 0 1px 0 var(--gloss-inner,rgba(255,255,255,.4));
+ border-radius:999px!important;border:0!important;
+ background:transparent!important;padding:0!important;box-shadow:none!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-pool-detail-header .market-single-language{
  min-width:43px;min-height:40px;border-radius:999px!important;
@@ -284,4 +269,64 @@ body.site-glass-root main.public-marketplace-flat .market-pool-detail-header .ma
 }
 html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-pool-detail-header .market-single-language{
  color:#ddf7f4!important;
+}
+
+/* Browsing community disclosure expands in flow; focus and options stay inside
+   the content width even with the mobile navigation open. */
+body.site-glass-root main.public-marketplace-flat .market-community-label{
+ display:block;font-size:.7rem;font-weight:800;margin-bottom:6px;color:var(--market-text);
+}
+body.site-glass-root main.public-marketplace-flat .market-community-picker{
+ width:100%;min-width:0;padding:3px;
+}
+body.site-glass-root main.public-marketplace-flat .market-community-picker summary{
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+ min-height:44px;width:100%;padding:9px 13px;list-style:none;cursor:pointer;
+ border:1px solid var(--gloss-rim);border-radius:22px;background:transparent;
+ box-shadow:inset 0 1px 0 var(--gloss-inner),0 0 0 1px #08aaa7,0 1px 5px var(--gloss-shadow);
+ color:var(--market-text);font-size:.88rem;
+}
+body.site-glass-root main.public-marketplace-flat .market-community-picker summary::-webkit-details-marker{display:none}
+body.site-glass-root main.public-marketplace-flat .market-community-picker summary:focus-visible,
+body.site-glass-root main.public-marketplace-flat .market-community-options :is(input,button):focus-visible{
+ outline:2px solid #0cb6b1;outline-offset:2px;
+}
+body.site-glass-root main.public-marketplace-flat .market-community-options{
+ display:flex;flex-direction:column;gap:4px;min-width:0;margin:10px 0 0;padding:6px;
+ border:1px solid var(--gloss-rim);border-radius:13px;
+ box-shadow:inset 0 1px 0 var(--gloss-inner);max-height:260px;overflow-y:auto;
+}
+body.site-glass-root main.public-marketplace-flat .market-community-options label{
+ display:flex;align-items:center;gap:9px;min-height:44px;margin:0!important;
+ padding:8px;font-size:.82rem!important;color:var(--market-text);cursor:pointer;
+}
+body.site-glass-root main.public-marketplace-flat .market-community-options input{
+ width:16px;height:16px;flex-shrink:0;accent-color:#08aaa7;
+}
+body.site-glass-root main.public-marketplace-flat .market-community-done{
+ min-height:44px;padding:8px 12px;border:1px solid var(--gloss-rim);
+ border-radius:999px;color:var(--market-accent);cursor:pointer;background:transparent;
+}
+body.site-glass-root main.public-marketplace-flat .market-location-control .market-location-retry{
+ min-height:44px;margin-top:6px;padding:6px 10px!important;
+ color:var(--market-accent)!important;border-color:var(--gloss-rim)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-featured-pool-body{
+ grid-template-columns:112px minmax(0,1fr)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-featured-pool-copy{min-width:0}
+body.site-glass-root main.public-marketplace-flat .market-pool-progress>div:first-child{
+ flex-wrap:wrap;gap:3px 8px;
+}
+body.site-glass-root main.public-marketplace-flat .market-featured-pool-actions{flex-wrap:wrap}
+body.site-glass-root main.public-marketplace-flat .market-pool-detail-header .market-single-language,
+body.site-glass-root main.public-marketplace-flat .market-flat-header :is(.market-single-language,.public-header-action,.market-header-location){
+ border:1px solid var(--gloss-rim)!important;
+ box-shadow:inset 0 1px 0 var(--gloss-inner),0 1px 5px var(--gloss-shadow)!important;
+}
+@media(max-width:640px){
+ body.site-glass-root main.public-marketplace-flat .market-featured-pool-body{
+  grid-template-columns:76px minmax(0,1fr)!important;gap:10px!important;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-pool-thumbnails>a{height:78px}
 }

@@ -1,5 +1,5 @@
 /** Public hero marketing copy. Main brand taglines remain in lib/site.ts, unchanged. */
-export const HERO_ROTATION_MS=7000
+export const HERO_ROTATION_MS=9000
 export const HERO_MESSAGES=[
  {key:'decisions',
   first:{en:'Smart people make smart decisions.',bn:'বুদ্ধিমান মানুষ সিদ্ধান্ত নেয় বুঝে।'},

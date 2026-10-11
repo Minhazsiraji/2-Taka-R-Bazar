@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {chooseAreaByLocation,distanceMeters,formatPrice} from '@/lib/storefront'
 import {PublicMarketplaceLower} from '@/components/public-marketplace-lower'
+import {CommunityPicker} from '@/components/community-picker'
 import {PublicHeader} from '@/components/public-header'
 import {PublicFooter} from '@/components/public-footer'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
@@ -103,10 +104,9 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
     <div className="market-location-intro"><strong>📍 {t('Find savings near your community','আপনার এলাকায় কম দামের অফার খুঁজুন')}</strong>
      <p>{t('Allow location to suggest nearby communities and group prices. Joining requires verified eligibility.','কাছের কমিউনিটি ও গ্রুপের দাম দেখতে লোকেশন অনুমতি দিন। যোগ দিতে এলাকা যাচাই প্রয়োজন।')}</p></div>
     <div className="market-location-control">
-     <label htmlFor="market-area-select">{t('Your community / area','আপনার কমিউনিটি / এলাকা')}</label>
-     <select id="market-area-select" className="input w-full" value={area} onChange={e=>selectArea(e.target.value)}>
-      <option value="">{t('All operating areas','সব এলাকা')}</option>{areas.map(a=><option key={a.community_id} value={a.community_id}>{a.community_name}</option>)}
-     </select></div></div>
+     <CommunityPicker areas={areas} value={area} onChange={selectArea} language={language}/>
+     <button type="button" className="market-location-retry" onClick={useLocation} disabled={gpsBusy}>{gpsBusy?t('Finding area…','এলাকা খোঁজা হচ্ছে…'):t('Detect my location','আমার অবস্থান খুঁজুন')}</button>
+     </div></div>
    <p role="status" aria-live="polite" title={gpsMessage} className="market-location-status">{locationStatus}</p>
    {nearestAreas.length>0&&<div className="market-nearby-suggestions" aria-label={t('Nearby communities','কাছের কমিউনিটি')}>
     <span className="market-nearby-heading">{t('Near you','কাছাকাছি')} <small>({t('approximate','আনুমানিক')})</small></span>

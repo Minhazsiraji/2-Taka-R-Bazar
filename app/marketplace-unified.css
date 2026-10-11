@@ -23,7 +23,7 @@ body.site-glass-root main.public-marketplace-flat .market-story .market-closing{
  box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-band:not(.market-hero-band){
- border:0!important;border-top:1px solid var(--market-edge)!important;border-radius:0!important;
+ border:0!important;border-top:1px solid var(--gloss-rim)!important;border-radius:0!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-content,
 body.site-glass-root main.public-marketplace-flat .market-hero-grid,
@@ -220,22 +220,22 @@ body.site-glass-root main.public-marketplace-flat .market-demo-supplier-bottom a
 }
 /* One continuous transparent footer and header, with readable sticky navigation. */
 body.site-glass-root:has(main.public-marketplace-flat) .site-unified-footer.market-full-footer{
- background:transparent!important;border-top:1px solid var(--market-edge)!important;
+ background:transparent!important;border-top:1px solid var(--gloss-rim)!important;
  box-shadow:none!important;backdrop-filter:none!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-full-footer .market-footer-bottom{
- background:transparent!important;border-top:1px solid var(--market-edge)!important;
+ background:transparent!important;border-top:1px solid var(--gloss-rim)!important;
 }
 body.site-glass-root main.public-marketplace-flat .public-glass-header.market-flat-header{
- background:transparent!important;border-bottom:1px solid var(--market-edge)!important;
+ background:transparent!important;border-bottom:1px solid var(--gloss-rim)!important;
  box-shadow:none!important;backdrop-filter:none!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-flat-header .market-header-search{
- background:transparent!important;border:1px solid var(--market-edge)!important;
- box-shadow:none!important;backdrop-filter:none!important;
+ background:transparent!important;border:1px solid var(--gloss-rim)!important;
+ box-shadow:inset 0 1px 0 var(--gloss-inner),0 1px 7px var(--gloss-shadow)!important;backdrop-filter:none!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-flat-header .market-header-nav{
- border-top:1px solid var(--market-edge)!important;
+ border-top:1px solid var(--gloss-rim)!important;
 }
 @media(max-width:980px){
  body.site-glass-root main.public-marketplace-flat .market-demo-reviews,
@@ -322,7 +322,7 @@ body.site-glass-root main.public-marketplace-flat .market-product-card::after{
  content:none!important;display:none!important;
 }
 html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .public-glass-header.market-flat-header{
- background:#192634!important;border-bottom-color:var(--market-edge)!important;
+ background:#192634!important;border-bottom-color:var(--gloss-rim)!important;
 }
 html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-header-location,
 html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-product-actions button[disabled]{

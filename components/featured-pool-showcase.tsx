@@ -47,9 +47,9 @@ export function FeaturedPoolShowcase({pools,language,areaName}:{pools:DemoFeatur
   </div>
   <div className="market-featured-pool-body market-pool-slide" key={pool.slug} aria-live="off">
    <div className="market-featured-pool-image market-pool-thumbnails" aria-label={t('Selected products in this Pool','এই পুলের নির্বাচিত পণ্য')}>
-    {thumbnails.map(({offer},i)=><Link href={`/demo-product/${offer.product_id}`} className={i===0?'market-pool-main-thumbnail':'market-pool-small-thumbnail'} key={offer.product_id}
+    {thumbnails.map(({offer})=><Link href={`/demo-product/${offer.product_id}`} className="market-pool-thumbnail" key={offer.product_id}
       aria-label={t('View product: ','পণ্য দেখুন: ')+t(offer.product_name,offer.product_name_bn??offer.product_name)}>
-      <img src={offer.image_url??pool.image} alt={t(offer.product_name,offer.product_name_bn??offer.product_name)}/>
+      <PoolThumbnail src={offer.image_url} name={t(offer.product_name,offer.product_name_bn??offer.product_name)} fallback={t('Image unavailable','ছবি নেই')}/>
     </Link>)}
    </div>
    <div className="market-featured-pool-copy">
@@ -73,4 +73,9 @@ export function FeaturedPoolShowcase({pools,language,areaName}:{pools:DemoFeatur
    </div>
   </div>
  </div>
+}
+
+function PoolThumbnail({src,name,fallback}:{src:string|null;name:string;fallback:string}){
+ const [failed,setFailed]=useState(false)
+ return src&&!failed?<img src={src} alt={name} onError={()=>setFailed(true)}/>:<span className="market-pool-image-fallback">{fallback}</span>
 }
