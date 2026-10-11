@@ -1,7 +1,7 @@
 name: Finance and Treasury isolated browser UAT
 on:
   push:
-    branches: [feat/finance-treasury-integrated-20261009]
+    branches: [feat/finance-treasury-integrated-20261009, feat/finance-complete-release-uat-20261011]
   workflow_dispatch:
 
 permissions:

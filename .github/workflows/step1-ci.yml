@@ -2,7 +2,7 @@ name: Step 1 CI
 
 on:
   push:
-    branches: [main, feat/finance-treasury-integrated-20261009]
+    branches: [main, feat/finance-treasury-integrated-20261009, feat/finance-complete-release-uat-20261011]
   pull_request:
     branches: [main]
   workflow_dispatch:
