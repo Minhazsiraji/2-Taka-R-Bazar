@@ -25,7 +25,7 @@ test('delivery copy and dual-source solo proposal are accurate',()=>{
  for(const token of ['৳20','৳30','৳1,000','Community-point pickup'])assert.match(lower,new RegExp(token))
  assert.match(lower,/2TBR-stocked products/)
  assert.match(lower,/Verified supplier-listed products/)
- assert.match(doc,/BOTH 2TBR stocked products AND authorized supplier-listed products/)
+ assert.match(doc,/both 2TBR stocked products AND authorized supplier-listed products/i)
  assert.match(lower,/Individual checkout is not open yet/)
 })
 test('responsive accessible section layouts are preserved',()=>{
