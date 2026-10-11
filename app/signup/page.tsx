@@ -4,9 +4,11 @@ import { BdPhoneInput } from '@/components/bd-phone-input'
 import { PublicHeader } from '@/components/public-header'
 import { PublicFooter } from '@/components/public-footer'
 import { SubmitButton } from '@/components/submit-button'
+import {safeAuthReturnPath} from '@/lib/auth-intent'
 
-export default async function SignupPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; ref?: string }> }) {
-  const { error, notice, ref } = await searchParams
+export default async function SignupPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; ref?: string; next?: string }> }) {
+  const { error, notice, ref, next } = await searchParams
+  const returnTo=safeAuthReturnPath(next)
   const referralCode=String(ref??'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12)
   return <main className="min-h-screen bg-slate-50 text-black">
     <PublicHeader actionHref="/login" actionLabel="Sign in" />
@@ -15,6 +17,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
         <div className="mb-6 text-center"><h1 className="text-3xl font-black">Join the community pool</h1><p className="muted mt-2">No email required. Enter your Bangladesh mobile number and verify it with OTP.</p></div>
         {notice && <div className="success mb-4">{notice}</div>}{error && <div className="error mb-4">{error}</div>}
         <form action={requestSignupOtp} className="grid gap-4">
+          {returnTo&&<input type="hidden" name="next" value={returnTo}/>} 
           <BdPhoneInput />
           <label><span className="label">Referral code (optional)</span><input className="input uppercase" name="referral_code" defaultValue={referralCode} maxLength={12} placeholder="e.g. MZ8K2Q"/><p className="mt-1 text-xs text-slate-500">If a neighbour invited you, their code will be carried safely through OTP. An invalid code never blocks signup.</p></label>
           <SubmitButton>Send OTP</SubmitButton>

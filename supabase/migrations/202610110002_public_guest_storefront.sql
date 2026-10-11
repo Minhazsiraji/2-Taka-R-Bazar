@@ -99,7 +99,7 @@ as $$
     and po.status in ('open','pricing','final_price','confirmation')
     and (po.opens_at is null or po.opens_at<=now())
     and (p_community_id is null or po.community_id=p_community_id)
-  order by closes_at nulls last,offer_title
+  order by 18 nulls last,11
   limit 150;
 $$;
 revoke all on function public.get_public_storefront_offers(uuid) from public;
