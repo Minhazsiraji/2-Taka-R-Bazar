@@ -1,4 +1,5 @@
 import { NextRequest,NextResponse } from 'next/server'
+import { renderFinancePdf } from '@/lib/finance/printable-pdf'
 import { requireAdmin } from '@/lib/auth'
 import { renderFinanceDocument, type PrintableRecord } from '@/lib/finance/printable-document'
 
@@ -38,11 +39,19 @@ export async function GET(request:NextRequest,context:{params:Promise<{kind:stri
   amount:Number(bill?.amount),status:String(bill?.status),reference:String(bill?.ref)
  }
  try{
-  const html=renderFinanceDocument(d)
   const download=request.nextUrl.searchParams.get('download')==='1'
+  if(download){
+   const pdf=renderFinancePdf(d)
+   return new NextResponse(new Uint8Array(pdf),{headers:{
+    'Content-Type':'application/pdf',
+    'Content-Disposition':'attachment; filename="'+kind+'-'+d.code.replace(/[^a-zA-Z0-9-]/g,'_')+'.pdf"',
+    'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'
+   }})
+  }
+  const html=renderFinanceDocument(d)
   return new NextResponse(html,{headers:{
    'Content-Type':'text/html; charset=utf-8',
-   'Content-Disposition':download?'attachment; filename="'+kind+'-'+id+'.html"':'inline',
+   'Content-Disposition':'inline',
    'Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
    'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'
   }})
