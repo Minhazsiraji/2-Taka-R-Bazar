@@ -29,6 +29,10 @@ export function FeaturedPoolShowcase({pools,language,areaName}:{pools:DemoFeatur
  const tier=demoPoolTierState(pool)
  const progressTarget=tier.upcoming??pool.minHouseholds
  const progressPercent=Math.min(100,Math.round(100*pool.sampleHouseholds/progressTarget))
+ const selected=pool.featuredProductIds
+   .map(id=>pool.bundle.find(item=>item.offer.product_id===id))
+   .filter((item):item is DemoFeaturedPool['bundle'][number]=>Boolean(item))
+ const thumbnails=(selected.length?selected:pool.bundle).slice(0,3)
  return <div className="market-featured-pool market-auto-pool" lang={language} role="region" aria-roledescription="carousel" aria-label={t('Featured Pools: automatically rotating examples','ফিচারড পুল: স্বয়ংক্রিয় নমুনা ক্যারোসেল')}
   onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}
   onFocusCapture={()=>setPaused(true)}
@@ -42,7 +46,12 @@ export function FeaturedPoolShowcase({pools,language,areaName}:{pools:DemoFeatur
    </div>
   </div>
   <div className="market-featured-pool-body market-pool-slide" key={pool.slug} aria-live="off">
-   <div className="market-featured-pool-image"><img src={pool.image} alt={t(pool.title.en,pool.title.bn)}/></div>
+   <div className="market-featured-pool-image market-pool-thumbnails" aria-label={t('Selected products in this Pool','এই পুলের নির্বাচিত পণ্য')}>
+    {thumbnails.map(({offer},i)=><Link href={`/demo-product/${offer.product_id}`} className={i===0?'market-pool-main-thumbnail':'market-pool-small-thumbnail'} key={offer.product_id}
+      aria-label={t('View product: ','পণ্য দেখুন: ')+t(offer.product_name,offer.product_name_bn??offer.product_name)}>
+      <img src={offer.image_url??pool.image} alt={t(offer.product_name,offer.product_name_bn??offer.product_name)}/>
+    </Link>)}
+   </div>
    <div className="market-featured-pool-copy">
     <span className="market-pool-slide-kind">{pool.slug==='weekly'?t('Weekly Pool','সাপ্তাহিক পুল'):pool.slug==='monthly'?t('Monthly Pool','মাসিক পুল'):t('Special Pool','বিশেষ পুল')}</span>
     <h2>{t(pool.title.en,pool.title.bn)}</h2>

@@ -7,6 +7,9 @@ export type DemoFeaturedPool={
  subtitle:{en:string;bn:string}
  description:{en:string;bn:string}
  image:string
+ /** In Preview this is the fixture editor's explicit ordering for up to 3 preview thumbnails.
+  * Production admin publishing will need a validated persisted ordering before going live. */
+ featuredProductIds:string[]
  bundle: {offer:StorefrontOffer;qty:number}[]
  minHouseholds:number
  sampleHouseholds:number
@@ -23,17 +26,17 @@ export function getDemoFeaturedPools(offers:StorefrontOffer[]):DemoFeaturedPool[
   {slug:'weekly',title:{en:'Weekly Essentials Pool',bn:'সাপ্তাহিক বাজার পুল'},
    subtitle:{en:'Groceries for the coming week',bn:'সপ্তাহের নিত্যপ্রয়োজনীয় বাজার'},
    description:{en:'Illustrative weekly grocery basket. Review item prices and quantities before any future real Pool opens.',bn:'সাপ্তাহিক বাজারের নমুনা পুল। বাস্তব পুল চালুর আগে এখানে পণ্য, দাম ও পরিমাণের ডিজাইন দেখুন।'},
-   image:'/demo-products/rice.svg',bundle:pack([item('0101',1),item('0102',1),item('0103',2)]),
+   image:'/demo-products/rice.svg',featuredProductIds:['00000000-0000-4000-8000-000000000101','00000000-0000-4000-8000-000000000102','00000000-0000-4000-8000-000000000103'],bundle:pack([item('0101',1),item('0102',1),item('0103',2)]),
    minHouseholds:20,sampleHouseholds:8,collection:{en:'Community pickup (when enabled)',bn:'কমিউনিটি সংগ্রহ পয়েন্ট (চালু হলে)'},isDemo:true},
   {slug:'monthly',title:{en:'Monthly Family Basket',bn:'মাসিক পরিবার বাজার পুল'},
    subtitle:{en:'Plan household essentials together',bn:'পরিবারের মাসিক প্রয়োজন একসাথে'},
    description:{en:'Illustrative monthly basket for community buying. All prices and participation counts are sample numbers.',bn:'কমিউনিটি কেনাকাটার মাসিক নমুনা বাজার। দাম ও অংশগ্রহণের সব সংখ্যা কাল্পনিক।'},
-   image:'/demo-products/oil.svg',bundle:pack([item('0101',2),item('0102',2),item('0103',2),item('0104',2),item('0105',2),item('0106',1)]),
+   image:'/demo-products/oil.svg',featuredProductIds:['00000000-0000-4000-8000-000000000102','00000000-0000-4000-8000-000000000101','00000000-0000-4000-8000-000000000106'],bundle:pack([item('0101',2),item('0102',2),item('0103',2),item('0104',2),item('0105',2),item('0106',1)]),
    minHouseholds:50,sampleHouseholds:18,collection:{en:'Community pickup (when enabled)',bn:'কমিউনিটি সংগ্রহ পয়েন্ট (চালু হলে)'},isDemo:true},
   {slug:'special',title:{en:'Special Savings Pool',bn:'বিশেষ সাশ্রয় পুল'},
    subtitle:{en:'Selected products for a future offer',bn:'ভবিষ্যৎ বিশেষ অফারের নির্বাচিত পণ্য'},
    description:{en:'Demonstrates a special limited-offer Pool. No live promotion, discount, stock or deadline is implied.',bn:'বিশেষ পুলের ডিজাইন নমুনা। কোনো বাস্তব ছাড়, মজুত বা শেষ তারিখ ঘোষণা করা হয়নি।'},
-   image:'/demo-products/detergent.svg',bundle:pack([item('0102',1),item('0105',1),item('0106',2)]),
+   image:'/demo-products/detergent.svg',featuredProductIds:['00000000-0000-4000-8000-000000000106','00000000-0000-4000-8000-000000000105','00000000-0000-4000-8000-000000000102'],bundle:pack([item('0102',1),item('0105',1),item('0106',2)]),
    minHouseholds:30,sampleHouseholds:12,collection:{en:'Community pickup (when enabled)',bn:'কমিউনিটি সংগ্রহ পয়েন্ট (চালু হলে)'},isDemo:true},
  ]
 }
