@@ -35,15 +35,22 @@ test('Preview-only sample pools cannot be bought or published',()=>{
  assert.match(fixture,/process.env.VERCEL_ENV !== 'production'/)
  assert.match(detail,/disabled aria-disabled="true"/)
  assert.match(detail,/demo-product/)
- assert.match(detail,/No live promotion|prices and participation counts|DEMO POOL/)
+ assert.match(detail,/DEMO ONLY|No live availability|ডেমো পুল/)
+ assert.match(detail,/demoPoolBasketTotal/)
+ assert.match(detail,/setCart\(/)
  assert.doesNotMatch(showcase,/\.insert\(|\.update\(|\.from\(/)
  assert.doesNotMatch(detail,/\.insert\(|\.update\(|\.from\(/)
 })
 test('Pool full details include product breakdown, sample totals and delivery disclosure',()=>{
- for(const needle of ['featuredPoolTotals(pool)','pool.bundle.map','minHouseholds','৳20','৳30','৳1,000']){
+ for(const needle of ['demoPoolTierState(pool)','pool.bundle.map','minHouseholds','৳20','৳30','৳1,000']){
   assert.ok(detail.includes(needle)||data.includes(needle),needle)
  }
  assert.match(detail,/market-pool-detail-items/)
+ assert.match(detail,/market-demo-quantity/)
+ assert.match(detail,/market-tier-table/)
+ assert.match(detail,/market-demo-delivery/)
+ assert.match(showcase,/market-pool-track/)
+ assert.match(showcase,/tier.householdsNeeded/)
  assert.match(css,/@media\(max-width:640px\)/)
  assert.match(css,/market-pool-detail-intro/)
  assert.match(css,/market-pool-tabs/)
@@ -64,4 +71,25 @@ test('one seamless background, transparent sections, hover details and demo revi
  assert.match(lower,/NOT A CUSTOMER REVIEW/)
  assert.match(lower,/NOT AN APPROVED SUPPLIER/)
  assert.match(lower,/market-demo-suppliers/)
+});
+
+test('shopper-facing demo tiers, quantity stepper, cart preview and selected CSS remain isolated',()=>{
+ const product=read('components/demo-product-details.tsx')
+ const shopperStyle=read('app/marketplace-shopper.css')
+ const layout=read('app/layout.tsx')
+ for(const needle of ['demoPoolTierThresholds','demoPoolTierFactor','demoPoolUnitPrice','demoPoolBasketTotal','demoPoolTierState']){
+  assert.ok(data.includes(needle),needle)
+ }
+ assert.match(detail,/demoPoolUnitPrice/)
+ assert.match(detail,/setQuantities/)
+ assert.match(detail,/setCart/)
+ assert.match(product,/setQuantity/)
+ assert.match(product,/setMode/)
+ assert.match(product,/setCart/)
+ assert.match(product,/disabled type="button"/)
+ assert.match(product,/formatPrice\(subtotal\+deliveryCharge\)/)
+ assert.match(layout,/marketplace-shopper.css/)
+ assert.match(shopperStyle,/market-ui-card/)
+ assert.match(shopperStyle,/market-featured-pool-body/)
+ assert.match(shopperStyle,/html\[data-theme="dark"\]/)
 });
