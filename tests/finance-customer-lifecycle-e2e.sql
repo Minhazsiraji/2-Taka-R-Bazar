@@ -167,13 +167,16 @@ set constraints all immediate;
 
 set constraints all deferred;
 -- Actual cash before fulfilment is not revenue. Cancellation refunds actual cash.
+insert into auth.users(id,email,created_at,updated_at) values
+ ('f0000000-0000-4000-8000-000000000004','cancel-buyer@example.invalid',now(),now()),
+ ('f0000000-0000-4000-8000-000000000005','prepaid-buyer@example.invalid',now(),now());
 insert into private.finance_uat_entities(entity_type,entity_id,reason) values
  ('order','f5000000-0000-4000-8000-000000000004','Disposable synthetic cancellation cash source'),
  ('order','f5000000-0000-4000-8000-000000000005','Disposable synthetic prepaid fulfilment source'),
  ('group_commitment','f7200000-0000-4000-8000-000000000004','Disposable synthetic Group Deal cancellation cash source');
 insert into public.orders(id,customer_id,pool_id,pickup_point_id,status,payment_status,product_subtotal,delivery_fee,total_amount,fulfillment_method)
-select id,'f0000000-0000-0000-0000-000000000001','f1000000-0000-4000-8000-000000000001',(select id from public.pickup_points where community_id='11111111-1111-1111-1111-111111111111' limit 1),'confirmed','payment_pending',980,0,980,'pickup'
-from (values ('f5000000-0000-4000-8000-000000000004'::uuid),('f5000000-0000-4000-8000-000000000005'::uuid)) v(id);
+select id,customer_id,'f1000000-0000-4000-8000-000000000001',(select id from public.pickup_points where community_id='11111111-1111-1111-1111-111111111111' limit 1),'confirmed','payment_pending',980,0,980,'pickup'
+from (values ('f5000000-0000-4000-8000-000000000004'::uuid,'f0000000-0000-4000-8000-000000000004'::uuid),('f5000000-0000-4000-8000-000000000005'::uuid,'f0000000-0000-4000-8000-000000000005'::uuid)) v(id,customer_id);
 insert into public.order_items(id,order_id,pool_item_id,product_id,quantity,benchmark_price_snapshot,unit_price)
 values('f6000000-0000-4000-8000-000000000005','f5000000-0000-4000-8000-000000000005','f2000000-0000-4000-8000-000000000001','22222222-2222-2222-2222-222222222221',1,1000,980);
 insert into public.group_deal_commitments(id,group_deal_id,circle_id,customer_id,quantity,status)

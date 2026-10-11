@@ -303,7 +303,7 @@ async function main(){
   const source='f5000000-0000-4000-8000-000000000003',item='f6000000-0000-4000-8000-000000000003'
   psql(`insert into private.finance_uat_entities(entity_type,entity_id,reason) values('order','${source}','Disposable browser synthetic completed customer source');
   insert into public.orders(id,customer_id,pool_id,status,payment_status,product_subtotal,delivery_fee,total_amount,fulfillment_method,pickup_point_id,completed_at)
-  values('${source}','f0000000-0000-0000-0000-000000000001','f1000000-0000-4000-8000-000000000001','completed','paid_manually',980,0,980,'pickup',(select id from public.pickup_points where community_id='11111111-1111-1111-1111-111111111111' limit 1),now());
+  values('${source}','${identities.get('admin').id}','f1000000-0000-4000-8000-000000000001','completed','paid_manually',980,0,980,'pickup',(select id from public.pickup_points where community_id='11111111-1111-1111-1111-111111111111' limit 1),now());
   insert into public.order_items(id,order_id,pool_item_id,product_id,quantity,benchmark_price_snapshot,unit_price)
   values('${item}','${source}','f2000000-0000-4000-8000-000000000001','22222222-2222-2222-2222-222222222221',1,1000,980)`)
   await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
