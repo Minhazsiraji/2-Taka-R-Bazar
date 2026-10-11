@@ -58,6 +58,8 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
    const match=chooseAreaByLocation(areas,latitude,longitude,accuracy)
    setNearestAreas(nearest)
    setGpsBusy(false)
+   // A delayed GPS response must not re-label a manually selected browsing area.
+   if(manualSelected.current)return
    if(match){
     if(!manualSelected.current){setArea(match.community_id);setCategory('all')}
     setLocationState('matched')
@@ -70,6 +72,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
    }
   },e=>{
    setGpsBusy(false)
+   if(manualSelected.current)return
    setLocationState(e.code===1?'denied':'failed')
    setGpsMessage(e.code===1?'Location permission was denied. Browse freely, select your community manually, or change browser permission to retry.':'We could not determine your location. Please select a community manually.')
   },{enableHighAccuracy:false,timeout:12000,maximumAge:60000})
