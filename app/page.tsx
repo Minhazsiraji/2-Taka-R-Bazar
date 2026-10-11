@@ -46,6 +46,7 @@ export default async function Page(){
  }
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
+  {/* Bangla default; switching the storefront language lives inside the client component. */}
   <PublicMarketplace areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} featured={featured} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
  </main>
 }

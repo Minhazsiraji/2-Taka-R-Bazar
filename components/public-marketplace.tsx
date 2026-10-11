@@ -104,7 +104,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      <select id="market-area-select" className="input w-full" value={area} onChange={e=>selectArea(e.target.value)}>
       <option value="">{t('All operating areas','সব এলাকা')}</option>{areas.map(a=><option key={a.community_id} value={a.community_id}>{a.community_name}</option>)}
      </select></div></div>
-   <p role="status" aria-live="polite" className="market-location-status">{locationStatus}</p>
+   <p role="status" aria-live="polite" title={gpsMessage} className="market-location-status">{locationStatus}</p>
    {nearestAreas.length>0&&<div className="market-nearby-suggestions" aria-label={t('Nearby communities','কাছের কমিউনিটি')}>
     <span className="market-nearby-heading">{t('Near you','কাছাকাছি')} <small>({t('approximate','আনুমানিক')})</small></span>
     {nearestAreas.map(a=>{const community=areas.find(c=>c.community_id===a.id);if(!community)return null;return <button key={a.id} type="button" aria-pressed={area===a.id}
