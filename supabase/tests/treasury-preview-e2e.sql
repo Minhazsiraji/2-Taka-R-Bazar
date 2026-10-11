@@ -28,6 +28,11 @@ select ok(pg_temp.expect_failure(
  'Super Admin required'),'Customer cannot create physical company cash accounts');
 
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000951',true);
+-- Shared authorized dummy DB may contain earlier synthetic openings.
+-- Capture them before this run and verify exact fixture deltas.
+create temp table qa_baseline as select public.treasury_dashboard(current_date) dashboard,
+ (select count(*)::integer from public.finance_journals where source_type='treasury_opening') opening_count;
+
 insert into qa_accounts(label,id) values
  ('A',public.treasury_create_account('Operating Bank A','bank','Bank A','1234',current_date,100000,'OPEN-A-0001',0,null)),
  ('B',public.treasury_create_account('Procurement Bank B','bank','Bank B','5678',current_date,50000,'OPEN-B-0001',0,null)),
@@ -41,12 +46,12 @@ insert into qa_debts(label,id) values
 
 select is((select count(*)::integer from qa_accounts),6,'6 distinct company accounts created');
 select is((select count(*)::integer from qa_debts),2,'Bank loan and private borrowing tracked separately');
-select is((select (public.treasury_dashboard(current_date)->>'cash_total')::numeric),180000::numeric,'Opening cash totals BDT 180000');
+select is((select (public.treasury_dashboard(current_date)->>'cash_total')::numeric - (select (dashboard->>'cash_total')::numeric from qa_baseline)),180000::numeric,'Opening cash totals BDT 180000');
 select is((select (public.treasury_dashboard(current_date)->>'card_outstanding')::numeric),5000::numeric,'Credit card liability is NOT treated as cash');
 select is((select (public.treasury_dashboard(current_date)->>'loan_and_private_borrowing_outstanding')::numeric),38000::numeric,
  'Old loan plus private borrowing is debt, not revenue');
 select is((select sum(l.debit-l.credit) from public.finance_journal_lines l),0::numeric,'Every opening journal balances');
-select is((select count(*)::integer from public.finance_journals where source_type='treasury_opening'),7,
+select is((select count(*)::integer from public.finance_journals where source_type='treasury_opening')-(select opening_count from qa_baseline),7,
  'Seven nonzero opening journals are separately classified');
 select ok(pg_temp.expect_failure(
  $$select public.treasury_create_account('Invalid card','credit_card','Example','3333',current_date,10000,'OPEN-INVALID',0,5000)$$,
@@ -98,7 +103,7 @@ insert into qa_tx(label,id) values
     5000,0,0,current_date,'OWNER-CAP-5000','Owner increased working capital fund'));
 select is((select count(*)::integer from qa_tx),8,'All eight distinct treasury transaction types submitted');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000951',true);
-select is((select (public.treasury_dashboard(current_date)->>'cash_total')::numeric),180000::numeric,
+select is((select (public.treasury_dashboard(current_date)->>'cash_total')::numeric - (select (dashboard->>'cash_total')::numeric from qa_baseline)),180000::numeric,
  'Pending transfers and repayments NEVER affect available posted cash');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000952',true);
 select ok(pg_temp.expect_failure(
@@ -107,7 +112,7 @@ select ok(pg_temp.expect_failure(
 
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000951',true);
 select is(public.treasury_review_transaction((select id from qa_tx where label='transfer'),true,'Approved transfer'),'posted','Transfer approved and posted');
-select is((select (public.treasury_dashboard(current_date)->>'cash_total')::numeric),180000::numeric,'Internal bank transfer causes zero company-wide cash flow');
+select is((select (public.treasury_dashboard(current_date)->>'cash_total')::numeric - (select (dashboard->>'cash_total')::numeric from qa_baseline)),180000::numeric,'Internal bank transfer causes zero company-wide cash flow');
 select is(public.treasury_review_transaction((select id from qa_tx where label='draw'),true,'Loan document checked'),'posted','Loan disbursement posts cash and loan liability');
 select is(public.treasury_review_transaction((select id from qa_tx where label='repay'),true,'Loan schedule checked'),'posted','Loan installment splits principal interest and fees');
 select is(public.treasury_review_transaction((select id from qa_tx where label='card_bill'),true,'Statement due verified'),'posted','Card bill lowers card payable, not expense');
@@ -116,7 +121,7 @@ select is(public.treasury_review_transaction((select id from qa_tx where label='
 select is(public.treasury_review_transaction((select id from qa_tx where label='draw_owner'),true,'Approved owner drawing'),'posted','Owner withdrawal never creates operating cost');
 select is(public.treasury_review_transaction((select id from qa_tx where label='cap_owner'),true,'Capital agreement approved'),'posted','Owner contribution is financing, not revenue');
 
-select is((select (public.treasury_dashboard(current_date)->>'cash_total')::numeric),193200::numeric,
+select is((select (public.treasury_dashboard(current_date)->>'cash_total')::numeric - (select (dashboard->>'cash_total')::numeric from qa_baseline)),193200::numeric,
  'Cash across 3 banks, wallet and petty cash reconciles to BDT 193200');
 select is((select (public.treasury_dashboard(current_date)->>'card_outstanding')::numeric),6000::numeric,
  'Card liability moves 5000 - 2000 + 3000 = 6000');
@@ -214,7 +219,11 @@ select public.treasury_set_minimum_reserve(100000);
 select is((select (public.treasury_dashboard(current_date)->>'minimum_reserve')::numeric),100000::numeric,
  'Treasury operating liquidity reserve policy updated by owner');
 select public.treasury_create_forecast(current_date+7,-20000,'supplier_payment','Supplier purchase order due','SUPPLIER-FORECAST-20K','contractual');
-select is((select (public.treasury_dashboard(current_date)->>'deployable_cash')::numeric),73200::numeric,
+select is((select (public.treasury_dashboard(current_date)->>'deployable_cash')::numeric),greatest(0,
+ 193200+(select (dashboard->>'unrestricted_cash')::numeric
+ -(dashboard->>'contractual_outflows_14d')::numeric
+ -(dashboard->>'open_supplier_payables')::numeric
+ -(dashboard->>'open_expense_payables')::numeric from qa_baseline)-100000-20000),
  'Deployable cash excludes minimum reserve plus contractual supplier obligation');
 
 insert into public.finance_periods(month_start,state,locked_by,locked_at,lock_notes)

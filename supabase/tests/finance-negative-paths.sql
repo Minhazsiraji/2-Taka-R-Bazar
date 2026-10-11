@@ -150,34 +150,34 @@ select ok(pg_temp.fails_with(
  format('update public.finance_journals set memo=%L where source_id=%L::uuid','tampered',(select id from qa_expenses where label='one')),
  'P0001','Posted finance journals are immutable'),'Posted financial records cannot be silently edited');
 
+create temp table qa_bank(id uuid);
+insert into qa_bank select public.treasury_create_account(
+ 'Negative path physical bank','bank','Synthetic bank','0911',current_date,10000,'QA-NEGATIVE-OPEN',0,null);
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000911',true);
 insert into qa_settlements(label,id)
-select 'rejected',public.finance_request_settlement(
- (select id from qa_expenses where label='one'),'bank','QA-BANK-TRANSFER-01',current_date,
- '00000000-0000-4000-8000-000000000911/transfer1.pdf',repeat('e',64));
+select 'rejected',public.treasury_request_transaction('expense_cash',(select id from qa_bank),null,null,
+ (select id from qa_expenses where label='one'),1250,0,0,current_date,'QA-BANK-TRANSFER-01','Synthetic bank settlement request');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000912',true);
-select is(public.finance_review_settlement((select id from qa_settlements where label='rejected'),false,'Proof mismatched bank transfer'),
+select is(public.treasury_review_transaction((select id from qa_settlements where label='rejected'),false,'Proof mismatched bank transfer'),
  'rejected','Bank payment proof can be rejected without disbursement posting');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000911',true);
 insert into qa_settlements(label,id)
-select 'paid',public.finance_request_settlement(
- (select id from qa_expenses where label='one'),'bank','QA-BANK-TRANSFER-02',current_date,
- '00000000-0000-4000-8000-000000000911/transfer2.pdf',repeat('f',64));
-select is((select count(*)::integer from public.finance_settlement_requests where expense_id=(select id from qa_expenses where label='one')),
+select 'paid',public.treasury_request_transaction('expense_cash',(select id from qa_bank),null,null,
+ (select id from qa_expenses where label='one'),1250,0,0,current_date,'QA-BANK-TRANSFER-02','Synthetic bank settlement retry');
+select is((select count(*)::integer from public.treasury_transactions where expense_id=(select id from qa_expenses where label='one')),
  2,'Rejected payment retry preserves both attempts');
 select ok(pg_temp.fails_with(
- $$select public.finance_request_settlement((select id from qa_expenses where label='corrected'),
- 'bank','QA-BANK-TRANSFER-02',current_date,
- '00000000-0000-4000-8000-000000000911/transfer3.pdf',repeat('1',64))$$,
- '23505','finance_settlement_reference_live'),'Reused bank transfer reference blocked across different approved expenses');
+ $$select public.treasury_request_transaction('expense_cash',(select id from qa_bank),null,null,
+ (select id from qa_expenses where label='corrected'),400,0,0,current_date,'QA-BANK-TRANSFER-02','Reused external transfer reference')$$,
+ '23505','treasury_reference_active'),'Reused bank transfer reference blocked across different approved expenses');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000912',true);
-select is(public.finance_review_settlement((select id from qa_settlements where label='paid'),true,'Matched independent proof'),
- 'verified','Independent final settlement verification posts cash movement');
+select is(public.treasury_review_transaction((select id from qa_settlements where label='paid'),true,'Matched independent proof'),
+ 'posted','Independent final settlement approval posts book cash movement');
 select is((select (public.finance_report(current_date)->>'settled_cash_out')::numeric),1250::numeric,
  'Monthly outgoing cash equals the sole internally verified payment');
 select is((select sum(debit-credit) from public.finance_journal_lines),0::numeric,
  'Ledger is still globally balanced after payment and reversal attempts');
-select is((select count(*)::integer from public.finance_journals where source_type='expense_settlement'),1,
+select is((select count(*)::integer from public.finance_journals where source_type='treasury_transaction' and source_id in(select id from qa_settlements)),1,
  'Rejected payment never posts, approved one posts exactly once');
 
 select * from finish();

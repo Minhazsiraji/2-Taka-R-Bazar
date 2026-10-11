@@ -2,7 +2,7 @@
 -- Executed by supabase test db in the disposable GitHub Actions Supabase stack.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(15);
+select plan(16);
 
 select has_table('public','finance_expenses','Expense source table exists');
 select has_table('public','finance_journals','Posted financial journals exist');
@@ -58,26 +58,25 @@ select is((select coalesce(sum(l.debit-l.credit),0) from public.finance_journal_
 select is((select (public.finance_report((now() at time zone 'Asia/Dhaka')::date)->>'profit_status')::text),
  'UNAVAILABLE_UNTIL_REVENUE_COGS_RECONCILED','Unreconciled revenue cannot show certified net profit');
 
+-- Once physical Treasury exists, the generic payment route must stay blocked.
+create temporary table finance_test_bank(id uuid);
+insert into finance_test_bank select public.treasury_create_account(
+ 'Issue 57 synthetic bank','bank','Synthetic bank','0057',current_date,2000,'ISSUE57-OPEN-901',0,null);
 do $$ begin perform set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000901',true); end $$;
-insert into finance_test_settlement(id)
-select public.finance_request_settlement(
- (select id from finance_test_expense),
- 'bank',
- 'E2E-TRANSFER-2TBR-01',
- (now() at time zone 'Asia/Dhaka')::date,
- '00000000-0000-4000-8000-000000000901/payment-fixture.jpg',
- repeat('b',64)
-);
-select is((select count(*)::integer from public.finance_settlement_requests where id in (select id from finance_test_settlement)),1,'Bank settlement request stored once');
 select throws_ok(
- 'select public.finance_review_settlement('''||(select id::text from finance_test_settlement)||'''::uuid,true,'''')',
- 'P0001','Payment requester may not verify payment','Payment self verification rejected'
-);
-
+ 'select public.finance_request_settlement('''||(select id::text from finance_test_expense)||'''::uuid,''bank'',''E2E-LEGACY-BLOCK'',current_date,''00000000-0000-4000-8000-000000000901/payment-fixture.jpg'',repeat(''b'',64))',
+ 'P0001','Use Treasury settlement with a specific cash account; generic finance payments are disabled',
+ 'Generic settlement cannot bypass physical bank accounting');
+insert into finance_test_settlement select public.treasury_request_transaction(
+ 'expense_cash',(select id from finance_test_bank),null,null,(select id from finance_test_expense),
+ 1250,0,0,current_date,'E2E-TRANSFER-2TBR-01','Synthetic physical bank expense settlement');
+select is((select count(*)::integer from public.treasury_transactions where id in(select id from finance_test_settlement)),1,'Treasury settlement request stored once');
+select throws_ok(
+ 'select public.treasury_review_transaction('''||(select id::text from finance_test_settlement)||'''::uuid,true,'''')',
+ 'P0001','Treasury reviewer requires Super Admin','Maker cannot verify payment');
 do $$ begin perform set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000902',true); end $$;
-select is(public.finance_review_settlement((select id from finance_test_settlement),true,'Bank proof verified'), 'verified','Independent settlement verification succeeds');
+select is(public.treasury_review_transaction((select id from finance_test_settlement),true,'Synthetic internally reviewed payment'), 'posted','Independent settlement approval posts book movement');
 select is((select coalesce(sum(l.debit-l.credit),0) from public.finance_journal_lines l
  join public.finance_journals j on j.id=l.journal_id),0::numeric,'All journal lines balance after settlement');
-
 select * from finish();
 rollback;

@@ -38,6 +38,7 @@ values('finance-evidence','00000000-0000-4000-8000-000000000921/receipt-pending.
  ('finance-evidence','00000000-0000-4000-8000-000000000921/transfer-done.pdf');
 
 select plan(20);
+create temp table qa_category_baseline as select count(*)::integer pending_count from public.finance_expenses where status='submitted' and incurred_on>=date_trunc('month',current_date)::date and incurred_on<(date_trunc('month',current_date)+interval '1 month')::date;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000921',true);
 update qa_cases c
 set expense_id=public.finance_submit_expense(
@@ -48,7 +49,7 @@ set expense_id=public.finance_submit_expense(
  repeat(c.proof,21)||left(c.proof,1),null,'AMT-01'
 );
 select is((select count(*)::integer from qa_cases where expense_id is not null),7,'All seven expense categories created');
-select is((select count(*)::integer from public.finance_journals),0,'Submitting expenses never prematurely recognizes costs');
+select is((select count(*)::integer from public.finance_journals where source_id in(select expense_id from qa_cases)),0,'Submitting expenses never prematurely recognizes costs');
 
 -- A pending expense is intentionally left unposted before period lock.
 create temp table qa_pending(id uuid);
@@ -64,7 +65,7 @@ select is((select count(*)::integer from (
 
 select is((select count(*)::integer from public.finance_journals where source_type='expense_accrual'),7,
  'Seven expense accrual journals posted once');
-select is((select count(*)::integer from public.finance_journal_lines),14,
+select is((select count(*)::integer from public.finance_journal_lines where journal_id in(select id from public.finance_journals where source_id in(select expense_id from qa_cases))),14,
  'Each journal has two balancing lines');
 select is((select count(distinct l.account_code)::integer from public.finance_journal_lines l
   join public.finance_journals j on j.id=l.journal_id
@@ -78,24 +79,27 @@ select is((select (public.finance_report(current_date)->>'posted_expenses')::num
  'The approved expense total is BDT 3108, excluding the pending draft');
 select is((select jsonb_array_length(public.finance_report(current_date)->'by_category')),7,
  'Report breaks down all seven expense categories');
-select is((select (public.finance_report(current_date)->>'pending_count')::integer),1,
+select is((select (public.finance_report(current_date)->>'pending_count')::integer)-(select pending_count from qa_category_baseline),1,
  'Dashboard correctly identifies the unapproved expense');
 
 -- Cash payment cannot be pre-recorded from a draft; settlement must be separately authorized.
+create temp table qa_bank(id uuid);
+insert into qa_bank select public.treasury_create_account(
+ 'Category synthetic bank','bank','Synthetic bank','0921',current_date,2000,'QA-CATEGORY-OPEN',0,null);
+
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000921',true);
 select ok(pg_temp.must_fail(
- $$select public.finance_request_settlement((select id from qa_pending),'cash',
- 'PENDING-NOT-PAID',current_date,'00000000-0000-4000-8000-000000000921/transfer-done.pdf',repeat('c',64))$$,
- 'Expense not approved for payment'),'Unapproved invoices cannot produce cash transactions');
+ $$select public.treasury_request_transaction('expense_cash',(select id from qa_bank),null,null,
+ (select id from qa_pending),50,0,0,current_date,'PENDING-NOT-PAID','Unapproved expense cannot be paid')$$,
+ 'Only fully approved, unpaid expense can be settled for exact value'),'Unapproved invoices cannot produce cash transactions');
 
 create temp table qa_paid(id uuid);
-insert into qa_paid select public.finance_request_settlement(
- (select expense_id from qa_cases where category='logistics'),'cash','CASH-RECEIPT-PAID',current_date,
- '00000000-0000-4000-8000-000000000921/transfer-done.pdf',repeat('e',64));
+insert into qa_paid select public.treasury_request_transaction('expense_cash',(select id from qa_bank),null,null,
+ (select expense_id from qa_cases where category='logistics'),111,0,0,current_date,'CASH-RECEIPT-PAID','Category expense physical bank settlement');
 
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000922',true);
-select is(public.finance_review_settlement((select id from qa_paid),true,'Cash accepted independently'),'verified',
- 'Independent verifier records the cash settlement');
+select is(public.treasury_review_transaction((select id from qa_paid),true,'Cash accepted independently'),'posted',
+ 'Independent reviewer records the book cash settlement');
 select is((select (public.finance_report(current_date)->>'settled_cash_out')::numeric),111::numeric,
  'Verified cash outflow is BDT 111, not all BDT 3108 expenses');
 select is((select sum(debit-credit) from public.finance_journal_lines),0::numeric,

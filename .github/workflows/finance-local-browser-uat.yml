@@ -2,6 +2,8 @@ name: Finance and Treasury isolated browser UAT
 on:
   push:
     branches: [feat/finance-treasury-integrated-20261009, feat/finance-complete-release-uat-20261011]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -9,6 +11,7 @@ permissions:
 
 jobs:
   browser-uat:
+    if: github.event_name != 'pull_request' || github.head_ref == 'feat/finance-complete-release-uat-20261011' || github.head_ref == 'feat/finance-treasury-integrated-20261009'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
