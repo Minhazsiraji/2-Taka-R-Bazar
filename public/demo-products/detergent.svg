@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="460" viewBox="0 0 600 460" role="img" aria-label="Illustrated demo DETERGENT product package">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#e8f5f9"/></linearGradient></defs>
+<rect width="600" height="460" rx="24" fill="url(#bg)"/><circle cx="490" cy="110" r="100" fill="#386bbb" opacity=".065"/><circle cx="100" cy="385" r="92" fill="#386bbb" opacity=".045"/>
+<ellipse cx="300" cy="390" rx="146" ry="19" fill="#233a46" opacity=".12"/>
+<path d="M237 116h126l27 231q2 18-16 18H226q-18 0-16-18z" fill="#f2faff" stroke="#609abb" stroke-width="6"/><path d="M238 116h125l-8-27H247z" fill="#2686bd"/><rect x="227" y="165" width="146" height="119" rx="13" fill="#3a83cb"/><path d="M242 234q25-44 49-8t65-15" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/><circle cx="290" cy="184" r="9" fill="#bdeafa"/><circle cx="311" cy="199" r="6" fill="#bdeafa"/>
+<text x="300" y="210" font-family="Arial,sans-serif" font-size="15" font-weight="800" fill="#fff" text-anchor="middle">DETERGENT</text>
+<rect x="18" y="18" width="106" height="30" rx="15" fill="#23334c" opacity=".9"/><text x="71" y="38" font-family="Arial,sans-serif" font-size="13" font-weight="800" text-anchor="middle" fill="#fff">DEMO ONLY</text>
+<text x="300" y="426" font-family="Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#53657c">Illustration · no actual product or stock</text>
+</svg>
