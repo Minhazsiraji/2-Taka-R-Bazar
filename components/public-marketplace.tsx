@@ -11,6 +11,7 @@ import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
 import {FeaturedProductsCarousel} from '@/components/featured-products-carousel'
 import {FeaturedPoolShowcase} from '@/components/featured-pool-showcase'
+import {AnimatedHeroMessages} from '@/components/animated-hero-messages'
 import {getDemoFeaturedPools} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
@@ -116,8 +117,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
    <div className="market-hero-grid market-hero-editorial mt-6">
     <section className="market-hero-copy market-hero-flat" aria-label={t('Shop together and save','একসাথে কিনে সাশ্রয় করুন')}>
      <span className="market-hero-editorial-kicker">{t('Community-first grocery marketplace','আপনার কমিউনিটির স্মার্ট বাজার')}</span>
-     <h1 className="market-hero-main-title">{t('Shop smarter. Save more with your community.','নিজের এলাকায় স্মার্ট বাজার করুন।')} <span className="market-hero-green">{t('Keep more savings.','সাশ্রয় করুন একসাথে।')}</span></h1>
-     <p className="market-hero-subtitle">{t('Browse products without signing in. Compare individual and community Pool prices, then verify only when you decide to join or order.','লগইন ছাড়াই পণ্য দেখুন। একা কেনা ও কমিউনিটি পুলের দাম তুলনা করুন। যোগ দেওয়া বা অর্ডার করার সময় যাচাই করুন।')}</p>
+     <AnimatedHeroMessages language={language}/>
      <div className="market-hero-actions">
       <a className="btn-primary" href="#deals">{t('Explore community deals','কমিউনিটি অফার দেখুন')}</a>
       <a className="btn-secondary" href="#how-it-works">{t('How it works','যেভাবে কাজ করে')}</a>
