@@ -3,7 +3,6 @@ import {createClient} from '@/lib/supabase/server'
 import {PublicHeader} from '@/components/public-header'
 import {PublicFooter} from '@/components/public-footer'
 import {PublicMarketplace} from '@/components/public-marketplace'
-import {FeaturedProductsCarousel} from '@/components/featured-products-carousel'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {PUBLIC_CONTACT_EMAIL,SITE_DESCRIPTION,SITE_NAME,SITE_TAGLINE_EN,SITE_URL} from '@/lib/site'
@@ -44,11 +43,7 @@ export default async function Page(){
  return <main className="min-h-screen bg-white text-black">
   <PublicHeader actionHref={authenticated?'/home':'/login'} actionLabel={authenticated?'My dashboard':'Sign in'}/>
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
-  <PublicMarketplace areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} howLabelBn="কীভাবে কাজ করে"/>
-  {featured.length>0&&<section className="mx-auto mb-10 max-w-6xl px-5 md:px-8">
-   <div className="mb-4"><p className="text-xs font-bold uppercase tracking-[.15em] text-teal-700">Our own & exclusive products</p><h2 className="mt-2 text-2xl font-black">Explore the 2-TAKA-R-BAZAR collection</h2></div>
-   <div className="overflow-hidden rounded-[28px] border border-black/10 bg-white"><FeaturedProductsCarousel products={featured}/></div>
-  </section>}
+  <PublicMarketplace areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} featured={featured} howLabelBn="কীভাবে কাজ করে"/>
   <PublicFooter/>
  </main>
 }

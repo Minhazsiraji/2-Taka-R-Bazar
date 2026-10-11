@@ -5,8 +5,10 @@ import Link from 'next/link'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {chooseAreaByLocation,formatPrice} from '@/lib/storefront'
 import {PublicMarketplaceLower} from '@/components/public-marketplace-lower'
+import {FeaturedProductsCarousel} from '@/components/featured-products-carousel'
+import type {ShowcaseProduct} from '@/lib/showcase-media'
 
-export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean}){
+export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[]}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[]}){
  const [area,setArea]=useState('')
  const [search,setSearch]=useState('')
  const [gpsBusy,setGpsBusy]=useState(false)
@@ -107,6 +109,10 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
     </article>
    })}</div>}
   </section>
+  {featured.length>0&&<section id="exclusive-products" className="mx-auto max-w-6xl px-5 py-7 md:px-8">
+    <div className="mb-4"><p className="text-xs font-bold uppercase tracking-[.15em] text-teal-700">Our own & exclusive products</p><h2 className="mt-2 text-2xl font-black">Explore the 2-TAKA-R-BAZAR collection</h2></div>
+    <div className="overflow-hidden rounded-[28px] border border-black/10 bg-white"><FeaturedProductsCarousel products={featured}/></div>
+   </section>}
   <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={next=>{setArea(next);setCategory('all')}}/>
  </>
 }
