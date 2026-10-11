@@ -1,5 +1,5 @@
 'use client'
-import {useMemo,useState} from 'react'
+import {useState} from 'react'
 import Link from 'next/link'
 import type {DemoFeaturedPool} from '@/lib/featured-pools'
 import {demoPoolBasketTotal,demoPoolTierState,demoPoolTierThresholds,demoPoolTierFactor,demoPoolUnitPrice} from '@/lib/featured-pools'
