@@ -62,7 +62,8 @@ test('pearl glass styles retained and location controls adapt to mobile',()=>{
 });
 
 test('flat editorial hero and Pool selector use a responsive balanced layout',()=>{
- assert.match(catalog,/market-hero-main-title/)
+ assert.match(catalog,/<AnimatedHeroMessages language=\{language\}\/\>/)
+ assert.match(read('components/animated-hero-messages.tsx'),/market-hero-main-title/)
  assert.match(catalog,/market-hero-copy market-hero-flat/)
  assert.match(catalog,/market-hero-product market-hero-pool-shell/)
  assert.match(catalog,/<FeaturedPoolShowcase pools=\{heroPools\}/)
