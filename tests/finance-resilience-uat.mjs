@@ -80,9 +80,9 @@ try{
   await new Promise(r=>setTimeout(r,1000))
  }
  assert.ok(ready,'Isolated restore database did not become ready')
- const existingRoles=execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-tAX','-c','select rolname from pg_roles'],{encoding:'utf8'}).trim().split('\n')
+ const existingRoles=execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-d','postgres','-tAX','-c','select rolname from pg_roles'],{encoding:'utf8'}).trim().split('\n')
  const roleRestore=roles.split('\n').filter(line=>!existingRoles.some(role=>line==='CREATE ROLE '+role+';'||line==='CREATE ROLE "'+role+'";')).join('\n')
- execFileSync('docker',['exec','-i',restoreName,'psql','-U','supabase_admin','-v','ON_ERROR_STOP=1'],{input:roleRestore,stdio:['pipe','pipe','pipe']})
+ execFileSync('docker',['exec','-i',restoreName,'psql','-U','supabase_admin','-d','postgres','-v','ON_ERROR_STOP=1'],{input:roleRestore,stdio:['pipe','pipe','pipe']})
  execFileSync('docker',['exec',restoreName,'createdb','-U','supabase_admin','-T','template0','issue57_restore'],{stdio:'pipe'})
  execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-d','issue57_restore','-v','ON_ERROR_STOP=1','-c','drop schema public cascade'],{stdio:'pipe'})
  execFileSync('docker',['exec',restoreName,'pg_restore','-U','supabase_admin','-d','issue57_restore','--no-owner','--exit-on-error','/restore/database.dump'],{stdio:'pipe'})
