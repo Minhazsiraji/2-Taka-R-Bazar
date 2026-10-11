@@ -122,19 +122,28 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      <div className="mt-6 grid grid-cols-2 gap-3 text-xs font-semibold text-slate-600"><p>{t('✓ Free community pickup','✓ কমিউনিটি পয়েন্টে ফ্রি')}</p><p>{t('✓ Optional home delivery','✓ চাইলে হোম ডেলিভারি')}</p><p>{t('✓ No subscription fee','✓ সাবস্ক্রিপশন ফি নেই')}</p><p>{t('✓ No fake savings','✓ ভুয়া সাশ্রয় নয়')}</p></div>
     </section>
     <section className="market-hero-product flex min-h-[410px] flex-col justify-center overflow-hidden rounded-[28px] border border-black/10 bg-white p-5 sm:p-7">
-     {spotlight?<><span className="text-xs font-black uppercase tracking-[.16em] text-teal-700">{spotlight.offer_kind==='GROUP_DEAL'?'Featured Group Deal':'Community Pool spotlight'}</span>
-      <div className="mt-4 flex min-h-56 items-center justify-center">{spotlight.image_url?<img src={spotlight.image_url} alt={spotlight.product_name} className="max-h-60 w-full object-contain"/>:<img src="/grocery-hero-glass.svg" alt="Grocery basket illustration" className="max-h-52 w-full object-contain"/>}</div>
-      <h2 className="mt-3 text-xl font-black">{spotlight.product_name}</h2><p className="mt-1 text-sm text-slate-500">{spotlight.package_size} · {spotlight.offer_title}</p>
-      <p className="mt-3 text-2xl font-black text-teal-700">{formatPrice(spotlight.confirmed_price??spotlight.upcoming_price)}</p>
-      <p className="mt-1 text-xs text-slate-500">{spotlight.confirmed_price?'Currently unlocked or published price':'Potential next-tier price — not yet unlocked'}</p>
-      <p className="mt-2 text-sm font-semibold">{spotlight.buyer_count} qualified {spotlight.buyer_count===1?'buyer':'buyers'} joined</p>
-      <Link href={spotlight.offer_kind==='GROUP_DEAL'?groupHref:poolHref} className="btn-primary mt-4 text-center">View this {spotlight.offer_kind==='GROUP_DEAL'?'Group Deal':'Pool'} →</Link>
+     {spotlight?<><span className="text-xs font-black uppercase tracking-[.16em] text-teal-700">
+       {spotlight.is_demo?t('DEMO · Sample featured product','ডেমো · নমুনা ফিচারড পণ্য'):
+        spotlight.offer_kind==='GROUP_DEAL'?t('Featured Group Deal','ফিচারড গ্রুপ ডিল'):t('Community Pool spotlight','কমিউনিটি পুলের বিশেষ অফার')}
+       </span>
+       <div className="mt-4 flex min-h-56 items-center justify-center">{spotlight.image_url?
+        <img src={spotlight.image_url} alt={t(spotlight.product_name,spotlight.product_name_bn??spotlight.product_name)} className="max-h-60 w-full object-contain"/>:
+        <img src="/grocery-hero-glass.svg" alt="" className="max-h-52 w-full object-contain"/>}
+       </div>
+       <h2 className="mt-3 text-xl font-black">{t(spotlight.product_name,spotlight.product_name_bn??spotlight.product_name)}</h2>
+       <p className="mt-1 text-sm text-slate-500">{spotlight.package_size}{spotlight.is_demo?' · DEMO / নমুনা':' · '+spotlight.offer_title}</p>
+       <p className="mt-3 text-2xl font-black text-teal-700">{formatPrice(spotlight.confirmed_price??spotlight.upcoming_price)}</p>
+       <p className="mt-1 text-xs text-slate-500">{spotlight.is_demo?t('Illustrative group price only · no ordering','শুধু নমুনা গ্রুপ মূল্য · অর্ডার নয়'):
+        spotlight.confirmed_price?t('Currently unlocked or published price','বর্তমানে প্রকাশিত বা আনলক করা মূল্য'):t('Potential next-tier price, not unlocked','পরবর্তী স্তরের সম্ভাব্য দাম, এখনো চালু নয়')}</p>
+       <p className="mt-2 text-sm font-semibold">{spotlight.buyer_count} {t('buyers','জন ক্রেতা')}{spotlight.is_demo?' · DEMO / নমুনা':t(' qualified',' যাচাইকৃত')}</p>
+       <Link href={spotlight.is_demo?`/demo-product/${spotlight.product_id}`:spotlight.offer_kind==='GROUP_DEAL'?groupHref:poolHref}
+        className="btn-primary mt-4 text-center">{spotlight.is_demo?t('View sample product →','নমুনা পণ্য দেখুন →'):t('View local deal →','স্থানীয় ডিল দেখুন →')}</Link>
      </>:<><img src="/grocery-hero-glass.svg" alt="Grocery essentials" className="max-h-64 w-full object-contain"/><h2 className="mt-5 text-center text-xl font-black">{t('Your next community deal starts here','আপনার এলাকার পরবর্তী গ্রুপ ডিল এখানে আসবে')}</h2><p className="mt-2 text-center text-sm text-slate-500">{t('New approved offers will appear here when available.','যাচাইকৃত অফার প্রকাশিত হলে এখানে দেখানো হবে।')}</p></>}
     </section>
    </div>
   </div></section>
   <section id="deals" className="market-band market-deals-band"><div className="market-content">
-   <div className="flex flex-wrap items-center justify-between gap-3"><div>{demoMode&&<span className="market-demo-banner">{t('DEMO CATALOG · sample prices, no ordering','ডেমো পণ্য · নমুনা মূল্য, অর্ডার নয়')}</span>}<p className="text-xs font-bold uppercase tracking-[.14em] text-teal-700">{t('Shop by buying mode','কেনার ধরন বেছে নিন')}</p><h2 className="mt-2 text-2xl font-black">{t('Products & local deals','পণ্য ও স্থানীয় অফার')}</h2><p className="mt-1 text-sm text-slate-500">{activeArea?activeArea.community_name:t('Choose an area to see nearby offers','কাছের অফার দেখতে এলাকা বাছুন')} · {filtered.length} active offers</p></div>
+   <div className="flex flex-wrap items-center justify-between gap-3"><div>{demoMode&&<span className="market-demo-banner">{t('DEMO CATALOG · sample prices, no ordering','ডেমো পণ্য · নমুনা মূল্য, অর্ডার নয়')}</span>}<p className="text-xs font-bold uppercase tracking-[.14em] text-teal-700">{t('Shop by buying mode','কেনার ধরন বেছে নিন')}</p><h2 className="mt-2 text-2xl font-black">{t('Products & local deals','পণ্য ও স্থানীয় অফার')}</h2><p className="mt-1 text-sm text-slate-500">{activeArea?activeArea.community_name:t('Choose an area to see nearby offers','কাছের অফার দেখতে এলাকা বাছুন')} · {filtered.length} {demoMode?t('demo offers','নমুনা অফার'):t('active offers','সক্রিয় অফার')}</p></div>
     <div className="flex flex-wrap gap-2" role="group" aria-label="Filter buying mode">{([['all','All products','সব পণ্য'],['group','Group Deals','গ্রুপ ডিল'],['pool','Community Pools','কমিউনিটি পুল']] as const).map(([val,label,labelBn])=><button type="button" key={val} onClick={()=>setMode(val)} aria-pressed={mode===val} className={mode===val?'btn-primary':'btn-secondary'}>{t(label,labelBn)}</button>)}</div>
    </div>
    <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter product category">
