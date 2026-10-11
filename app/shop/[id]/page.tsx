@@ -58,7 +58,7 @@ export default async function PublicProductPage({params,searchParams}:Params){
      <h1 className="mt-3 text-3xl font-black">{item.product_name}</h1>
      <p className="mt-2 text-sm text-slate-600">{[item.brand,item.package_size].filter(Boolean).join(' · ')}</p>
      {product.showcase?.description&&<p className="mt-5 whitespace-pre-line text-sm leading-7 text-slate-600">{product.showcase.description}</p>}
-     {product.showcase?.highlights?.length>0&&<ul className="mt-5 list-inside list-disc text-sm leading-7">{product.showcase.highlights.map(x=><li key={x}>{x}</li>)}</ul>}
+     {(product.showcase?.highlights?.length??0)>0&&<ul className="mt-5 list-inside list-disc text-sm leading-7">{(product.showcase?.highlights??[]).map(x=><li key={x}>{x}</li>)}</ul>}
      <h2 className="mt-7 text-lg font-black">Choose how to buy</h2>
      <div className="mt-3 grid grid-cols-2 gap-3">
       <div className="rounded-2xl border border-black/10 p-4"><p className="text-sm font-black">Buy Alone</p><p className="mt-2 text-lg font-black">Price not published</p><p className="mt-1 text-xs text-slate-500">Individual orders will open after inventory and solo checkout verification.</p><button type="button" disabled className="mt-4 w-full cursor-not-allowed rounded-xl border p-3 text-xs font-black opacity-60">Buy Alone · Soon</button></div>
