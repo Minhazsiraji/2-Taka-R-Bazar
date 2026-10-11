@@ -63,7 +63,7 @@ export function demoPoolUnitPrice(offer:StorefrontOffer,factor:number):number{
 export function demoPoolBasketTotal(pool:DemoFeaturedPool,threshold:number,quantities?:Record<string,number>):number{
  const factor=demoPoolTierFactor(pool,threshold)
  return pool.bundle.reduce((sum,{offer,qty})=>{
-  const quantity=quantities?.[offer.product_id]??qty
+  const quantity=quantities ? (quantities[offer.product_id]??0) : qty
   return sum+Math.max(0,quantity)*demoPoolUnitPrice(offer,factor)
  },0)
 }
