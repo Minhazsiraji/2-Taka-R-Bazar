@@ -144,6 +144,7 @@ select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',
 select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'inventory_source')::numeric=8750,'Integrated source inventory report mismatch');
 select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'ap_source')::numeric=4027,'Integrated independent AP report mismatch');
 \echo 'INTEGRATED_SOURCE_REPORT_RECONCILIATION_PASS'
+set constraints all deferred;
 -- Recover a paid supplier credit in two actual cash instalments, no revenue.
 insert into storage.objects(bucket_id,name) values
  ('finance-evidence','a0000000-0000-0000-0000-000000000001/supplier-recovery-400.pdf'),

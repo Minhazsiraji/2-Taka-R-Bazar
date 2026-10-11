@@ -1,0 +1,16 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(6);
+insert into auth.users(id,email,created_at,updated_at) values('00000000-0000-4000-8000-000000000993','audit-owner@example.invalid',now(),now());
+insert into public.user_roles(user_id,role) values('00000000-0000-4000-8000-000000000993','super_admin');
+insert into public.audit_events(event_type,entity_type,metadata) values('finance_export_fixture','synthetic_fixture','{"synthetic":true}');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000993',true);
+select ok(jsonb_array_length(public.finance_audit_export(date_trunc('month',current_date)::date,0)->'rows')>0,'Authorized export includes retained financial history');
+select throws_ok($$delete from public.audit_events where event_type='finance_export_fixture'$$,'P0001','Financial audit history is immutable','Financial audit deletion denied');
+select throws_ok($$update public.audit_events set metadata='{}' where event_type='finance_export_fixture'$$,'P0001','Financial audit history is immutable','Financial audit rewriting denied');
+select ok(not has_function_privilege('anon','public.finance_audit_export(date,bigint)','EXECUTE'),'Anonymous export denied');
+select set_config('request.jwt.claim.sub','',true);
+select throws_ok($$select public.finance_audit_export(date '2026-10-01',0)$$,'P0001','Super Admin audit export required','No identity cannot export financial audit');
+select is((select count(*)::integer from public.audit_events where event_type='finance_export_fixture'),1,'Failed attacks retain original audit history');
+select * from finish();
+rollback;

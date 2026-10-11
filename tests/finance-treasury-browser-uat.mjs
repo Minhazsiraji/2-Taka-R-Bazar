@@ -302,8 +302,8 @@ async function main(){
   // New customer source is operator-registered only in this disposable DB.
   const source='f5000000-0000-4000-8000-000000000003',item='f6000000-0000-4000-8000-000000000003'
   psql(`insert into private.finance_uat_entities(entity_type,entity_id,reason) values('order','${source}','Disposable browser synthetic completed customer source');
-  insert into public.orders(id,customer_id,pool_id,status,payment_status,product_subtotal,delivery_fee,total_amount,fulfillment_method,completed_at)
-  values('${source}','f0000000-0000-0000-0000-000000000001','f1000000-0000-4000-8000-000000000001','completed','paid_manually',980,0,980,'pickup',now());
+  insert into public.orders(id,customer_id,pool_id,status,payment_status,product_subtotal,delivery_fee,total_amount,fulfillment_method,pickup_point_id,completed_at)
+  values('${source}','f0000000-0000-0000-0000-000000000001','f1000000-0000-4000-8000-000000000001','completed','paid_manually',980,0,980,'pickup',(select id from public.pickup_points where community_id='11111111-1111-1111-1111-111111111111' limit 1),now());
   insert into public.order_items(id,order_id,pool_item_id,product_id,quantity,benchmark_price_snapshot,unit_price)
   values('${item}','${source}','f2000000-0000-4000-8000-000000000001','22222222-2222-2222-2222-222222222221',1,1000,980)`)
   await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
@@ -330,6 +330,8 @@ async function main(){
   await approveEvent(sale)
   const saleOriginal=await owner.request.get(base+'/api/finance/originals/customer_event/'+sale)
   assert.equal(saleOriginal.status(),200);assert.deepEqual(await saleOriginal.body(),saleProof)
+  const register=await owner.request.get(base+'/api/finance/documents/customer_event/'+sale+'?download=1')
+  assert.equal(register.status(),200);assert.equal((await register.body()).subarray(0,5).toString(),'%PDF-')
   assert.equal(psql(`select status from public.finance_customer_events where id='${sale}'`),'posted')
   console.log('PASS browser actual source sale, invoice-lot COGS, independent approval and original integrity');stages++
   async function customerCash(kind,reference){
@@ -389,6 +391,11 @@ async function main(){
   await visit(owner,'/super-admin/finance-report','Integrated accounting report & period close')
   await snapshot(owner,'integrated-report')
   await owner.getByText('BDT 93.00',{exact:true}).waitFor({timeout:30000})
+  const auditExport=await owner.request.get(base+'/api/finance/export?month='+new Date().toISOString().slice(0,7))
+  assert.equal(auditExport.status(),200);const exported=await auditExport.json()
+  assert.equal(Number(exported.report.profit_before_tax),93);assert.ok(exported.audit.rows.length>0)
+  assert.match(exported.report.ledger_sha256,/^[a-f0-9]{64}$/)
+  console.log('PASS authorized accounting and immutable audit export bound to journal fingerprint');stages++
   const closeCookie=await viewer('super_admin','close_maker'),closeContext=await browser.newContext()
   await closeContext.addCookies(closeCookie);const closeMaker=await closeContext.newPage()
   await visit(closeMaker,'/super-admin/finance-report?month=2001-01','Integrated accounting report & period close')

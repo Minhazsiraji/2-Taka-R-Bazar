@@ -8,11 +8,11 @@ function pdfText(value:unknown){
 }
 function money(value:number){return 'BDT '+value.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
 export function renderFinancePdf(d:PrintableRecord):Buffer{
- if(!['purchase_order','supplier_bill'].includes(d.kind)||!Number.isSafeInteger(d.quantity)||d.quantity<1||
+ if(!['purchase_order','supplier_bill','credit_note','customer_sale','customer_receipt'].includes(d.kind)||!Number.isSafeInteger(d.quantity)||d.quantity<1||
  !Number.isFinite(d.unitPrice)||d.unitPrice<=0||!Number.isFinite(d.amount)||
  Math.abs(d.amount-d.quantity*d.unitPrice)>.02)throw Error('Invalid document transaction')
  const bill=d.kind==='supplier_bill'
- const label=bill?'SUPPLIER BILL REGISTER':'PURCHASE ORDER'
+ const label=bill?'SUPPLIER BILL REGISTER':d.kind==='purchase_order'?'PURCHASE ORDER':d.kind.replaceAll('_',' ').toUpperCase()+' REGISTER'
  const lines:string[]=[]
  const draw=(x:number,y:number,size:number,text:string,bold=false)=>{
   // Explicitly reset fill color for every text operation: background rectangles must never tint subsequent text.
@@ -38,7 +38,7 @@ export function renderFinancePdf(d:PrintableRecord):Buffer{
  draw(380,523,10,d.unitPrice.toFixed(2));draw(480,523,10,d.amount.toFixed(2))
  draw(45,470,15,'Total: '+money(d.amount),true)
  lines.push('0.7 0.75 0.78 RG 0.7 w 45 452 m 550 452 l S')
- draw(45,427,9,bill?'INTERNAL REGISTER - Not a supplier-issued tax invoice.':'INTERNAL PO - Approval subject to recorded workflow status.')
+ draw(45,427,9,!['purchase_order','supplier_bill'].includes(d.kind)?'INTERNAL ACCOUNTING REGISTER - Not external proof or tax invoice.':bill?'INTERNAL REGISTER - Not a supplier-issued tax invoice.':'INTERNAL PO - Approval subject to recorded workflow status.')
  draw(45,407,9,'Keep original supplier evidence and the independent approval trail.')
  draw(45,374,10,'Manually signed by: _______________________   Date: _____________')
  draw(45,55,9,'2-TAKA-R-BAZAR | System record | Not valid as approval when SUBMITTED')
