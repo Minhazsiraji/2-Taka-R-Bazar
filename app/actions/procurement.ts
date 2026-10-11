@@ -166,3 +166,26 @@ export async function procurementReviewDocument(fd:FormData) {
  }catch(e){outcome(describe(e),'error')}
  outcome('Document lifecycle review recorded; original and accounting history retained')
 }
+
+export async function procurementSupplierReturn(fd:FormData) {
+ const viewer=await requireAdmin()
+ try {
+  requireIsolated()
+  const proof=await uploadDocument(viewer.supabase,viewer.user.id,fd)
+  const {error}=await viewer.supabase.rpc('finance_request_supplier_return',{
+   p_bill:get(fd,'bill_id'),p_quantity:Number(get(fd,'quantity')),p_reference:get(fd,'credit_reference'),
+   p_date:get(fd,'business_date'),p_reason:get(fd,'reason'),p_path:proof.location,p_sha256:proof.digest})
+  if(error)throw new Error(error.message)
+ }catch(e){outcome(describe(e),'error')}
+ outcome('Supplier return and credit note submitted for independent inventory and AP review')
+}
+export async function procurementReviewSupplierReturn(fd:FormData) {
+ const viewer=await requireSuperAdmin()
+ try {
+  requireIsolated()
+  const {error}=await viewer.supabase.rpc('finance_review_supplier_return',{
+   p_id:get(fd,'credit_id'),p_approve:get(fd,'decision')==='approve',p_note:get(fd,'reason')})
+  if(error)throw new Error(error.message)
+ }catch(e){outcome(describe(e),'error')}
+ outcome('Supplier return review recorded; inventory and payable or supplier receivable reconciled')
+}

@@ -20,6 +20,7 @@ function psql(sql){
  return execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-tAX',
  '-v','ON_ERROR_STOP=1','-c',sql],{env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8'}).trim()
 }
+const identities=new Map()
 async function viewer(role){
  const email='uat-'+role+'-'+Date.now()+'@example.invalid'
  const password='LOCAL-ONLY-Synthetic!349'
@@ -27,9 +28,9 @@ async function viewer(role){
  if(error||!data?.user?.id)throw new Error('Synthetic user failed '+error?.message)
  const id=data.user.id
  assert.match(id,/^[0-9a-f-]{36}$/i)
- assert.ok(['admin','super_admin'].includes(role))
+ assert.ok(['admin','super_admin','customer'].includes(role))
  psql("insert into public.user_roles(user_id,role) values('"+id+"','"+role+"') on conflict do nothing")
- psql("insert into private.finance_uat_leases(actor_id,expires_at,reason) values('"+id+"',clock_timestamp()+interval '1 hour','Issue 57 disposable browser maker checker UAT')")
+ if(role!=='customer')psql("insert into private.finance_uat_leases(actor_id,expires_at,reason) values('"+id+"',clock_timestamp()+interval '1 hour','Issue 57 disposable browser maker checker UAT')")
  const jar=new Map()
  const client=createServerClient(db,key,{cookies:{
   getAll:()=>[...jar.values()].map(c=>({name:c.name,value:c.value})),
@@ -37,6 +38,7 @@ async function viewer(role){
  }})
  const login=await client.auth.signInWithPassword({email,password})
  if(login.error||!login.data.user)throw new Error('Local synthetic login failed '+login.error?.message)
+ identities.set(role,{client,id})
  return [...jar.values()].filter(c=>c.value).map(c=>({
   name:c.name,value:c.value,url:base,httpOnly:c.options?.httpOnly??false,
   secure:false,sameSite:'Lax'
@@ -296,6 +298,31 @@ async function main(){
   assert.equal(psql("select count(*) from public.finance_document_events where request_id='"+pending+"' and stage='approved'"),'1')
   await snapshot(owner,'document-original-void')
   console.log('PASS original upload/hash/download, independent document void, original retained');stages++
+  const customerCookie=await viewer('customer')
+  const customerContext=await browser.newContext()
+  await customerContext.addCookies(customerCookie)
+  const customerFile=await customerContext.request.get(base+'/api/finance/attachments/'+attachment)
+  assert.notEqual(customerFile.headers()['content-type'],'application/pdf','Customer must not receive original finance evidence')
+  const customer=identities.get('customer').client
+  const anonymous=createClient(db,key,{auth:{persistSession:false}})
+  for(const client of [customer,anonymous]){
+   const report=await client.rpc('finance_inventory_source');assert.ok(report.error,'Unauthorized inventory read succeeded')
+   const journals=await client.from('finance_journals').select('*');assert.ok(journals.error,'Unauthorized raw ledger read succeeded')
+   const file=await client.storage.from('finance-evidence').download(psql("select evidence_path from public.finance_document_attachments where id='"+attachment+"'"));assert.ok(file.error,'Unauthorized original file access succeeded')
+  }
+  const originalPath=psql("select evidence_path from public.finance_document_attachments where id='"+attachment+"'")
+  const overwrite=await identities.get('admin').client.storage.from('finance-evidence').update(originalPath,Buffer.from('%PDF-1.4 altered'),{contentType:'application/pdf'})
+  assert.ok(overwrite.error,'Original storage file overwrite succeeded')
+  const afterAttack=await owner.request.get(base+'/api/finance/attachments/'+attachment)
+  assert.deepEqual(await afterAttack.body(),original,'Overwrite attack changed original bytes')
+  const ownerIdentity=identities.get('super_admin')
+  psql("delete from private.finance_uat_leases where actor_id='"+ownerIdentity.id+"'")
+  const locked=await ownerIdentity.client.rpc('treasury_create_account',{
+   p_name:'Blocked direct API bank',p_kind:'bank',p_institution:'Synthetic',p_last_four:'0057',
+   p_open_date:new Date().toISOString().slice(0,10),p_opening_balance:1,p_opening_reference:'REVOKED-LEASE',p_restricted:0,p_credit_limit:null})
+  assert.ok(locked.error);assert.match(locked.error.message,/Financial writes locked/)
+  console.log('PASS real authenticated/customer/anonymous RPC and storage security, overwrite attack, revoked owner lease');stages++
+  await customerContext.close()
   console.log('SYNTHETIC_BROWSER_UAT_PASS '+stages+' stages, viewport 1440/768/360')
  }finally{await browser.close()}
 }

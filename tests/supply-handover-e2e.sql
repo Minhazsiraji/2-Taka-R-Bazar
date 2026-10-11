@@ -595,6 +595,23 @@ select pg_temp.assert_true(public.treasury_review_transaction(
 select pg_temp.assert_true((select status='posted' from public.procurement_supplier_bills
  where id=(select v::uuid from e2e_state where k='supplier_bill')),'Partial payment incorrectly settled whole bill');
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+-- Return two unallocated units after a partial payment; AP falls by 1,900.
+insert into storage.objects(bucket_id,name) values('finance-evidence','a0000000-0000-0000-0000-000000000001/supplier-return-credit.pdf');
+insert into e2e_state values('supplier_return',public.finance_request_supplier_return(
+ (select v::uuid from e2e_state where k='supplier_bill'),2,'E2E-CREDIT-1900',current_date,
+ 'Two independently verified units returned to supplier',
+ 'a0000000-0000-0000-0000-000000000001/supplier-return-credit.pdf',repeat('d',64))::text);
+select pg_temp.expect_error(format('select public.treasury_request_supplier_payment(%L::uuid,%L::uuid,%L,current_date)',
+ (select v from e2e_state where k='supplier_bill'),(select v from e2e_state where k='bank_acct'),'RETURN-PENDING-PAYMENT'),'Resolve pending supplier return');
+select pg_temp.expect_error(format('select public.finance_request_supplier_return(%L::uuid,9,%L,current_date,%L,%L,%L)',
+ (select v from e2e_state where k='supplier_bill'),'E2E-OVER-RETURN','Attempt to return reserved or unavailable units',
+ 'a0000000-0000-0000-0000-000000000001/supplier-return-credit.pdf',repeat('d',64)),'exceeds unreserved inventory');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select pg_temp.assert_true(public.finance_review_supplier_return(
+ (select v::uuid from e2e_state where k='supplier_return'),true,'Supplier credit and physical return checked')='posted','Supplier return not posted');
+select pg_temp.assert_true((select sum(debit-credit) from public.finance_journal_lines where account_code='2100')=-4600,'AP does not equal invoice less 3000 payment and 1900 credit');
+select pg_temp.assert_true((select received_quantity+coalesce((select sum(quantity) from public.finance_inventory_movements m where m.bill_id=l.bill_id),0)=8 from public.finance_inventory_lots l where bill_id=(select v::uuid from e2e_state where k='supplier_bill')),'Returned quantity not removed from inventory');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
 insert into e2e_state values ('supplier_payment',public.treasury_request_supplier_payment(
  (select v::uuid from e2e_state where k='supplier_bill'),
  (select v::uuid from e2e_state where k='bank_acct'),'E2E-BANK-SUPPLIER-9500',current_date)::text);
@@ -611,16 +628,32 @@ select pg_temp.assert_true(public.treasury_review_transaction(
 select pg_temp.assert_true((select status='settled' from public.procurement_supplier_bills
  where id=(select v::uuid from e2e_state where k='supplier_bill')),
  'Supplier bill remains open after verified Treasury authorization');
-select pg_temp.assert_true((select private.treasury_account_balance((select v::uuid from e2e_state where k='bank_acct')))=90500,
+select pg_temp.assert_true((select private.treasury_account_balance((select v::uuid from e2e_state where k='bank_acct')))=92400,
  'Treasury bank did not reconcile after supplier payable settlement');
 select pg_temp.assert_true(
  (select coalesce(sum(debit-credit),0)=0 from public.finance_journal_lines),
  'Procurement and Treasury ledger lost double-entry balance');
 
+-- A return after full settlement creates a supplier receivable, not negative AP or cash.
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into storage.objects(bucket_id,name) values('finance-evidence','a0000000-0000-0000-0000-000000000001/supplier-paid-credit.pdf');
+insert into e2e_state values('supplier_paid_return',public.finance_request_supplier_return(
+ (select v::uuid from e2e_state where k='supplier_bill'),1,'E2E-CREDIT-PAID-950',current_date,
+ 'One paid invoice unit physically returned with supplier credit',
+ 'a0000000-0000-0000-0000-000000000001/supplier-paid-credit.pdf',repeat('e',64))::text);
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select pg_temp.assert_true(public.finance_review_supplier_return(
+ (select v::uuid from e2e_state where k='supplier_paid_return'),true,'Paid invoice supplier credit independently checked')='posted','Paid supplier return failed');
+select pg_temp.assert_true((select sum(debit-credit) from public.finance_journal_lines where account_code='1300')=950,'Paid credit not recognized as supplier receivable');
+select pg_temp.assert_true((select sum(debit-credit) from public.finance_journal_lines where account_code='2100')=0,'Paid return created negative supplier payable');
+select pg_temp.assert_true((select sum(debit-credit) from public.finance_journal_lines where account_code='1200')=6650,'Inventory valuation does not equal seven retained units at 950');
+select pg_temp.assert_true(private.treasury_account_balance((select v::uuid from e2e_state where k='bank_acct'))=92400,'Supplier credit fabricated cash');
+select pg_temp.expect_error(format('select public.finance_review_supplier_return(%L::uuid,true,%L)',
+ (select v from e2e_state where k='supplier_paid_return'),'Repeated return approval must not post twice'),'not pending');
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
 insert into e2e_state values('supplier_statement',public.treasury_import_statement_line(
  (select v::uuid from e2e_state where k='bank_acct'),'QA-STATEMENT-SUPPLIER-9500',
- current_date,-6500,'E2E-BANK-SUPPLIER-9500')::text);
+ current_date,-4600,'E2E-BANK-SUPPLIER-9500')::text);
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
 select pg_temp.assert_true(public.treasury_match_statement(
  (select v::uuid from e2e_state where k='supplier_statement'),
@@ -662,7 +695,7 @@ select pg_temp.expect_error(
  'E2E-REPLAY-CASH'),'already posted');
 
 select pg_temp.assert_true(
- (select (public.treasury_dashboard(current_date)->>'cash_total')::numeric)=92530,
+ (select (public.treasury_dashboard(current_date)->>'cash_total')::numeric)=94430,
  'Bank minus supplier payment plus accepted COD does not equal true combined cash');
 
 \echo 'FINANCE_TREASURY_PROCUREMENT_COD_INTEGRATION_E2E_PASS'
