@@ -49,6 +49,7 @@ jobs:
           export LOCAL_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
           export FINANCE_PREVIEW_SUPABASE_URL="$API_URL"
           export FINANCE_WRITES_ENABLED=true
+          export FINANCE_UAT_LOGIN_ENABLED=true
           export VERCEL_ENV=preview
           export NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000
           npm run dev -- --hostname 127.0.0.1 >/tmp/2tbr-local-next.log 2>&1 &

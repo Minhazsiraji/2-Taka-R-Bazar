@@ -26,6 +26,7 @@ const NOINDEX_PREFIXES = [
   '/group-deals',
   '/supplier',
   '/preview-demo',
+  '/finance-uat',
   '/qr',
 ]
 

@@ -38,7 +38,7 @@ async function viewer(role,identityKey=role){
  }})
  const login=await client.auth.signInWithPassword({email,password})
  if(login.error||!login.data.user)throw new Error('Local synthetic login failed '+login.error?.message)
- identities.set(identityKey,{client,id})
+ identities.set(identityKey,{client,id,email,password})
  return [...jar.values()].filter(c=>c.value).map(c=>({
   name:c.name,value:c.value,url:base,httpOnly:c.options?.httpOnly??false,
   secure:false,sameSite:'Lax'
@@ -128,16 +128,24 @@ async function main(){
  const fixture=readFileSync('tests/supply-handover-e2e.sql','utf8').replace('\\ir finance-customer-lifecycle-e2e.sql','\\i tests/finance-customer-lifecycle-e2e.sql').replace(/rollback;\s*$/,'set constraints all immediate; commit;')
  execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],{
   input:fixture,env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8',stdio:['pipe','pipe','pipe']})
- const ownerCookie=await viewer('super_admin')
- const makerCookie=await viewer('admin')
+ await viewer('super_admin')
+ await viewer('admin')
  const browser=await chromium.launch({headless:true})
  let stages=0
  try{
   const ownerContext=await browser.newContext({viewport:{width:1440,height:900}})
   const makerContext=await browser.newContext({viewport:{width:1440,height:900}})
-  await ownerContext.addCookies(ownerCookie)
-  await makerContext.addCookies(makerCookie)
   const owner=await ownerContext.newPage(),maker=await makerContext.newPage()
+  async function loginReviewer(page,key){
+   await page.goto(base+'/finance-uat/login')
+   await page.getByLabel('Reviewer email').fill(identities.get(key).email)
+   await page.getByLabel('Password',{exact:true}).fill(identities.get(key).password)
+   await page.getByRole('button',{name:'Sign in for finance UAT'}).click()
+   await page.getByRole('heading',{name:'Customer revenue, inventory & refunds'}).waitFor({timeout:90000})
+  }
+  await loginReviewer(owner,'super_admin')
+  await loginReviewer(maker,'admin')
+  console.log('PASS separate browser password sign-in verifies active reviewer leases without phones or SMS');stages++
   await visit(owner,'/super-admin/finance','Finance intelligence')
   await assertFinancialDesign(owner,'Finance')
   await snapshot(owner,'finance')
@@ -419,6 +427,13 @@ async function main(){
   await customerContext.addCookies(customerCookie)
   const customerFile=await customerContext.request.get(base+'/api/finance/attachments/'+attachment)
   assert.notEqual(customerFile.headers()['content-type'],'application/pdf','Customer must not receive original finance evidence')
+  const forbiddenLogin=await customerContext.newPage()
+  await forbiddenLogin.goto(base+'/finance-uat/login')
+  await forbiddenLogin.getByLabel('Reviewer email').fill(identities.get('customer').email)
+  await forbiddenLogin.getByLabel('Password',{exact:true}).fill(identities.get('customer').password)
+  await forbiddenLogin.getByRole('button',{name:'Sign in for finance UAT'}).click()
+  await forbiddenLogin.getByRole('alert').waitFor({timeout:45000})
+  assert.match(await forbiddenLogin.getByRole('alert').innerText(),/active UAT lease/)
   const customer=identities.get('customer').client
   const anonymous=createClient(db,key,{auth:{persistSession:false}})
   await viewer('pickup_operator','community_operator')
