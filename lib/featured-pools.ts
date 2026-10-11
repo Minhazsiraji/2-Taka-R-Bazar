@@ -44,3 +44,37 @@ export function featuredPoolTotals(pool:DemoFeaturedPool){
   units:sum.units+row.qty
  }),{solo:0,group:0,units:0})
 }
+
+/** Illustrative tier prices: a display-only preview, not procurement quotes or payable amounts.
+ * Every tier uses the same per-line unit pricing rule so the detail page and featured card agree.
+ */
+export function demoPoolTierThresholds(pool:DemoFeaturedPool):number[]{
+ return [...new Set([1,Math.max(2,Math.round(pool.minHouseholds*.25)),Math.max(3,Math.round(pool.minHouseholds*.5)),pool.minHouseholds])].sort((a,b)=>a-b)
+}
+export function demoPoolTierFactor(pool:DemoFeaturedPool,threshold:number):number{
+ const position=demoPoolTierThresholds(pool).indexOf(threshold)
+ return position<=0?0:position===1?.4:position===2?.7:1
+}
+export function demoPoolUnitPrice(offer:StorefrontOffer,factor:number):number{
+ const solo=Math.max(0,Number(offer.solo_price)||0)
+ const target=Math.min(solo,Math.max(0,Number(offer.confirmed_price)||0))
+ return Math.max(target,Math.round(solo-(solo-target)*factor))
+}
+export function demoPoolBasketTotal(pool:DemoFeaturedPool,threshold:number,quantities?:Record<string,number>):number{
+ const factor=demoPoolTierFactor(pool,threshold)
+ return pool.bundle.reduce((sum,{offer,qty})=>{
+  const quantity=quantities?.[offer.product_id]??qty
+  return sum+Math.max(0,quantity)*demoPoolUnitPrice(offer,factor)
+ },0)
+}
+export function demoPoolTierState(pool:DemoFeaturedPool){
+ const tiers=demoPoolTierThresholds(pool)
+ const current=tiers.filter(threshold=>threshold<=pool.sampleHouseholds).at(-1)??tiers[0]
+ const upcoming=tiers.find(threshold=>threshold>pool.sampleHouseholds)??null
+ return {
+  tiers,current,upcoming,householdsNeeded:upcoming===null?0:upcoming-pool.sampleHouseholds,
+  currentPrice:demoPoolBasketTotal(pool,current),
+  nextPrice:upcoming===null?null:demoPoolBasketTotal(pool,upcoming),
+  soloPrice:pool.bundle.reduce((sum,{offer,qty})=>sum+qty*(Number(offer.solo_price)||0),0)
+ }
+}
