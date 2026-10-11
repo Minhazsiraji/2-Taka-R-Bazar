@@ -83,7 +83,7 @@ export function DemoProductDetails({offer}:{offer:StorefrontOffer}){
       {cart.group>0&&<span>{t('Group Buy','গ্রুপ কেনা')}: {cart.group} × {formatPrice(group)} = {formatPrice(cart.group*group)}</span>}
       <b>{t('Demo total incl. delivery','ডেলিভারিসহ নমুনা মোট')}: {formatPrice(cartSubtotal+cartDelivery)}</b>
       <button type="button" onClick={()=>setCart({solo:0,group:0})}>{t('Clear demo basket','ডেমো কার্ট খালি করুন')}</button>
-     </div>
+     </div>}
      <p className="market-demo-message">{t('Stock, delivery time, location eligibility, supplier assurance and refunds must be confirmed before a real product can be sold. No payment is available in this demo.','বিক্রির আগে মজুত, সরবরাহের সময়, এলাকার যোগ্যতা, সরবরাহকারী ও রিফান্ডের নিয়ম নিশ্চিত করতে হবে। ডেমোতে পেমেন্ট নেই।')}</p>
      <Link href="/" className="btn-secondary">{t('← Back to storefront','← দোকানের হোমপেজে ফিরুন')}</Link>
     </section>
