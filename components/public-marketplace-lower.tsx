@@ -104,22 +104,46 @@ export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,
   <section id="customer-experiences" className="market-story-section market-band"><div className="market-content">
    <Eyebrow>{t('Trust must be earned','বিশ্বাস অর্জন করতে হয়')}</Eyebrow>
    <Heading title={t('Customer experiences','গ্রাহকদের অভিজ্ঞতা')} description={t('Only real feedback is published after a completed order and specific publication consent, with moderation.','শুধু প্রকৃত, অনুমতিপ্রাপ্ত ও যাচাইকৃত মতামত প্রকাশিত হবে।')}/>
-   <div className="market-review-pending">
+   {demoMode?<div className="market-demo-reviews">
+    {[
+     {en:'Example: ordering alone',bn:'নমুনা: একা বাজার করা',quote:'I compare the individual price and the Pool price before deciding how to shop.',qb:'কেনার আগে একক দাম ও পুলের দাম তুলনা করে নিজের মতো সিদ্ধান্ত নিই।',icon:'◉'},
+     {en:'Example: neighbourhood pooling',bn:'নমুনা: কমিউনিটি পুল',quote:'Our neighbours can view the same bundle and choose only what each household needs.',qb:'এক এলাকার সবাই একই পুল দেখে নিজের পরিবারের প্রয়োজন অনুযায়ী পণ্য বাছতে পারেন।',icon:'⌂'},
+     {en:'Example: collection options',bn:'নমুনা: পণ্য সংগ্রহ',quote:'I can review free community pickup and the separate optional delivery fee.',qb:'কমিউনিটি পয়েন্টে ফ্রি সংগ্রহ ও আলাদা হোম ডেলিভারি খরচ আগে থেকেই দেখতে পারি।',icon:'✓'}
+    ].map((item,i)=><article key={i} className="market-demo-review">
+     <span className="market-demo-review-label">{t('UI SAMPLE · NOT A CUSTOMER REVIEW','ইউআই নমুনা · প্রকৃত রিভিউ নয়')}</span>
+     <div className="market-demo-review-icon" aria-hidden="true">{item.icon}</div>
+     <h3>{t(item.en,item.bn)}</h3><blockquote>{t(item.quote,item.qb)}</blockquote>
+     <p>{t('Fictional scenario to test the review-card design.','রিভিউ কার্ডের ডিজাইন যাচাইয়ের জন্য কল্পিত উদাহরণ।')}</p>
+    </article>)}
+    </div>:<div className="market-review-pending">
     <div className="market-review-mark" aria-hidden="true">“</div><div>
      <h3>{t('Real reviews are coming as the pilot grows.','পাইলট এগোলে গ্রাহকদের প্রকৃত মতামত আসবে।')}</h3>
      <p>{t('We haven’t published any customer testimonials yet. No borrowed quotes, invented customers, fabricated ratings or unverified savings will be displayed here.','এখনও কোনো গ্রাহকের প্রকাশযোগ্য মতামত নেই। এখানে কল্পিত রিভিউ, নাম, রেটিং বা সাশ্রয় দেখানো হবে না।')}</p>
      <Link href={authenticated?'/feedback':'/signup'}>{authenticated?t('Share your feedback','মতামত দিন'):t('Join your community','কমিউনিটিতে যোগ দিন')} →</Link>
     </div><span className="market-review-note">{t('Verified purchases only','শুধু যাচাইকৃত ক্রয়')}</span>
-   </div>
+   </div>}
   </div></section>
 
   <section id="supplier-network" className="market-story-section market-band"><div className="market-content">
    <Eyebrow>{t('Two sources · One shopping experience','দুই উৎস · একই কেনাকাটার অভিজ্ঞতা')}</Eyebrow>
    <Heading title={t('Our products & supply partners','আমাদের পণ্য ও সরবরাহকারী')} description={t('Buy Alone will support both our own stock and approved suppliers.','একা কেনায় নিজস্ব স্টক ও অনুমোদিত সরবরাহকারী—দুই ধরনের পণ্যই থাকবে।')}/>
-   <div className="market-supply-grid">
+   {demoMode?<div className="market-supply-grid market-demo-suppliers">
+    {[
+     {icon:'▣',en:'2TBR Warehouse · Demo',bn:'2TBR গুদাম · নমুনা',e:'Own-stock sample: rice, oil and lentils',b:'নিজস্ব স্টকের নমুনা: চাল, তেল ও ডাল',category:'OWN_STOCK'},
+     {icon:'◈',en:'Grocery Supplier A · Demo',bn:'মুদিপণ্য সরবরাহকারী A · নমুনা',e:'Illustrative partner: sugar and flour',b:'নমুনা পার্টনার: চিনি ও ময়দা',category:'SUPPLIER'},
+     {icon:'⌂',en:'Household Supplier B · Demo',bn:'গৃহস্থালি সরবরাহকারী B · নমুনা',e:'Illustrative partner: detergent and household products',b:'নমুনা পার্টনার: ডিটারজেন্ট ও গৃহস্থালি পণ্য',category:'SUPPLIER'}
+    ].map(item=><article key={item.en} className="market-demo-supplier">
+     <span className="market-demo-review-label">{t('DEMO PROFILE · NOT AN APPROVED SUPPLIER','ডেমো প্রোফাইল · অনুমোদিত সরবরাহকারী নয়')}</span>
+     <span className="market-supply-icon" aria-hidden="true">{item.icon}</span>
+     <h3>{t(item.en,item.bn)}</h3><p>{t(item.e,item.b)}</p>
+     <div className="market-demo-supplier-bottom"><span>{item.category==='OWN_STOCK'?t('Own-stock model','নিজস্ব স্টক মডেল'):t('Supplier-listed model','সরবরাহকারী মডেল')}</span>
+      <a href="#deals">{t('View sample products →','নমুনা পণ্য দেখুন →')}</a>
+     </div>
+    </article>)}
+   </div>:<div className="market-supply-grid">
     <article><span className="market-supply-icon" aria-hidden="true">▣</span><h3>{t('2TBR-stocked products','2TBR-এর নিজস্ব স্টকের পণ্য')}</h3><p>{t('Products stocked and monitored by 2TBR, with receiving, price and inventory controls.','2TBR-এর গুদামে থাকা পণ্য, যেগুলোর মজুত, গ্রহণ ও মূল্য যাচাই করা হয়।')}</p><span>{t('Owned stock · Verified availability','নিজস্ব স্টক · যাচাইকৃত মজুত')}</span></article>
     <article><span className="market-supply-icon" aria-hidden="true">◈</span><h3>{t('Verified supplier-listed products','যাচাইকৃত সরবরাহকারীর পণ্য')}</h3><p>{t('Partner products need confirmed availability, fulfillment, return and payment controls.','পার্টনার পণ্যের জন্য মজুত, ডেলিভারি, রিটার্ন ও অর্থপ্রদানের যাচাই প্রয়োজন।')}</p><span>{t('Partner stock · Confirmed supply','পার্টনার স্টক · নিশ্চিত সরবরাহ')}</span></article>
-   </div>
+   </div>}
    <div className="market-supplier-cta"><div><strong>{t('Are you a supplier, brand or producer?','আপনি কি সরবরাহকারী, ব্র্যান্ড বা উৎপাদক?')}</strong>
     <p>{t('Tell our team about your products and capacity. Approval is required before listings go live.','আপনার পণ্য ও সরবরাহ সক্ষমতা আমাদের জানান। তালিকাভুক্তির আগে অনুমোদন প্রয়োজন।')}</p></div>
     <a href="mailto:business@agentsiraji.com?subject=2TBR%20Supplier%20Partnership" className="btn-secondary">{t('Become a supply partner →','সরবরাহকারী হতে যোগাযোগ করুন →')}</a></div>
