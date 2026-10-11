@@ -58,14 +58,14 @@ export default async function TreasuryMaker({searchParams}:{searchParams:Promise
   </div>
   <div className="rounded-2xl border border-slate-200 bg-white p-5">
    <h2 className="text-lg font-black">Import bank statement line</h2><p className="mt-1 text-sm text-slate-500">Normalized signed amount: cash inflow positive, cash outflow negative; credit-card charges positive and card bill repayments negative. Import requires independent matching.</p>
-   <form action={treasuryImportStatement} className="mt-4 grid gap-3 sm:grid-cols-2">
+   <form action={treasuryImportStatement} encType="multipart/form-data" className="mt-4 grid gap-3 sm:grid-cols-2">
     <input name="return_path" type="hidden" value="/admin/treasury"/>
     <label className="text-xs font-bold text-slate-600">Account<select name="account_id" required className={input}><option value="">Choose account</option>{options.accounts.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
     <label className="text-xs font-bold text-slate-600">Statement date<input type="date" name="statement_date" defaultValue={today} required className={input}/></label>
     <label className="text-xs font-bold text-slate-600">Statement line ID<input name="external_line_id" minLength={4} required className={input}/></label>
     <label className="text-xs font-bold text-slate-600">Signed value (BDT)<input type="number" name="signed_amount" step="0.01" required className={input}/></label>
     <label className="col-span-full text-xs font-bold text-slate-600">Bank transaction reference<input name="reference" minLength={4} required className={input}/></label>
-    <button className="col-span-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-black text-white">Import for independent bank reconciliation →</button>
+    <label className="col-span-full text-xs font-bold">Original bank statement<input name="original_file" type="file" required accept=".pdf,.jpg,.jpeg,.png" className={input}/></label><button className="col-span-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-black text-white">Import for independent bank reconciliation →</button>
    </form>
   </div>
   <p className="text-sm text-slate-500"><Link className="font-bold text-teal-700 underline" href="/admin">Back to Operations</Link> · Finance managers should not approve their own transactions.</p>

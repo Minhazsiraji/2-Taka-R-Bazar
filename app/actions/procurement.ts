@@ -189,3 +189,12 @@ export async function procurementReviewSupplierReturn(fd:FormData) {
  }catch(e){outcome(describe(e),'error')}
  outcome('Supplier return review recorded; inventory and payable or supplier receivable reconciled')
 }
+
+export async function procurementRecoverSupplierCredit(fd:FormData){
+ const v=await requireAdmin()
+ try{requireIsolated();const proof=await uploadDocument(v.supabase,v.user.id,fd)
+ const {error}=await v.supabase.rpc('finance_request_supplier_credit_recovery',{p_credit:get(fd,'credit_id'),p_account:get(fd,'account_id'),p_amount:Number(get(fd,'amount')),p_date:get(fd,'business_date'),p_reference:get(fd,'reference'),p_path:proof.location,p_sha256:proof.digest})
+ if(error)throw new Error(error.message)
+ }catch(e){outcome(describe(e),'error')}
+ outcome('Supplier credit recovery submitted to independent Treasury approval')
+}

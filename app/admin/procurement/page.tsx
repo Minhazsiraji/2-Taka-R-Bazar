@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/auth'
 import {
  procurementCreatePO,procurementReviewPO,procurementLinkDispatch,
  procurementSubmitBill,procurementReviewBill,procurementRequestPayment,
- procurementPostCommunityCash,procurementAttachDocument,procurementDocumentLifecycle,procurementReviewDocument,procurementSupplierReturn,procurementReviewSupplierReturn
+ procurementPostCommunityCash,procurementAttachDocument,procurementDocumentLifecycle,procurementReviewDocument,procurementSupplierReturn,procurementReviewSupplierReturn,procurementRecoverSupplierCredit
 } from '@/app/actions/procurement'
 
 export const dynamic='force-dynamic'
@@ -141,6 +141,15 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
     <label className="text-xs font-bold">Signed custody reference<input name="cash_custody_reference" minLength={4} required className={style}/></label>
     <button disabled={!isolated||demoMode} className="rounded-xl bg-teal-700 px-3 py-2.5 text-xs font-black text-white disabled:opacity-40">Post accepted cash to Treasury</button>
    </form>)}{!cash.length&&<p className="text-sm text-slate-500">No accepted Community cash handovers are awaiting a ledger entry.</p>}</div>
+  </Panel>
+  <Panel heading="Recover supplier credit receivable" detail="Record only actual cash recovered from a posted supplier credit. Treasury checks the proof and remaining entitlement independently.">
+   <form action={procurementRecoverSupplierCredit} encType="multipart/form-data" className="grid gap-2">
+    <label>Posted supplier credit<select name="credit_id" required className={style}><option value="">Choose posted credit</option>{stock.credits?.filter(c=>c.status==='posted').map(c=><option key={c.id} value={c.id}>{c.reference} · BDT {c.amount}</option>)}</select></label>
+    <label>Actual receiving account<select name="account_id" required className={style}><option value="">Choose liquid account</option>{d.liquid_accounts.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
+    <label>Recovered BDT<input name="amount" type="number" min=".01" step=".01" required className={style}/></label><label>Cash receipt date<input name="business_date" type="date" defaultValue={today} required className={style}/></label>
+    <label>Bank / cash reference<input name="reference" required minLength={4} className={style}/></label><label>Original receipt proof<input name="invoice_file" type="file" required accept=".pdf,.jpg,.jpeg,.png" className={style}/></label>
+    <button disabled={demoMode||!isolated} className="rounded-lg border p-2">Request supplier credit recovery</button>
+   </form>
   </Panel>
   <Panel heading="Supplier returns and credit notes" detail="Return only available inventory from a matched invoice. Independent approval reduces stock and AP; credit on a paid invoice becomes a supplier receivable, never invented cash.">
    {Boolean(stock.unreconciled_historical_bills)&&<p role="alert">Historical stock reconciliation required for {stock.unreconciled_historical_bills} invoices.</p>}

@@ -33,6 +33,16 @@ const posted=sql("select id from public.treasury_transactions where external_ref
 const replay=await run(asActor(checker,`select public.treasury_review_transaction('${posted}',true,'Synthetic duplicate review attempt')`))
 assert.notEqual(replay.code,0);assert.match(replay.error,/not pending/)
 console.log('CONCURRENT_REPLAY_PASS immutable one-post journal')
+// Posting and close contend on the same month lock in two real sessions.
+sql("insert into public.user_roles(user_id,role) values('a0000000-0000-0000-0000-000000000001','super_admin') on conflict do nothing")
+const closeId=sql(asActor(checker,"select public.finance_request_period_close('2002-01-01','Synthetic simultaneous close and posting qualification','')")).split('\n').find(x=>/^[0-9a-f-]{36}$/.test(x))
+const closing=await Promise.all([
+ run(asActor(maker,`select public.finance_review_period_close('${closeId}',true,'Independent unchanged ended month snapshot checked')`)),
+ run(asActor(checker,"select private.treasury_post('CONCURRENT-CLOSE-POST',gen_random_uuid(),'2002-01-15','Synthetic posting versus close race',jsonb_build_array(jsonb_build_object('account','1100','debit',1),jsonb_build_object('account','4000','credit',1)),auth.uid())"))])
+// Fixture maker is admin; assign Super Admin only in this disposable DB for close review.
+assert.equal(closing.filter(r=>r.code===0).length,1,'Only close or competing posting may qualify')
+assert.match(closing.find(r=>r.code!==0).error,/Finance period is locked|Period sources changed/)
+console.log('CONCURRENT_PERIOD_CLOSE_PASS serialized month posting; snapshot change or locked period rejects loser')
 // Backup includes schema, RLS, grants, original audit history and financial rows.
 // It stays in /tmp and is never uploaded as an Actions artifact.
 mkdirSync('/tmp/issue57-restore',{recursive:true})
@@ -43,13 +53,9 @@ const backup='/tmp/issue57-restore/database.dump'
 writeFileSync(backup,execFileSync('docker',['exec',dbContainer,'pg_dump','-U','postgres','-d','postgres','-Fc','--no-owner'],{stdio:'pipe',maxBuffer:256*1024*1024}))
 const roles=execFileSync('docker',['exec',dbContainer,'pg_dumpall','-U','postgres','--roles-only'],{encoding:'utf8',stdio:'pipe'}).replace(/^CREATE ROLE postgres;\n/m,'')
 writeFileSync('/tmp/issue57-restore/roles.sql',roles)
-const fingerprint=`select md5(string_agg(row_hash,'' order by row_hash)) from (
- select md5(row_to_json(j)::text) row_hash from public.finance_journals j union all
- select md5(row_to_json(l)::text) from public.finance_journal_lines l union all
- select md5(row_to_json(a)::text) from public.audit_events a union all
- select md5(row_to_json(d)::text) from public.finance_document_attachments d union all
- select md5(row_to_json(e)::text) from public.finance_document_events e union all
- select md5(row_to_json(u)::text) from auth.users u) x`
+const fingerprintTables=sql("select n.nspname||'.'||c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where c.relkind='r' and ((n.nspname='public' and (c.relname like 'finance\\_%' escape '\\' or c.relname like 'treasury\\_%' escape '\\' or c.relname in ('audit_events','procurement_purchase_orders','procurement_dispatch_links','procurement_supplier_bills','own_product_inventory','own_product_inventory_movements','user_roles'))) or (n.nspname='private' and c.relname in ('finance_uat_leases','finance_uat_entities')) or (n.nspname='auth' and c.relname='users') or (n.nspname='storage' and c.relname='objects')) order by 1").split('\n')
+assert.ok(fingerprintTables.length>=25)
+const fingerprint="select md5(string_agg(row_hash,'' order by row_hash)) from ("+fingerprintTables.map(table=>"select md5('"+table+"'||row_to_json(t)::text) row_hash from "+table+" t").join(' union all ')+") x"
 const before=sql(fingerprint)
 const restoreName='issue57-isolated-restore'
 try{
@@ -60,13 +66,13 @@ try{
   await new Promise(r=>setTimeout(r,1000))
  }
  assert.ok(ready,'Isolated restore database did not become ready')
- const existingRoles=execFileSync('docker',['exec',restoreName,'psql','-U','postgres','-tAX','-c','select rolname from pg_roles'],{encoding:'utf8'}).trim().split('\n')
+ const existingRoles=execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-tAX','-c','select rolname from pg_roles'],{encoding:'utf8'}).trim().split('\n')
  const roleRestore=roles.split('\n').filter(line=>!existingRoles.some(role=>line==='CREATE ROLE '+role+';'||line==='CREATE ROLE "'+role+'";')).join('\n')
- execFileSync('docker',['exec','-i',restoreName,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input:roleRestore,stdio:['pipe','pipe','pipe']})
- execFileSync('docker',['exec',restoreName,'createdb','-U','postgres','-T','template0','issue57_restore'],{stdio:'pipe'})
- execFileSync('docker',['exec',restoreName,'psql','-U','postgres','-d','issue57_restore','-v','ON_ERROR_STOP=1','-c','drop schema public cascade'],{stdio:'pipe'})
- execFileSync('docker',['exec',restoreName,'pg_restore','-U','postgres','-d','issue57_restore','--no-owner','--exit-on-error','/restore/database.dump'],{stdio:'pipe'})
- const restored=s=>execFileSync('docker',['exec',restoreName,'psql','-U','postgres','-d','issue57_restore','-tAX','-v','ON_ERROR_STOP=1','-c',s],{encoding:'utf8'}).trim()
+ execFileSync('docker',['exec','-i',restoreName,'psql','-U','supabase_admin','-v','ON_ERROR_STOP=1'],{input:roleRestore,stdio:['pipe','pipe','pipe']})
+ execFileSync('docker',['exec',restoreName,'createdb','-U','supabase_admin','-T','template0','issue57_restore'],{stdio:'pipe'})
+ execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-d','issue57_restore','-v','ON_ERROR_STOP=1','-c','drop schema public cascade'],{stdio:'pipe'})
+ execFileSync('docker',['exec',restoreName,'pg_restore','-U','supabase_admin','-d','issue57_restore','--no-owner','--exit-on-error','/restore/database.dump'],{stdio:'pipe'})
+ const restored=s=>execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-d','issue57_restore','-tAX','-v','ON_ERROR_STOP=1','-c',s],{encoding:'utf8'}).trim()
  assert.equal(restored(fingerprint),before,'Restore changed financial rows, identities, original document metadata or audit history')
  assert.equal(restored("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname like 'finance\\_%' escape '\\' and c.relkind='r' and not c.relrowsecurity"),'0')
  assert.equal(restored("select has_table_privilege('authenticated','public.finance_journals','INSERT')::text"),'false')

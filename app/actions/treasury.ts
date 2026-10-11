@@ -1,4 +1,5 @@
 'use server'
+import {uploadFinanceOriginal} from '@/lib/finance/upload-original'
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -107,14 +108,15 @@ export async function treasuryReviewTransaction(fd:FormData) {
 }
 
 export async function treasuryImportStatement(fd:FormData) {
- const {supabase}=await requireAdmin()
+ const {supabase,user}=await requireAdmin()
  let errorMessage=''
  try {
   requireIsolatedTreasuryDatabase()
-  const {error}=await supabase.rpc('treasury_import_statement_line',{
+  const proof=await uploadFinanceOriginal(supabase,user.id,fd.get('original_file'))
+  const {error}=await supabase.rpc('treasury_import_statement_original',{
    p_account:get(fd,'account_id'),p_external_id:get(fd,'external_line_id'),
    p_date:get(fd,'statement_date'),p_amount:amount(fd,'signed_amount'),
-   p_reference:get(fd,'reference')
+   p_reference:get(fd,'reference'),p_path:proof.path,p_sha256:proof.hash
   })
   if(error)throw new Error(error.message)
  }catch(e){errorMessage=err(e)}

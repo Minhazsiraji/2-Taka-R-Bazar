@@ -144,3 +144,22 @@ select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',
 select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'inventory_source')::numeric=8750,'Integrated source inventory report mismatch');
 select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'ap_source')::numeric=4027,'Integrated independent AP report mismatch');
 \echo 'INTEGRATED_SOURCE_REPORT_RECONCILIATION_PASS'
+-- Recover a paid supplier credit in two actual cash instalments, no revenue.
+insert into storage.objects(bucket_id,name) values
+ ('finance-evidence','a0000000-0000-0000-0000-000000000001/supplier-recovery-400.pdf'),
+ ('finance-evidence','a0000000-0000-0000-0000-000000000001/supplier-recovery-550.pdf');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state select 'supplier_recovery1',public.finance_request_supplier_credit_recovery((select v::uuid from e2e_state where k='supplier_paid_return'),(select v::uuid from e2e_state where k='bank_acct'),400,current_date,'SUPPLIER-RECOVERY-400','a0000000-0000-0000-0000-000000000001/supplier-recovery-400.pdf',repeat('d',64))::text;
+select pg_temp.expect_error(format('select public.finance_request_supplier_credit_recovery(%L::uuid,%L::uuid,551,current_date,%L,%L,%L)',(select v from e2e_state where k='supplier_paid_return'),(select v from e2e_state where k='bank_acct'),'OVER-RECOVERY-551','a0000000-0000-0000-0000-000000000001/supplier-recovery-550.pdf',repeat('e',64)),'unreserved credit receivable');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select public.treasury_review_transaction((select v::uuid from e2e_state where k='supplier_recovery1'),true,'Independent actual supplier credit recovery checked');
+select pg_temp.assert_true(private.finance_supplier_credit_balance((select v::uuid from e2e_state where k='supplier_paid_return'))=550,'Partial supplier credit recovery balance wrong');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state select 'supplier_recovery2',public.finance_request_supplier_credit_recovery((select v::uuid from e2e_state where k='supplier_paid_return'),(select v::uuid from e2e_state where k='bank_acct'),550,current_date,'SUPPLIER-RECOVERY-550','a0000000-0000-0000-0000-000000000001/supplier-recovery-550.pdf',repeat('e',64))::text;
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select public.treasury_review_transaction((select v::uuid from e2e_state where k='supplier_recovery2'),true,'Independent final actual supplier recovery checked');
+select pg_temp.assert_true(private.finance_supplier_credit_balance((select v::uuid from e2e_state where k='supplier_paid_return'))=0,'Recovered supplier credit should settle exactly');
+select pg_temp.assert_true(private.treasury_account_balance((select v::uuid from e2e_state where k='bank_acct'))=93380,'Actual supplier recovered cash missing');
+select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'profit_before_tax')::numeric=93,'Supplier recovery must not invent revenue');
+set constraints all immediate;
+\echo 'SUPPLIER_PARTIAL_CREDIT_RECOVERY_E2E_PASS'

@@ -253,6 +253,7 @@ async function main(){
   await maker.locator('input[name="external_line_id"]').fill('LOCAL-STATEMENT-125')
   await maker.locator('input[name="signed_amount"]').fill('-125')
   await maker.locator('input[name="reference"]').fill('LOCAL-BANK-TRANSFER-125')
+  await maker.locator('input[name="original_file"]').setInputFiles({name:'original-statement.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\nActual synthetic browser bank statement\n%%EOF')})
   await maker.getByRole('button',{name:/Import for independent bank reconciliation/}).click()
   await maker.getByText('Statement line imported as unmatched',{exact:false}).waitFor({timeout:45000})
   console.log('PASS statement imported as UNMATCHED');stages++

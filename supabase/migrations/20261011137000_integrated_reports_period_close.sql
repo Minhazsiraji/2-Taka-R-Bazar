@@ -110,7 +110,14 @@ begin
  select count(*) into v_count from public.treasury_transactions t join public.treasury_accounts a on a.id in(t.source_account_id,t.target_account_id)
  where t.status='posted' and t.business_date>=p_month and t.business_date<v_end and a.account_kind in ('bank','wallet') and not exists(select 1 from public.treasury_statement_lines l where l.account_id=a.id and l.matched_transaction_id=t.id);
  if v_count>0 then v_blockers=v_blockers||jsonb_build_array('BANK_LEGS_UNMATCHED:'||v_count); end if;
+ select count(*) into v_count from public.treasury_transactions t join public.treasury_accounts a on a.id in(t.source_account_id,t.target_account_id)
+ join public.treasury_statement_lines l on l.account_id=a.id and l.matched_transaction_id=t.id
+ where t.status='posted' and t.business_date>=p_month and t.business_date<v_end and a.account_kind in ('bank','wallet')
+ and not exists(select 1 from public.finance_document_attachments d where d.entity_type='statement' and d.entity_id=l.id and d.kind='bank_statement'
+ and not exists(select 1 from public.finance_document_events e where e.attachment_id=d.id and e.action='void' and e.stage='approved'));
+ if v_count>0 then v_blockers=v_blockers||jsonb_build_array('BANK_STATEMENT_ORIGINALS_MISSING:'||v_count); end if;
  return jsonb_build_object('month',p_month,'basis','Accrual double-entry, verified inventory layers, physical Treasury cash',
+ 'ledger_sha256',(select encode(extensions.digest(coalesce(jsonb_agg(to_jsonb(j)||jsonb_build_object('lines',(select jsonb_agg(to_jsonb(l) order by l.id) from public.finance_journal_lines l where l.journal_id=j.id)) order by j.id),'[]'::jsonb)::text,'sha256'),'hex') from public.finance_journals j where j.posting_date<v_end),
  'product_revenue',v_revenue,'delivery_income',v_delivery,'cogs',v_cogs,'product_gross_profit',v_revenue-v_cogs,
  'operating_and_financing_expenses',v_expense,'profit_before_tax',v_revenue+v_delivery-v_cogs-v_expense,
  'tax_amount',null,'profit_after_tax',null,'certification',case when jsonb_array_length(v_blockers)=0 then 'SOURCE_RECONCILED_BEFORE_TAX' else 'PROVISIONAL_BLOCKERS_REMAIN' end,

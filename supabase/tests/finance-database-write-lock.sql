@@ -19,6 +19,7 @@ select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000971'
 select lives_ok($test$select public.treasury_create_account('Leased synthetic bank','bank','Synthetic','0057',current_date,100,'LOCK-TEST-03',0,null)$test$,'Operator lease permits otherwise authorized UAT RPC');
 select is((select count(*)::integer from public.treasury_accounts where name='Leased synthetic bank'),1,'Exactly one leased account was recorded');
 select set_config('request.jwt.claim.sub','',true);
+select set_config('request.jwt.claims','{}',true);
 insert into auth.users(id,email,created_at,updated_at) values('00000000-0000-4000-8000-000000000972','non-uat-owner@example.invalid',now(),now());
 insert into public.finance_accounts(code,title,kind) values('T00000000000040008000000000000972','Unleased financial resource','asset');
 insert into public.treasury_accounts(id,name,account_kind,institution,ledger_code,opened_on,opening_reference,created_by)

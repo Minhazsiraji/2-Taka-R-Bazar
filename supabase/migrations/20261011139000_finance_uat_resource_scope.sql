@@ -36,7 +36,7 @@ begin
  for v in select * from (values
  ('source_account_id','treasury_accounts'),('target_account_id','treasury_accounts'),('account_id','treasury_accounts'),('cash_account_id','treasury_accounts'),
  ('facility_id','treasury_facilities'),('expense_id','finance_expenses'),('supplier_bill_id','procurement_supplier_bills'),
- ('bill_id','procurement_supplier_bills'),('po_id','procurement_purchase_orders'),('journal_id','finance_journals'),
+ ('bill_id','procurement_supplier_bills'),('supplier_credit_note_id','finance_supplier_credit_notes'),('po_id','procurement_purchase_orders'),('journal_id','finance_journals'),
  ('attachment_id','finance_document_attachments'),('transaction_id','treasury_transactions'),
  ('matched_transaction_id','treasury_transactions'),('customer_event_id','finance_customer_events'),('sale_id','finance_customer_events'),('event_id','finance_customer_events')) x(field_name,table_name)
  loop if nullif(r->>v.field_name,'') is not null then perform private.finance_assert_uat_origin(v.table_name,(r->>v.field_name)::uuid); end if; end loop;
