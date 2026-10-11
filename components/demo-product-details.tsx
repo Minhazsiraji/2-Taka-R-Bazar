@@ -10,7 +10,7 @@ export function DemoProductDetails({offer}:{offer:StorefrontOffer}){
  const [lang,setLang]=useState<MarketplaceLanguage>('bn')
  const [quantity,setQuantity]=useState(1)
  const [mode,setMode]=useState<BuyMode>('group')
- const [cart,setCart]=useState<{qty:number;mode:BuyMode}|null>(null)
+ const [cart,setCart]=useState<Record<BuyMode,number>>({solo:0,group:0})
  const [delivery,setDelivery]=useState<'pickup'|'home'>('pickup')
  const t=(en:string,bn:string)=>chooseText(lang,en,bn)
  const name=t(offer.product_name,offer.product_name_bn??offer.product_name)
@@ -19,6 +19,8 @@ export function DemoProductDetails({offer}:{offer:StorefrontOffer}){
  const price=mode==='solo'?solo:group
  const subtotal=quantity*price
  const deliveryCharge=delivery==='pickup'?0:subtotal<=1000?20:30
+ const cartSubtotal=cart.solo*solo+cart.group*group
+ const cartDelivery=delivery==='pickup'||cartSubtotal===0?0:cartSubtotal<=1000?20:30
  const households=Number(offer.buyer_count)||0
  const nextThreshold=Number(offer.next_threshold)||0
  const remaining=Math.max(0,nextThreshold-households)
@@ -72,14 +74,16 @@ export function DemoProductDetails({offer}:{offer:StorefrontOffer}){
       <div><span>{t('Estimated demo total','মোট নমুনা হিসাব')}</span><b>{formatPrice(subtotal+deliveryCharge)}</b></div>
      </div>
      <div className="market-demo-buttons">
-      <button type="button" className="btn-primary" onClick={()=>setCart({qty:quantity,mode})}>{t('Add to Demo Basket','ডেমো কার্টে যোগ করুন')}</button>
+      <button type="button" className="btn-primary" onClick={()=>setCart(previous=>({...previous,[mode]:Math.min(20,previous[mode]+quantity)}))}>{t('Add to Demo Basket','ডেমো কার্টে যোগ করুন')}</button>
       <button disabled type="button" className="btn-secondary">{mode==='group'?t('Join Group · Unavailable','গ্রুপে যোগ দিন · বন্ধ'):t('Buy Now · Unavailable','এখন কিনুন · বন্ধ')}</button>
      </div>
-     {cart&&<div className="market-demo-cart-preview" role="status">
+     {(cart.solo>0||cart.group>0)&&<div className="market-demo-cart-preview" role="status">
       <strong>{t('On-screen demo basket · no real order','শুধু স্ক্রিনের ডেমো কার্ট · বাস্তব অর্ডার নয়')}</strong>
-      <span>{name}: {cart.qty} × {formatPrice(cart.mode==='solo'?solo:group)} ({cart.mode==='solo'?t('Buy Alone','একা কেনা'):t('Group Buy','গ্রুপ কেনা')})</span>
-      <button type="button" onClick={()=>setCart(null)}>{t('Remove from demo basket','ডেমো কার্ট থেকে সরান')}</button>
-     </div>}
+      {cart.solo>0&&<span>{t('Buy Alone','একা কেনা')}: {cart.solo} × {formatPrice(solo)} = {formatPrice(cart.solo*solo)}</span>}
+      {cart.group>0&&<span>{t('Group Buy','গ্রুপ কেনা')}: {cart.group} × {formatPrice(group)} = {formatPrice(cart.group*group)}</span>}
+      <b>{t('Demo total incl. delivery','ডেলিভারিসহ নমুনা মোট')}: {formatPrice(cartSubtotal+cartDelivery)}</b>
+      <button type="button" onClick={()=>setCart({solo:0,group:0})}>{t('Clear demo basket','ডেমো কার্ট খালি করুন')}</button>
+     </div>
      <p className="market-demo-message">{t('Stock, delivery time, location eligibility, supplier assurance and refunds must be confirmed before a real product can be sold. No payment is available in this demo.','বিক্রির আগে মজুত, সরবরাহের সময়, এলাকার যোগ্যতা, সরবরাহকারী ও রিফান্ডের নিয়ম নিশ্চিত করতে হবে। ডেমোতে পেমেন্ট নেই।')}</p>
      <Link href="/" className="btn-secondary">{t('← Back to storefront','← দোকানের হোমপেজে ফিরুন')}</Link>
     </section>
