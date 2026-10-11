@@ -4,6 +4,7 @@ import {useMemo,useState} from 'react'
 import Link from 'next/link'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {chooseAreaByLocation,formatPrice} from '@/lib/storefront'
+import {PublicMarketplaceLower} from '@/components/public-marketplace-lower'
 
 export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean}){
  const [area,setArea]=useState('')
@@ -11,12 +12,15 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
  const [gpsBusy,setGpsBusy]=useState(false)
  const [gpsMessage,setGpsMessage]=useState('')
  const [mode,setMode]=useState<'all'|'group'|'pool'>('all')
+ const [category,setCategory]=useState('all')
  const activeArea=areas.find(a=>a.community_id===area)
+ const categories=useMemo(()=>[...new Set(offers.filter(o=>!area||o.community_id===area).map(o=>o.category).filter(Boolean))].sort(),[offers,area])
  const filtered=useMemo(()=>offers.filter(offer=>
   (!area||offer.community_id===area)&&
   (mode==='all'||(mode==='group'?offer.offer_kind==='GROUP_DEAL':offer.offer_kind==='COMMUNITY_POOL'))&&
+  (category==='all'||offer.category===category)&&
   [offer.product_name,offer.category,offer.brand,offer.offer_title].join(' ').toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
- ),[offers,area,search,mode])
+ ),[offers,area,search,mode,category])
  const featured=filtered.find(x=>x.offer_kind==='GROUP_DEAL')??filtered[0]
  const groupHref=authenticated?'/group-deals':'/login?next=%2Fgroup-deals'
  const poolHref=authenticated?'/pool':'/login?next=%2Fpool'
@@ -27,7 +31,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   navigator.geolocation.getCurrentPosition(p=>{
     const match=chooseAreaByLocation(areas,p.coords.latitude,p.coords.longitude,p.coords.accuracy)
     setGpsBusy(false)
-    if(match){setArea(match.community_id);setGpsMessage('Showing '+match.community_name+'. Confirm your address before checkout.')}
+    if(match){setArea(match.community_id);setCategory('all');setGpsMessage('Showing '+match.community_name+'. Confirm your address before checkout.')}
     else setGpsMessage('We could not confidently match your area. Please select it manually.')
   },()=>{setGpsBusy(false);setGpsMessage('Location permission unavailable. Select your area instead.')},
   {enableHighAccuracy:false,timeout:12000,maximumAge:60000})
@@ -35,14 +39,14 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
  return <>
   <div className="mx-auto max-w-6xl px-5 pt-5 md:px-8">
    <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-black/10 pb-4 text-sm font-bold">
-    <a href="#deals">Today's Group Deals</a><a href="#deals" onClick={()=>setMode('pool')}>Community Pools</a>
-    <a href="#how-it-works">How it works</a>
+    <a href="#deals" onClick={()=>setMode('group')}>Today's Group Deals</a><a href="#deals" onClick={()=>setMode('pool')}>Community Pools</a>
+    <a href="#how-it-works">How it works</a><a href="#our-communities">Our areas</a><a href="#customer-experiences">Reviews</a>
     <Link href={authenticated?'/home':'/signup'}>{authenticated?'My dashboard':'Join community'}</Link>
    </nav>
    {!catalogAvailable&&<p role="alert" className="mt-5 rounded-xl border border-amber-300/60 p-4 text-sm font-semibold">Storefront offers are being configured. Browse the site now; live product quotes will appear only after the verified catalog is connected.</p>}
    <div className="mt-5 flex flex-wrap items-end gap-3">
     <label className="min-w-[190px] flex-1"><span className="mb-1 block text-xs font-bold">Your community / area</span>
-     <select className="input w-full" value={area} onChange={e=>{setArea(e.target.value);setGpsMessage('')}}>
+     <select className="input w-full" value={area} onChange={e=>{setArea(e.target.value);setCategory('all');setGpsMessage('')}}>
       <option value="">All operating areas</option>{areas.map(a=><option key={a.community_id} value={a.community_id}>{a.community_name}</option>)}
      </select></label>
     <button type="button" onClick={useLocation} disabled={gpsBusy} className="btn-secondary min-h-11">{gpsBusy?'Locating…':'📍 Use my location'}</button>
@@ -76,6 +80,10 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
    <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.14em] text-teal-700">Shop by buying mode</p><h2 className="mt-2 text-2xl font-black">Products & local deals</h2><p className="mt-1 text-sm text-slate-500">{activeArea?activeArea.community_name:'Choose an area to see nearby offers'} · {filtered.length} active offers</p></div>
     <div className="flex flex-wrap gap-2" role="group" aria-label="Filter buying mode">{([['all','All products'],['group','Group Deals'],['pool','Community Pools']] as const).map(([val,label])=><button type="button" key={val} onClick={()=>setMode(val)} aria-pressed={mode===val} className={mode===val?'btn-primary':'btn-secondary'}>{label}</button>)}</div>
    </div>
+   <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter product category">
+    <button type="button" onClick={()=>setCategory('all')} aria-pressed={category==='all'} className={category==='all'?'btn-primary text-xs':'btn-secondary text-xs'}>All categories</button>
+    {categories.map(c=><button type="button" key={c} aria-pressed={category===c} onClick={()=>setCategory(c)} className={category===c?'btn-primary text-xs':'btn-secondary text-xs'}>{c}</button>)}
+   </div>
    {filtered.length===0?<div className="mt-6 rounded-3xl border border-black/10 bg-white p-8 text-center"><p className="text-xl font-black">No active local offers yet</p><p className="mt-2 text-sm text-slate-500">Try another area or check back when Operations publishes an eligible product and a live deal.</p></div>
    :<div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filtered.map(offer=>{
     const href=offer.offer_kind==='GROUP_DEAL'?groupHref:poolHref
@@ -99,14 +107,6 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
     </article>
    })}</div>}
   </section>
-  <section id="how-it-works" className="mx-auto mb-10 max-w-6xl rounded-[28px] border border-black/10 bg-white p-6 sm:p-8">
-   <h2 className="text-2xl font-black">How it works</h2>{howLabelBn&&<p className="mt-1 text-xs text-slate-500" lang="bn">{howLabelBn}</p>}
-   <div className="mt-5 grid gap-4 text-sm leading-6 md:grid-cols-3">
-    <p><b>1. Browse for free.</b> Explore products and compare active deals without signing in.</p>
-    <p><b>2. Choose an area and buying mode.</b> Select manually or allow one-time browser location. Prices are always clearly labelled.</p>
-    <p><b>3. Verify only when transacting.</b> OTP, community verification, quantity and final price confirmation happen in the secure purchasing flow.</p>
-   </div>
-   <p className="mt-4 text-xs text-slate-500">Location is not tracked continuously. Browsing does not qualify anyone for a Group Deal. Final prices and purchases are validated by the existing secure systems.</p>
-  </section>
+  <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={next=>{setArea(next);setCategory('all')}}/>
  </>
 }

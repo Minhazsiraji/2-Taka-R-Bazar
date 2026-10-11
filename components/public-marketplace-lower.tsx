@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import type {ReactNode} from 'react'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {formatPrice} from '@/lib/storefront'
 import {SITE_TAGLINE_BN,SITE_TAGLINE_EN} from '@/lib/site'
@@ -37,7 +38,7 @@ const faqs=[
   {question:'Can I cancel, return or report an issue?',answer:'Issues and remedies are governed by the published Return and Refund Policies. Use the order issue flow after signing in; do not assume an unqualified group commitment is a paid order.'},
 ] as const
 
-function Eyebrow({children}:{children:React.ReactNode}){
+function Eyebrow({children}:{children:ReactNode}){
   return <p className="market-story-eyebrow">{children}</p>
 }
 function Heading({english,bangla,description}:{english:string;bangla:string;description?:string}){
