@@ -6,10 +6,15 @@ import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {chooseAreaByLocation,distanceMeters,formatPrice} from '@/lib/storefront'
 import {PublicMarketplaceLower} from '@/components/public-marketplace-lower'
 import {PublicHeader} from '@/components/public-header'
+import {PublicFooter} from '@/components/public-footer'
+import type {MarketplaceLanguage} from '@/lib/storefront-language'
+import {chooseText} from '@/lib/storefront-language'
 import {FeaturedProductsCarousel} from '@/components/featured-products-carousel'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
-export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[]}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[]}){
+export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],demoMode=false}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];demoMode?:boolean}){
+ const [language,setLanguage]=useState<MarketplaceLanguage>('bn')
+ const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const [area,setArea]=useState('')
  const [search,setSearch]=useState('')
  const [gpsBusy,setGpsBusy]=useState(false)
@@ -26,7 +31,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   (!area||offer.community_id===area)&&
   (mode==='all'||(mode==='group'?offer.offer_kind==='GROUP_DEAL':offer.offer_kind==='COMMUNITY_POOL'))&&
   (category==='all'||offer.category===category)&&
-  [offer.product_name,offer.category,offer.brand,offer.offer_title].join(' ').toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
+  [offer.product_name,offer.product_name_bn,offer.category,offer.category_bn,offer.brand,offer.offer_title].join(' ').toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
  ),[offers,area,search,mode,category])
  const spotlight=filtered.find(x=>x.offer_kind==='GROUP_DEAL')??filtered[0]
  const groupHref=authenticated?'/group-deals':'/login?next=%2Fgroup-deals'
@@ -79,34 +84,32 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   setLocationState('manual')
   setGpsMessage(value?'Showing your chosen community. A verified address is required before joining a local Group Deal.':'Showing all operating areas.')
  }
- const activeLocationLabel=activeArea?.community_name??(locationState==='denied'?'Choose area':'Find my community')
+ const activeLocationLabel=activeArea?.community_name??(locationState==='denied'?t('Choose area','এলাকা বাছুন'):t('Find my community','আমার এলাকা খুঁজুন'))
+ const locationStatus=locationState==='matched'?t('Nearby community selected; joining requires verification.','কাছের কমিউনিটি নির্বাচিত হয়েছে; যোগ দিতে যাচাই প্রয়োজন।'):
+ locationState==='denied'?t('Location denied. Select your area manually.','লোকেশন অনুমতি নেই। নিজে এলাকা বেছে নিন।'):
+ locationState==='nearby'?t('No reliable match; select a community manually.','নির্ভরযোগ্য এলাকা মেলেনি; নিজে বেছে নিন।'):
+ locationState==='manual'?t('Area selected; eligibility checked before joining.','এলাকা নির্বাচিত; যোগদানের আগে যাচাই হবে।'):
+ gpsBusy?t('Requesting location…','লোকেশন চাওয়া হচ্ছে…'):t('You can browse without location.','লোকেশন ছাড়াও পণ্য দেখতে পারবেন।')
 
  return <>
-  <PublicHeader storefront actionHref={authenticated?'/home':'/login'} actionLabel={authenticated?'My dashboard':'Sign in'}
-   searchValue={search} onSearchChange={setSearch} onLocationClick={useLocation} locating={gpsBusy} locationLabel={activeLocationLabel}/>
+  <PublicHeader storefront actionHref={authenticated?'/home':'/login'} actionLabel={authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Sign in','লগইন')}
+   searchValue={search} onSearchChange={setSearch} onLocationClick={useLocation} locating={gpsBusy} locationLabel={activeLocationLabel}
+   language={language} onLanguageChange={setLanguage}/>
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">
-   {!catalogAvailable&&<p role="alert" className="mt-5 rounded-xl border border-amber-300/60 p-4 text-sm font-semibold">Storefront offers are being configured. Browse the site now; live product quotes will appear only after the verified catalog is connected.</p>}
    <div className="market-location-panel">
-    <div className="market-location-intro">
-     <strong>📍 Find savings near your community</strong>
-     <p><b>Allow location</b> to discover eligible nearby groups, communities and area-based prices. Your browser asks permission; joining a Group Deal still needs secure location and account verification.</p>
-     <p lang="bn">আপনার এলাকার গ্রুপ ডিল ও কম দামে কেনার সুযোগ দেখতে লোকেশন অনুমতি দিন। যোগ দেওয়ার আগে যাচাই প্রয়োজন।</p>
-    </div>
+    <div className="market-location-intro"><strong>📍 {t('Find savings near your community','আপনার এলাকায় কম দামের অফার খুঁজুন')}</strong>
+     <p>{t('Allow location to suggest nearby communities and group prices. Joining requires verified eligibility.','কাছের কমিউনিটি ও গ্রুপের দাম দেখতে লোকেশন অনুমতি দিন। যোগ দিতে এলাকা যাচাই প্রয়োজন।')}</p></div>
     <div className="market-location-control">
-     <label htmlFor="market-area-select">Your community / area</label>
+     <label htmlFor="market-area-select">{t('Your community / area','আপনার কমিউনিটি / এলাকা')}</label>
      <select id="market-area-select" className="input w-full" value={area} onChange={e=>selectArea(e.target.value)}>
-      <option value="">All operating areas</option>{areas.map(a=><option key={a.community_id} value={a.community_id}>{a.community_name}</option>)}
-     </select>
-     <button type="button" onClick={useLocation} disabled={gpsBusy} className="market-location-retry">{gpsBusy?'Locating…':'Use my location again'}</button>
-    </div>
-   </div>
-   <p role="status" aria-live="polite" className="market-location-status">{gpsMessage||(gpsBusy?'Requesting location permission…':'You can browse without sharing your location.')}</p>
-   {nearestAreas.length>0&&<div className="market-nearby-suggestions" aria-label="Nearby community suggestions">
-    <span className="market-nearby-heading">Near you <small>(approximate, not a verified membership)</small></span>
+      <option value="">{t('All operating areas','সব এলাকা')}</option>{areas.map(a=><option key={a.community_id} value={a.community_id}>{a.community_name}</option>)}
+     </select></div></div>
+   <p role="status" aria-live="polite" className="market-location-status">{locationStatus}</p>
+   {nearestAreas.length>0&&<div className="market-nearby-suggestions" aria-label={t('Nearby communities','কাছের কমিউনিটি')}>
+    <span className="market-nearby-heading">{t('Near you','কাছাকাছি')} <small>({t('approximate','আনুমানিক')})</small></span>
     {nearestAreas.map(a=>{const community=areas.find(c=>c.community_id===a.id);if(!community)return null;return <button key={a.id} type="button" aria-pressed={area===a.id}
       onClick={()=>selectArea(a.id)} className={area===a.id?'market-nearby-option is-selected':'market-nearby-option'}>
-      {community.community_name} <small>{a.meters<1000?Math.max(0.1,a.meters/1000).toFixed(1):Math.round(a.meters/1000)} km approx.</small>
-     </button>})}
+      {community.community_name} <small>{a.meters<1000?Math.max(0.1,a.meters/1000).toFixed(1):Math.round(a.meters/1000)} km</small></button>})}
    </div>}
    <div className="market-hero-grid mt-6 grid gap-5 lg:grid-cols-[1.08fr_.92fr]">
     <section className="market-hero-copy flex flex-col justify-center rounded-[28px] border border-black/10 bg-white p-6 sm:p-8">
@@ -169,9 +172,10 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      <p className="mt-3 text-sm leading-7 text-slate-600">Explore 2-TAKA-R-BAZAR private-label and exclusive partner products, photos and short videos. Real approved products will appear as they are published.</p>
      <a href="#deals" className="btn-secondary mt-4">Browse available offers →</a>
     </div>
-    <div className="market-exclusive-carousel"><FeaturedProductsCarousel products={featured}/></div>
+    <div className="market-exclusive-carousel"><FeaturedProductsCarousel products={featured} language={language}/></div>
    </div>
   </section>
-  <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={selectArea}/>
+  <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={selectArea} language={language} demoMode={demoMode}/>
+  <PublicFooter storefront language={language}/>
  </>
 }
