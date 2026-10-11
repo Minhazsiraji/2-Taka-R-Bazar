@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { mkdir } from 'node:fs/promises'
+import {readFileSync} from 'node:fs'
+import {createHash} from 'node:crypto'
 import { chromium } from 'playwright'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
@@ -119,6 +121,11 @@ async function snapshot(page,label){
 }
 async function main(){
  await mkdir('artifacts',{recursive:true})
+ // Retain the fully asserted synthetic supply chain only in this disposable DB.
+ // No hosted target is accepted by the guard above; CI destroys the entire stack.
+ const fixture=readFileSync('tests/supply-handover-e2e.sql','utf8').replace(/rollback;\s*$/,'set constraints all immediate; commit;')
+ execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],{
+  input:fixture,env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8',stdio:['pipe','pipe','pipe']})
  const ownerCookie=await viewer('super_admin')
  const makerCookie=await viewer('admin')
  const browser=await chromium.launch({headless:true})
@@ -256,6 +263,39 @@ async function main(){
   await owner.getByText('Statement line matched to posted ledger transaction',{exact:false}).waitFor({timeout:45000})
   assert.equal(psql("select (matched_transaction_id is not null)::text from public.treasury_statement_lines where id='"+line+"'"),'true')
   console.log('PASS independent statement matching');stages++
+  // Upload real original bytes through the maker form, then void in a second browser session.
+  const bill=psql("select id from public.procurement_supplier_bills where invoice_reference='QA-SUPPLIER-INV-9500'")
+  const original=Buffer.from('%PDF-1.4\nSynthetic original receipt for browser UAT\n%%EOF')
+  await maker.goto(base+'/admin/procurement',{waitUntil:'domcontentloaded'})
+  const upload=maker.locator('input[name="document_file"]').locator('xpath=ancestor::form')
+  await upload.locator('select[name="entity_type"]').selectOption('bill')
+  await upload.locator('select[name="entity_id"]').selectOption(bill)
+  await upload.locator('select[name="document_kind"]').selectOption('goods_receipt')
+  await upload.locator('input[name="display_name"]').fill('Browser original signed synthetic receipt')
+  await upload.locator('input[name="document_file"]').setInputFiles({name:'synthetic-original.pdf',mimeType:'application/pdf',buffer:original})
+  await upload.getByRole('button',{name:'Save immutable evidence to record'}).click()
+  await maker.getByText('Evidence attached permanently to the selected financial record').waitFor({timeout:45000})
+  const attachment=psql("select id from public.finance_document_attachments where display_name='Browser original signed synthetic receipt'")
+  assert.match(attachment,/^[0-9a-f-]{36}$/)
+  assert.equal(psql("select evidence_sha256 from public.finance_document_attachments where id='"+attachment+"'"),createHash('sha256').update(original).digest('hex'))
+  const downloaded=await maker.request.get(base+'/api/finance/attachments/'+attachment)
+  assert.equal(downloaded.status(),200);assert.deepEqual(await downloaded.body(),original)
+  const lifecycle=maker.locator('input[name="attachment_id"][value="'+attachment+'"]').locator('xpath=ancestor::form')
+  await lifecycle.locator('select[name="document_action"]').selectOption('void')
+  await lifecycle.locator('input[name="reason"]').fill('Synthetic paper document superseded in browser qualification')
+  await lifecycle.getByRole('button',{name:'Request independent document review'}).click()
+  await maker.getByText('Document lifecycle request submitted for independent review; original retained').waitFor({timeout:45000})
+  const pending=psql("select id from public.finance_document_events where attachment_id='"+attachment+"' and stage='requested'")
+  await owner.goto(base+'/admin/procurement',{waitUntil:'domcontentloaded'})
+  const review=owner.locator('input[name="request_id"][value="'+pending+'"]').locator('xpath=ancestor::form')
+  await review.locator('input[name="reason"]').fill('Original retained and void reason independently reviewed')
+  await review.getByRole('button',{name:'Approve document action'}).click()
+  await owner.getByText('Document lifecycle review recorded; original and accounting history retained').waitFor({timeout:45000})
+  const retained=await owner.request.get(base+'/api/finance/attachments/'+attachment)
+  assert.equal(retained.status(),200);assert.deepEqual(await retained.body(),original)
+  assert.equal(psql("select count(*) from public.finance_document_events where request_id='"+pending+"' and stage='approved'"),'1')
+  await snapshot(owner,'document-original-void')
+  console.log('PASS original upload/hash/download, independent document void, original retained');stages++
   console.log('SYNTHETIC_BROWSER_UAT_PASS '+stages+' stages, viewport 1440/768/360')
  }finally{await browser.close()}
 }

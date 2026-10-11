@@ -102,7 +102,8 @@ export async function procurementRequestPayment(fd:FormData) {
  requireIsolated()
  const {error}=await v.supabase.rpc('treasury_request_supplier_payment',{
  p_bill_id:get(fd,'bill_id'),p_bank_account:get(fd,'account_id'),
- p_reference:get(fd,'external_reference'),p_payment_date:get(fd,'payment_date')
+ p_reference:get(fd,'external_reference'),p_payment_date:get(fd,'payment_date'),
+ p_amount:get(fd,'payment_amount')?Number(get(fd,'payment_amount')):null
  })
  if(error)throw new Error(error.message)
  }catch(e){outcome(describe(e),'error')}
@@ -143,4 +144,25 @@ export async function procurementAttachDocument(fd:FormData) {
 class FormDataWithFile {
  data:FormData
  constructor(file:File){this.data=new FormData();this.data.set('invoice_file',file)}
+}
+
+export async function procurementDocumentLifecycle(fd:FormData) {
+ const viewer=await requireAdmin()
+ try {
+  requireIsolated()
+  const {error}=await viewer.supabase.rpc('finance_request_document_lifecycle',{
+   p_attachment:get(fd,'attachment_id'),p_action:get(fd,'document_action'),p_reason:get(fd,'reason')})
+  if(error)throw new Error(error.message)
+ }catch(e){outcome(describe(e),'error')}
+ outcome('Document lifecycle request submitted for independent review; original retained')
+}
+export async function procurementReviewDocument(fd:FormData) {
+ const viewer=await requireSuperAdmin()
+ try {
+  requireIsolated()
+  const {error}=await viewer.supabase.rpc('finance_review_document_lifecycle',{
+   p_request:get(fd,'request_id'),p_approve:get(fd,'decision')==='approve',p_reason:get(fd,'reason')})
+  if(error)throw new Error(error.message)
+ }catch(e){outcome(describe(e),'error')}
+ outcome('Document lifecycle review recorded; original and accounting history retained')
 }

@@ -556,11 +556,44 @@ select pg_temp.assert_true(
  (select sum(credit) from public.finance_journal_lines where account_code='2100')=9500,
  'Approved supplier bill did not credit accounts payable exactly once');
 
+-- Manual document fallback retains original provenance with an independent lifecycle.
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into storage.objects(bucket_id,name) values('finance-evidence','a0000000-0000-0000-0000-000000000001/manual-receipt.pdf');
+insert into e2e_state values('manual_document',public.finance_attach_document('bill',
+ (select v::uuid from e2e_state where k='supplier_bill'),'goods_receipt','Signed synthetic manual receipt',
+ 'a0000000-0000-0000-0000-000000000001/manual-receipt.pdf',repeat('f',64))::text);
+insert into e2e_state values('document_void_request',public.finance_request_document_lifecycle(
+ (select v::uuid from e2e_state where k='manual_document'),'void','Synthetic duplicate paper superseded')::text);
+insert into public.user_roles(user_id,role) values('a0000000-0000-0000-0000-000000000001','super_admin') on conflict do nothing;
+select pg_temp.expect_error(format('select public.finance_review_document_lifecycle(%L::uuid,true,%L)',
+ (select v from e2e_state where k='document_void_request'),'Synthetic self review must fail'),'Independent maker-checker');
+delete from public.user_roles where user_id='a0000000-0000-0000-0000-000000000001' and role='super_admin';
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select pg_temp.assert_true(public.finance_review_document_lifecycle(
+ (select v::uuid from e2e_state where k='document_void_request'),true,'Independent synthetic document review')='approved','Document void approval failed');
+select pg_temp.expect_error(format('select public.finance_review_document_lifecycle(%L::uuid,true,%L)',
+ (select v from e2e_state where k='document_void_request'),'Repeated synthetic reviewer approval'),'already reviewed');
+select pg_temp.assert_true(public.finance_original_fingerprint('attachment',(select v::uuid from e2e_state where k='manual_document'))=repeat('f',64),'Void altered fingerprint');
+select pg_temp.assert_true(public.finance_attachment_download_path((select v::uuid from e2e_state where k='manual_document'))='a0000000-0000-0000-0000-000000000001/manual-receipt.pdf','Void lost original file');
+select pg_temp.expect_error(format('update public.finance_document_attachments set display_name=%L where id=%L::uuid','Alter original record',(select v from e2e_state where k='manual_document')),'immutable');
+select pg_temp.expect_error(format('delete from public.finance_document_events where request_id=%L::uuid',(select v from e2e_state where k='document_void_request')),'immutable');
+select pg_temp.assert_true((select status='posted' from public.procurement_supplier_bills where id=(select v::uuid from e2e_state where k='supplier_bill')),'Document void must not void accounting payable');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+
 insert into e2e_state values('bank_acct',public.treasury_create_account(
  'Synthetic Supplier Bank','bank','E2E Bank','7842',current_date,100000,'E2E-OPEN-BANK',0,null)::text);
 insert into e2e_state values('cash_acct',public.treasury_create_account(
  'Synthetic Community Cash','cash','E2E Community','',current_date,0,'E2E-OPEN-CASH',0,null)::text);
 
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state values ('supplier_payment_partial',public.treasury_request_supplier_payment(
+ (select v::uuid from e2e_state where k='supplier_bill'),
+ (select v::uuid from e2e_state where k='bank_acct'),'E2E-BANK-SUPPLIER-3000',current_date,3000)::text);
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select pg_temp.assert_true(public.treasury_review_transaction(
+ (select v::uuid from e2e_state where k='supplier_payment_partial'),true,'Partial payment independently checked')='posted','Partial payment failed');
+select pg_temp.assert_true((select status='posted' from public.procurement_supplier_bills
+ where id=(select v::uuid from e2e_state where k='supplier_bill')),'Partial payment incorrectly settled whole bill');
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
 insert into e2e_state values ('supplier_payment',public.treasury_request_supplier_payment(
  (select v::uuid from e2e_state where k='supplier_bill'),
@@ -569,7 +602,7 @@ select pg_temp.expect_error(
  format('select public.treasury_request_supplier_payment(%L::uuid,%L::uuid,%L,current_date)',
  (select v from e2e_state where k='supplier_bill'),(select v from e2e_state where k='bank_acct'),
  'E2E-DOUBLE-PAY'),
- 'treasury_one_supplier_bill_payment');
+ 'Supplier payment exceeds unreserved payable');
 
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
 select pg_temp.assert_true(public.treasury_review_transaction(
@@ -587,7 +620,7 @@ select pg_temp.assert_true(
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
 insert into e2e_state values('supplier_statement',public.treasury_import_statement_line(
  (select v::uuid from e2e_state where k='bank_acct'),'QA-STATEMENT-SUPPLIER-9500',
- current_date,-9500,'E2E-BANK-SUPPLIER-9500')::text);
+ current_date,-6500,'E2E-BANK-SUPPLIER-9500')::text);
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
 select pg_temp.assert_true(public.treasury_match_statement(
  (select v::uuid from e2e_state where k='supplier_statement'),

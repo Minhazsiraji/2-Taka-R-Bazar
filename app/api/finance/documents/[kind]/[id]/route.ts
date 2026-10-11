@@ -1,3 +1,4 @@
+import {verifyOriginal} from '@/lib/finance/original-integrity'
 import { NextRequest,NextResponse } from 'next/server'
 import { renderFinancePdf } from '@/lib/finance/printable-pdf'
 import { requireAdmin } from '@/lib/auth'
@@ -20,6 +21,8 @@ export async function GET(request:NextRequest,context:{params:Promise<{kind:stri
   const {data:file,error:downloadError}=await supabase.storage.from('finance-evidence').download(bill.evidence_path)
   if(downloadError||!file)return new NextResponse('Private proof unavailable',{status:404})
   const buf=await file.arrayBuffer()
+  const {data:hash,error:hashError}=await supabase.rpc('finance_original_fingerprint',{p_entity_type:'bill',p_id:id})
+  if(hashError||!verifyOriginal(buf,hash))return new NextResponse('Original evidence integrity failed',{status:409})
   const type=file.type
   if(!['application/pdf','image/jpeg','image/png'].includes(type))return new NextResponse('Unsupported proof format',{status:415})
   const extension=type==='application/pdf'?'pdf':type==='image/png'?'png':'jpg'

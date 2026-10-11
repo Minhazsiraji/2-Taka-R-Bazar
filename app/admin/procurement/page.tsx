@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/auth'
 import {
  procurementCreatePO,procurementReviewPO,procurementLinkDispatch,
  procurementSubmitBill,procurementReviewBill,procurementRequestPayment,
- procurementPostCommunityCash,procurementAttachDocument
+ procurementPostCommunityCash,procurementAttachDocument,procurementDocumentLifecycle,procurementReviewDocument
 } from '@/app/actions/procurement'
 
 export const dynamic='force-dynamic'
@@ -58,7 +58,7 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
   (!String(process.env.NEXT_PUBLIC_SUPABASE_URL).includes('sukabonfjcnaavjgjyuy')||process.env.FINANCE_SHARED_DB_UAT_ENABLED==='true')
  const {data,error}=demoMode?{data:demo,error:null}:await supabase.rpc('procurement_workbench')
  const {data:attachmentData}=demoMode?{data:[]}:await supabase.rpc('finance_document_attachment_index')
- const attachments=(Array.isArray(attachmentData)?attachmentData:[]) as Array<{id:string;entity_type:string;entity_id:string;kind:string;name:string;uploaded_at:string}>
+ const attachments=(Array.isArray(attachmentData)?attachmentData:[]) as Array<{id:string;entity_type:string;entity_id:string;kind:string;name:string;uploaded_at:string;state?:string;pending_request?:string|null}>
  const d=(data??{selected_quotes:[],purchase_orders:[],dispatches:[],bills:[],liquid_accounts:[],cash_receipts_pending:[]}) as Data
  const quote=d.selected_quotes??[],po=d.purchase_orders??[],dispatch=d.dispatches??[],bills=d.bills??[],accounts=d.liquid_accounts??[],cash=d.cash_receipts_pending??[]
  const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'})
@@ -124,6 +124,7 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
    <Panel heading="6 · Request supplier bank settlement" detail="Approving this Treasury request debits supplier payable and credits the actual bank account. Independent statement matching follows.">
     <form action={procurementRequestPayment} className="grid gap-2">
      <label className="text-xs font-bold">Matched unpaid supplier invoice<select name="bill_id" className={style} required><option value="">Choose posted invoice</option>{bills.filter(x=>x.status==='posted').map(x=><option key={x.id} value={x.id}>{x.vendor} · {x.ref} · {taka(x.amount)}</option>)}</select></label>
+     <label className="text-xs font-bold">Partial payment amount (leave blank for unreserved balance)<input name="payment_amount" type="number" min=".01" step=".01" className={style}/></label>
      <label className="text-xs font-bold">Pay from account<select name="account_id" className={style} required><option value="">Choose liquid account</option>{accounts.map(x=><option key={x.id} value={x.id}>{x.name} · {x.kind}</option>)}</select></label>
      <div className="grid grid-cols-2 gap-2"><label className="text-xs font-bold">Payment date<input name="payment_date" type="date" className={style} defaultValue={today} required/></label><label className="text-xs font-bold">Bank reference<input name="external_reference" minLength={4} className={style} required/></label></div>
      <button disabled={!isolated||demoMode} className="rounded-xl bg-teal-700 px-3 py-2.5 text-sm font-black text-white disabled:opacity-40">Request independent Treasury settlement</button>
@@ -161,7 +162,18 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
      <label className="text-xs font-bold">Upload PDF, JPG or PNG (up to 1.5 MB)<input className={style} name="document_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required/></label>
      <button disabled={demoMode||!isolated} className="rounded-xl bg-teal-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40">Save immutable evidence to record</button>
     </form>
-    <div className="mt-3 space-y-1">{attachments.map(a=><div key={a.id} className="flex flex-wrap justify-between gap-2 border-t border-teal-100 py-2 text-xs"><span>{a.name} · {a.kind} · {a.entity_type} · {a.uploaded_at?.slice(0,10)}</span><a className="font-black text-teal-800 underline" href={`/api/finance/attachments/${a.id}`}>Download original</a></div>)}{!attachments.length&&<p className="text-xs text-slate-600">No additional signed documents attached.</p>}</div>
+    <div className="mt-3 space-y-3">{attachments.map(a=><div key={a.id} className="border-t border-teal-100 py-2 text-xs">
+     <p>{a.name} · {a.kind} · {a.state??'active'} · {new Date(a.uploaded_at).toLocaleDateString('en-GB')}</p>
+     <a href={`/api/finance/attachments/${a.id}`} className="font-bold text-teal-800 underline">Download original (integrity checked)</a>
+     {a.pending_request?<form action={procurementReviewDocument} className="mt-2 grid gap-2">
+      <input type="hidden" name="request_id" value={a.pending_request}/><label>Independent review reason<input name="reason" minLength={10} maxLength={1000} required className={style}/></label>
+      <div className="flex gap-2"><button name="decision" value="approve" disabled={demoMode||!isolated} className="rounded-lg bg-teal-700 p-2 font-bold text-white">Approve document action</button><button name="decision" value="reject" disabled={demoMode||!isolated} className="rounded-lg border p-2">Reject document action</button></div>
+     </form>:<form action={procurementDocumentLifecycle} className="mt-2 grid gap-2">
+      <input type="hidden" name="attachment_id" value={a.id}/><label>Document action<select name="document_action" className={style}><option value="void">Void document</option><option value="archive">Archive document</option></select></label>
+      <label>Reason (original and journals remain retained)<input name="reason" required minLength={10} maxLength={1000} className={style}/></label>
+      <button disabled={demoMode||!isolated} className="rounded-lg border p-2 font-bold">Request independent document review</button>
+     </form>}
+    </div>)}</div>
    </div>
    <p className="mt-3 text-xs text-slate-600">Manual fallback: prepare and sign documents offline; attach original supplier invoice as PDF/JPEG/PNG in step 4. For any additional manual PO or custody evidence, keep the signed original under controlled records until a dedicated linked upload register is available. No manual document may substitute for verified payment or physical receipt.</p>
   </Panel>
