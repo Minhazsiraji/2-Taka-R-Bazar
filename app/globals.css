@@ -102,9 +102,9 @@ td { @apply border-t border-slate-100 px-3 py-3 align-top; background: rgba(255,
 .success { @apply border-emerald-200 text-emerald-900; background: rgba(236,253,245,.76); }
 .error { @apply border-rose-200 text-rose-900; background: rgba(255,241,242,.78); }
 
-main :is(div,section,article,form,blockquote,details)[class*="rounded-xl"]:not(.card):not(.table-wrap),
-main :is(div,section,article,form,blockquote,details)[class*="rounded-2xl"]:not(.card):not(.table-wrap),
-main :is(div,section,article,form,blockquote,details)[class*="rounded-["]:not(.card):not(.table-wrap) {
+main :is(div,section,article,form,blockquote,details)[class*="rounded-xl"]:not(.card):not(.table-wrap):not(.finance-panel):not(.finance-ops-hero),
+main :is(div,section,article,form,blockquote,details)[class*="rounded-2xl"]:not(.card):not(.table-wrap):not(.finance-panel):not(.finance-ops-hero),
+main :is(div,section,article,form,blockquote,details)[class*="rounded-["]:not(.card):not(.table-wrap):not(.finance-panel):not(.finance-ops-hero) {
   box-shadow: 0 7px 20px rgba(15,23,42,.055), inset 0 1px 0 rgba(255,255,255,.42);
   -webkit-backdrop-filter: blur(12px) saturate(1.08); backdrop-filter: blur(12px) saturate(1.08);
   transition: transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s ease, border-color .22s ease;

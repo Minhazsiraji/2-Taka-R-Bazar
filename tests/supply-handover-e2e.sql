@@ -466,6 +466,172 @@ select pg_temp.assert_true(
   'SOD violation was not recorded as a fraud event'
 );
 
+
+-- FINANCE/TREASURY INTEGRATION: same disposable tenant, prior verified supplier delivery.
+insert into public.user_roles(user_id,role)
+values('a0000000-0000-0000-0000-000000000002','super_admin') on conflict do nothing;
+
+insert into public.pools(id,community_id,title,status,created_by)
+values('f1000000-0000-4000-8000-000000000001',
+ '11111111-1111-1111-1111-111111111111','E2E procurement cost-linked pool','pricing',
+ 'a0000000-0000-0000-0000-000000000001');
+insert into public.pool_items(id,pool_id,product_id,benchmark_price_snapshot,final_customer_price,
+ frozen_committed_quantity,active)
+values('f2000000-0000-4000-8000-000000000001',
+ 'f1000000-0000-4000-8000-000000000001',
+ '22222222-2222-2222-2222-222222222221',1000,980,10,true);
+insert into public.supplier_quotes(id,pool_item_id,supplier_id,quote_phase,quantity,
+ quoted_unit_price,landed_unit_price,delivery_cost,delivery_included,
+ selected,valid_until,customer_ceiling_price)
+values('f3000000-0000-4000-8000-000000000001',
+ 'f2000000-0000-4000-8000-000000000001',
+ '33333333-3333-3333-3333-333333333333','final',10,950,950,0,true,
+ true,current_date+30,990);
+update public.pool_items set selected_supplier_quote_id='f3000000-0000-4000-8000-000000000001'
+where id='f2000000-0000-4000-8000-000000000001';
+update public.pools set status='ordered' where id='f1000000-0000-4000-8000-000000000001';
+
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state values ('matched_po',public.procurement_submit_po(
+ 'f3000000-0000-4000-8000-000000000001','Synthetic pool frozen-demand purchase order')::text);
+select pg_temp.expect_error(
+ format('select public.procurement_submit_po(%L::uuid,%L)',
+  'f3000000-0000-4000-8000-000000000001','replay'),
+ 'already has a purchase order');
+
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select pg_temp.assert_true(public.procurement_review_po(
+ (select v::uuid from e2e_state where k='matched_po'),true,'Checked supplier quote and frozen demand')='approved',
+ 'PO approval failed');
+
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state values ('po_dispatch_link',
+ public.procurement_link_dispatch((select v::uuid from e2e_state where k='matched_po'),
+ (select v::uuid from e2e_state where k='happy_dispatch'))::text);
+
+select pg_temp.expect_error(
+ format('select public.procurement_link_dispatch(%L::uuid,%L::uuid)',
+ (select v from e2e_state where k='matched_po'),
+ (select v from e2e_state where k='damage_dispatch')),
+ 'Dispatch supplier, destination or status does not match PO');
+
+select pg_temp.assert_true(
+ private.procurement_accepted_quantity((select v::uuid from e2e_state where k='matched_po'))=10,
+ 'Invoice match quantity not taken from independently verified supply receipt');
+
+insert into storage.objects(bucket_id,name)
+values ('finance-evidence','a0000000-0000-0000-0000-000000000001/supplier-qa-proof.pdf');
+
+select pg_temp.expect_error(
+ format('select public.procurement_submit_bill(%L::uuid,%L,current_date,10,980,%L,%L)',
+  (select v from e2e_state where k='matched_po'),'QA-EXPENSIVE-INV',
+  'a0000000-0000-0000-0000-000000000001/supplier-qa-proof.pdf',
+  repeat('a',64)),
+ 'must match approved PO');
+
+select pg_temp.expect_error(
+ format('select public.procurement_submit_bill(%L::uuid,%L,current_date,11,950,%L,%L)',
+  (select v from e2e_state where k='matched_po'),'QA-OVERQTY-INV',
+  'a0000000-0000-0000-0000-000000000001/supplier-qa-proof.pdf',
+  repeat('b',64)),
+ 'exceeds verified accepted');
+
+insert into e2e_state values ('supplier_bill',public.procurement_submit_bill(
+ (select v::uuid from e2e_state where k='matched_po'),'QA-SUPPLIER-INV-9500',
+ current_date,10,950,'a0000000-0000-0000-0000-000000000001/supplier-qa-proof.pdf',
+ repeat('c',64))::text);
+
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select pg_temp.assert_true(public.procurement_review_bill(
+  (select v::uuid from e2e_state where k='supplier_bill'),true,
+  'Full PO, independent goods and vendor invoice match')='posted',
+  'Supplier bill did not post inventory liability after independent match');
+
+select pg_temp.assert_true(
+ (select sum(debit) from public.finance_journal_lines where account_code='1200')=9500,
+ 'Matched supplier bill did not debit inventory by actual verified cost');
+select pg_temp.assert_true(
+ (select sum(credit) from public.finance_journal_lines where account_code='2100')=9500,
+ 'Approved supplier bill did not credit accounts payable exactly once');
+
+insert into e2e_state values('bank_acct',public.treasury_create_account(
+ 'Synthetic Supplier Bank','bank','E2E Bank','7842',current_date,100000,'E2E-OPEN-BANK',0,null)::text);
+insert into e2e_state values('cash_acct',public.treasury_create_account(
+ 'Synthetic Community Cash','cash','E2E Community','',current_date,0,'E2E-OPEN-CASH',0,null)::text);
+
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state values ('supplier_payment',public.treasury_request_supplier_payment(
+ (select v::uuid from e2e_state where k='supplier_bill'),
+ (select v::uuid from e2e_state where k='bank_acct'),'E2E-BANK-SUPPLIER-9500',current_date)::text);
+select pg_temp.expect_error(
+ format('select public.treasury_request_supplier_payment(%L::uuid,%L::uuid,%L,current_date)',
+ (select v from e2e_state where k='supplier_bill'),(select v from e2e_state where k='bank_acct'),
+ 'E2E-DOUBLE-PAY'),
+ 'treasury_one_supplier_bill_payment');
+
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select pg_temp.assert_true(public.treasury_review_transaction(
+ (select v::uuid from e2e_state where k='supplier_payment'),true,'Bank payment checked')='posted',
+ 'Supplier bill payment did not debit payable and credit physical bank');
+select pg_temp.assert_true((select status='settled' from public.procurement_supplier_bills
+ where id=(select v::uuid from e2e_state where k='supplier_bill')),
+ 'Supplier bill remains open after verified Treasury authorization');
+select pg_temp.assert_true((select private.treasury_account_balance((select v::uuid from e2e_state where k='bank_acct')))=90500,
+ 'Treasury bank did not reconcile after supplier payable settlement');
+select pg_temp.assert_true(
+ (select coalesce(sum(debit-credit),0)=0 from public.finance_journal_lines),
+ 'Procurement and Treasury ledger lost double-entry balance');
+
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state values('supplier_statement',public.treasury_import_statement_line(
+ (select v::uuid from e2e_state where k='bank_acct'),'QA-STATEMENT-SUPPLIER-9500',
+ current_date,-9500,'E2E-BANK-SUPPLIER-9500')::text);
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select pg_temp.assert_true(public.treasury_match_statement(
+ (select v::uuid from e2e_state where k='supplier_statement'),
+ (select v::uuid from e2e_state where k='supplier_payment'))='matched',
+ 'Physical supplier bank payment did not independently match its statement');
+
+-- A prior Community Ops acceptance is synthetic: this validates the Treasury boundary,
+-- while earlier tests exercise full real handover and variance gates.
+insert into public.community_ops_days(id,community_id,business_date,primary_operator_id,
+ status,accepted_with_exception,admin_accepted_by,admin_accepted_at)
+values('f4000000-0000-4000-8000-000000000001',
+ '11111111-1111-1111-1111-111111111111',current_date,
+ 'd0000000-0000-0000-0000-000000000001','closed',false,
+ 'a0000000-0000-0000-0000-000000000001',now());
+insert into public.community_ops_cash_handovers(day_id,product_cod_submitted,delivery_fees_submitted,
+ submitted_by,submitted_at,product_cod_received,delivery_fees_received,received_by,received_at,status)
+values('f4000000-0000-4000-8000-000000000001',2000,30,
+ 'd0000000-0000-0000-0000-000000000001',now(),2000,30,
+ 'a0000000-0000-0000-0000-000000000001',now(),'accepted');
+
+select pg_temp.assert_true(
+ public.treasury_post_verified_community_cash(
+ 'f4000000-0000-4000-8000-000000000001',
+ (select v::uuid from e2e_state where k='cash_acct'),
+ 'E2E-CASH-CUSTODY-2030') is not null,
+ 'Accepted physical community cash was not posted');
+select pg_temp.assert_true(
+ (select private.treasury_account_balance((select v::uuid from e2e_state where k='cash_acct')))=2030,
+ 'Community COD did not increase a separate physical cash account');
+select pg_temp.assert_true(
+ (select coalesce(sum(credit),0) from public.finance_journal_lines where account_code='2210')=2000,
+ 'Unapplied product COD should be a separate suspense liability, not fake net profit');
+select pg_temp.assert_true(
+ (select coalesce(sum(credit),0) from public.finance_journal_lines where account_code='2211')=30,
+ 'Community delivery fee collection must be separately classified');
+select pg_temp.expect_error(
+ format('select public.treasury_post_verified_community_cash(%L::uuid,%L::uuid,%L)',
+ 'f4000000-0000-4000-8000-000000000001',(select v from e2e_state where k='cash_acct'),
+ 'E2E-REPLAY-CASH'),'already posted');
+
+select pg_temp.assert_true(
+ (select (public.treasury_dashboard(current_date)->>'cash_total')::numeric)=92530,
+ 'Bank minus supplier payment plus accepted COD does not equal true combined cash');
+
+\echo 'FINANCE_TREASURY_PROCUREMENT_COD_INTEGRATION_E2E_PASS'
+
 -- All assertions passed. Roll back every synthetic row.
 \echo 'SUPPLY_HANDOVER_SYNTHETIC_E2E_PASS'
 rollback;
