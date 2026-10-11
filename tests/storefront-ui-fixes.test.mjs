@@ -1,0 +1,46 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8')
+const picker=read('components/community-picker.tsx')
+const market=read('components/public-marketplace.tsx')
+const gallery=read('components/featured-pool-showcase.tsx')
+const css=read('app/marketplace-hero-motion.css')
+
+test('community options use in-flow disclosure and native keyboard-operable radios',()=>{
+ assert.ok(!picker.includes('<select'))
+ assert.match(picker,/<details/)
+ assert.match(picker,/<summary[^>]*aria-labelledby=/)
+ assert.match(picker,/<fieldset/)
+ assert.match(picker,/type="radio"/)
+ assert.match(picker,/checked=\{value===option.community_id\}/)
+ assert.match(picker,/event.key==='Escape'/)
+ assert.match(picker,/querySelector\('summary'\)\?\.focus\(\)/)
+ assert.match(css,/market-community-options\{[\s\S]*?min-width:0/)
+ assert.match(css,/summary:focus-visible/)
+ assert.match(market,/onClick=\{useLocation\} disabled=\{gpsBusy\}/)
+})
+test('late location callbacks cannot re-label a manually selected browsing community',()=>{
+ assert.equal((market.match(/if\(manualSelected.current\)return/g)||[]).length,2)
+ assert.match(market,/setLocationState\('manual'\)/)
+ assert.match(market,/eligibility checked before joining/)
+})
+test('gallery has one equal vertical slot per selected product and honest missing-image fallback',()=>{
+ assert.match(gallery,/featuredProductIds[\s\S]*?\.map\(id=>pool.bundle.find/)
+ assert.match(gallery,/slice\(0,3\)/)
+ assert.match(gallery,/thumbnails.map\(\(\{offer\}\)/)
+ assert.match(gallery,/className="market-pool-thumbnail"/)
+ assert.match(gallery,/onError=\{\(\)=>setFailed\(true\)\}/)
+ assert.match(gallery,/Image unavailable/)
+ assert.ok(!gallery.includes('offer.image_url??pool.image'))
+ assert.match(css,/grid-template-columns:minmax\(0,1fr\);\s*grid-auto-rows:86px/)
+ assert.match(css,/grid-template-columns:76px minmax\(0,1fr\)/)
+ assert.match(css,/object-fit:contain!important/)
+ assert.ok(!css.includes('grid-row:1/span 2'))
+})
+test('language wrapper contributes no second border and glossy tokens reach the header',()=>{
+ assert.match(css,/body.site-glass-root:has\(main.public-marketplace-flat\)\{\s*--gloss-rim/)
+ assert.match(css,/\.market-flat-header \.market-language-toggle\{[\s\S]*?border:0!important/)
+ assert.match(css,/\.market-pool-detail-header \.market-language-toggle\{[\s\S]*?border:0!important/)
+ assert.match(read('app/marketplace-unified.css'),/\.market-header-search\{[\s\S]*?border:1px solid var\(--gloss-rim\)/)
+})
