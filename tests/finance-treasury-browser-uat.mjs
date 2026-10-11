@@ -482,6 +482,26 @@ async function main(){
    p_open_date:new Date().toISOString().slice(0,10),p_opening_balance:1,p_opening_reference:'REVOKED-LEASE',p_restricted:0,p_credit_limit:null})
   assert.ok(locked.error);assert.match(locked.error.message,/Financial writes locked/)
   console.log('PASS real authenticated/customer/anonymous RPC and storage security, overwrite attack, revoked owner lease');stages++
+  const journalsBeforeCleanup=psql('select count(*) from public.finance_journals')
+  const withdrawRole=await identities.get('close_maker').client.rpc('super_admin_set_role',{
+   p_user_id:ownerIdentity.id,p_role:'super_admin',p_enabled:false})
+  assert.ok(!withdrawRole.error,'Independent operator could not withdraw temporary reviewer role')
+  const staleReviewerReport=await ownerIdentity.client.rpc('finance_integrated_report',{
+   p_month:new Date().toISOString().slice(0,7)+'-01'})
+  assert.ok(staleReviewerReport.error,'Withdrawn reviewer retained report access through existing token')
+  const staleReviewerInventory=await ownerIdentity.client.rpc('finance_inventory_source')
+  assert.ok(staleReviewerInventory.error,'Withdrawn reviewer retained inventory access through existing token')
+  const staleReviewerOriginal=await owner.request.get(base+'/api/finance/attachments/'+attachment)
+  assert.notEqual(staleReviewerOriginal.status(),200,'Withdrawn reviewer retained original download through browser session')
+  assert.notEqual(staleReviewerOriginal.headers()['content-type'],'application/pdf')
+  assert.equal(psql('select count(*) from public.finance_journals'),journalsBeforeCleanup,'Reviewer cleanup changed journal history')
+  assert.equal(psql("select count(*) from auth.users where id='"+ownerIdentity.id+"'"),'1','Reviewer identity referenced by audit must be retained')
+  assert.ok(Number(psql("select count(*) from public.audit_events where event_type='role_revoked' and entity_id='"+ownerIdentity.id+"'"))>0,'Role withdrawal lacks immutable audit evidence')
+  const reviewerSession=await ownerIdentity.client.auth.getSession()
+  assert.ok(reviewerSession.data.session)
+  const revokeSession=await supa.auth.admin.signOut(reviewerSession.data.session.access_token,'global')
+  assert.ok(!revokeSession.error,'Reviewer session revocation failed')
+  console.log('PASS independent temporary role withdrawal denies existing-token reports and browser originals; sessions revoked, identity/journals/audit retained');stages++
   await customerContext.close()
   console.log('SYNTHETIC_BROWSER_UAT_PASS '+stages+' stages, viewport 1440/768/360')
  }finally{await browser.close()}
