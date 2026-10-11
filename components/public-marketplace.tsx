@@ -23,7 +23,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   (category==='all'||offer.category===category)&&
   [offer.product_name,offer.category,offer.brand,offer.offer_title].join(' ').toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
  ),[offers,area,search,mode,category])
- const featured=filtered.find(x=>x.offer_kind==='GROUP_DEAL')??filtered[0]
+ const spotlight=filtered.find(x=>x.offer_kind==='GROUP_DEAL')??filtered[0]
  const groupHref=authenticated?'/group-deals':'/login?next=%2Fgroup-deals'
  const poolHref=authenticated?'/pool':'/login?next=%2Fpool'
  function useLocation(){
@@ -67,13 +67,13 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      <div className="mt-6 grid grid-cols-2 gap-3 text-xs font-semibold text-slate-600"><p>✓ Free community pickup</p><p>✓ Optional home delivery</p><p>✓ No subscription fee</p><p>✓ No fake savings</p></div>
     </section>
     <section className="flex min-h-[410px] flex-col justify-center overflow-hidden rounded-[28px] border border-black/10 bg-white p-5 sm:p-7">
-     {featured?<><span className="text-xs font-black uppercase tracking-[.16em] text-teal-700">{featured.offer_kind==='GROUP_DEAL'?'Featured Group Deal':'Community Pool spotlight'}</span>
-      <div className="mt-4 flex min-h-56 items-center justify-center">{featured.image_url?<img src={featured.image_url} alt={featured.product_name} className="max-h-60 w-full object-contain"/>:<img src="/grocery-hero-glass.svg" alt="Grocery basket illustration" className="max-h-52 w-full object-contain"/>}</div>
-      <h2 className="mt-3 text-xl font-black">{featured.product_name}</h2><p className="mt-1 text-sm text-slate-500">{featured.package_size} · {featured.offer_title}</p>
-      <p className="mt-3 text-2xl font-black text-teal-700">{formatPrice(featured.confirmed_price??featured.upcoming_price)}</p>
-      <p className="mt-1 text-xs text-slate-500">{featured.confirmed_price?'Currently unlocked or published price':'Potential next-tier price — not yet unlocked'}</p>
-      <p className="mt-2 text-sm font-semibold">{featured.buyer_count} qualified {featured.buyer_count===1?'buyer':'buyers'} joined</p>
-      <Link href={featured.offer_kind==='GROUP_DEAL'?groupHref:poolHref} className="btn-primary mt-4 text-center">View this {featured.offer_kind==='GROUP_DEAL'?'Group Deal':'Pool'} →</Link>
+     {spotlight?<><span className="text-xs font-black uppercase tracking-[.16em] text-teal-700">{spotlight.offer_kind==='GROUP_DEAL'?'Featured Group Deal':'Community Pool spotlight'}</span>
+      <div className="mt-4 flex min-h-56 items-center justify-center">{spotlight.image_url?<img src={spotlight.image_url} alt={spotlight.product_name} className="max-h-60 w-full object-contain"/>:<img src="/grocery-hero-glass.svg" alt="Grocery basket illustration" className="max-h-52 w-full object-contain"/>}</div>
+      <h2 className="mt-3 text-xl font-black">{spotlight.product_name}</h2><p className="mt-1 text-sm text-slate-500">{spotlight.package_size} · {spotlight.offer_title}</p>
+      <p className="mt-3 text-2xl font-black text-teal-700">{formatPrice(spotlight.confirmed_price??spotlight.upcoming_price)}</p>
+      <p className="mt-1 text-xs text-slate-500">{spotlight.confirmed_price?'Currently unlocked or published price':'Potential next-tier price — not yet unlocked'}</p>
+      <p className="mt-2 text-sm font-semibold">{spotlight.buyer_count} qualified {spotlight.buyer_count===1?'buyer':'buyers'} joined</p>
+      <Link href={spotlight.offer_kind==='GROUP_DEAL'?groupHref:poolHref} className="btn-primary mt-4 text-center">View this {spotlight.offer_kind==='GROUP_DEAL'?'Group Deal':'Pool'} →</Link>
      </>:<><img src="/grocery-hero-glass.svg" alt="Grocery essentials" className="max-h-64 w-full object-contain"/><h2 className="mt-5 text-center text-xl font-black">Your next community deal starts here</h2><p className="mt-2 text-center text-sm text-slate-500">There are no publicly available active product offers right now. New products will appear when verified and published.</p></>}
     </section>
    </div>
