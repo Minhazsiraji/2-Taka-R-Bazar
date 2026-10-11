@@ -237,5 +237,8 @@ select ok(pg_temp.expect_failure(
  'Finance period is locked'),'No financial cash movements posted into closed period');
 select is((select sum(l.debit-l.credit) from public.finance_journal_lines l),0::numeric,
  'Month-end final treasury and business journals remain exactly balanced');
+-- Execute deferred per-journal constraints before rolling fixtures back.
+-- ROLLBACK alone would never execute deferred balance checks.
+set constraints all immediate;
 select * from finish();
 rollback;

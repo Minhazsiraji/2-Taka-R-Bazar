@@ -67,5 +67,8 @@ select is((public.treasury_cash_bridge_source(date_trunc('month',current_date)::
 select is((public.treasury_cash_bridge_source(date_trunc('month',current_date)::date)->>'internalTransfers')::numeric,0::numeric,
  'Internal transfers do not invent external cash inflows');
 
+-- Execute deferred per-journal constraints before rolling fixtures back.
+-- ROLLBACK alone would never execute deferred balance checks.
+set constraints all immediate;
 select * from finish();
 rollback;

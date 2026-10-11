@@ -180,5 +180,8 @@ select is((select sum(debit-credit) from public.finance_journal_lines),0::numeri
 select is((select count(*)::integer from public.finance_journals where source_type='treasury_transaction' and source_id in(select id from qa_settlements)),1,
  'Rejected payment never posts, approved one posts exactly once');
 
+-- Execute deferred per-journal constraints before rolling fixtures back.
+-- ROLLBACK alone would never execute deferred balance checks.
+set constraints all immediate;
 select * from finish();
 rollback;

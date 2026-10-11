@@ -78,5 +78,8 @@ do $$ begin perform set_config('request.jwt.claim.sub','00000000-0000-4000-8000-
 select is(public.treasury_review_transaction((select id from finance_test_settlement),true,'Synthetic internally reviewed payment'), 'posted','Independent settlement approval posts book movement');
 select is((select coalesce(sum(l.debit-l.credit),0) from public.finance_journal_lines l
  join public.finance_journals j on j.id=l.journal_id),0::numeric,'All journal lines balance after settlement');
+-- Execute deferred per-journal constraints before rolling fixtures back.
+-- ROLLBACK alone would never execute deferred balance checks.
+set constraints all immediate;
 select * from finish();
 rollback;

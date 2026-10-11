@@ -125,5 +125,8 @@ select ok(pg_temp.must_fail(
 select is((select (public.finance_report(current_date)->>'posted_expenses')::numeric),3108::numeric,
  'Read-only reports remain available after the close');
 
+-- Execute deferred per-journal constraints before rolling fixtures back.
+-- ROLLBACK alone would never execute deferred balance checks.
+set constraints all immediate;
 select * from finish();
 rollback;

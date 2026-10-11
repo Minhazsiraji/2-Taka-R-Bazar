@@ -31,9 +31,11 @@ Draft PR: https://github.com/Minhazsiraji/2-Taka-R-Bazar/pull/58
 | Profit/cash-bridge SQL | PASS: 14/14 | Restricted diagnostics, independent cash reconciliation, no invented certification or tax rate |
 | Hosted SQL total | PASS: 141/141 | Five suites on the authorized shared dummy DB; every transaction ends ROLLBACK |
 | Initial branch CI | PASS | Commit `7c6f22a250854ac21527a00ce520e0ac88c3fb82`; Actions run `38119251464`, application job and disposable migration/supply E2E job all passed |
-| Public browser smoke | PASS, limited | Homepage and FAQ at `https://2takarbazar.com/faq`; free pickup and BDT 20/30 optional delivery visible. This does not establish authenticated ordering or finance UAT |
+| Public browser smoke | PASS, limited | Homepage and FAQ at `https://2takarbazar.com/faq`; free pickup and BDT 20/30 optional delivery visible. Unauthenticated Finance navigation also redirects to mobile sign-in; no OTP was requested. This does not establish authenticated ordering or finance UAT |
 | Hosted supply E2E through MCP | UNVERIFIED | API returned `Invalid or expired requestState`; do not count this attempt as a pass. Separate disposable supply E2E passed in the initial CI run |
 | Hosted authorized finance browser UAT | BLOCKED | No authenticated maker/checker browser session or verified accessible candidate deployment |
+
+Raw assertion results are recorded in `docs/uat/issue-57-sql-results.json`. Every suite also forces deferred per-journal constraints with `SET CONSTRAINTS ALL IMMEDIATE` before rollback; all passed.
 
 SQL tests that exercised the candidate reporting function applied its definition **inside their rolled-back transaction**. The reporting migration was not installed on the shared hosted database. Final CI must be assessed at the candidate SHA; initial CI results must not be attributed to later commits.
 
@@ -52,7 +54,7 @@ Read-only catalog checks on the shared project found zero finance/procurement/tr
 
 Supabase advisors returned 33 RLS-without-policy informational findings (including RPC-only tables), two anonymous SECURITY DEFINER warnings for public QR functions, 128 authenticated SECURITY DEFINER warnings across the application, and a leaked-password-protection warning. These are review findings, not proof that every function is exploitable. Individual RPC authorization, storage access and cross-role browser verification are still required; do not replace deny-by-default tables with permissive policies simply to remove informational findings. Password-protection configuration requires assessment against the mobile OTP design.
 
-Production application financial actions still fail closed outside an approved Preview. Database RPC safety and release authorization must be assessed separately; an application environment guard alone is not a complete database-write release gate.
+Production application financial actions still fail closed outside an approved Preview. Public mutating finance RPCs are executable by authenticated users and enforce staff/reviewer roles, but the inspected functions do not share the Server Action Preview environment restriction. A suitably authorized role could call these RPCs directly. Add and qualify a database-level financial release gate or scoped UAT authorization before financial Production signoff; the application environment guard alone is not a complete database-write release gate.
 
 Automatic approval review rejected the local Supabase initialization invocation because it attempted unsolicited telemetry to PostHog. No retry or indirect workaround for that rejected command was performed. Connected SQL verification and already configured repository CI were used for unaffected work.
 
