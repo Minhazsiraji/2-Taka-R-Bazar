@@ -164,3 +164,76 @@ select pg_temp.assert_true(private.treasury_account_balance((select v::uuid from
 select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'profit_before_tax')::numeric=93,'Supplier recovery must not invent revenue');
 set constraints all immediate;
 \echo 'SUPPLIER_PARTIAL_CREDIT_RECOVERY_E2E_PASS'
+
+set constraints all deferred;
+-- Actual cash before fulfilment is not revenue. Cancellation refunds actual cash.
+insert into private.finance_uat_entities(entity_type,entity_id,reason) values
+ ('order','f5000000-0000-4000-8000-000000000004','Disposable synthetic cancellation cash source'),
+ ('order','f5000000-0000-4000-8000-000000000005','Disposable synthetic prepaid fulfilment source'),
+ ('group_commitment','f7200000-0000-4000-8000-000000000004','Disposable synthetic Group Deal cancellation cash source');
+insert into public.orders(id,customer_id,pool_id,pickup_point_id,status,payment_status,product_subtotal,delivery_fee,total_amount,fulfillment_method)
+select id,'f0000000-0000-0000-0000-000000000001','f1000000-0000-4000-8000-000000000001',(select id from public.pickup_points where community_id='11111111-1111-1111-1111-111111111111' limit 1),'confirmed','payment_pending',980,0,980,'pickup'
+from (values ('f5000000-0000-4000-8000-000000000004'::uuid),('f5000000-0000-4000-8000-000000000005'::uuid)) v(id);
+insert into public.order_items(id,order_id,pool_item_id,product_id,quantity,benchmark_price_snapshot,unit_price)
+values('f6000000-0000-4000-8000-000000000005','f5000000-0000-4000-8000-000000000005','f2000000-0000-4000-8000-000000000001','22222222-2222-2222-2222-222222222221',1,1000,980);
+insert into public.group_deal_commitments(id,group_deal_id,circle_id,customer_id,quantity,status)
+values('f7200000-0000-4000-8000-000000000004','f7000000-0000-4000-8000-000000000001','f7100000-0000-4000-8000-000000000001','a0000000-0000-0000-0000-000000000001',1,'qualified');
+insert into storage.objects(bucket_id,name) values ('finance-evidence','a0000000-0000-0000-0000-000000000001/cancel-deposit.pdf');
+insert into storage.objects(bucket_id,name) values ('finance-evidence','a0000000-0000-0000-0000-000000000001/cancel-refund.pdf');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state select 'cancel_deposit',public.finance_request_customer_deposit('order','f5000000-0000-4000-8000-000000000004',false,(select v::uuid from e2e_state where k='bank_acct'),980,current_date,'PREPAY-CANCEL','a0000000-0000-0000-0000-000000000001/cancel-deposit.pdf',encode(extensions.digest('cancel-deposit','sha256'),'hex'))::text;
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select public.treasury_review_transaction((select v::uuid from e2e_state where k='cancel_deposit'),true,'Independent actual prepaid cash receipt checked');
+select pg_temp.assert_true(private.finance_customer_deposit_balance('order','f5000000-0000-4000-8000-000000000004')=980,'Actual customer advance missing');
+select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'profit_before_tax')::numeric=93,'Unearned deposit wrongly increases profit');
+update public.orders set status='cancelled' where id='f5000000-0000-4000-8000-000000000004';
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state select 'cancel_refund',public.finance_request_customer_deposit('order','f5000000-0000-4000-8000-000000000004',true,(select v::uuid from e2e_state where k='bank_acct'),980,current_date,'CANCEL-REFUND-CANCEL','a0000000-0000-0000-0000-000000000001/cancel-refund.pdf',encode(extensions.digest('cancel-refund','sha256'),'hex'))::text;
+select pg_temp.expect_error(format('select public.finance_request_customer_deposit(%L,%L::uuid,true,%L::uuid,1,current_date,%L,%L,%L)','order','f5000000-0000-4000-8000-000000000004',(select v from e2e_state where k='bank_acct'),'CANCEL-OVER-REFUND','a0000000-0000-0000-0000-000000000001/cancel-refund.pdf',repeat('f',64)),'unreserved source entitlement');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select public.treasury_review_transaction((select v::uuid from e2e_state where k='cancel_refund'),true,'Independent cancelled source cash entitlement checked');
+select pg_temp.assert_true(private.finance_customer_deposit_balance('order','f5000000-0000-4000-8000-000000000004')=0,'Cancellation advance refund did not settle');
+insert into storage.objects(bucket_id,name) values ('finance-evidence','a0000000-0000-0000-0000-000000000001/groupcancel-deposit.pdf');
+insert into storage.objects(bucket_id,name) values ('finance-evidence','a0000000-0000-0000-0000-000000000001/groupcancel-refund.pdf');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state select 'groupcancel_deposit',public.finance_request_customer_deposit('group_commitment','f7200000-0000-4000-8000-000000000004',false,(select v::uuid from e2e_state where k='bank_acct'),995,current_date,'PREPAY-GROUPCANCEL','a0000000-0000-0000-0000-000000000001/groupcancel-deposit.pdf',encode(extensions.digest('groupcancel-deposit','sha256'),'hex'))::text;
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select public.treasury_review_transaction((select v::uuid from e2e_state where k='groupcancel_deposit'),true,'Independent actual prepaid cash receipt checked');
+select pg_temp.assert_true(private.finance_customer_deposit_balance('group_commitment','f7200000-0000-4000-8000-000000000004')=995,'Actual customer advance missing');
+select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'profit_before_tax')::numeric=93,'Unearned deposit wrongly increases profit');
+update public.group_deal_commitments set status='cancelled' where id='f7200000-0000-4000-8000-000000000004';
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state select 'groupcancel_refund',public.finance_request_customer_deposit('group_commitment','f7200000-0000-4000-8000-000000000004',true,(select v::uuid from e2e_state where k='bank_acct'),995,current_date,'CANCEL-REFUND-GROUPCANCEL','a0000000-0000-0000-0000-000000000001/groupcancel-refund.pdf',encode(extensions.digest('groupcancel-refund','sha256'),'hex'))::text;
+select pg_temp.expect_error(format('select public.finance_request_customer_deposit(%L,%L::uuid,true,%L::uuid,1,current_date,%L,%L,%L)','group_commitment','f7200000-0000-4000-8000-000000000004',(select v from e2e_state where k='bank_acct'),'CANCEL-OVER-REFUND','a0000000-0000-0000-0000-000000000001/groupcancel-refund.pdf',repeat('f',64)),'unreserved source entitlement');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select public.treasury_review_transaction((select v::uuid from e2e_state where k='groupcancel_refund'),true,'Independent cancelled source cash entitlement checked');
+select pg_temp.assert_true(private.finance_customer_deposit_balance('group_commitment','f7200000-0000-4000-8000-000000000004')=0,'Cancellation advance refund did not settle');
+insert into storage.objects(bucket_id,name) values
+ ('finance-evidence','a0000000-0000-0000-0000-000000000001/prepaid-fulfilled.pdf'),
+ ('finance-evidence','a0000000-0000-0000-0000-000000000001/prepaid-sale.pdf'),
+ ('finance-evidence','a0000000-0000-0000-0000-000000000001/prepaid-credit.pdf'),
+ ('finance-evidence','a0000000-0000-0000-0000-000000000001/prepaid-refund.pdf');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state select 'prepaid_deposit',public.finance_request_customer_deposit('order','f5000000-0000-4000-8000-000000000005',false,(select v::uuid from e2e_state where k='bank_acct'),980,current_date,'PREPAID-FULFILMENT-980','a0000000-0000-0000-0000-000000000001/prepaid-fulfilled.pdf',encode(extensions.digest('prepaid-fulfilled','sha256'),'hex'))::text;
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select public.treasury_review_transaction((select v::uuid from e2e_state where k='prepaid_deposit'),true,'Independent actual prepaid customer cash checked');
+update public.orders set status='completed',completed_at=now(),payment_status='paid_manually' where id='f5000000-0000-4000-8000-000000000005';
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state select 'prepaid_sale',public.finance_request_customer_sale('order','f5000000-0000-4000-8000-000000000005',jsonb_build_array(jsonb_build_object('line_id','f6000000-0000-4000-8000-000000000005','bill_id',(select v from e2e_state where k='supplier_bill'),'quantity',1)),'Actual prepaid source fulfilled with exact invoice lot','a0000000-0000-0000-0000-000000000001/prepaid-sale.pdf',encode(extensions.digest('prepaid-sale','sha256'),'hex'))::text;
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select public.finance_review_customer_sale((select v::uuid from e2e_state where k='prepaid_sale'),true,'Independent prepaid fulfilment cost and deposit checked');
+select pg_temp.assert_true(private.finance_customer_deposit_balance('order','f5000000-0000-4000-8000-000000000005')=0,'Earned sale did not consume customer advance');
+select pg_temp.assert_true(private.finance_customer_balance((select v::uuid from e2e_state where k='prepaid_sale'),'1100')=0,'Applied prepayment must settle AR without another cash receipt');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state select 'prepaid_credit',public.finance_request_customer_credit((select v::uuid from e2e_state where k='prepaid_sale'),'[{"line_index":1,"quantity":1}]',0,true,current_date,'Prepaid fulfilled customer physical return and credit','a0000000-0000-0000-0000-000000000001/prepaid-credit.pdf',encode(extensions.digest('prepaid-credit','sha256'),'hex'))::text;
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select public.finance_review_customer_credit((select v::uuid from e2e_state where k='prepaid_credit'),true,'Original prepaid sale refund and physical return checked');
+select pg_temp.assert_true(private.finance_customer_balance((select v::uuid from e2e_state where k='prepaid_sale'),'2300')=980,'Returned prepaid sale requires actual refund payable');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
+insert into e2e_state select 'prepaid_refund',public.finance_request_customer_cash((select v::uuid from e2e_state where k='prepaid_sale'),'customer_refund',(select v::uuid from e2e_state where k='bank_acct'),980,current_date,'PREPAID-RETURN-REFUND','a0000000-0000-0000-0000-000000000001/prepaid-refund.pdf',encode(extensions.digest('prepaid-refund','sha256'),'hex'))::text;
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select public.treasury_review_transaction((select v::uuid from e2e_state where k='prepaid_refund'),true,'Actual original prepaid customer refund bank proof checked');
+select pg_temp.assert_true(private.treasury_account_balance((select v::uuid from e2e_state where k='bank_acct'))=93380,'Prepayment or cancellation double counted physical bank cash');
+select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'profit_before_tax')::numeric=93,'Prepayment/return/cancellation invented final revenue or expense');
+set constraints all immediate;
+\echo 'CUSTOMER_ADVANCES_FULFILMENT_CANCELLATION_REFUNDS_E2E_PASS'

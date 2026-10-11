@@ -24,7 +24,7 @@ declare r jsonb;
 begin
  if not private.finance_authorized(auth.uid()) then raise exception 'Finance role required'; end if;
  if p_kind='customer_event' then
- select jsonb_build_object('kind',case when e.kind='credit' then 'credit_note' else 'customer_sale' end,'code',e.id,'supplier','Customer source '||e.source_kind||' '||e.source_id,'product','Recorded product '+e.product_amount||' + delivery '||e.delivery_amount,'quantity',1,'unitPrice',e.product_amount+e.delivery_amount,'amount',e.product_amount+e.delivery_amount,'status',e.status,'reference',e.reason,'date',e.business_date) into r from public.finance_customer_events e where id=p_id;
+ select jsonb_build_object('kind',case when e.kind='credit' then 'credit_note' else 'customer_sale' end,'code',e.id,'supplier','Customer source '||e.source_kind||' '||e.source_id,'product','Recorded product '||e.product_amount||' + delivery '||e.delivery_amount,'quantity',1,'unitPrice',e.product_amount+e.delivery_amount,'amount',e.product_amount+e.delivery_amount,'status',e.status,'reference',e.reason,'date',e.business_date) into r from public.finance_customer_events e where id=p_id;
  elsif p_kind='supplier_credit_note' then
  select jsonb_build_object('kind','credit_note','code',c.reference,'supplier',s.business_name,'product',p.name,'quantity',c.quantity,'unitPrice',b.unit_price,'amount',c.quantity*b.unit_price,'status',c.status,'reference',c.reason,'date',c.business_date) into r from public.finance_supplier_credit_notes c join public.procurement_supplier_bills b on b.id=c.bill_id join public.procurement_purchase_orders po on po.id=b.po_id join public.products p on p.id=po.product_id join public.suppliers s on s.id=b.supplier_id where c.id=p_id;
  elsif p_kind='cash_transaction' then

@@ -35,7 +35,8 @@ assert.notEqual(replay.code,0);assert.match(replay.error,/not pending/)
 console.log('CONCURRENT_REPLAY_PASS immutable one-post journal')
 // Posting and close contend on the same month lock in two real sessions.
 sql("insert into public.user_roles(user_id,role) values('a0000000-0000-0000-0000-000000000001','super_admin') on conflict do nothing")
-const closeId=sql(asActor(checker,"select public.finance_request_period_close('2002-01-01','Synthetic simultaneous close and posting qualification','')")).split('\n').find(x=>/^[0-9a-f-]{36}$/.test(x))
+sql(asActor(checker,"select public.finance_request_period_close('2002-01-01','Synthetic simultaneous close and posting qualification','')"))
+const closeId=sql("select id from public.finance_period_close_requests where month_start='2002-01-01'")
 const closing=await Promise.all([
  run(asActor(maker,`select public.finance_review_period_close('${closeId}',true,'Independent unchanged ended month snapshot checked')`)),
  run(asActor(checker,"select private.treasury_post('CONCURRENT-CLOSE-POST',gen_random_uuid(),'2002-01-15','Synthetic posting versus close race',jsonb_build_array(jsonb_build_object('account','1100','debit',1),jsonb_build_object('account','4000','credit',1)),auth.uid())"))])

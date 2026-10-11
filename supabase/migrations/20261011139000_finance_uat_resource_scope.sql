@@ -40,6 +40,8 @@ begin
  ('attachment_id','finance_document_attachments'),('transaction_id','treasury_transactions'),
  ('matched_transaction_id','treasury_transactions'),('customer_event_id','finance_customer_events'),('sale_id','finance_customer_events'),('event_id','finance_customer_events')) x(field_name,table_name)
  loop if nullif(r->>v.field_name,'') is not null then perform private.finance_assert_uat_origin(v.table_name,(r->>v.field_name)::uuid); end if; end loop;
+ if tg_table_name='treasury_transactions' and nullif(r->>'customer_source_id','') is not null then
+ if not exists(select 1 from private.finance_uat_entities where entity_type=r->>'customer_source_kind' and entity_id=(r->>'customer_source_id')::uuid) then raise exception using errcode='42501',message='UAT scope denied: customer source is not operator-registered'; end if;end if;
  if tg_table_name='finance_customer_events' then
  if r->>'kind'='sale' then
  if not exists(select 1 from private.finance_uat_entities where entity_type=r->>'source_kind' and entity_id=(r->>'source_id')::uuid) then raise exception using errcode='42501',message='UAT scope denied: customer source is not operator-registered'; end if;

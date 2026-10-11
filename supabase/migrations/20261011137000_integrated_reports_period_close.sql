@@ -122,7 +122,7 @@ begin
  'operating_and_financing_expenses',v_expense,'profit_before_tax',v_revenue+v_delivery-v_cogs-v_expense,
  'tax_amount',null,'profit_after_tax',null,'certification',case when jsonb_array_length(v_blockers)=0 then 'SOURCE_RECONCILED_BEFORE_TAX' else 'PROVISIONAL_BLOCKERS_REMAIN' end,
  'cash_open',v_cash_open,'cash_movement',v_cash-v_cash_open,'cash_close',v_cash,'inventory_ledger',v_stock_ledger,'inventory_source',v_stock_source,
- 'ap_ledger',v_ap_ledger,'ap_source',v_ap_source,'customer_ar',v_ar,'customer_refund_payable',v_refund,'supplier_credit_receivable',v_supplier_credit,'unallocated_cod_liability',v_unallocated,
+ 'ap_ledger',v_ap_ledger,'ap_source',v_ap_source,'customer_advances',(select coalesce(sum(l.credit-l.debit),0) from public.finance_journal_lines l join public.finance_journals j on j.id=l.journal_id where l.account_code='2200' and j.posting_date<v_end),'customer_ar',v_ar,'customer_refund_payable',v_refund,'supplier_credit_receivable',v_supplier_credit,'unallocated_cod_liability',v_unallocated,
  'by_model',v_models,'by_product',v_products,'by_pool',v_pools,'by_community',v_communities,'expense_attributions',v_expenses,'campaigns',v_campaigns,
  'inventory',v_inventory,'trial_balance',v_accounts,'blockers',v_blockers,'limitations',jsonb_build_array('Product margins exclude delivery and company costs unless explicitly attributed','Bank verification is independent supplied-statement matching; no bank-provider authenticity claim','Tax requires configured policy; profit after tax is unavailable'));
 end $$;

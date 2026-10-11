@@ -22,7 +22,7 @@ jobs:
           cache: npm
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.120.0
       - name: Start disposable local Supabase (NOT a hosted project)
         run: supabase start
       - name: Apply all current migrations from scratch

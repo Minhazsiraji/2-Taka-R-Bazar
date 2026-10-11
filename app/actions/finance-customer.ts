@@ -29,3 +29,8 @@ export async function requestCustomerCod(fd:FormData){const v=await requireAdmin
  try{gate();const {error}=await v.supabase.rpc('finance_request_cod_allocation',{p_sale:get(fd,'sale_id'),p_day:get(fd,'day_id')});if(error)throw new Error(error.message)}catch(e){outcome(e instanceof Error?e.message:'COD allocation failed',true)}outcome('COD allocation submitted; physical cash will not be posted twice')}
 export async function reviewCustomerCod(fd:FormData){const v=await requireSuperAdmin()
  try{gate();const {error}=await v.supabase.rpc('finance_review_cod_allocation',{p_id:get(fd,'cod_id'),p_approve:get(fd,'decision')==='approve',p_note:get(fd,'reason')});if(error)throw new Error(error.message)}catch(e){outcome(e instanceof Error?e.message:'COD review failed',true)}outcome('Independent COD allocation review recorded')}
+
+export async function requestCustomerDeposit(fd:FormData){const v=await requireAdmin()
+ try{gate();const proof=await uploadFinanceOriginal(v.supabase,v.user.id,fd.get('original_file'));const source=get(fd,'source').split(':')
+ const {error}=await v.supabase.rpc('finance_request_customer_deposit',{p_source_kind:source[0],p_source:source[1],p_refund:get(fd,'operation')==='refund',p_account:get(fd,'account_id'),p_amount:Number(get(fd,'amount')),p_date:get(fd,'business_date'),p_reference:get(fd,'reference'),p_path:proof.path,p_sha256:proof.hash});if(error)throw new Error(error.message)
+ }catch(e){outcome(e instanceof Error?e.message:'Customer advance request failed',true)}outcome('Customer advance or cancellation refund submitted for independent Treasury review')}

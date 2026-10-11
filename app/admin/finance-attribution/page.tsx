@@ -8,8 +8,8 @@ type Budget={id:string;code:string;month_start:string;channel:string;amount:numb
 type Allocation={id:string;expense_id:string;status:string;allocations:Array<{amount:number;cost_center:string;budget_id?:string}>}
 export default async function AttributionPage({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}){
  const {supabase}=await requireAdmin();const q=await searchParams
- const [{data,error},{data:communities},{data:products}]=await Promise.all([
-  supabase.rpc('finance_attribution_source'),supabase.from('communities').select('id,name').eq('active',true),supabase.from('products').select('id,name').eq('active',true)])
+ const [{data,error},{data:communities},{data:products},{data:staff}]=await Promise.all([
+  supabase.rpc('finance_attribution_source'),supabase.from('communities').select('id,name').eq('active',true),supabase.from('products').select('id,name').eq('active',true),supabase.rpc('finance_staff_options')])
  const d=(data??{}) as {budgets?:Budget[];attributions?:Allocation[];expense_sources?:Array<{id:string;description:string;amount:number;attributed:boolean}>}
  const site=process.env.NEXT_PUBLIC_SUPABASE_URL??''
  const enabled=process.env.VERCEL_ENV==='preview'&&process.env.FINANCE_WRITES_ENABLED==='true'&&Boolean(site)&&site===process.env.FINANCE_PREVIEW_SUPABASE_URL&&(!site.includes('sukabonfjcnaavjgjyuy')||process.env.FINANCE_SHARED_DB_UAT_ENABLED==='true')
@@ -27,7 +27,7 @@ export default async function AttributionPage({searchParams}:{searchParams:Promi
    </form>
    {d.budgets?.map(b=><div key={b.id} className="rounded-lg border p-3"><p>{b.code} · {b.month_start} · {b.channel} · BDT {b.amount} · {b.status}</p>{b.status==='pending'&&<form action={reviewCampaignBudget} className="mt-2 grid gap-2"><input type="hidden" name="budget_id" value={b.id}/><label>Independent review reason<input name="reason" required minLength={10} className={input}/></label><div className="flex gap-2"><button name="decision" value="approve" disabled={!enabled} className="rounded-lg border p-2">Approve budget</button><button name="decision" value="reject" disabled={!enabled} className="rounded-lg border p-2">Reject budget</button></div></form>}</div>)}
   </section>
-  <section className="grid gap-3 rounded-xl border p-4"><h2 className="text-lg font-bold">Allocate approved expense</h2><FinanceExpenseAllocationForm expenses={d.expense_sources?.filter(e=>!e.attributed)??[]} budgets={d.budgets?.filter(b=>b.status==='approved')??[]} communities={communities??[]} products={products??[]} disabled={!enabled}/></section>
+  <section className="grid gap-3 rounded-xl border p-4"><h2 className="text-lg font-bold">Allocate approved expense</h2><FinanceExpenseAllocationForm expenses={d.expense_sources?.filter(e=>!e.attributed)??[]} budgets={d.budgets?.filter(b=>b.status==='approved')??[]} communities={communities??[]} products={products??[]} staff={(staff as Array<{id:string;name:string}>|null)??[]} disabled={!enabled}/></section>
   <section className="grid gap-3 rounded-xl border p-4"><h2 className="text-lg font-bold">Independent attribution review</h2>{d.attributions?.map(a=><div key={a.id} className="rounded-lg border p-3"><p>{a.status} · BDT {a.allocations.reduce((n,r)=>n+Number(r.amount),0)} · {a.allocations.map(r=>r.cost_center).join(', ')}</p>{a.status==='pending'&&<form action={reviewExpenseAttribution} className="mt-2 grid gap-2"><input type="hidden" name="attribution_id" value={a.id}/><label>Independent allocation review<input name="reason" required minLength={10} className={input}/></label><div className="flex gap-2"><button name="decision" value="approve" disabled={!enabled} className="rounded-lg border p-2">Approve expense allocation</button><button name="decision" value="reject" disabled={!enabled} className="rounded-lg border p-2">Reject expense allocation</button></div></form>}</div>)}</section>
  </div></AdminShell>
 }
