@@ -28,9 +28,9 @@ async function viewer(role,identityKey=role){
  if(error||!data?.user?.id)throw new Error('Synthetic user failed '+error?.message)
  const id=data.user.id
  assert.match(id,/^[0-9a-f-]{36}$/i)
- assert.ok(['admin','super_admin','customer'].includes(role))
+ assert.ok(['admin','super_admin','customer','pickup_operator'].includes(role))
  psql("insert into public.user_roles(user_id,role) values('"+id+"','"+role+"') on conflict do nothing")
- if(role!=='customer')psql("insert into private.finance_uat_leases(actor_id,expires_at,reason) values('"+id+"',clock_timestamp()+interval '1 hour','Issue 57 disposable browser maker checker UAT')")
+ if(['admin','super_admin'].includes(role))psql("insert into private.finance_uat_leases(actor_id,expires_at,reason) values('"+id+"',clock_timestamp()+interval '1 hour','Issue 57 disposable browser maker checker UAT')")
  const jar=new Map()
  const client=createServerClient(db,key,{cookies:{
   getAll:()=>[...jar.values()].map(c=>({name:c.name,value:c.value})),
@@ -421,11 +421,21 @@ async function main(){
   assert.notEqual(customerFile.headers()['content-type'],'application/pdf','Customer must not receive original finance evidence')
   const customer=identities.get('customer').client
   const anonymous=createClient(db,key,{auth:{persistSession:false}})
-  for(const client of [customer,anonymous]){
+  await viewer('pickup_operator','community_operator')
+  await viewer('customer','supplier_owner')
+  psql(`insert into public.supplier_memberships(supplier_id,user_id,role,active) values('33333333-3333-3333-3333-333333333333','${identities.get('supplier_owner').id}','owner',true)`)
+  const forbidden=[customer,anonymous,identities.get('community_operator').client,identities.get('supplier_owner').client]
+  for(const client of forbidden){
    const report=await client.rpc('finance_inventory_source');assert.ok(report.error,'Unauthorized inventory read succeeded')
    const journals=await client.from('finance_journals').select('*');assert.ok(journals.error,'Unauthorized raw ledger read succeeded')
    const file=await client.storage.from('finance-evidence').download(psql("select evidence_path from public.finance_document_attachments where id='"+attachment+"'"));assert.ok(file.error,'Unauthorized original file access succeeded')
   }
+  for(const key of ['community_operator','supplier_owner']){
+   const client=identities.get(key).client
+   const denied=await client.rpc('finance_integrated_report',{p_month:new Date().toISOString().slice(0,7)+'-01'})
+   assert.ok(denied.error,'Operational identity accessed Super Admin financial report')
+  }
+  console.log('PASS supplier and pickup operator identities cannot read finance ledger, originals or company report');stages++
   const originalPath=psql("select evidence_path from public.finance_document_attachments where id='"+attachment+"'")
   const overwrite=await identities.get('admin').client.storage.from('finance-evidence').update(originalPath,Buffer.from('%PDF-1.4 altered'),{contentType:'application/pdf'})
   assert.ok(overwrite.error,'Original storage file overwrite succeeded')

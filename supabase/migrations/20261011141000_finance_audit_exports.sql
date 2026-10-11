@@ -7,14 +7,14 @@ begin
  select coalesce(jsonb_agg(to_jsonb(x) order by x.id),'[]'),max(x.id) into rows,v_next from (
  select a.* from public.audit_events a where a.id>p_after and a.created_at>=p_month::timestamp at time zone 'Asia/Dhaka'
  and a.created_at<(p_month+interval '1 month')::timestamp at time zone 'Asia/Dhaka'
- and (a.event_type ~ '^(finance_|treasury_|procurement_|supplier_return_|supplier_credit_|customer_sale_|customer_credit_|customer_cash_|customer_cod_)') order by a.id limit 1000) x;
- return jsonb_build_object('month',p_month,'rows',rows,'next_cursor',v_next,'has_more',exists(select 1 from public.audit_events a where a.id>coalesce(v_next,p_after) and a.created_at>=p_month::timestamp at time zone 'Asia/Dhaka' and a.created_at<(p_month+interval '1 month')::timestamp at time zone 'Asia/Dhaka' and a.event_type ~ '^(finance_|treasury_|procurement_|supplier_return_|supplier_credit_|customer_sale_|customer_credit_|customer_cash_|customer_cod_)'));
+ and (a.event_type ~ '^(finance_|treasury_|procurement_|supplier_return_|supplier_credit_|supplier_payment_|customer_sale_|customer_credit_|customer_cash_|customer_cod_)') order by a.id limit 1000) x;
+ return jsonb_build_object('month',p_month,'rows',rows,'next_cursor',v_next,'has_more',exists(select 1 from public.audit_events a where a.id>coalesce(v_next,p_after) and a.created_at>=p_month::timestamp at time zone 'Asia/Dhaka' and a.created_at<(p_month+interval '1 month')::timestamp at time zone 'Asia/Dhaka' and a.event_type ~ '^(finance_|treasury_|procurement_|supplier_return_|supplier_credit_|supplier_payment_|customer_sale_|customer_credit_|customer_cash_|customer_cod_)'));
 end $$;
 revoke all on function public.finance_audit_export(date,bigint) from public,anon,authenticated;
 grant execute on function public.finance_audit_export(date,bigint) to authenticated;
 create function private.finance_audit_immutable() returns trigger language plpgsql security definer set search_path='' as $$
 begin
- if old.event_type ~ '^(finance_|treasury_|procurement_|supplier_return_|supplier_credit_|customer_sale_|customer_credit_|customer_cash_|customer_cod_)' then raise exception 'Financial audit history is immutable'; end if;
+ if old.event_type ~ '^(finance_|treasury_|procurement_|supplier_return_|supplier_credit_|supplier_payment_|customer_sale_|customer_credit_|customer_cash_|customer_cod_)' then raise exception 'Financial audit history is immutable'; end if;
  if tg_op='DELETE' then return old;end if;return new;
 end $$;
 revoke all on function private.finance_audit_immutable() from public,anon,authenticated,service_role;
