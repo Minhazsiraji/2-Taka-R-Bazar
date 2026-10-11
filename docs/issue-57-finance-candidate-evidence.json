@@ -91,7 +91,22 @@
   "hosted_gate_installed": false,
   "hosted_journals": 2,
   "hosted_backup_verified": false,
-  "hosted_finance_uat": "BLOCKED: dashboard sign-in provider connection failure; reviewer provisioning and candidate schema preparation pending",
+  "hosted_finance_uat": "BLOCKED: recoverable manual hosted DB and original-byte backups unverified; supported temporary reviewer provisioning and candidate hosted schema preparation pending",
   "production_release_decision": "HOLD",
-  "merged": false
+  "merged": false,
+  "report_qualified_sha": "58e3f3d9a1c341e520a64b0484e58e978af8629c",
+  "report_workflows": [
+    38155020484,
+    38155020536,
+    38155020473
+  ],
+  "hosted_dashboard_authenticated": true,
+  "hosted_plan": "Free",
+  "managed_backups_available": false,
+  "security_advisors": {
+    "rls_without_policy_info": 33,
+    "anonymous_qr_definers_warn": 2,
+    "authenticated_definers_warn": 128,
+    "leaked_password_protection_disabled": true
+  }
 }

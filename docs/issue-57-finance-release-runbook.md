@@ -8,6 +8,10 @@
 4. Capture existing hosted journal/audit/source counts and independent bank/cash balances. Apply the reviewed candidate migrations in dependency order, in an atomic UAT schema preparation transaction where practical. Reconcile hosted migration-history entries with the exact repository filenames; never blindly replay already-installed DDL. Do not backfill historical revenue/COGS or alter old audit rows.
 5. Verify the database gate rejects direct authenticated financial RPC writes without an operator lease, even for finance roles, and cannot be unlocked with JWT user metadata. Recheck fixed definer search paths, public/anonymous privileges, RLS, protected evidence and unchanged ordinary customer operations. Root/no-JWT maintenance access is an operator trust boundary, never an application credential.
 
+## Current hosted recovery prerequisite
+
+The authenticated scheduled-backups page for `sukabonfjcnaavjgjyuy` explicitly reports that the Free plan does not include project backups. Do not treat a disposable restore as a live restore point. Use an operator-managed connection configured securely outside chat to produce a private manual PostgreSQL schema/data/roles backup, then restore it into an isolated destination and verify original audit and financial fingerprints, ownership, RLS/grants and migration versions. Back up private object bytes separately and verify restored hashes and denied unauthorized downloads. Never put database credentials, password hashes or backup contents in git/PR/CI logs. Choosing a paid plan is an owner action; no upgrade is authorized by this implementation task. Do not restore over the operating Production database for a qualification test.
+
 ## Temporary reviewer lifecycle
 
 - Provision two distinct synthetic reviewer identities through supported Supabase Auth administration, with normal authentication; one maker and one independent Super Admin checker. Do not change an existing customer's/staff member's password. Keep credentials out of PRs, reports, logs and chat. Do not invent phone numbers or send SMS.
