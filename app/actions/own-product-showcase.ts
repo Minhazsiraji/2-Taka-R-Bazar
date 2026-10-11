@@ -18,7 +18,7 @@ export async function saveOwnProductShowcase(form:FormData){
   if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId))error('Invalid product ID')
   const {data:product, error:productError}=await supabase.from('products')
     .select('id,source_type,is_demo,active').eq('id',productId).maybeSingle()
-  if(productError||!product||!['DIRECT_PRODUCT','PRIVATE_LABEL','EXCLUSIVE_PARTNER'].includes(product.source_type))error('Own product not found')
+  if(productError||!product||!['PRIVATE_LABEL','EXCLUSIVE_PARTNER'].includes(product.source_type))error('Showcase requires an own-label or exclusive-partner product')
   const description=String(form.get('description')??'').trim()
   if(description.length>3000)error('Description exceeds 3,000 characters')
   const highlights=lines(String(form.get('highlights')??''),8,180)

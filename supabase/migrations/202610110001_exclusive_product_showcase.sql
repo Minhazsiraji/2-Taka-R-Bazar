@@ -55,7 +55,7 @@ as $$
   from public.products p
   join public.own_product_showcase s on s.product_id=p.id
   where p.active=true and p.is_demo=false
-    and p.source_type in ('DIRECT_PRODUCT','PRIVATE_LABEL','EXCLUSIVE_PARTNER')
+    and p.source_type in ('PRIVATE_LABEL','EXCLUSIVE_PARTNER')
     and s.published=true
     and (p_product_id is null or p.id=p_product_id)
     and (not p_featured_only or s.featured=true)

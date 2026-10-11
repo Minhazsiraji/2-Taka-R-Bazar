@@ -12,6 +12,7 @@ test('public RPC whitelists safe customer-facing columns and excludes drafts, de
   assert.match(sql,/security definer/)
   assert.match(sql,/p\.active=true and p\.is_demo=false/)
   assert.match(sql,/s\.published=true/)
+  assert.match(sql,/p\.source_type in \('PRIVATE_LABEL','EXCLUSIVE_PARTNER'\)/)
   assert.match(sql,/s\.featured=true/)
   assert.match(sql,/grant execute on function public\.get_public_own_product_showcase\(uuid,boolean\) to anon,authenticated/)
   assert.doesNotMatch(sql,/select p\.\*/)
