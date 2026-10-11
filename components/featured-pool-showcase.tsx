@@ -5,7 +5,7 @@ import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
 import {formatPrice} from '@/lib/storefront'
 import type {DemoFeaturedPool} from '@/lib/featured-pools'
-import {featuredPoolTotals} from '@/lib/featured-pools'
+import {demoPoolTierState} from '@/lib/featured-pools'
 
 const ROTATION_MS=6500
 export function FeaturedPoolShowcase({pools,language,areaName}:{pools:DemoFeaturedPool[];language:MarketplaceLanguage;areaName?:string}){
@@ -26,7 +26,8 @@ export function FeaturedPoolShowcase({pools,language,areaName}:{pools:DemoFeatur
   <p>{t('Weekly, monthly and special Pools will appear after they are approved and published.','অনুমোদিত সাপ্তাহিক, মাসিক ও বিশেষ পুল প্রকাশিত হলে এখানে দেখা যাবে।')}</p>
   <a href="#deals" className="btn-secondary">{t('Explore current offers','বর্তমান অফার দেখুন')}</a>
  </div>
- const total=featuredPoolTotals(pool)
+ const tier=demoPoolTierState(pool)
+ const progressPercent=Math.min(100,Math.round(100*pool.sampleHouseholds/pool.minHouseholds))
  return <div className="market-featured-pool market-auto-pool" lang={language} role="region" aria-roledescription="carousel" aria-label={t('Featured Pools: automatically rotating examples','ফিচারড পুল: স্বয়ংক্রিয় নমুনা ক্যারোসেল')}
   onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}
   onFocusCapture={()=>setPaused(true)}
@@ -45,13 +46,20 @@ export function FeaturedPoolShowcase({pools,language,areaName}:{pools:DemoFeatur
     <span className="market-pool-slide-kind">{pool.slug==='weekly'?t('Weekly Pool','সাপ্তাহিক পুল'):pool.slug==='monthly'?t('Monthly Pool','মাসিক পুল'):t('Special Pool','বিশেষ পুল')}</span>
     <h2>{t(pool.title.en,pool.title.bn)}</h2>
     <p className="market-pool-subtitle">{t(pool.subtitle.en,pool.subtitle.bn)}</p>
-    <div className="market-featured-pool-prices">
-     <div><span>{t('Sample group basket','নমুনা গ্রুপ বাজার')}</span><strong>{formatPrice(total.group)}</strong></div>
-     <div><span>{t('Sample solo basket','নমুনা একক বাজার')}</span><s>{formatPrice(total.solo)}</s></div>
+    <div className="market-featured-pool-prices market-pool-current-next">
+     <div><span>{t('Currently unlocked · example','বর্তমানে আনলক · নমুনা')}</span><strong>{formatPrice(tier.currentPrice)}</strong></div>
+     <div><span>{tier.upcoming?t('Next potential tier','পরবর্তী সম্ভাব্য দাম'):t('Final tier reached','সর্বশেষ স্তর')} </span>
+      <b>{tier.nextPrice!==null?formatPrice(tier.nextPrice):'—'}</b></div>
     </div>
-    <p className="market-pool-mini-line">{pool.bundle.length} {t('products','টি পণ্য')} · {total.units} {t('units','ইউনিট')} · {areaName??t('Choose community','এলাকা বাছুন')}</p>
-    <p className="market-pool-mini-line">{t('Sample households','নমুনা পরিবার')}: {pool.sampleHouseholds}/{pool.minHouseholds} · {t('Not a live group','বাস্তব গ্রুপ নয়')}</p>
-    <div className="market-featured-pool-actions"><Link href={`/demo-pool/${pool.slug}`} className="btn-primary">{t('Open details →','বিস্তারিত খুলুন →')}</Link><span>{t('Illustration only · no checkout','শুধু নমুনা · অর্ডার নয়')}</span></div>
+    <div className="market-pool-progress">
+     <div><strong>{t('Households joined (demo)','যোগ দেওয়া পরিবার (ডেমো)')}</strong><span>{pool.sampleHouseholds}/{pool.minHouseholds}</span></div>
+     <div className="market-pool-track" role="progressbar" aria-label={t('Example household progress','নমুনা পরিবারের অগ্রগতি')} aria-valuemin={0} aria-valuemax={pool.minHouseholds} aria-valuenow={pool.sampleHouseholds}>
+      <span style={{width:`${progressPercent}%`}}/></div>
+     <p>{tier.upcoming?t(`${tier.householdsNeeded} more households to unlock the next illustrative price`,`আর ${tier.householdsNeeded} পরিবার এলে পরের নমুনা দাম আনলক হবে`):
+      t('Example final tier reached','নমুনা শেষ স্তরে পৌঁছেছে')}</p>
+    </div>
+    <p className="market-pool-mini-line">{pool.bundle.length} {t('products','টি পণ্য')} · {t('Basket','মোট বাজার')}: {tier.soloPrice>tier.currentPrice?formatPrice(tier.soloPrice):t('No saving at this tier','এই স্তরে ছাড় নেই')} · {areaName??t('Choose community','এলাকা বাছুন')}</p>
+    <div className="market-featured-pool-actions"><Link href={`/demo-pool/${pool.slug}`} className="btn-primary">{t('Open Pool details →','পুলের বিস্তারিত →')}</Link><span>{t('Sample only · no checkout','ডেমো · অর্ডার নয়')}</span></div>
    </div>
   </div>
  </div>
