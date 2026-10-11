@@ -60,3 +60,26 @@ test('pearl glass styles retained and location controls adapt to mobile',()=>{
  assert.match(css,/market-location-panel/)
  assert.match(css,/@media\(max-width:790px\)/)
 });
+
+test('compact hero and featured product use a responsive two-column layout with small type',()=>{
+ assert.match(catalog,/market-hero-main-title/)
+ assert.match(catalog,/market-featured-content/)
+ assert.match(catalog,/market-featured-image/)
+ assert.match(catalog,/market-featured-details/)
+ assert.match(catalog,/market-featured-button/)
+ assert.match(css,/\.market-hero-copy \.market-hero-main-title\{/)
+ assert.match(css,/\.market-featured-content\{/)
+ assert.match(css,/font-size:clamp\(1\.85rem,2\.65vw,2\.65rem\)/)
+ assert.match(css,/grid-template-columns:105px minmax\(0,1fr\)/)
+})
+test('product cards adapt to compact one-row-per-product mobile view',()=>{
+ for(const cls of ['market-product-image','market-product-title','market-product-prices','market-product-actions']){
+  assert.match(catalog,new RegExp(cls))
+  assert.match(css,new RegExp(cls))
+ }
+ assert.match(css,/\.market-products-grid\{\s*grid-template-columns:1fr!important/)
+ assert.match(css,/grid-column:1\/-1;grid-row:4/)
+ assert.match(css,/grid-column:1\/-1;grid-row:7/)
+ assert.match(css,/min-height:42px!important/)
+ assert.match(css,/@media\(max-width:375px\)/)
+})
