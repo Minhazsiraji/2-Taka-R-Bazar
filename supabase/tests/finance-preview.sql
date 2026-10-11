@@ -29,6 +29,10 @@ values
 create temporary table finance_test_expense(id uuid);
 create temporary table finance_test_settlement(id uuid);
 
+-- Operator-issued leases are transaction-local synthetic fixture authorization.
+insert into private.finance_uat_leases(actor_id,expires_at,reason)
+ select id,clock_timestamp()+interval '1 hour','Issue 57 disposable synthetic qualification'
+ from auth.users where email like '%@example.invalid' on conflict(actor_id) do nothing;
 do $$ begin perform set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000901',true); end $$;
 
 insert into finance_test_expense(id)

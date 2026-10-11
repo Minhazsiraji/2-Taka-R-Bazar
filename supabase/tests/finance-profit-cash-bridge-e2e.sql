@@ -15,6 +15,10 @@ insert into public.user_roles(user_id,role) values
 ('11111111-1111-4111-8111-111111111911','super_admin');
 
 select plan(14);
+-- Operator-issued leases are transaction-local synthetic fixture authorization.
+insert into private.finance_uat_leases(actor_id,expires_at,reason)
+ select id,clock_timestamp()+interval '1 hour','Issue 57 disposable synthetic qualification'
+ from auth.users where email like '%@example.invalid' on conflict(actor_id) do nothing;
 select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111912',true);
 select ok(pg_temp.denied(
  $$select public.finance_profit_source(date_trunc('month',current_date)::date,null,null)$$,

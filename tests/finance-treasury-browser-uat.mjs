@@ -27,6 +27,7 @@ async function viewer(role){
  assert.match(id,/^[0-9a-f-]{36}$/i)
  assert.ok(['admin','super_admin'].includes(role))
  psql("insert into public.user_roles(user_id,role) values('"+id+"','"+role+"') on conflict do nothing")
+ psql("insert into private.finance_uat_leases(actor_id,expires_at,reason) values('"+id+"',clock_timestamp()+interval '1 hour','Issue 57 disposable browser maker checker UAT')")
  const jar=new Map()
  const client=createServerClient(db,key,{cookies:{
   getAll:()=>[...jar.values()].map(c=>({name:c.name,value:c.value})),

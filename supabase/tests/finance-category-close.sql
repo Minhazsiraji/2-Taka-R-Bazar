@@ -39,6 +39,10 @@ values('finance-evidence','00000000-0000-4000-8000-000000000921/receipt-pending.
 
 select plan(20);
 create temp table qa_category_baseline as select count(*)::integer pending_count from public.finance_expenses where status='submitted' and incurred_on>=date_trunc('month',current_date)::date and incurred_on<(date_trunc('month',current_date)+interval '1 month')::date;
+-- Operator-issued leases are transaction-local synthetic fixture authorization.
+insert into private.finance_uat_leases(actor_id,expires_at,reason)
+ select id,clock_timestamp()+interval '1 hour','Issue 57 disposable synthetic qualification'
+ from auth.users where email like '%@example.invalid' on conflict(actor_id) do nothing;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000921',true);
 update qa_cases c
 set expense_id=public.finance_submit_expense(

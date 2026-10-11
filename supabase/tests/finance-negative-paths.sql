@@ -48,6 +48,10 @@ select ok(not has_table_privilege('anon','public.finance_expenses','SELECT'),'An
 select ok((select relrowsecurity from pg_class where oid='public.finance_settlement_requests'::regclass),'Settlement RLS enforced');
 select ok((select relrowsecurity from pg_class where oid='public.finance_accounts'::regclass),'Chart of accounts RLS enforced');
 
+-- Operator-issued leases are transaction-local synthetic fixture authorization.
+insert into private.finance_uat_leases(actor_id,expires_at,reason)
+ select id,clock_timestamp()+interval '1 hour','Issue 57 disposable synthetic qualification'
+ from auth.users where email like '%@example.invalid' on conflict(actor_id) do nothing;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000913',true);
 select ok(pg_temp.fails_with(
  $$select public.finance_submit_expense('marketing_online','Fake ads expense','Fake vendor','ANON-001',400,current_date,

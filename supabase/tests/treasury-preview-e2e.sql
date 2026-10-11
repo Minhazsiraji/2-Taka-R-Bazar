@@ -22,6 +22,10 @@ create temp table qa_statements(label text primary key,id uuid not null);
 
 select plan(53);
 
+-- Operator-issued leases are transaction-local synthetic fixture authorization.
+insert into private.finance_uat_leases(actor_id,expires_at,reason)
+ select id,clock_timestamp()+interval '1 hour','Issue 57 disposable synthetic qualification'
+ from auth.users where email like '%@example.invalid' on conflict(actor_id) do nothing;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000953',true);
 select ok(pg_temp.expect_failure(
  $$select public.treasury_create_account('Illegal','bank','Fake','1234',current_date,100,'FAKE-0001',0,null)$$,
