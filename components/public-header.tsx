@@ -4,24 +4,28 @@ import Link from 'next/link'
 import { BrandLogo } from '@/components/brand-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SITE_TAGLINE_BN, SITE_TAGLINE_EN } from '@/lib/site'
+import type {MarketplaceLanguage} from '@/lib/storefront-language'
+import {chooseText} from '@/lib/storefront-language'
 
 type HeaderProps={
  actionHref?:string;actionLabel?:string;storefront?:boolean
  searchValue?:string;onSearchChange?:(value:string)=>void
  onLocationClick?:()=>void;locating?:boolean;locationLabel?:string
+ language?:MarketplaceLanguage;onLanguageChange?:(language:MarketplaceLanguage)=>void
 }
 const storefrontNav=[
- {href:'#deals',label:'Group Deals'},
- {href:'#exclusive-products',label:'Our Products'},
- {href:'#popular-nearby',label:'Popular Nearby'},
- {href:'#how-it-works',label:'How It Works'},
- {href:'#our-communities',label:'Our Areas'},
- {href:'#customer-experiences',label:'Reviews'},
- {href:'#marketplace-faq',label:'FAQ'},
+ {href:'#deals',label:'Group Deals',bn:'গ্রুপ ডিল'},
+ {href:'#exclusive-products',label:'Our Products',bn:'আমাদের পণ্য'},
+ {href:'#popular-nearby',label:'Popular Nearby',bn:'জনপ্রিয়'},
+ {href:'#how-it-works',label:'How It Works',bn:'যেভাবে কাজ করে'},
+ {href:'#our-communities',label:'Our Areas',bn:'এলাকা'},
+ {href:'#customer-experiences',label:'Reviews',bn:'মতামত'},
+ {href:'#marketplace-faq',label:'FAQ',bn:'প্রশ্নোত্তর'},
 ] as const
 
 export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefront=false,
- searchValue='',onSearchChange,onLocationClick,locating=false,locationLabel='Find my community'}:HeaderProps){
+ searchValue='',onSearchChange,onLocationClick,locating=false,locationLabel='Find my community',language='bn',onLanguageChange}:HeaderProps){
+ const t=(en:string,bn:string)=>chooseText(language,en,bn)
  if(storefront)return <header className="public-glass-header market-flat-header" aria-label="2-TAKA-R-BAZAR public shop header">
   <div className="market-header-inner">
    <Link href="/" className="market-brand-lockup" aria-label="2-TAKA-R-BAZAR home">
@@ -33,25 +37,29 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
     </span>
    </Link>
    <div className="market-header-search">
-    <label htmlFor="market-header-product-search" className="sr-only">Search groceries and products</label>
+    <label htmlFor="market-header-product-search" className="sr-only">{t('Search groceries and products','পণ্য ও বাজার খুঁজুন')}</label>
     <span aria-hidden="true" className="market-search-icon">⌕</span>
     <input id="market-header-product-search" type="search" value={searchValue}
      onChange={e=>onSearchChange?.(e.target.value)}
      onKeyDown={e=>{if(e.key==='Enter')document.getElementById('deals')?.scrollIntoView({behavior:'smooth',block:'start'})}}
-     placeholder="Search rice, oil, groceries…" autoComplete="off" enterKeyHint="search"/>
+     placeholder={t('Search rice, oil, groceries…','চাল, ডাল, তেল, বাজার খুঁজুন…')} autoComplete="off" enterKeyHint="search"/>
    </div>
    <div className="market-header-actions">
     <button type="button" onClick={onLocationClick} disabled={locating} className="market-header-location" aria-label="Find communities near my location">
-     <span aria-hidden="true">📍</span><span className="market-header-location-text">{locating?'Finding area…':locationLabel}</span>
+     <span aria-hidden="true">📍</span><span className="market-header-location-text">{locating?t('Finding area…','এলাকা খোঁজা হচ্ছে…'):locationLabel}</span>
     </button>
+    <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
+     <button type="button" aria-pressed={language==='bn'} onClick={()=>onLanguageChange?.('bn')}>বাংলা</button>
+     <button type="button" aria-pressed={language==='en'} onClick={()=>onLanguageChange?.('en')}>EN</button>
+    </div>
     <ThemeToggle/>
     <Link href={actionHref} className="public-header-action btn-secondary">{actionLabel}</Link>
    </div>
   </div>
   <nav className="market-header-nav" aria-label="Shop and information">
    <div className="market-header-nav-inner">
-    {storefrontNav.map(item=><a key={item.href} href={item.href}>{item.label}</a>)}
-    <Link href="/signup" className="market-header-join">Join Community</Link>
+    {storefrontNav.map(item=><a key={item.href} href={item.href}>{t(item.label,item.bn)}</a>)}
+    <Link href="/signup" className="market-header-join">{t('Join Community','কমিউনিটিতে যোগ দিন')}</Link>
    </div>
   </nav>
  </header>

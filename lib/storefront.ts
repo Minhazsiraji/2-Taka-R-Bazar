@@ -26,6 +26,10 @@ export type StorefrontOffer = {
   next_threshold: number|null
   closes_at: string|null
   price_status: 'unlocked'|'awaiting_threshold'|'final'|'pending_final_price'
+  is_demo?: boolean
+  solo_price?: number | null
+  product_name_bn?: string
+  category_bn?: string
 }
 export function distanceMeters(lat1:number,lon1:number,lat2:number,lon2:number){
   const dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180

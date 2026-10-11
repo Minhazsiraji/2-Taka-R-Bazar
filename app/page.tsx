@@ -1,5 +1,6 @@
 import type {Metadata} from 'next'
 import {createClient} from '@/lib/supabase/server'
+import {demoStorefrontEnabled,DEMO_AREAS,DEMO_OFFERS,DEMO_SHOWCASE} from '@/lib/public-demo-products'
 import {PublicFooter} from '@/components/public-footer'
 import {PublicMarketplace} from '@/components/public-marketplace'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
@@ -22,10 +23,15 @@ export default async function Page(){
   supabase.rpc('get_public_own_product_showcase',{p_product_id:null,p_featured_only:true}),
  ])
  const authenticated=Boolean(claims.data?.claims?.sub)
- const areas=(areasRes.data??[]) as StorefrontArea[]
- const offers=(offersRes.data??[]) as StorefrontOffer[]
- const featured=(featuredRes.data??[]) as ShowcaseProduct[]
- const catalogAvailable=!areasRes.error&&!offersRes.error
+ const realAreas=(areasRes.data??[]) as StorefrontArea[]
+ const realOffers=(offersRes.data??[]) as StorefrontOffer[]
+ const realFeatured=(featuredRes.data??[]) as ShowcaseProduct[]
+ // Seed presentation data only when Preview has no public active offers; never write fixtures to the DB.
+ const demoMode=demoStorefrontEnabled() && realOffers.length===0
+ const areas=demoMode ? DEMO_AREAS : realAreas
+ const offers=demoMode ? DEMO_OFFERS : realOffers
+ const featured=demoMode ? DEMO_SHOWCASE : realFeatured
+ const catalogAvailable=demoMode || (!areasRes.error&&!offersRes.error)
  const schema={
   '@context':'https://schema.org',
   '@graph':[
@@ -41,7 +47,7 @@ export default async function Page(){
  }
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
-  <PublicMarketplace areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} featured={featured} howLabelBn="কীভাবে কাজ করে"/>
+  <PublicMarketplace areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} featured={featured} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
   <PublicFooter storefront/>
  </main>
 }

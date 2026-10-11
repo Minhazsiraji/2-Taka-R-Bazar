@@ -12,6 +12,9 @@ export type ShowcaseProduct = {
   gallery_urls: string[]
   video_url: string | null
   featured: boolean
+  is_demo?: boolean
+  name_bn?: string
+  description_bn?: string
 }
 
 const VALID_YOUTUBE_ID = /^[a-zA-Z0-9_-]{11}$/
