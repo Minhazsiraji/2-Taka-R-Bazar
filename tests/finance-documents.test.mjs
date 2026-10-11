@@ -52,3 +52,9 @@ test('download produces a real PDF, not HTML, with accurate figures',async()=>{
  assert.match(route,/\.pdf/)
  assert.doesNotMatch(route,/filename=.*\.html/)
 })
+
+test('PDF resets high-contrast ink after every filled shape',()=>{
+ const src=readFileSync('lib/finance/printable-pdf.ts','utf8')
+ assert.match(src,/const draw=[\\s\\S]*?lines\\.push\\('0\\.1 0\\.22 0\\.27 rg'\\)/)
+ assert.match(src,/0\\.87 0\\.93 0\\.92 rg 45 545 505 35 re f/)
+})
