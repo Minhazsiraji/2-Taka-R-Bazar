@@ -55,8 +55,11 @@ export function DemoPoolDetail({pool}:{pool:DemoFeaturedPool}){
   <header className="market-pool-detail-header">
    <Link href="/" className="market-pool-home-link">← 2-TAKA-R-BAZAR</Link>
    <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
-    <button type="button" aria-pressed={language==='bn'} onClick={()=>setLanguage('bn')}>বাংলা</button>
-    <button type="button" aria-pressed={language==='en'} onClick={()=>setLanguage('en')}>EN</button>
+    <button className="market-single-language" type="button"
+     onClick={()=>setLanguage(language==='bn'?'en':'bn')}
+     aria-label={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}>
+     {language==='bn'?'EN':'BAN'}
+    </button>
    </div>
   </header>
   <div className="market-pool-detail-content" lang={language}>

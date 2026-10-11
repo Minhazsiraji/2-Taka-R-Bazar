@@ -28,8 +28,11 @@ export function DemoProductDetails({offer}:{offer:StorefrontOffer}){
   <header className="market-pool-detail-header">
    <Link href="/" className="market-pool-home-link">← 2-TAKA-R-BAZAR</Link>
    <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
-    <button aria-pressed={lang==='bn'} onClick={()=>setLang('bn')} type="button">বাংলা</button>
-    <button aria-pressed={lang==='en'} onClick={()=>setLang('en')} type="button">English</button>
+    <button className="market-single-language" type="button"
+     onClick={()=>setLang(lang==='bn'?'en':'bn')}
+     aria-label={lang==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}>
+     {lang==='bn'?'EN':'BAN'}
+    </button>
    </div>
   </header>
   <div className="market-pool-detail-content">
