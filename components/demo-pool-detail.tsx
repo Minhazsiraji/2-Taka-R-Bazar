@@ -30,7 +30,8 @@ export function DemoPoolDetail({pool}:{pool:DemoFeaturedPool}){
  const cartUnits=Object.values(cart).reduce((sum,qty)=>sum+qty,0)
  const cartTotal=demoPoolBasketTotal(pool,tier.current,cart)
  const cartDelivery=delivery==='pickup'||cartTotal===0?0:cartTotal<=1000?20:30
- const progress=Math.min(100,Math.round(pool.sampleHouseholds/pool.minHouseholds*100))
+ const progressTarget=tier.upcoming??pool.minHouseholds
+ const progress=Math.min(100,Math.round(pool.sampleHouseholds/progressTarget*100))
  function adjust(id:string,step:number){
   setQuantities(previous=>({...previous,[id]:clamp((previous[id]??0)+step)}))
   setStatus('')
@@ -69,10 +70,10 @@ export function DemoPoolDetail({pool}:{pool:DemoFeaturedPool}){
      <div className="market-pool-detail-stats">
       <div><span>{t('Current unlocked example','বর্তমানে আনলক · ডেমো')}</span><b>{formatPrice(tier.currentPrice)}</b></div>
       <div><span>{t('Next potential example','পরবর্তী সম্ভাব্য · ডেমো')}</span><b>{tier.nextPrice===null?'—':formatPrice(tier.nextPrice)}</b></div>
-      <div><span>{t('Example households','নমুনা পরিবার')}</span><b>{pool.sampleHouseholds}/{pool.minHouseholds}</b></div>
+      <div><span>{t('Example households','নমুনা পরিবার')}</span><b>{pool.sampleHouseholds}/{progressTarget} · {t('Final','শেষ')} {pool.minHouseholds}</b></div>
      </div>
      <div className="market-tier-progress">
-      <div className="market-tier-track" role="progressbar" aria-valuemin={0} aria-valuemax={pool.minHouseholds} aria-valuenow={pool.sampleHouseholds} aria-label={t('Example household progress','নমুনা পরিবারের অগ্রগতি')}><span style={{width:`${progress}%`}}/></div>
+      <div className="market-tier-track" role="progressbar" aria-valuemin={0} aria-valuemax={progressTarget} aria-valuenow={pool.sampleHouseholds} aria-label={t('Example household progress','নমুনা পরিবারের অগ্রগতি')}><span style={{width:`${progress}%`}}/></div>
       <p>{tier.upcoming?t(`${tier.householdsNeeded} more households needed for the next illustrative price.`,`পরের নমুনা দাম পেতে আরও ${tier.householdsNeeded} পরিবার দরকার।`):t('Example final tier reached.','নমুনায় সর্বশেষ স্তর অর্জিত।')}</p>
      </div>
     </div>

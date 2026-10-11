@@ -27,7 +27,8 @@ export function FeaturedPoolShowcase({pools,language,areaName}:{pools:DemoFeatur
   <a href="#deals" className="btn-secondary">{t('Explore current offers','বর্তমান অফার দেখুন')}</a>
  </div>
  const tier=demoPoolTierState(pool)
- const progressPercent=Math.min(100,Math.round(100*pool.sampleHouseholds/pool.minHouseholds))
+ const progressTarget=tier.upcoming??pool.minHouseholds
+ const progressPercent=Math.min(100,Math.round(100*pool.sampleHouseholds/progressTarget))
  return <div className="market-featured-pool market-auto-pool" lang={language} role="region" aria-roledescription="carousel" aria-label={t('Featured Pools: automatically rotating examples','ফিচারড পুল: স্বয়ংক্রিয় নমুনা ক্যারোসেল')}
   onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}
   onFocusCapture={()=>setPaused(true)}
@@ -52,8 +53,8 @@ export function FeaturedPoolShowcase({pools,language,areaName}:{pools:DemoFeatur
       <b>{tier.nextPrice!==null?formatPrice(tier.nextPrice):'—'}</b></div>
     </div>
     <div className="market-pool-progress">
-     <div><strong>{t('Households joined (demo)','যোগ দেওয়া পরিবার (ডেমো)')}</strong><span>{pool.sampleHouseholds}/{pool.minHouseholds}</span></div>
-     <div className="market-pool-track" role="progressbar" aria-label={t('Example household progress','নমুনা পরিবারের অগ্রগতি')} aria-valuemin={0} aria-valuemax={pool.minHouseholds} aria-valuenow={pool.sampleHouseholds}>
+     <div><strong>{t('Households joined (demo)','যোগ দেওয়া পরিবার (ডেমো)')}</strong><span>{pool.sampleHouseholds}/{progressTarget} · {t('Final target','চূড়ান্ত লক্ষ্য')} {pool.minHouseholds}</span></div>
+     <div className="market-pool-track" role="progressbar" aria-label={t('Example household progress','নমুনা পরিবারের অগ্রগতি')} aria-valuemin={0} aria-valuemax={progressTarget} aria-valuenow={pool.sampleHouseholds}>
       <span style={{width:`${progressPercent}%`}}/></div>
      <p>{tier.upcoming?t(`${tier.householdsNeeded} more households to unlock the next illustrative price`,`আর ${tier.householdsNeeded} পরিবার এলে পরের নমুনা দাম আনলক হবে`):
       t('Example final tier reached','নমুনা শেষ স্তরে পৌঁছেছে')}</p>
