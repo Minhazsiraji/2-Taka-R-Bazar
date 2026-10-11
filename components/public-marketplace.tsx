@@ -115,30 +115,31 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
     <section className="market-hero-copy flex flex-col justify-center rounded-[28px] border border-black/10 bg-white p-6 sm:p-8">
      <span className="text-xs font-black uppercase tracking-[.17em] text-teal-700">{t('Local deals · Transparent prices','স্থানীয় অফার · স্বচ্ছ মূল্য')}</span>
      
-     <h1 className="mt-4 text-4xl font-black leading-tight tracking-[-.035em] sm:text-5xl">{t('Shop freely. Choose how you save.','নিজের মতো কিনুন। বেশি সাশ্রয় করুন।')}</h1>
-     <p className="mt-4 text-base leading-7 text-slate-600">{t('Browse without login. Compare individual prices and local group prices. Login only when you order.','লগইন ছাড়াই পণ্য দেখুন। একা কেনা ও গ্রুপে কেনার দাম তুলনা করুন। অর্ডারের সময় লগইন করুন।')}</p>
+     <h1 className="market-hero-main-title mt-4 text-4xl font-black leading-tight tracking-[-.035em] sm:text-5xl">{t('Shop freely. Choose how you save.','নিজের মতো কিনুন। বেশি সাশ্রয় করুন।')}</h1>
+     <p className="market-hero-subtitle mt-4 text-base leading-7 text-slate-600">{t('Browse without login. Compare individual prices and local group prices. Login only when you order.','লগইন ছাড়াই পণ্য দেখুন। একা কেনা ও গ্রুপে কেনার দাম তুলনা করুন। অর্ডারের সময় লগইন করুন।')}</p>
      
-     <div className="mt-6 flex flex-wrap gap-3"><a href="#deals" className="btn-primary">{t('Explore local deals','স্থানীয় অফার দেখুন')}</a><a href="#how-it-works" className="btn-secondary">{t('How it works','যেভাবে কাজ করে')}</a></div>
-     <div className="mt-6 grid grid-cols-2 gap-3 text-xs font-semibold text-slate-600"><p>{t('✓ Free community pickup','✓ কমিউনিটি পয়েন্টে ফ্রি')}</p><p>{t('✓ Optional home delivery','✓ চাইলে হোম ডেলিভারি')}</p><p>{t('✓ No subscription fee','✓ সাবস্ক্রিপশন ফি নেই')}</p><p>{t('✓ No fake savings','✓ ভুয়া সাশ্রয় নয়')}</p></div>
+     <div className="market-hero-actions mt-6 flex flex-wrap gap-3"><a href="#deals" className="btn-primary">{t('Explore local deals','স্থানীয় অফার দেখুন')}</a><a href="#how-it-works" className="btn-secondary">{t('How it works','যেভাবে কাজ করে')}</a></div>
+     <div className="market-hero-benefits mt-6 grid grid-cols-2 gap-3 text-xs font-semibold text-slate-600"><p>{t('✓ Free community pickup','✓ কমিউনিটি পয়েন্টে ফ্রি')}</p><p>{t('✓ Optional home delivery','✓ চাইলে হোম ডেলিভারি')}</p><p>{t('✓ No subscription fee','✓ সাবস্ক্রিপশন ফি নেই')}</p><p>{t('✓ No fake savings','✓ ভুয়া সাশ্রয় নয়')}</p></div>
     </section>
     <section className="market-hero-product flex min-h-[410px] flex-col justify-center overflow-hidden rounded-[28px] border border-black/10 bg-white p-5 sm:p-7">
-     {spotlight?<><span className="text-xs font-black uppercase tracking-[.16em] text-teal-700">
-       {spotlight.is_demo?t('DEMO · Sample featured product','ডেমো · নমুনা ফিচারড পণ্য'):
-        spotlight.offer_kind==='GROUP_DEAL'?t('Featured Group Deal','ফিচারড গ্রুপ ডিল'):t('Community Pool spotlight','কমিউনিটি পুলের বিশেষ অফার')}
-       </span>
-       <div className="mt-4 flex min-h-56 items-center justify-center">{spotlight.image_url?
-        <img src={spotlight.image_url} alt={t(spotlight.product_name,spotlight.product_name_bn??spotlight.product_name)} className="max-h-60 w-full object-contain"/>:
-        <img src="/grocery-hero-glass.svg" alt="" className="max-h-52 w-full object-contain"/>}
-       </div>
-       <h2 className="mt-3 text-xl font-black">{t(spotlight.product_name,spotlight.product_name_bn??spotlight.product_name)}</h2>
-       <p className="mt-1 text-sm text-slate-500">{spotlight.package_size}{spotlight.is_demo?' · DEMO / নমুনা':' · '+spotlight.offer_title}</p>
-       <p className="mt-3 text-2xl font-black text-teal-700">{formatPrice(spotlight.confirmed_price??spotlight.upcoming_price)}</p>
-       <p className="mt-1 text-xs text-slate-500">{spotlight.is_demo?t('Illustrative group price only · no ordering','শুধু নমুনা গ্রুপ মূল্য · অর্ডার নয়'):
-        spotlight.confirmed_price?t('Currently unlocked or published price','বর্তমানে প্রকাশিত বা আনলক করা মূল্য'):t('Potential next-tier price, not unlocked','পরবর্তী স্তরের সম্ভাব্য দাম, এখনো চালু নয়')}</p>
-       <p className="mt-2 text-sm font-semibold">{spotlight.buyer_count} {t('buyers','জন ক্রেতা')}{spotlight.is_demo?' · DEMO / নমুনা':t(' qualified',' যাচাইকৃত')}</p>
+     {spotlight?<div className="market-featured-content">
+      <div className="market-featured-image">
+       {spotlight.image_url?<img src={spotlight.image_url} alt={t(spotlight.product_name,spotlight.product_name_bn??spotlight.product_name)} />:
+        <img src="/grocery-hero-glass.svg" alt="" />}
+      </div>
+      <div className="market-featured-details">
+       <span className="market-featured-eyebrow">{spotlight.is_demo?t('DEMO · Sample featured product','ডেমো · নমুনা পণ্য'):
+        spotlight.offer_kind==='GROUP_DEAL'?t('Featured Group Deal','ফিচারড গ্রুপ ডিল'):t('Community Pool spotlight','কমিউনিটি পুলের বিশেষ অফার')}</span>
+       <h2>{t(spotlight.product_name,spotlight.product_name_bn??spotlight.product_name)}</h2>
+       <p className="market-featured-size">{spotlight.package_size}{spotlight.is_demo?' · DEMO / নমুনা':' · '+spotlight.offer_title}</p>
+       <strong className="market-featured-price">{formatPrice(spotlight.confirmed_price??spotlight.upcoming_price)}</strong>
+       <p className="market-featured-note">{spotlight.is_demo?t('Illustrative group price · no ordering','নমুনা গ্রুপ মূল্য · অর্ডার নয়'):
+        spotlight.confirmed_price?t('Currently unlocked price','বর্তমানে আনলক করা দাম'):t('Potential price; not yet unlocked','সম্ভাব্য মূল্য; এখনো চালু নয়')}</p>
+       <p className="market-featured-buyers">{spotlight.buyer_count} {t('buyers','জন ক্রেতা')}{spotlight.is_demo?' · DEMO / নমুনা':t(' qualified',' যাচাইকৃত')}</p>
        <Link href={spotlight.is_demo?`/demo-product/${spotlight.product_id}`:spotlight.offer_kind==='GROUP_DEAL'?groupHref:poolHref}
-        className="btn-primary mt-4 text-center">{spotlight.is_demo?t('View sample product →','নমুনা পণ্য দেখুন →'):t('View local deal →','স্থানীয় ডিল দেখুন →')}</Link>
-     </>:<><img src="/grocery-hero-glass.svg" alt="Grocery essentials" className="max-h-64 w-full object-contain"/><h2 className="mt-5 text-center text-xl font-black">{t('Your next community deal starts here','আপনার এলাকার পরবর্তী গ্রুপ ডিল এখানে আসবে')}</h2><p className="mt-2 text-center text-sm text-slate-500">{t('New approved offers will appear here when available.','যাচাইকৃত অফার প্রকাশিত হলে এখানে দেখানো হবে।')}</p></>}
+        className="btn-primary market-featured-button">{spotlight.is_demo?t('View sample product →','নমুনা পণ্য দেখুন →'):t('View local deal →','স্থানীয় ডিল দেখুন →')}</Link>
+      </div>
+     </div>:<><img src="/grocery-hero-glass.svg" alt="Grocery essentials" className="max-h-64 w-full object-contain"/><h2 className="mt-5 text-center text-xl font-black">{t('Your next community deal starts here','আপনার এলাকার পরবর্তী গ্রুপ ডিল এখানে আসবে')}</h2><p className="mt-2 text-center text-sm text-slate-500">{t('New approved offers will appear here when available.','যাচাইকৃত অফার প্রকাশিত হলে এখানে দেখানো হবে।')}</p></>}
     </section>
    </div>
   </div></section>
@@ -155,18 +156,18 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
     const href=offer.offer_kind==='GROUP_DEAL'?groupHref:poolHref
     const hasPrice=Number(offer.confirmed_price)>0
     return <article key={offer.offer_kind+offer.offer_id+offer.community_id} className="market-product-card flex min-w-0 flex-col rounded-3xl border border-black/10 bg-white p-4">
-     <Link href={offer.is_demo?`/demo-product/${offer.product_id}`:`/shop/${offer.product_id}?area=${offer.community_id}`} className="relative flex h-48 items-center justify-center overflow-hidden rounded-2xl bg-white/30" aria-label={`View details for ${t(offer.product_name,offer.product_name_bn??offer.product_name)}`}>{offer.image_url?<img src={offer.image_url} alt={t(offer.product_name,offer.product_name_bn??offer.product_name)} loading="lazy" className="h-full w-full object-contain"/>:<img src="/grocery-hero-glass.svg" alt="" className="h-44 w-full object-contain"/>}
+     <Link href={offer.is_demo?`/demo-product/${offer.product_id}`:`/shop/${offer.product_id}?area=${offer.community_id}`} className="market-product-image relative flex h-48 items-center justify-center overflow-hidden rounded-2xl bg-white/30" aria-label={`View details for ${t(offer.product_name,offer.product_name_bn??offer.product_name)}`}>{offer.image_url?<img src={offer.image_url} alt={t(offer.product_name,offer.product_name_bn??offer.product_name)} loading="lazy" className="h-full w-full object-contain"/>:<img src="/grocery-hero-glass.svg" alt="" className="h-44 w-full object-contain"/>}
       <span className="absolute left-2 top-2 rounded-full border border-teal-200 bg-white/95 px-3 py-1 text-xs font-bold text-teal-700">{offer.is_demo?'DEMO / নমুনা':offer.offer_kind==='GROUP_DEAL'?t('Group Deal','গ্রুপ ডিল'):t('Pool','পুল')}</span></Link>
-     <h3 className="mt-3 line-clamp-2 text-lg font-black"><Link href={offer.is_demo?`/demo-product/${offer.product_id}`:`/shop/${offer.product_id}?area=${offer.community_id}`}>{t(offer.product_name,offer.product_name_bn??offer.product_name)}</Link></h3>
-     <p className="mt-1 text-xs text-slate-500">{[offer.brand,offer.package_size].filter(Boolean).join(' · ')}</p>
-     <p className="mt-2 text-xs text-slate-500">{areas.find(a=>a.community_id===offer.community_id)?.community_name??'Local community'}</p>
-     <div className="mt-3 grid grid-cols-2 gap-3">
+     <h3 className="market-product-title mt-3 line-clamp-2 text-lg font-black"><Link href={offer.is_demo?`/demo-product/${offer.product_id}`:`/shop/${offer.product_id}?area=${offer.community_id}`}>{t(offer.product_name,offer.product_name_bn??offer.product_name)}</Link></h3>
+     <p className="market-product-meta mt-1 text-xs text-slate-500">{[offer.brand,offer.package_size].filter(Boolean).join(' · ')}</p>
+     <p className="market-product-community mt-2 text-xs text-slate-500">{areas.find(a=>a.community_id===offer.community_id)?.community_name??'Local community'}</p>
+     <div className="market-product-prices mt-3 grid grid-cols-2 gap-3">
       <div className="rounded-xl border border-black/10 p-3"><p className="text-xs font-bold">{t('Buy Alone','একা কিনুন')}</p><p className="mt-2 text-sm font-black">{offer.is_demo?formatPrice(offer.solo_price):t('Not quoted yet','দাম দেওয়া হয়নি')}</p><p className="mt-1 text-xs text-slate-500">{offer.is_demo?t('Sample price only · DEMO','শুধু নমুনা মূল্য · ডেমো'):t('Separate individual price required','একা কেনার আলাদা দাম প্রয়োজন')}</p></div>
       <div className="rounded-xl border border-teal-200 p-3"><p className="text-xs font-bold text-teal-700">{t('Group Buy','গ্রুপে কিনুন')}</p><p className="mt-2 text-lg font-black text-teal-700">{formatPrice(offer.confirmed_price??offer.upcoming_price)}</p><p className="mt-1 text-xs text-slate-500">{offer.is_demo?t('Sample price · DEMO','নমুনা মূল্য · ডেমো'):hasPrice?t('Published / unlocked','প্রকাশিত / আনলক হয়েছে'):t('Target or price pending','লক্ষ্য বা দাম বাকি')}</p></div>
      </div>
-     <p className="mt-3 text-xs text-slate-500">{offer.buyer_count} {t('buyers','জন ক্রেতা')} · {offer.quantity_joined} {t('units','ইউনিট')}{offer.is_demo?' (DEMO)':''}{offer.next_threshold? ` · ${t('Next threshold','পরের লক্ষ্য')} ${offer.next_threshold}`:''}</p>
-     {offer.next_threshold&&offer.next_threshold>0&&<div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-label="Verified buyers towards next price tier" aria-valuemin={0} aria-valuemax={offer.next_threshold} aria-valuenow={Math.min(offer.buyer_count,offer.next_threshold)}><div className="h-full rounded-full bg-teal-600" style={{width:`${Math.min(100,Math.round(100*offer.buyer_count/offer.next_threshold))}%`}}/></div>}
-     <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
+     <p className="market-product-count mt-3 text-xs text-slate-500">{offer.buyer_count} {t('buyers','জন ক্রেতা')} · {offer.quantity_joined} {t('units','ইউনিট')}{offer.is_demo?' (DEMO)':''}{offer.next_threshold? ` · ${t('Next threshold','পরের লক্ষ্য')} ${offer.next_threshold}`:''}</p>
+     {offer.next_threshold&&offer.next_threshold>0&&<div className="market-product-progress mt-2 h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-label="Verified buyers towards next price tier" aria-valuemin={0} aria-valuemax={offer.next_threshold} aria-valuenow={Math.min(offer.buyer_count,offer.next_threshold)}><div className="h-full rounded-full bg-teal-600" style={{width:`${Math.min(100,Math.round(100*offer.buyer_count/offer.next_threshold))}%`}}/></div>}
+     <div className="market-product-actions mt-auto grid grid-cols-2 gap-2 pt-4">
       <button type="button" disabled aria-disabled="true" title="Individual checkout is not released yet" className="cursor-not-allowed rounded-xl border border-slate-200 px-2 py-3 text-xs font-black opacity-60">{offer.is_demo?t('Buy Alone · Demo','একা কিনুন · ডেমো'):t('Buy Alone · Soon','একা কেনা · শিগগিরই')}</button>
       {offer.is_demo?<button type="button" disabled aria-disabled="true" className="btn-primary cursor-not-allowed opacity-65 text-xs">{t('Group Buy · Demo','গ্রুপে কিনুন · ডেমো')}</button>:<Link href={href} className="btn-primary flex items-center justify-center text-center text-xs">{authenticated?t('Join / View group','গ্রুপ দেখুন / যোগ দিন'):t('Sign in to join','যোগ দিতে লগইন')}</Link>}
      </div>
