@@ -84,6 +84,16 @@ try{
  const roleRestore=roles.split('\n').filter(line=>!existingRoles.some(role=>line==='CREATE ROLE '+role+';'||line==='CREATE ROLE "'+role+'";')).join('\n')
  execFileSync('docker',['exec','-i',restoreName,'psql','-U','supabase_admin','-d','postgres','-v','ON_ERROR_STOP=1'],{input:roleRestore,stdio:['pipe','pipe','pipe']})
  execFileSync('docker',['exec',restoreName,'createdb','-U','supabase_admin','-T','template0','issue57_restore'],{stdio:'pipe'})
+ // pg_cron is bound to one database name at server startup. Restore its real
+ // schema too, using the isolated server's target DB rather than excluding it.
+ execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-d','postgres','-v','ON_ERROR_STOP=1','-c',"alter system set cron.database_name='issue57_restore'"],{stdio:'pipe'})
+ execFileSync('docker',['restart',restoreName],{stdio:'pipe'})
+ ready=false
+ for(let i=0;i<45;i++){
+  try{execFileSync('docker',['exec',restoreName,'pg_isready','-h','127.0.0.1','-U','postgres'],{stdio:'pipe'});ready=true;break}catch{}
+  await new Promise(r=>setTimeout(r,1000))
+ }
+ assert.ok(ready,'Isolated restore database did not restart with cron configuration')
  execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-d','issue57_restore','-v','ON_ERROR_STOP=1','-c','drop schema public cascade'],{stdio:'pipe'})
  execFileSync('docker',['exec',restoreName,'pg_restore','-U','supabase_admin','-d','issue57_restore','--no-owner','--exit-on-error','/restore/database.dump'],{stdio:'pipe'})
  const restored=s=>execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-d','issue57_restore','-tAX','-v','ON_ERROR_STOP=1','-c',s],{encoding:'utf8'}).trim()
