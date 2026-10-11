@@ -436,3 +436,332 @@ html[data-theme="dark"] body.site-glass-root .market-nearby-option{color:#e6f1f6
 html[data-theme="dark"] body.site-glass-root .market-language-toggle{background:#17313a}
 html[data-theme="dark"] body.site-glass-root .market-language-toggle button{color:#c4dade}
 html[data-theme="dark"] body.site-glass-root .market-language-toggle button[aria-pressed="true"]{background:#185f68;color:#eaffff}
+
+/* Compact storefront refinement, 2026-10-11.
+   Only the public browse-first homepage; keep tap targets comfortably usable. */
+.site-glass-root .public-marketplace-flat .market-hero-band{
+ padding:10px 0 20px!important;
+}
+.site-glass-root .public-marketplace-flat .market-hero-grid{
+ gap:16px!important;margin-top:.5rem!important;align-items:stretch;
+}
+.site-glass-root .public-marketplace-flat .market-hero-copy{
+ padding:14px 4px!important;justify-content:center;
+}
+.site-glass-root .public-marketplace-flat .market-hero-copy .market-hero-main-title{
+ font-size:clamp(1.85rem,2.65vw,2.65rem)!important;
+ line-height:1.14!important;letter-spacing:-.035em!important;
+ margin-top:.45rem!important;max-width:650px!important;
+}
+.site-glass-root .public-marketplace-flat .market-hero-copy .market-hero-subtitle{
+ font-size:.9rem!important;line-height:1.5!important;margin-top:.5rem!important;
+}
+.site-glass-root .public-marketplace-flat .market-hero-actions{
+ gap:9px!important;margin-top:13px!important;
+}
+.site-glass-root .public-marketplace-flat .market-hero-benefits{
+ margin-top:12px!important;gap:6px 14px!important;
+ font-size:.75rem!important;line-height:1.4!important;
+}
+.site-glass-root .public-marketplace-flat :is(.btn-primary,.btn-secondary){
+ min-height:39px!important;padding:.47rem .83rem!important;
+ font-size:.82rem!important;line-height:1.25!important;
+ border-radius:12px!important;
+}
+.site-glass-root .public-marketplace-flat .market-hero-product{
+ min-height:0!important;padding:12px!important;display:flex!important;
+ align-items:stretch!important;justify-content:center!important;
+}
+.site-glass-root .public-marketplace-flat .market-featured-content{
+ display:grid;grid-template-columns:minmax(125px,.83fr) minmax(0,1.17fr);
+ gap:14px;align-items:center;width:100%;min-width:0;
+}
+.site-glass-root .public-marketplace-flat .market-featured-image{
+ min-width:0;display:flex;align-items:center;justify-content:center;
+ padding:8px;border-radius:14px;background:rgba(255,255,255,.25);
+}
+.site-glass-root .public-marketplace-flat .market-featured-image img{
+ width:100%;height:186px;max-height:186px!important;object-fit:contain;
+}
+.site-glass-root .public-marketplace-flat .market-featured-details{
+ min-width:0;display:flex;flex-direction:column;align-items:flex-start;
+ justify-content:center;gap:5px;
+}
+.site-glass-root .public-marketplace-flat .market-featured-eyebrow{
+ font-size:.64rem!important;font-weight:800;line-height:1.4;
+ letter-spacing:.08em;color:var(--theme-accent,#087f8d);
+}
+.site-glass-root .public-marketplace-flat .market-featured-details h2{
+ font-size:clamp(1rem,1.36vw,1.3rem)!important;line-height:1.24!important;
+ font-weight:800!important;margin:0!important;
+}
+.site-glass-root .public-marketplace-flat .market-featured-size,
+.site-glass-root .public-marketplace-flat .market-featured-note,
+.site-glass-root .public-marketplace-flat .market-featured-buyers{
+ font-size:.73rem!important;line-height:1.35!important;
+ margin:0!important;color:var(--theme-muted,#60708d);
+}
+.site-glass-root .public-marketplace-flat .market-featured-price{
+ display:block;font-size:1.55rem!important;line-height:1.15!important;
+ font-weight:800!important;color:var(--theme-accent,#087f8d);
+}
+.site-glass-root .public-marketplace-flat .market-featured-button{
+ margin-top:5px!important;min-height:39px!important;font-size:.78rem!important;
+}
+.site-glass-root .public-marketplace-flat .market-location-panel{
+ padding:.53rem .8rem!important;gap:.55rem!important;
+}
+.site-glass-root .public-marketplace-flat .market-location-intro strong{
+ font-size:.83rem!important;line-height:1.3!important;
+}
+.site-glass-root .public-marketplace-flat .market-location-intro p{
+ font-size:.73rem!important;line-height:1.34!important;
+}
+.site-glass-root .public-marketplace-flat .market-deals-band{
+ padding:32px 0 40px!important;
+}
+.site-glass-root .public-marketplace-flat .market-deals-band h2{
+ font-size:1.48rem!important;line-height:1.2!important;
+}
+.site-glass-root .public-marketplace-flat .market-deals-band [role="group"]{
+ gap:6px!important;
+}
+.site-glass-root .public-marketplace-flat .market-deals-band [role="group"] button{
+ min-height:35px!important;padding:.35rem .65rem!important;
+ font-size:.77rem!important;border-radius:10px!important;
+}
+.site-glass-root .public-marketplace-flat .market-products-grid{
+ gap:12px!important;
+}
+.site-glass-root .public-marketplace-flat .market-product-card{
+ padding:12px!important;border-radius:13px!important;
+}
+.site-glass-root .public-marketplace-flat .market-product-image{
+ height:136px!important;min-height:0!important;
+ border-radius:10px!important;
+}
+.site-glass-root .public-marketplace-flat .market-product-image img{
+ max-height:122px!important;height:100%!important;object-fit:contain!important;
+}
+.site-glass-root .public-marketplace-flat .market-product-title{
+ font-size:.92rem!important;line-height:1.3!important;
+ margin-top:8px!important;
+}
+.site-glass-root .public-marketplace-flat .market-product-meta,
+.site-glass-root .public-marketplace-flat .market-product-community,
+.site-glass-root .public-marketplace-flat .market-product-count{
+ font-size:.71rem!important;line-height:1.35!important;
+ margin-top:4px!important;
+}
+.site-glass-root .public-marketplace-flat .market-product-prices{
+ gap:7px!important;margin-top:8px!important;
+}
+.site-glass-root .public-marketplace-flat .market-product-prices>div{
+ padding:8px!important;border-radius:10px!important;
+ overflow-wrap:anywhere;
+}
+.site-glass-root .public-marketplace-flat .market-product-prices p{
+ font-size:.7rem!important;line-height:1.3!important;
+ margin-top:3px!important;
+}
+.site-glass-root .public-marketplace-flat .market-product-prices p:nth-child(2){
+ font-size:.98rem!important;font-weight:800!important;
+}
+.site-glass-root .public-marketplace-flat .market-product-progress{
+ height:6px!important;margin-top:5px!important;
+}
+.site-glass-root .public-marketplace-flat .market-product-actions{
+ gap:7px!important;padding-top:10px!important;
+}
+.site-glass-root .public-marketplace-flat .market-product-actions :is(button,a){
+ min-height:39px!important;padding:.37rem .55rem!important;
+ font-size:.73rem!important;line-height:1.28!important;
+ border-radius:10px!important;
+}
+.site-glass-root .public-marketplace-flat .market-exclusives-band{
+ padding:34px 0!important;
+}
+.site-glass-root .public-marketplace-flat .market-exclusive-intro h2{
+ font-size:clamp(1.25rem,2vw,1.8rem)!important;
+}
+.site-glass-root .public-marketplace-flat .market-exclusive-intro p{
+ font-size:.81rem!important;line-height:1.5!important;
+}
+.site-glass-root .public-marketplace-flat .market-exclusive-carousel .featured-showcase{
+ min-height:335px!important;padding:13px 16px!important;
+}
+.site-glass-root .public-marketplace-flat .market-exclusive-carousel .showcase-slide{
+ margin-top:5px!important;
+}
+.site-glass-root .public-marketplace-flat .market-exclusive-carousel .showcase-hero-photo img{
+ height:156px!important;max-height:156px!important;
+}
+.site-glass-root .public-marketplace-flat .market-exclusive-carousel .showcase-slide h2{
+ font-size:1.25rem!important;line-height:1.25!important;
+}
+.site-glass-root .public-marketplace-flat .market-exclusive-carousel .showcase-slide .pt-4{
+ padding-top:8px!important;
+}
+.site-glass-root .public-marketplace-flat .market-exclusive-carousel .showcase-slide .mt-4{
+ margin-top:8px!important;
+}
+.site-glass-root .public-marketplace-flat .market-story .market-story-section{
+ padding:34px 0 40px!important;
+}
+.site-glass-root .public-marketplace-flat .market-story .market-story-heading h2{
+ font-size:clamp(1.3rem,2vw,1.8rem)!important;
+}
+.site-glass-root .public-marketplace-flat .market-story .market-story-description{
+ font-size:.81rem!important;line-height:1.5!important;
+}
+.site-glass-root .public-marketplace-flat .market-story .market-step,
+.site-glass-root .public-marketplace-flat .market-story .market-benefit,
+.site-glass-root .public-marketplace-flat .market-story .market-area-card{
+ padding:14px!important;
+}
+.site-glass-root .public-marketplace-flat .market-story .market-step h3,
+.site-glass-root .public-marketplace-flat .market-story .market-benefit h3{
+ font-size:.94rem!important;margin-top:.6rem!important;
+}
+@media(max-width:900px){
+ .site-glass-root .public-marketplace-flat .market-featured-content{
+  grid-template-columns:minmax(110px,.68fr) minmax(0,1.32fr);
+ }
+ .site-glass-root .public-marketplace-flat .market-featured-image img{height:150px;max-height:150px!important}
+}
+@media(max-width:640px){
+ .site-glass-root .public-marketplace-flat .market-content{
+  width:calc(100% - 28px)!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-hero-band{
+  padding:8px 0 20px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-hero-grid{
+  margin-top:9px!important;gap:8px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-hero-copy{
+  padding:8px 1px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-hero-copy .market-hero-main-title{
+  font-size:clamp(1.52rem,6.2vw,1.9rem)!important;
+  line-height:1.18!important;margin-top:6px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-hero-copy .market-hero-subtitle{
+  font-size:.82rem!important;line-height:1.45!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-hero-actions{gap:7px!important;margin-top:10px!important}
+ .site-glass-root .public-marketplace-flat .market-hero-benefits{
+  margin-top:10px!important;gap:6px 9px!important;font-size:.69rem!important;
+ }
+ .site-glass-root .public-marketplace-flat :is(.btn-primary,.btn-secondary){
+  min-height:42px!important;padding:.48rem .7rem!important;font-size:.79rem!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-hero-product{
+  padding:9px!important;min-height:0!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-featured-content{
+  grid-template-columns:105px minmax(0,1fr);gap:11px;
+ }
+ .site-glass-root .public-marketplace-flat .market-featured-image{
+  padding:3px;border-radius:10px;
+ }
+ .site-glass-root .public-marketplace-flat .market-featured-image img{
+  height:132px;max-height:132px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-featured-details{
+  gap:4px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-featured-eyebrow{
+  font-size:.6rem!important;letter-spacing:.04em!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-featured-details h2{
+  font-size:.93rem!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-featured-price{
+  font-size:1.23rem!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-featured-size,
+ .site-glass-root .public-marketplace-flat .market-featured-note,
+ .site-glass-root .public-marketplace-flat .market-featured-buyers{
+  font-size:.66rem!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-featured-button{
+  min-height:42px!important;padding:.4rem .6rem!important;
+  font-size:.74rem!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-location-panel{
+  padding:9px 10px!important;gap:7px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-location-intro p{
+  font-size:.72rem!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-products-grid{
+  grid-template-columns:1fr!important;gap:10px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-product-card{
+  display:grid!important;grid-template-columns:100px minmax(0,1fr);
+  gap:0 10px!important;align-content:start;
+ }
+ .site-glass-root .public-marketplace-flat .market-product-image{
+  grid-column:1;grid-row:1/span 3;
+  height:96px!important;min-height:0!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-product-image img{
+  max-height:90px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-product-title{
+  grid-column:2;grid-row:1;
+  margin:1px 0 4px!important;
+  font-size:.91rem!important;line-height:1.3!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-product-meta{
+  grid-column:2;grid-row:2;margin:2px 0!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-product-community{
+  grid-column:2;grid-row:3;margin:2px 0!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-product-prices{
+  grid-column:1/-1;grid-row:4;
+  margin-top:10px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-product-count{grid-column:1/-1;grid-row:5}
+ .site-glass-root .public-marketplace-flat .market-product-progress{grid-column:1/-1;grid-row:6}
+ .site-glass-root .public-marketplace-flat .market-product-actions{
+  grid-column:1/-1;grid-row:7;
+ }
+ .site-glass-root .public-marketplace-flat .market-product-actions :is(button,a){
+  min-height:42px!important;font-size:.78rem!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-deals-band{
+  padding:23px 0 30px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-exclusives-band{
+  padding:26px 0!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-exclusive-carousel .featured-showcase{
+  min-height:300px!important;padding:12px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-exclusive-carousel .showcase-hero-photo img{
+  height:135px!important;max-height:135px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-story .market-story-section{
+  padding:25px 0 31px!important;
+ }
+ .site-glass-root .market-flat-header .market-header-nav-inner{
+  gap:14px!important;
+ }
+ .site-glass-root .market-flat-header .market-header-nav-inner a{
+  min-height:42px!important;font-size:.76rem!important;
+ }
+}
+@media(max-width:375px){
+ .site-glass-root .public-marketplace-flat .market-featured-content{
+  grid-template-columns:90px minmax(0,1fr);gap:8px;
+ }
+ .site-glass-root .public-marketplace-flat .market-featured-image img{
+  height:116px;max-height:116px!important;
+ }
+ .site-glass-root .public-marketplace-flat .market-product-card{
+  grid-template-columns:85px minmax(0,1fr);
+ }
+}
