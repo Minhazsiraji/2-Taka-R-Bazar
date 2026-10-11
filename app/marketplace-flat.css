@@ -374,3 +374,65 @@ html[data-theme="dark"] body.site-glass-root .public-marketplace-flat .market-lo
 html[data-theme="dark"] body.site-glass-root .market-header-location{color:#92e9e5;background:rgba(14,31,44,.7);border-color:rgba(92,212,210,.3)}
 html[data-theme="dark"] body.site-glass-root .market-flat-header .market-header-search{background:rgba(20,34,46,.8)!important;border-color:rgba(140,180,200,.2)!important}
 html[data-theme="dark"] body.site-glass-root .market-nearby-option{color:#e6f1f6;background:#142c3b}
+
+/* Preview visual review: compact location and separate Bangla/English switch */
+.site-glass-root .public-marketplace-flat .market-hero-band{padding-top:7px!important}
+.site-glass-root .public-marketplace-flat .market-location-panel{
+ padding:.65rem .9rem!important;gap:.7rem!important;grid-template-columns:minmax(0,1.7fr) minmax(205px,.72fr)!important;
+ margin-top:0!important;border-radius:12px!important
+}
+.site-glass-root .public-marketplace-flat .market-location-intro strong{font-size:.87rem!important}
+.site-glass-root .public-marketplace-flat .market-location-intro p{font-size:.75rem!important;line-height:1.4!important;margin-top:.16rem!important}
+.site-glass-root .public-marketplace-flat .market-location-control select{min-height:37px!important}
+.site-glass-root .public-marketplace-flat .market-location-status{font-size:.72rem!important;margin:.24rem 0!important;min-height:0}
+.market-language-toggle{display:flex;flex:0 0 auto;align-items:center;gap:1px;padding:3px;border:1px solid rgba(15,177,175,.33);border-radius:999px;background:rgba(255,255,255,.35)}
+.market-language-toggle button{font-size:.72rem;font-weight:750;line-height:1;min-height:30px;padding:.45rem .49rem;border-radius:999px;color:#576480;white-space:nowrap}
+.market-language-toggle button[aria-pressed="true"]{color:#064f58;background:rgba(49,217,214,.30);box-shadow:0 1px 5px rgba(6,118,116,.08)}
+.site-glass-root .market-flat-header .market-header-nav-inner>a{flex:0 0 auto!important;display:inline-flex!important;white-space:nowrap!important}
+.market-demo-banner{display:inline-flex;font-size:.77rem;font-weight:800;color:#774000;background:#fff1cc;border:1px solid #eac879;border-radius:99px;padding:.3rem .7rem;margin-bottom:.6rem}
+.market-demo-detail-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.1rem max(14px,calc((100% - 1200px)/2));border-bottom:1px solid var(--theme-line,rgba(255,255,255,.75));background:var(--theme-card,rgba(255,255,255,.6))}
+.market-demo-detail-container{max-width:1200px;margin:auto;padding:1.3rem 16px 4rem}
+.market-demo-detail-banner{padding:.8rem 1rem;background:#fff0c1;border:1px solid #dcb65d;color:#75470d;border-radius:14px;font-size:.87rem;font-weight:750;margin-bottom:1.3rem}
+.market-demo-detail-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:1.5rem}
+.market-demo-detail-image,.market-demo-detail-copy{border-radius:20px;border:1px solid var(--theme-line,#ddd);padding:1.2rem;background:var(--theme-card,rgba(255,255,255,.68))}
+.market-demo-detail-image{display:grid;place-items:center;min-height:320px}
+.market-demo-detail-image img{max-width:100%;max-height:430px;object-fit:contain}
+.market-demo-detail-copy h1{font-size:clamp(1.7rem,3vw,2.6rem);font-weight:800;margin:.5rem 0}
+.market-demo-pill{display:inline-block;color:#713f12;background:#ffebb4;border:1px solid #e5bc5f;border-radius:999px;font-weight:800;font-size:.74rem;padding:.3rem .6rem;margin:.75rem 0}
+.market-demo-prices{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:.7rem 0}
+.market-demo-prices>div{padding:1rem;border-radius:14px;border:1px solid #adc7c7;background:rgba(233,248,247,.48)}
+.market-demo-prices span,.market-demo-prices strong{display:block}
+.market-demo-prices span{font-weight:800;font-size:.83rem}
+.market-demo-prices strong{margin-top:.35rem;font-weight:900;font-size:1.6rem;color:#087f8d}
+.market-demo-message{font-size:.82rem!important;line-height:1.65!important;margin:.8rem 0!important}
+.market-demo-buttons{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.market-demo-buttons button{padding:.75rem;border:1px solid #a6bfc0;border-radius:12px;opacity:.65;cursor:not-allowed}
+.market-full-footer .site-footer-single-language{font-size:.86rem;line-height:1.5;font-weight:650}
+@media(max-width:790px){
+ .site-glass-root .public-marketplace-flat .market-location-panel{grid-template-columns:1fr!important;gap:.5rem!important}
+ .market-demo-detail-grid{grid-template-columns:1fr}
+ .market-demo-detail-image{min-height:240px}
+}
+@media(max-width:640px){
+ .site-glass-root .market-flat-header .market-header-nav-inner{gap:1.25rem!important;max-width:none!important}
+ .site-glass-root .market-flat-header .market-header-nav{overflow-x:auto!important;white-space:nowrap!important}
+ .site-glass-root .market-flat-header .market-header-inner{grid-template-columns:minmax(0,1fr) auto!important;gap:.35rem!important}
+ .site-glass-root .market-flat-header .market-header-actions{gap:.17rem!important;min-width:0}
+ .site-glass-root .market-flat-header .public-header-action{padding:.45rem .39rem!important;font-size:.69rem!important;min-height:32px!important}
+ .site-glass-root .market-flat-header .market-header-location{padding:.4rem!important;min-width:32px!important;min-height:32px!important}
+ .site-glass-root .market-flat-header .market-brand-copy small{display:none!important}
+ .site-glass-root .market-flat-header .market-brand-copy strong{font-size:.75rem!important}
+ .site-glass-root .market-flat-header .market-brand-lockup svg,
+ .site-glass-root .market-flat-header .market-brand-lockup img{width:32px!important;height:32px!important}
+ .market-language-toggle{padding:1px!important}
+ .market-language-toggle button{font-size:.68rem!important;padding:.38rem .36rem!important;min-height:29px!important}
+ .market-demo-detail-banner{font-size:.77rem}
+ .market-demo-detail-container{padding:.8rem 12px 3rem}
+}
+@media(max-width:385px){
+ .site-glass-root .market-flat-header .market-header-actions{gap:.08rem!important}
+ .market-language-toggle button{padding:.35rem .23rem!important;font-size:.65rem!important}
+}
+html[data-theme="dark"] body.site-glass-root .market-language-toggle{background:#17313a}
+html[data-theme="dark"] body.site-glass-root .market-language-toggle button{color:#c4dade}
+html[data-theme="dark"] body.site-glass-root .market-language-toggle button[aria-pressed="true"]{background:#185f68;color:#eaffff}
