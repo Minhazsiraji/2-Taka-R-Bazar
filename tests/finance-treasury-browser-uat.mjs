@@ -125,7 +125,7 @@ async function main(){
  await mkdir('artifacts',{recursive:true})
  // Retain the fully asserted synthetic supply chain only in this disposable DB.
  // No hosted target is accepted by the guard above; CI destroys the entire stack.
- const fixture=readFileSync('tests/supply-handover-e2e.sql','utf8').replace(/rollback;\s*$/,'set constraints all immediate; commit;')
+ const fixture=readFileSync('tests/supply-handover-e2e.sql','utf8').replace('\\ir finance-customer-lifecycle-e2e.sql','\\i tests/finance-customer-lifecycle-e2e.sql').replace(/rollback;\s*$/,'set constraints all immediate; commit;')
  execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],{
   input:fixture,env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8',stdio:['pipe','pipe','pipe']})
  const ownerCookie=await viewer('super_admin')

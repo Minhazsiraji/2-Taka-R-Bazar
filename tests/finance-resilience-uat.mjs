@@ -7,7 +7,7 @@ const env={...process.env,PGPASSWORD:'postgres'}
 if(process.env.ISSUE57_DISPOSABLE_DB!=='true')throw new Error('Disposable DB qualification opt-in required')
 const sql=s=>execFileSync('psql',[...args,'-c',s],{env,encoding:'utf8'}).trim()
 // Seed a fully asserted chain, retaining synthetic data only in the disposable DB.
-const fixture=readFileSync('tests/supply-handover-e2e.sql','utf8').replace(/rollback;\s*$/,'set constraints all immediate; commit;')
+const fixture=readFileSync('tests/supply-handover-e2e.sql','utf8').replace('\\ir finance-customer-lifecycle-e2e.sql','\\i tests/finance-customer-lifecycle-e2e.sql').replace(/rollback;\s*$/,'set constraints all immediate; commit;')
 execFileSync('psql',args,{input:fixture,env,encoding:'utf8',stdio:['pipe','pipe','pipe']})
 const maker='a0000000-0000-0000-0000-000000000001',checker='a0000000-0000-0000-0000-000000000002'
 const bank=sql("select id from public.treasury_accounts where name='Synthetic Supplier Bank'")
@@ -40,8 +40,8 @@ const dbContainer=execFileSync('docker',['ps','--filter','name=supabase_db_','--
 assert.match(dbContainer,/^supabase_db_[a-zA-Z0-9_-]+$/)
 const image=execFileSync('docker',['inspect','--format','{{.Config.Image}}',dbContainer],{encoding:'utf8'}).trim()
 const backup='/tmp/issue57-restore/database.dump'
-execFileSync('pg_dump',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-Fc','--no-owner','-f',backup],{env,stdio:'pipe'})
-const roles=execFileSync('pg_dumpall',['-h','127.0.0.1','-p','54322','-U','postgres','--roles-only'],{env,encoding:'utf8'}).replace(/^CREATE ROLE postgres;\n/m,'')
+writeFileSync(backup,execFileSync('docker',['exec',dbContainer,'pg_dump','-U','postgres','-d','postgres','-Fc','--no-owner'],{stdio:'pipe'}))
+const roles=execFileSync('docker',['exec',dbContainer,'pg_dumpall','-U','postgres','--roles-only'],{encoding:'utf8',stdio:'pipe'}).replace(/^CREATE ROLE postgres;\n/m,'')
 writeFileSync('/tmp/issue57-restore/roles.sql',roles)
 const fingerprint=`select md5(string_agg(row_hash,'' order by row_hash)) from (
  select md5(row_to_json(j)::text) row_hash from public.finance_journals j union all

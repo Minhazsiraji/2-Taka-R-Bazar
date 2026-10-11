@@ -699,6 +699,7 @@ select pg_temp.assert_true(
  'Bank minus supplier payment plus accepted COD does not equal true combined cash');
 
 \echo 'FINANCE_TREASURY_PROCUREMENT_COD_INTEGRATION_E2E_PASS'
+\ir finance-customer-lifecycle-e2e.sql
 
 -- All assertions passed. Roll back every synthetic row.
 \echo 'SUPPLY_HANDOVER_SYNTHETIC_E2E_PASS'
