@@ -295,3 +295,42 @@ html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .marke
   transition:none!important;transform:none!important;
  }
 }
+
+/* Sticky header needs an opaque matching tone, not see-through overlapping text. */
+body.site-glass-root main.public-marketplace-flat .public-glass-header.market-flat-header{
+ background:#ebe7ed!important;backdrop-filter:none!important;
+ -webkit-backdrop-filter:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-header-nav-inner a,
+body.site-glass-root main.public-marketplace-flat .market-brand-copy strong{
+ color:var(--market-text)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-header-nav-inner .market-header-join{
+ color:var(--market-accent)!important;
+}
+body.site-glass-root main.public-marketplace-flat :is(.market-header-search input,.market-location-panel select){
+ color:var(--market-text)!important;
+ background:transparent!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-header-search input::placeholder{
+ color:var(--market-muted)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-hero-product.market-hero-pool-shell::before,
+body.site-glass-root main.public-marketplace-flat .market-hero-product.market-hero-pool-shell::after,
+body.site-glass-root main.public-marketplace-flat .market-product-card::before,
+body.site-glass-root main.public-marketplace-flat .market-product-card::after{
+ content:none!important;display:none!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .public-glass-header.market-flat-header{
+ background:#192634!important;border-bottom-color:var(--market-edge)!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-header-location,
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-product-actions button[disabled]{
+ background:transparent!important;color:var(--market-muted)!important;
+ border-color:var(--market-edge)!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-featured-pool-copy h2,
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-demo-review h3,
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-demo-supplier h3{
+ color:var(--market-text)!important;
+}
