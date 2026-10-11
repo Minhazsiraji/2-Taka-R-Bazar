@@ -38,3 +38,25 @@ test('design affects only the public landing route; dark mode and mobile are sty
  assert.match(css,/data-theme="dark"/)
  assert.doesNotMatch(css,/\.site-glass-root\s+main\{/)
 })
+
+test('header search and auto-location use guest-only browser matching with manual fallback',()=>{
+ assert.match(header,/market-header-product-search/)
+ assert.match(header,/onSearchChange\?\./)
+ assert.match(header,/onLocationClick/)
+ assert.match(catalog,/navigator\.geolocation\.getCurrentPosition/)
+ assert.match(catalog,/useEffect\(\(\)=>/)
+ assert.match(catalog,/initialLocationRequested\.current/)
+ assert.match(catalog,/chooseAreaByLocation\(areas/)
+ assert.match(catalog,/manualSelected\.current/)
+ assert.match(catalog,/nearestAreas\.map/)
+ assert.match(catalog,/onChange=\{e=>selectArea\(e\.target\.value\)\}/)
+ assert.match(catalog,/joining a Group Deal still needs secure location and account verification/)
+ assert.doesNotMatch(catalog,/watchPosition\(/)
+ assert.doesNotMatch(catalog,/localStorage\.setItem\(/)
+});
+test('pearl glass styles retained and location controls adapt to mobile',()=>{
+ assert.match(css,/#eee9eb/)
+ assert.match(css,/market-header-search/)
+ assert.match(css,/market-location-panel/)
+ assert.match(css,/@media\(max-width:790px\)/)
+});
