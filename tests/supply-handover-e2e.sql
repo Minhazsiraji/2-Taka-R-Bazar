@@ -62,6 +62,10 @@ on conflict do nothing;
 insert into public.communities(id,name,slug,active,sort_order)
 values('11111111-1111-1111-1111-111111111111','E2E Synthetic Community','e2e-synthetic-community',true,999);
 
+-- Pickup fixtures must have a real destination; production destination checks stay enabled.
+insert into public.pickup_points(id,community_id,name,address,active)
+values('11111111-1111-4111-8111-111111111112','11111111-1111-1111-1111-111111111111','E2E Synthetic Pickup','Synthetic pickup address',true);
+
 insert into public.products(id,name,brand,category,package_size,unit,sku,active,is_demo)
 values
 ('22222222-2222-2222-2222-222222222221','E2E Oil','Synthetic','Grocery','5 L','bottle','E2E-OIL-5L',true,true),
