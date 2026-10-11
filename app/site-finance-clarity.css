@@ -1,0 +1,731 @@
+/* 2TBR Financial operations UI — route scoped; never affects customer storefront.
+   Counteracts historic site-wide glass selectors which erased dark financial
+   hero backgrounds, styled decorative header nodes like panels and reduced
+   control contrast. Intended brand: ink #102a39, deep teal #087f8d, aqua #13cfc8. */
+
+body.site-glass-root main .finance-ops-surface {
+  --finance-ink: #123044;
+  --finance-muted: #50667a;
+  --finance-brand: #087f8d;
+  --finance-brand-deep: #096b73;
+  --finance-card: #ffffff;
+  color: var(--finance-ink);
+}
+
+/* Hero gradient and title need to win over broad header and rounded-panel rules. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-ops-hero,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero,
+body.site-glass-root main .finance-ops-surface .finance-ops-hero {
+  position: relative !important;
+  min-height: 0 !important;
+  overflow: hidden;
+  border: 1px solid #147e82 !important;
+  background: linear-gradient(116deg,#09283b 0%,#0b4d56 51%,#087d77 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 30px rgba(6,58,66,.19) !important;
+  /* Glass blur is supplied by the later shared header-parity rule. */
+}
+
+/* The old ".site-glass-root header > div" turns the header's children
+   into framed cards and changes position:absolute to relative, creating
+   a giant blank square above the Treasury heading. */
+body.site-glass-root main .finance-ops-surface .finance-ops-hero > div {
+  position: relative !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(h1,h2,h3,strong,b),
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(h1,h2,h3,strong,b) {
+  color: #ffffff !important;
+  text-shadow: none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero p,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero p {
+  color: #d4f5f3 !important;
+  text-shadow: none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero p:first-child {
+  color: #9ff3e9 !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero > div span[class*="rounded-full"] {
+  color: #ecffff !important;
+  border-color: rgba(182,255,244,.55) !important;
+  background: rgba(2,29,43,.48) !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero a {
+  color: #ffffff !important;
+  border: 1px solid rgba(205,255,249,.64) !important;
+  background: rgba(7,54,64,.58) !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero a:hover {
+  border-color: #ffffff !important;
+  background: rgba(15,113,115,.85) !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero a:focus-visible {
+  outline: 3px solid #affff4 !important;
+}
+/* Hero current month control, not an active button. */
+body.site-glass-root main .finance-ops-surface .finance-ops-hero div[class*="bg-white/15"] {
+  color: #f7fffd !important;
+  border-color: rgba(205,255,249,.4) !important;
+  background: rgba(7,54,64,.58) !important;
+}
+
+/* Solid financial cards; the marketing site's multiple translucent
+   glass layers made numeric labels and charts almost invisible. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel,
+body.site-glass-root main .finance-ops-surface .finance-panel {
+  color: var(--finance-ink) !important;
+  background: rgba(255,255,255,.95) !important;
+  border: 1px solid rgba(18,117,126,.18) !important;
+  box-shadow: 0 5px 20px rgba(17,52,62,.075), inset 0 1px 0 rgba(255,255,255,.95) !important;
+  /* The later parity material owns backdrop blur; never suppress it here. */
+}
+body.site-glass-root main .finance-ops-surface .finance-panel :is(h2,h3) { color: #102b3d !important; }
+body.site-glass-root main .finance-ops-surface .finance-panel p[class*="text-slate-500"] { color: #50667a !important; }
+
+body.site-glass-root main .finance-ops-surface :is(input:not([type="checkbox"]), select, textarea) {
+  color: #183347 !important;
+  border: 1px solid #a6bcc7 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+body.site-glass-root main .finance-ops-surface :is(input,textarea)::placeholder {
+  color: #617587 !important;
+}
+body.site-glass-root main .finance-ops-surface :is(input,select,textarea):focus-visible {
+  border-color: var(--finance-brand) !important;
+  outline: 3px solid rgba(19,207,200,.23) !important;
+  outline-offset: 1px;
+}
+body.site-glass-root main .finance-ops-surface label {
+  color: #345064 !important;
+}
+
+/* Teal brand actions with always-legible contrast. */
+body.site-glass-root main .finance-ops-surface form button:not([value="reject"]):not(:disabled) {
+  color: #ffffff !important;
+  border: 1px solid #075d65 !important;
+  background: linear-gradient(180deg,#0b8992,#086b76) !important;
+  box-shadow: 0 4px 12px rgba(6,108,116,.18) !important;
+  opacity: 1 !important;
+  font-weight: 700 !important;
+}
+body.site-glass-root main .finance-ops-surface form button:not([value="reject"]):not(:disabled):hover {
+  background: #075e69 !important;
+}
+body.site-glass-root main .finance-ops-surface form button[value="reject"]:not(:disabled) {
+  color: #992a3b !important;
+  border: 1px solid #e5a9b2 !important;
+  background: #fff0f2 !important;
+  box-shadow: none !important;
+}
+body.site-glass-root main .finance-ops-surface form button:disabled {
+  color: #475569 !important;
+  border: 1px solid #bfcbd4 !important;
+  background: #e5eaf0 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+}
+body.site-glass-root main .finance-ops-surface form button:focus-visible {
+  outline: 3px solid #13cfc8 !important;
+  outline-offset: 2px;
+}
+body.site-glass-root main .finance-ops-surface th {
+  background: #e9f1f2 !important;
+  color: #345064 !important;
+}
+body.site-glass-root main .finance-ops-surface td {
+  background: rgba(255,255,255,.92) !important;
+  color: #173448 !important;
+  border-color: #e1ebed !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-empty-state {
+  color: #496173 !important;
+  background: #edf6f6 !important;
+  border: 1px dashed #b0c9c9 !important;
+  box-shadow: none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-gate-notice {
+  color: #884009 !important;
+  border: 1px solid #f2cc86 !important;
+  background: #fff6df !important;
+  box-shadow: none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-gate-notice a { color: #7c3900 !important; }
+body.site-glass-root main .finance-ops-surface .finance-protection-notice {
+  color: #244254 !important;
+  border: 1px solid #a9cfd0 !important;
+  background: #e8f6f5 !important;
+  box-shadow: none !important;
+}
+
+/* Financial dashboard dark theme must remain readable and dark, without
+   applying changes to Customer Home, other Admin routes or global glass. */
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface {
+  --finance-ink: #f1f7f9;
+  --finance-muted: #b6cad3;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel {
+  color: #e8f4f5 !important;
+  background: #142a36 !important;
+  border-color: #315262 !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,.22) !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel :is(h2,h3) { color: #f2fbff !important; }
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel p[class*="text-slate-500"] { color: #b7cbd5 !important; }
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(input:not([type="checkbox"]),select,textarea) {
+  color: #f1f7f9 !important;
+  border-color: #577080 !important;
+  background: #102330 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(input,textarea)::placeholder { color: #a4b9c6 !important; }
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface label { color: #c2d8df !important; }
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface th { color: #cfdee5 !important; background: #173442 !important; }
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface td { color: #eaf5f7 !important; background: #142b37 !important; border-color:#315160 !important; }
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-empty-state {
+  color: #bad4da !important; background: #17343d !important; border-color: #2a6971 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-gate-notice {
+  color: #ffdc9b !important; border-color: #815f30 !important; background: #332917 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-gate-notice a { color:#ffdf9f !important; }
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-protection-notice {
+  color: #c5edeb !important; border-color: #285b5e !important; background: #153039 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface form button:disabled {
+  color: #bed0d9 !important; background: #2d4654 !important; border-color: #536a79 !important;
+}
+@media(max-width:639px) {
+  body.site-glass-root main .finance-ops-surface .finance-ops-hero { padding: 1.1rem !important; }
+  body.site-glass-root main .finance-ops-surface .finance-panel { padding: 1rem !important; }
+}
+
+
+/* Super Admin route navigation uses the same ink/teal brand, with clear
+   default, hover and keyboard-focus states. This is not a global store reset. */
+body.site-glass-root aside .super-admin-nav-link,
+body.site-glass-root details .super-admin-nav-link {
+  color: #184151 !important;
+  background: rgba(249,254,253,.9) !important;
+  border: 1px solid #b3d9d9 !important;
+  box-shadow: none !important;
+  line-height: 1.45;
+}
+body.site-glass-root aside .super-admin-nav-link:hover,
+body.site-glass-root details .super-admin-nav-link:hover {
+  color: #045f68 !important;
+  background: #e6faf6 !important;
+  border-color: #47bab0 !important;
+  box-shadow: 0 2px 9px rgba(6,112,116,.12) !important;
+}
+html[data-theme="dark"] body.site-glass-root aside .super-admin-nav-link,
+html[data-theme="dark"] body.site-glass-root details .super-admin-nav-link {
+  color: #d4edf0 !important;
+  background: #16343e !important;
+  border-color: #376976 !important;
+}
+html[data-theme="dark"] body.site-glass-root aside .super-admin-nav-link:hover,
+html[data-theme="dark"] body.site-glass-root details .super-admin-nav-link:hover {
+  color: #e9fffc !important;
+  background: #1d555a !important;
+  border-color: #46b6b1 !important;
+}
+
+
+/* Specificity firewall: legacy site CSS targets every rounded div/section
+   using multiple :not() selectors and !important. Override only the named
+   financial components at higher specificity, not the entire application. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface > :is(section,header).finance-ops-hero[class*="rounded-"]:not(.card):not(.table-wrap),
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface > :is(section,header).finance-ops-hero[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: linear-gradient(116deg,#09283b 0%,#0b4d56 51%,#087d77 100%) !important;
+  border-color: #147e82 !important;
+  box-shadow: 0 12px 30px rgba(6,58,66,.19) !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #ffffff !important;
+  color: #123044 !important;
+  border-color: rgba(18,117,126,.2) !important;
+  box-shadow: 0 5px 20px rgba(17,52,62,.075) !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #142a36 !important;
+  color: #e8f4f5 !important;
+  border-color: #315262 !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,.22) !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-gate-notice[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #fff6df !important;
+  border-color: #f2cc86 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-gate-notice[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #332917 !important;
+  border-color: #815f30 !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-protection-notice[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #e8f6f5 !important;
+  border-color: #a9cfd0 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-protection-notice[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #153039 !important;
+  border-color: #285b5e !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-empty-state[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #edf6f6 !important;
+  border-color: #b0c9c9 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,p).finance-empty-state[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background: #17343d !important;
+  border-color: #2a6971 !important;
+}
+
+
+/* FINANCIAL REPORT V2: fixed brand controls, chart uses SVG primitives so
+   generic "div[class*=rounded-]" glass skins cannot repaint bars. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-hero-badge,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-hero-badge {
+  display:inline-flex !important;align-items:center !important;justify-content:center !important;
+  min-height:32px !important;
+  color:#063f43 !important;background:#c3f7ef !important;
+  border:1px solid #74e3d7 !important;border-radius:999px !important;
+  text-shadow:none !important;box-shadow:none !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-month-selector,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-month-selector {
+  color:#ffffff !important;
+  background:rgba(1,41,52,.90) !important;
+  border:1px solid rgba(208,253,245,.7) !important;
+  box-shadow:none !important;
+  text-align:center !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-hero-actions,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-hero-actions {
+  border:none !important;background:transparent !important;
+  box-shadow:none !important;border-radius:0 !important;padding:0 !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(.finance-hero-actions,.finance-hero-bottom) > a,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(.finance-hero-actions,.finance-hero-bottom) > a {
+  color:#f5fffd !important;
+  background:#155564 !important;
+  border-color:#8de8db !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-ops-hero > div,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero > div {
+  min-height:0 !important;position:relative !important;
+  border:0 !important;background:transparent !important;
+  box-shadow:none !important;backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+/* High-density reports are deliberately opaque even though Storefront uses glass. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel,
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface section.finance-panel,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface section.finance-panel {
+  background-image:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel {
+  background-color:#ffffff !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel {
+  background-color:#142a36 !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-verified-badge {
+  color:#075d60 !important;
+  background:#d8f8f4 !important;
+  border:1px solid #9be4da !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-verified-badge {
+  color:#cefffb !important;
+  background:#105255 !important;
+  border-color:#4caeac !important;
+}
+
+/* Chart controls and tooltip must remain vivid on white and dark backgrounds. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-chart-block,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-chart-block {
+  display:block!important; min-width:0!important;
+  color:inherit!important;
+  background:none!important;box-shadow:none!important;
+  border:0!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-legend {
+  display:flex!important;gap:8px 22px!important;flex-wrap:wrap!important;
+  margin-top:18px!important;align-items:center!important;
+  color:#25495a!important;font-size:12px!important;font-weight:700!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-legend > span {
+  display:inline-flex!important;align-items:center!important;gap:8px!important;
+  color:#25495a!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-legend-dot {
+  display:inline-block!important;width:12px!important;height:12px!important;
+  border-radius:3px!important;flex-shrink:0!important;box-shadow:none!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-inflow {
+  background:#0f8b8d!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-outflow {
+  background:#4f46e5!important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-chart-plot {
+  margin-top:14px!important;padding:8px 12px 10px!important;
+  background:#f5f9fa!important;border:1px solid #cfdee2!important;
+  border-radius:14px!important;box-shadow:none!important;
+  overflow:visible!important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-chart-plot {
+  margin-top:14px!important;padding:8px 12px 10px!important;
+  background:#172f3b!important;border:1px solid #3c5867!important;
+  border-radius:14px!important;box-shadow:none!important;
+  overflow:visible!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-cash-svg {
+  width:100%!important;height:auto!important;max-height:260px!important;display:block!important;
+  overflow:visible!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-cash-svg rect[role="img"] {
+  cursor:crosshair!important;
+  filter:none!important;
+  transition:opacity .12s ease!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-cash-svg rect[role="img"]:focus-visible {
+  outline:2px solid #0f8b8d;
+  outline-offset:2px;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-popover-zone {
+  min-height:74px!important;
+  background:none!important;
+  border:0!important;box-shadow:none!important;
+  margin:0 auto!important;max-width:100%!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-popover {
+  display:flex!important;flex-wrap:wrap!important;align-items:center!important;
+  gap:6px 14px!important;
+  padding:11px 13px!important;
+  border-radius:10px!important;
+  color:#ffffff!important;
+  border:1px solid #4caeb0!important;
+  background:#103443!important;
+  box-shadow:0 9px 22px rgba(8,36,51,.2)!important;
+  font-size:13px!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-popover :is(strong,b,span) {
+  color:#ffffff!important;
+  text-shadow:none!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-popover b {
+  font-variant-numeric:tabular-nums!important;
+  font-size:15px!important;
+}
+body.site-glass-root main .finance-ops-surface .finance-chart-help {
+  margin:8px 0 0!important;
+  color:#3e5a68!important;
+  font-size:12px!important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-chart-help,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-chart-legend,
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-chart-legend > span {
+  color:#cee2e8!important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-cash-svg text {
+  fill:#d5e9ed!important;
+}
+
+
+/* FINANCIAL DASHBOARD GLASS PARITY — exact light glass material from
+   .app-shell-header-bar (site-glass-v3.css). User-approved header is the
+   source of truth. All primary finance, treasury, procurement panels share
+   its gradient, white rim, layered shadow, blur and aqua/violet edge glints.
+   This intentionally supersedes the older opaque-card patch above. */
+body.site-glass-root .finance-ops-surface {
+  --finance-glass-face: linear-gradient(135deg,rgba(255,255,255,.42),rgba(242,240,250,.28));
+  --finance-glass-rim: rgba(255,255,255,.94);
+  --finance-glass-depth:
+    0 16px 40px rgba(36,43,70,.10),
+    inset 0 1.5px 0 rgba(255,255,255,.97),
+    inset 1px 0 0 rgba(255,255,255,.58),
+    inset -1px -1px 0 rgba(67,224,231,.16),
+    inset 0 -2px 0 rgba(146,116,232,.045),
+    4px 5px 9px rgba(67,224,231,.06),
+    -3px 5px 8px rgba(146,116,232,.035);
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap),
+body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+  position:relative !important;
+  background: var(--finance-glass-face) !important;
+  background-color: rgba(255,255,255,.12) !important;
+  border: 1px solid var(--finance-glass-rim) !important;
+  box-shadow: var(--finance-glass-depth) !important;
+  backdrop-filter: blur(24px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
+  border-radius: 22px !important;
+  color: #133448 !important;
+  overflow: hidden;
+  isolation: isolate;
+}
+/* Pearl-glass edge refracts light, rather than a white fill. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel::after {
+  content:"";
+  pointer-events:none;
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  z-index:0;
+  background:
+    linear-gradient(90deg,transparent 0%,rgba(151,119,235,.11) 18%,transparent 38%,transparent 68%,rgba(65,226,232,.17) 88%,transparent 100%) bottom/100% 2px no-repeat,
+    linear-gradient(180deg,transparent 0%,transparent 60%,rgba(65,226,232,.15) 82%,transparent 100%) right/2px 100% no-repeat,
+    linear-gradient(90deg,rgba(255,255,255,.75),rgba(255,255,255,.18) 56%,transparent 100%) top/100% 1px no-repeat;
+}
+body.site-glass-root main .finance-ops-surface .finance-panel > * {
+  position:relative;
+  z-index:1;
+}
+/* Avoid clipping the SVG tooltip: the tooltip is inside the chart panel. */
+body.site-glass-root main .finance-ops-surface .finance-panel .finance-chart-popover-zone {
+  position:relative;
+  z-index:2;
+}
+/* Keep all figures and labels legible on translucent glass. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel :is(h2,h3,strong,b) {
+  color:#132f41;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel :is(p,span)[class*="text-slate-"] {
+  color:#435c71 !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel p[class*="font-black"] {
+  color:#123448 !important;
+}
+/* Do not repaint financial semantic amount colors (risk, liquidity, inflows). */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel .text-teal-700 { color:#066772 !important; }
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel .text-emerald-700 { color:#087054 !important; }
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel .text-violet-700 { color:#6136ab !important; }
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel .text-amber-700 { color:#995600 !important; }
+/* Forms and action buttons stay usable while the panel itself is translucent. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel :is(input:not([type="checkbox"]),select,textarea) {
+  background:rgba(255,255,255,.76) !important;
+  border:1px solid rgba(106,151,160,.68) !important;
+  color:#14374a !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8) !important;
+  backdrop-filter:blur(5px) !important;
+  -webkit-backdrop-filter:blur(5px) !important;
+}
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel :is(input,textarea)::placeholder {
+  color:#527084 !important;
+}
+/* Secondary controls and nested areas use weaker glass so there aren't
+   opaque white rectangles floating inside the primary card. */
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface .finance-panel :is(div,form,section)[class*="rounded-"]:not(.finance-chart-popover):not(.finance-hero-badge):not(.finance-chart-plot) {
+  background-color:rgba(255,255,255,.10);
+}
+/* Border/glass for major audit-gate notice cards; maintain colored alerts
+   for schema-not-installed and Production-protection warnings. */
+body.site-glass-root main .finance-ops-surface .finance-glass-gate {
+  border:1px solid rgba(255,255,255,.94) !important;
+  background:var(--finance-glass-face) !important;
+  box-shadow:var(--finance-glass-depth) !important;
+  backdrop-filter:blur(24px) saturate(145%) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%) !important;
+  color:#294353 !important;
+}
+/* The header itself remains deep teal; only the secondary cards match
+   the white pearl header. Dark mode uses translucent graphite instead. */
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background:linear-gradient(135deg,rgba(33,54,70,.88),rgba(15,32,43,.86)) !important;
+  background-color:rgba(14,31,43,.55) !important;
+  border:1px solid rgba(190,236,236,.19) !important;
+  box-shadow:0 16px 36px rgba(0,0,0,.22),inset 0 1px 0 rgba(225,255,255,.12),inset -1px -1px 0 rgba(71,219,220,.12) !important;
+  backdrop-filter:blur(24px) saturate(135%) !important;
+  -webkit-backdrop-filter:blur(24px) saturate(135%) !important;
+  border-radius:22px !important;
+  color:#e8f4f5 !important;
+  overflow:hidden;
+  isolation:isolate;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel::after {
+  content:"";position:absolute;inset:0;pointer-events:none;
+  border-radius:inherit;z-index:0;
+  border:1px solid rgba(255,255,255,.06);
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel :is(p,span)[class*="text-slate-"] {color:#b9d0dd !important;}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-panel :is(input:not([type="checkbox"]),select,textarea) {
+  background:rgba(12,29,39,.68) !important;
+  color:#f0fcff !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-glass-gate {
+  background:linear-gradient(135deg,rgba(32,53,67,.86),rgba(14,30,43,.86)) !important;
+  border-color:rgba(203,243,238,.19) !important;
+  color:#d1e3ed !important;
+}
+@media (max-width: 767px) {
+  body.site-glass-root main .finance-ops-surface .finance-panel {
+    backdrop-filter:blur(12px) saturate(120%) !important;
+    -webkit-backdrop-filter:blur(12px) saturate(120%) !important;
+  }
+}
+
+
+/* Semantic hero controls also need a theme-agnostic fallback. When ThemeToggle
+   leaves html[data-theme] unset, the older attribute-based selector wins and
+   turns the badges transparent; use a more specific route-owned token. */
+body.site-glass-root main .finance-ops-surface .finance-ops-hero > div .finance-hero-badge[class*="rounded-full"] {
+  display:inline-flex !important;align-items:center !important;justify-content:center !important;
+  min-height:32px !important;
+  color:#063f43 !important;
+  background:#c3f7ef !important;
+  border:1px solid #74e3d7 !important;
+  border-radius:999px !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero > div .finance-month-selector[class*="rounded-"] {
+  color:#ffffff !important;
+  background:rgba(1,41,52,.90) !important;
+  border:1px solid rgba(208,253,245,.7) !important;
+  text-align:center !important;
+  box-shadow:none !important;
+}
+
+
+/* Desktop material parity: header and reporting cards must use identical
+   blur strength, not the older 12px low-cost inner-card fallback. */
+@media (min-width: 768px) {
+  body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+    backdrop-filter:blur(24px) !important;
+    -webkit-backdrop-filter:blur(24px) !important;
+  }
+}
+
+
+/* HEADER-TO-DASHBOARD PARITY (user-approved): all TOP-LEVEL Finance / Treasury /
+   Procurement hero and report surfaces are the same pearl glass as Super
+   Admin's app-shell-header-bar. Dark teal is an accent for actions, not the
+   opaque background of the hero. Scoped: customer pages are untouched. */
+body.site-glass-root main .finance-ops-surface :is(section,header).finance-ops-hero[class*="rounded-"]:not(.card):not(.table-wrap),
+html[data-theme="light"] body.site-glass-root main .finance-ops-surface :is(section,header).finance-ops-hero[class*="rounded-"]:not(.card):not(.table-wrap) {
+  position:relative !important;
+  background:var(--finance-glass-face) !important;
+  background-color:rgba(255,255,255,.12) !important;
+  border:1px solid var(--finance-glass-rim) !important;
+  border-radius:20px !important;
+  box-shadow:var(--finance-glass-depth) !important;
+  backdrop-filter:blur(24px) !important;
+  -webkit-backdrop-filter:blur(24px) !important;
+  color:#123044 !important;
+  min-height:0 !important;
+}
+body.site-glass-root main .finance-ops-surface :is(div,section,article,form).finance-panel[class*="rounded-"]:not(.card):not(.table-wrap) {
+  border-radius:20px !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-glass-gate {
+  border-radius:20px !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(h1,h2,h3,strong,b),
+body.site-glass-root main .finance-ops-surface .finance-ops-hero div :is(h1,h2,h3,strong,b) {
+  color:#123044 !important;
+  text-shadow:none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(p,div p),
+body.site-glass-root main .finance-ops-surface .finance-ops-hero p:first-child {
+  color:#426075 !important;
+  text-shadow:none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero p[class*="uppercase"] {
+  color:#0b7774 !important;
+  font-weight:800 !important;
+  text-shadow:none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-hero-badge {
+  color:#07414a !important;
+  background:#c3f7ef !important;
+  border:1px solid #74e3d7 !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(.finance-hero-actions,.finance-hero-bottom) > a {
+  color:#ffffff !important;
+  background:#0a6d70 !important;
+  border:1px solid #056e71 !important;
+  text-shadow:none !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(.finance-hero-actions,.finance-hero-bottom) > a:hover {
+  color:#ffffff !important;
+  background:#075458 !important;
+  border-color:#086e71 !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-ops-hero .finance-month-selector {
+  color:#ffffff !important;
+  background:#103d4a !important;
+  border:1px solid #0a6171 !important;
+}
+/* The product/brand hero and all sections share one glass face but semantic
+   notices retain amber/teal edge labels, never broad solid warning blocks. */
+body.site-glass-root main .finance-ops-surface .finance-gate-notice[class*="rounded-"] {
+  background:var(--finance-glass-face) !important;
+  border:1px solid var(--finance-glass-rim) !important;
+  border-left:4px solid #ce8a22 !important;
+  box-shadow:var(--finance-glass-depth) !important;
+  backdrop-filter:blur(24px) !important;
+  -webkit-backdrop-filter:blur(24px) !important;
+  color:#8b440e !important;
+}
+body.site-glass-root main .finance-ops-surface .finance-protection-notice[class*="rounded-"] {
+  background:var(--finance-glass-face) !important;
+  border:1px solid var(--finance-glass-rim) !important;
+  border-left:4px solid #0b9696 !important;
+  box-shadow:var(--finance-glass-depth) !important;
+  backdrop-filter:blur(24px) !important;
+  -webkit-backdrop-filter:blur(24px) !important;
+  color:#29495a !important;
+}
+/* Dark mode: hero and panels match the dark shell's frosted material.
+   We preserve semantic contrast and don't force white-on-pearl. */
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface :is(section,header).finance-ops-hero[class*="rounded-"]:not(.card):not(.table-wrap) {
+  background:linear-gradient(135deg,rgba(33,54,70,.88),rgba(15,32,43,.86)) !important;
+  background-color:rgba(14,31,43,.55) !important;
+  border-color:rgba(190,236,236,.19) !important;
+  box-shadow:0 16px 36px rgba(0,0,0,.22),inset 0 1px 0 rgba(225,255,255,.12),inset -1px -1px 0 rgba(71,219,220,.12) !important;
+  color:#f4ffff !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero :is(h1,h2,h3,strong,b) {
+  color:#f4ffff !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero p {
+  color:#bedce0 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-ops-hero p[class*="uppercase"] {
+  color:#9ff3e9 !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-gate-notice[class*="rounded-"] {
+  background:linear-gradient(135deg,rgba(32,53,67,.86),rgba(14,30,43,.86)) !important;
+  border-color:#344f5e !important;
+  border-left-color:#dbaa52 !important;
+  color:#ffdeae !important;
+}
+html[data-theme="dark"] body.site-glass-root main .finance-ops-surface .finance-protection-notice[class*="rounded-"] {
+  background:linear-gradient(135deg,rgba(32,53,67,.86),rgba(14,30,43,.86)) !important;
+  border-color:#344f5e !important;
+  border-left-color:#30bdb6 !important;
+  color:#ccebe7 !important;
+}
+
+
+/* Final glass-material cascade fix: historical site-wide hero selectors with
+   html[data-theme] and !important previously kept backdrop-filter: none.
+   Repeat the finance surface + hero classes to ensure exact header blur wins
+   in light, dark, and system theme without affecting other site routes. */
+html body.site-glass-root main .finance-ops-surface.finance-ops-surface > section.finance-ops-hero.finance-ops-hero,
+html body.site-glass-root main .finance-ops-surface.finance-ops-surface > header.finance-ops-hero.finance-ops-hero {
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+}

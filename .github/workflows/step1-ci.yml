@@ -2,7 +2,7 @@ name: Step 1 CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/finance-treasury-integrated-20261009]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -54,6 +54,8 @@ jobs:
         run: supabase start
       - name: Apply migrations from zero
         run: supabase db reset
+      - name: Finance and Treasury synthetic pgTAP UAT
+        run: supabase test db
       - name: Synthetic supply handover E2E
         env:
           PGPASSWORD: postgres
