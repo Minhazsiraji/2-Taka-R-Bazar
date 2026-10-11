@@ -73,7 +73,7 @@ const fingerprint="select md5(string_agg(row_hash,'' order by row_hash)) from ("
 const before=sql(fingerprint)
 const restoreName='issue57-isolated-restore'
 try{
- execFileSync('docker',['run','-d','--name',restoreName,'-e','POSTGRES_PASSWORD=postgres','-v','/tmp/issue57-restore:/restore:ro',image],{encoding:'utf8',stdio:'pipe'})
+ execFileSync('docker',['run','-d','--network','none','--name',restoreName,'-e','POSTGRES_PASSWORD=postgres','-v','/tmp/issue57-restore:/restore:ro',image],{encoding:'utf8',stdio:'pipe'})
  let ready=false
  for(let i=0;i<45;i++){
   try{execFileSync('docker',['exec',restoreName,'pg_isready','-h','127.0.0.1','-U','postgres'],{stdio:'pipe'});ready=true;break}catch{}

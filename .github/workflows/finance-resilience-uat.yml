@@ -23,7 +23,10 @@ jobs:
       - name: Start disposable local Supabase
         run: supabase start
       - name: Apply candidate schema from zero
-        run: supabase db reset
+        run: |
+          supabase db reset
+          # Disposable fixtures must never execute the operational hosted push schedules.
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "update cron.job set active=false;"
       - name: Concurrent financial writes and independent restore
         env:
           ISSUE57_DISPOSABLE_DB: 'true'

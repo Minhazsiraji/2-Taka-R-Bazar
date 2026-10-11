@@ -26,7 +26,10 @@ jobs:
       - name: Start disposable local Supabase (NOT a hosted project)
         run: supabase start
       - name: Apply all current migrations from scratch
-        run: supabase db reset
+        run: |
+          supabase db reset
+          # Disposable fixtures must never execute the operational hosted push schedules.
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "update cron.job set active=false;"
       - name: Install project and pinned UAT-only browser tooling
         run: |
           npm ci --no-audit --no-fund
