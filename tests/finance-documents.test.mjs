@@ -55,6 +55,7 @@ test('download produces a real PDF, not HTML, with accurate figures',async()=>{
 
 test('PDF resets high-contrast ink after every filled shape',()=>{
  const src=readFileSync('lib/finance/printable-pdf.ts','utf8')
- assert.match(src,/const draw=[\\s\\S]*?lines\\.push\\('0\\.1 0\\.22 0\\.27 rg'\\)/)
- assert.match(src,/0\\.87 0\\.93 0\\.92 rg 45 545 505 35 re f/)
+ const drawBlock=src.slice(src.indexOf('const draw='),src.indexOf("draw(45,783"))
+ assert.ok(drawBlock.includes("lines.push('0.1 0.22 0.27 rg')"),'Each text draw must reset to dark ink')
+ assert.ok(src.includes('0.87 0.93 0.92 rg 45 545 505 35 re f'),'Table uses pale fill')
 })
