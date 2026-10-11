@@ -61,16 +61,16 @@ test('pearl glass styles retained and location controls adapt to mobile',()=>{
  assert.match(css,/@media\(max-width:790px\)/)
 });
 
-test('compact hero and featured product use a responsive two-column layout with small type',()=>{
+test('flat editorial hero and Pool selector use a responsive balanced layout',()=>{
  assert.match(catalog,/market-hero-main-title/)
- assert.match(catalog,/market-featured-content/)
- assert.match(catalog,/market-featured-image/)
- assert.match(catalog,/market-featured-details/)
- assert.match(catalog,/market-featured-button/)
- assert.match(css,/\.market-hero-copy \.market-hero-main-title\{/)
- assert.match(css,/\.market-featured-content\{/)
- assert.match(css,/font-size:clamp\(1\.85rem,2\.65vw,2\.65rem\)/)
- assert.match(css,/grid-template-columns:105px minmax\(0,1fr\)/)
+ assert.match(catalog,/market-hero-copy market-hero-flat/)
+ assert.match(catalog,/market-hero-product market-hero-pool-shell/)
+ assert.match(catalog,/<FeaturedPoolShowcase pools=\{heroPools\}/)
+ assert.match(css,/\.market-hero-grid\.market-hero-editorial\{/)
+ assert.match(css,/\.market-hero-copy\.market-hero-flat\{/)
+ assert.match(css,/\.market-featured-pool-body\{/)
+ assert.match(css,/grid-template-columns:1fr!important/)
+ assert.match(css,/market-location-panel/)
 })
 test('product cards adapt to compact one-row-per-product mobile view',()=>{
  for(const cls of ['market-product-image','market-product-title','market-product-prices','market-product-actions']){
