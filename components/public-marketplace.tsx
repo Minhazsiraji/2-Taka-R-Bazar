@@ -5,7 +5,7 @@ import Link from 'next/link'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {chooseAreaByLocation,formatPrice} from '@/lib/storefront'
 
-export function PublicMarketplace({areas,offers,authenticated=false}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean}){
+export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string}){
  const [area,setArea]=useState('')
  const [search,setSearch]=useState('')
  const [gpsBusy,setGpsBusy]=useState(false)
@@ -98,7 +98,7 @@ export function PublicMarketplace({areas,offers,authenticated=false}:{areas:Stor
    })}</div>}
   </section>
   <section id="how-it-works" className="mx-auto mb-10 max-w-6xl rounded-[28px] border border-black/10 bg-white p-6 sm:p-8">
-   <h2 className="text-2xl font-black">How it works</h2>
+   <h2 className="text-2xl font-black">How it works</h2>{howLabelBn&&<p className="mt-1 text-xs text-slate-500" lang="bn">{howLabelBn}</p>}
    <div className="mt-5 grid gap-4 text-sm leading-6 md:grid-cols-3">
     <p><b>1. Browse for free.</b> Explore products and compare active deals without signing in.</p>
     <p><b>2. Choose an area and buying mode.</b> Select manually or allow one-time browser location. Prices are always clearly labelled.</p>
