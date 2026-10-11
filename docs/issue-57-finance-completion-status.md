@@ -1,84 +1,94 @@
-# Issue #57 — Finance completion qualification
+# Issue #57 — integrated finance candidate and release gates
 
 Date: 11 October 2026. Branch: `feat/finance-complete-release-uat-20261011`.
 Tracking: https://github.com/Minhazsiraji/2-Taka-R-Bazar/issues/57
 Draft PR: https://github.com/Minhazsiraji/2-Taka-R-Bazar/pull/58
 
-**Decision: BLOCKED. This is a qualification checkpoint, not a completed integrated finance implementation or a Production release.** All eight work packages remain open until their remaining requirements are implemented and tested. No main merge, Production alias change, hosted schema migration, financial-write enablement, real payment or customer-order mutation was performed in this lane.
+**Production decision: HOLD. Merge is authorized only after every mandatory gate passes.** This document supersedes the earlier 194-application / 141-SQL checkpoint. Implementation has advanced across all eight packages; hosted qualification and release preparation must still be completed. No application-test count alone qualifies the release.
 
-## Changes in this candidate
+## Candidate implementation
 
-- Added the completion branch to application/database and browser workflow triggers. Browser qualification also runs for its draft pull request.
-- Prepared a read-only reporting migration: monthly operating expense trends include posted physical Treasury expense settlements, matching the central Finance report. The old trend returned zero for a Treasury-paid expense while the central report returned the correct amount.
-- Updated three legacy settlement suites to use an actual Treasury account and independent reviewer; explicitly retained a test rejecting the generic settlement route once physical Treasury exists.
-- Made shared-database cash assertions compare exact fixture movements against captured starting balances. Existing dummy accounts are not erased to manufacture an empty baseline.
-- Made cash-bridge opening checks reconcile to an independent physical-account ledger query and retained empty-community and uncertified-profit assertions.
-- Added disposable local Supabase configuration, with no hosted project credentials. Synthetic fixtures use independent accounts and do not request SMS OTP.
-
-## Verified results
-
-| Check | Result | Scope and evidence |
+| Package | Implemented behavior | Qualification still required |
 | --- | --- | --- |
-| Application suite | PASS: 194/194 | `npm test`; no skipped tests |
-| Typecheck | PASS | `npm run typecheck` |
-| Lint | PASS with warnings | Existing accessibility/react warnings; no lint errors |
-| Next production build | PASS | Placeholder database configuration; no hosted database access |
-| Production dependency audit | PASS | `npm audit --omit=dev --audit-level=high`: zero vulnerabilities |
-| Finance foundation SQL | PASS: 16/16 | Independent approval, expense posting, Treasury settlement, generic-route rejection |
-| Finance negative SQL | PASS: 38/38 | Unauthorized customer, duplicate invoice/hash/reference, failed approvals, immutability and retries |
-| Category/period-lock SQL | PASS: 20/20 | Seven expense categories, BDT 3,108 accrual, BDT 111 settlement, corrected trend, period lock |
-| Treasury SQL | PASS: 53/53 | Transfer, capital, loans/principal/interest/fees, card liability, liquidity, statement matching and duplicates |
-| Profit/cash-bridge SQL | PASS: 14/14 | Restricted diagnostics, independent cash reconciliation, no invented certification or tax rate |
-| Hosted SQL total | PASS: 141/141 | Five suites on the authorized shared dummy DB; every transaction ends ROLLBACK |
-| Initial branch CI | PASS | Commit `7c6f22a250854ac21527a00ce520e0ac88c3fb82`; Actions run `38119251464`, application job and disposable migration/supply E2E job all passed |
-| Public browser smoke | PASS, limited | Homepage and FAQ at `https://2takarbazar.com/faq`; free pickup and BDT 20/30 optional delivery visible. Unauthenticated Finance navigation also redirects to mobile sign-in; no OTP was requested. This does not establish authenticated ordering or finance UAT |
-| Hosted supply E2E through MCP | UNVERIFIED | API returned `Invalid or expired requestState`; do not count this attempt as a pass. Separate disposable supply E2E passed in the initial CI run |
-| Hosted authorized finance browser UAT | BLOCKED | No authenticated maker/checker browser session or verified accessible candidate deployment |
+| Documents | Immutable original attachments and SHA-256 verification; authenticated original download, printable registers and direct PDF; separate maker/checker void/archive events retain original files and accounting; duplicate detection; manual original invoice, receipt, statement and credit-note uploads | Hosted original-byte, lifecycle and failure-path UAT; approved original-file retention and recovery evidence |
+| Maker-checker | Separate authenticated maker/checker roles; self-review rejection; time-limited operator-issued leases, revocation and fixture-only parent restrictions; Preview-only reviewer password sign-in without phone numbers or SMS | Supervised hosted sign-in and reviewer lifecycle on the exact Preview; leases only for temporary identities |
+| Procurement | Selected quote/PO price locks, independent accepted-goods matching, immutable invoice posting, partial payment reservations, supplier inventory returns/credit notes, partial recovery of credits from already-paid invoices, original evidence links | Hosted supplier/payment/credit scenario and original statement reconciliation |
+| Customer lifecycle | Actual fulfilled source snapshots for Pools, Group Deals and Direct Products; exact source-line invoice-lot allocation; separate product revenue, delivery fees and actual delivery cost; AR, COD custody allocation, collections, partial credits, physical restock and refund payable/cash; unearned deposits, cancellation refunds and prepaid fulfilment | Hosted all-model walkthrough and source-to-ledger reconciliation; legacy fulfilled Group Deals with missing snapshots remain explicit blockers |
+| Expenses/marketing | Existing categories and accruals; exact amount-to-source allocation by cost center/community/pool/product/staff; independent campaign-budget approval and reserved spend; commission staff validation; real QR campaign conversion reporting | Hosted attribution, budget and approval UAT; external campaign effectiveness is not inferred from spend |
+| Treasury | Physical bank/cash movements, capital, loans/principal/interest/fees, cards and restricted balances; supplier/customer cash and original statement evidence; exact statement matching; unallocated COD/deposits; existing explicitly provisional forecasts | Hosted bank/cash reconciliation and source completeness review; no automatic bank transfer or gateway settlement |
+| Reporting/close | Posted-ledger product revenue, fees, COGS and expense reconciliation; company/model/community/pool/product reports; cash bridge, source AP/AR/refunds/supplier receivables, stock valuation and trial balance; allocation/bank/source blockers; independent ended-period close with ledger fingerprint and month lock; paginated immutable audit export | Hosted close and audit export; tax/VAT policy and external statement/physical cash signoff remain separate obligations |
+| Security/resilience/release | Database default-deny financial triggers, fixed definer search paths, RLS and explicit grants; fixture-only scopes, cross-role/storage attacks and lease revocation; actual concurrent cash/AP/return/close sessions; isolated PostgreSQL and original-byte restore harnesses | All current-SHA CI jobs, hosted security UAT, verified live backup/restore plan, rollback deployment and final release decision |
 
-Raw assertion results are recorded in `docs/uat/issue-57-sql-results.json`. Every suite also forces deferred per-journal constraints with `SET CONSTRAINTS ALL IMMEDIATE` before rollback; all passed.
+The database gate does not trust application flags or caller-editable JWT metadata. API callers need an active operator-issued lease, and linked financial parents/source registrations must be synthetic. Existing customer ordering and fulfilment tables are not globally write-locked. Production financial Server Actions remain fail-closed outside an explicitly approved Preview.
 
-SQL tests that exercised the candidate reporting function applied its definition **inside their rolled-back transaction**. The reporting migration was not installed on the shared hosted database. Final CI must be assessed at the candidate SHA; initial CI results must not be attributed to later commits.
+## Verification evidence
 
-## Accounting validation
+Evidence must identify the exact commit. Do not attribute a previous run to a later head.
 
-- Shared baseline and post-test checks: two existing journals, zero unbalanced journals, zero retained suite fixture users.
-- Synthetic openings, expense accruals and settlements balance debit and credit exactly.
-- Internal bank transfers preserve company-wide cash and do not become revenue or expense.
-- Owner capital/drawings, loan principal and card repayments remain financing/equity/liability movements. Financing interest and fees are separate.
-- Supplier goods and COD suspense remain distinct from earned revenue and actual COGS. Synthetic statement matching proves internal matching behavior, not external bank authenticity.
-- Revenue, inventory-lot cost, refunds, tax, overhead allocation and final company net profit are **not certified** by these tests.
+Implementation candidate: `e40aece3132378f0a67d6bd551132e24bd975978`. All three workflows completed successfully at this exact SHA:
 
-## Security findings
-
-Read-only catalog checks on the shared project found zero finance/procurement/treasury tables without RLS, zero direct INSERT/UPDATE/DELETE grants for anon/authenticated on those tables, zero anonymous finance RPC execute grants, and zero public finance SECURITY DEFINER functions without a fixed empty search path.
-
-Supabase advisors returned 33 RLS-without-policy informational findings (including RPC-only tables), two anonymous SECURITY DEFINER warnings for public QR functions, 128 authenticated SECURITY DEFINER warnings across the application, and a leaked-password-protection warning. These are review findings, not proof that every function is exploitable. Individual RPC authorization, storage access and cross-role browser verification are still required; do not replace deny-by-default tables with permissive policies simply to remove informational findings. Password-protection configuration requires assessment against the mobile OTP design.
-
-Production application financial actions still fail closed outside an approved Preview. Public mutating finance RPCs are executable by authenticated users and enforce staff/reviewer roles, but the inspected functions do not share the Server Action Preview environment restriction. A suitably authorized role could call these RPCs directly. Add and qualify a database-level financial release gate or scoped UAT authorization before financial Production signoff; the application environment guard alone is not a complete database-write release gate.
-
-Automatic approval review rejected the local Supabase initialization invocation because it attempted unsolicited telemetry to PostHog. No retry or indirect workaround for that rejected command was performed. Connected SQL verification and already configured repository CI were used for unaffected work.
-
-## Work-package blockers and resolution
-
-| Issue #57 package | Evidence / remaining gap | Required resolution |
+| Check | Result | GitHub evidence |
 | --- | --- | --- |
-| Evidence/documents | Existing printable PDF and attachments cover a foundation; authenticated original-byte/hash UAT, void/archive, retention and source-linked credit-note lifecycle are not qualified | Implement reasoned immutable void/archive and credit-note/document lifecycle; test upload failure, original bytes, cross-user access and audit history |
-| Maker-checker | SQL role checks pass; hosted browser reviewer lifecycle and two genuine sessions are unverified | Establish two temporary authorized test identities with expiry/revocation; verify sessions and independent browser approvals without unnecessary SMS |
-| Procurement | `treasury_one_supplier_bill_payment` permits one active full-bill settlement; supplier returns/credits and independent vendor statement lifecycle remain absent | Implement partial allocation with bill/account locks and overpayment prevention, credit notes/returns and statement reconciliation; run race and retry tests |
-| Customer lifecycle | Profit source deliberately reports unposted/uncertified sales; invoice-average cost is not an allocated inventory cost layer | Implement actual fulfilment-linked revenue/COGS, inventory valuation and return/refund events for Pools, Group Deals and own-brand/direct products; reconcile COD and earned delivery separately |
-| Expenses/marketing | Categories and accruals pass; campaign codes alone do not provide a complete budget/allocation model | Add validated campaign/cost-center attribution, budgets, commissions and exact sum-to-source allocations; validate against completed-buyer attribution |
-| Treasury | Core treasury assertions pass; forecasts/manual statements do not provide verified external source evidence | Add supported bank/provider provenance, unallocated-cash handling and operational forecast source links; retain provisional bank/cash-flow labels |
-| Reporting/close | Trend bug fixed in candidate; final net profit, allocation completeness, controlled close and audit exports remain unqualified | Complete source event reconciliation, AP/AR/stock/close controls and authorized exports, then compare independent ledger totals by all required dimensions |
-| Security/release | Full role browser, concurrency, backup/restore and retention qualification remains missing | Execute authenticated cross-user/storage attacks, concurrent posting/race suites, tested restore and retention procedures; record signoff at the final commit |
+| Application tests | 203 passed; zero failures | Step 1 CI run 38154072208, job 114513298427 |
+| Security/build/static checks | Production dependency audit: zero vulnerabilities; typecheck, lint and production build passed (lint warnings remain) | Same verify job |
+| From-zero migrations and SQL | 10 pgTAP suites, 199 assertions passed | Job 114513298329 |
+| Integrated SQL lifecycle | Supply handover; Finance/Treasury/Procurement/COD; all buying-model revenue/COGS/credits/refunds; source report reconciliation; supplier partial credit recovery; customer advances/fulfilment/cancellation refunds passed | Same migrations job |
+| Independent browser UAT | 27 stages; desktop/tablet/mobile 1440/768/360; normal password form sign-in without SMS; separate maker/checker; forged original rejected before posting; lifecycle, collections/refunds, budget, close, cross-role/RPC/storage attacks and revoked lease passed | Run 38154072210, job 114513298391 |
+| Real concurrent sessions | Cash spend, replay, supplier AP reservation, remaining-unit return and period-close/posting: five passed | Run 38154072220, job 114513298222 |
+| Full isolated database restore | Exact financial/audit/document/Auth fingerprint; RLS and financial grants retained; fresh isolated PostgreSQL server without network passed | Same resilience job |
+| Original-file recovery | Exact byte/hash restoration and private/unauthorized access checks passed | Browser job 114513298391 |
 
-## Environment blockers
+Earlier restore harness and browser assertion failures were fixed and rerun; they are not counted as passes. Disposable database restore covers database metadata. Original file bytes are separately restored in the storage check. These are synthetic isolated tests, not hosted backup certification or a hosted finance walkthrough. This report-only commit must be independently checked by CI before it can supersede the implementation SHA above.
 
-The Vercel connector lists four projects in team `team_t9Rz1iIa8Pyb5bZJqUIIoY2x`, none named 2TBR. Direct lookup of `2-taka-r-bazar` and the deployment referenced by GitHub status both returned HTTP 404. GitHub reported a successful Vercel status with inspector URL `https://vercel.com/minhazs-projects-d28f7aed/2-taka-r-bazar/DnN29g8p4fMS6L6ZM5iQRbSRAyN1`, but this does not provide a verified candidate deployment hostname, SHA binding or environment configuration.
+## Independent accounting validation
 
-Resolution: restore connector access to the existing 2TBR Vercel project and inspect the exact candidate deployment and branch-scoped Preview environment. Do not create a replacement project, change Production credentials or broaden financial permissions to work around the access gap. No preview URL is claimed until it is retrieved and verified.
+The disposable fixture checks exact source-derived values rather than changing cost or price to obtain a target profit. After all three buying models, supplier returns, collections, COD allocations and customer credits/refunds:
 
-## Release and rollback preparation
+| Measure | Exact synthetic BDT |
+| --- | ---: |
+| Product revenue after credits | 1,970 |
+| Earned delivery fees | 50 |
+| Inventory COGS after returned stock | 1,900 |
+| Actual delivery expenses | 27 |
+| Profit before tax | 93 |
+| Remaining inventory | 8,750 |
+| Supplier/delivery expense payable | 4,027 |
+| Customer AR / customer refund payable | 0 / 0 |
+| Unallocated COD custody | 40 |
+| Supplier return receivable before recovery | 950 |
+| Supplier return receivable after 400 + 550 actual recovery | 0 |
+| Physical bank after supplier credit recovery | 93,380 |
+| Physical cash | 2,030 |
 
-Keep PR #58 draft and Issue #57 open. Complete the blockers above, qualify one exact candidate SHA with all required automation and hosted browser tests, attach evidence and deployment URL, verify backups, then stage one bulk release. Production financial-write enablement requires the separate financial release signoff.
+Customer advances, cancelled orders/Group Deals and a prepaid sale followed by a full return/refund end with the same bank and profit totals. Deposits remain liability 2200 until applied or refunded; supplier recovery reduces receivable 1300. Neither becomes additional revenue. Internal transfers and loan principal remain outside profit. Deferred journal balance constraints are explicitly forced before transaction completion.
 
-Current rollback is trivial: no Production change has been made. Reject or revert the candidate commits on this feature branch; no hosted data rollback is needed because fixtures and candidate SQL changes were transactionally rolled back. Any later deployment must document a verified previous Production deployment and a backward-compatible migration rollback plan before promotion.
+Reports retain `profit_after_tax = null`: no tax rate, VAT amount or certified statutory net profit is invented. A close request rejects missing source posting, incomplete expense allocation, mismatched inventory/AP, pending financial approvals or unmatched bank evidence. Closing does not execute real payments.
+
+## Hosted state and remaining blockers
+
+Read-only check on `sukabonfjcnaavjgjyuy` found **two existing journals**, no installed `private.finance_uat_leases`, and no installed `finance_customer_events`. Therefore the candidate database security gate is implemented/tested in the branch, **not yet installed on the shared hosted database**. Existing role-protected RPCs there still lack this new common database gate. Do not claim the live system is protected by uninstalled code.
+
+The existing Vercel project is accessible: `prj_lADdm8GGkXmEYiowqbo4QnAzlwtC`, `2-taka-r-bazar`. Omitting optional team selectors resolves the erroneous connector 404. No replacement project was created. Verified implementation candidate `e40aece3132378f0a67d6bd551132e24bd975978` has READY deployment `dpl_DLEKGW9ZVZSw7h2yXoaC8NtfjMUP` at https://2-taka-r-bazar-64phfy41f-minhazs-projects-d28f7aed.vercel.app. Its homepage loads in the browser; this is not authenticated hosted finance UAT. Production rollback evidence is READY deployment `dpl_iYF4sHWTzfsKvNyvB7DigA1gP2BS`, main SHA `e74b798b60c4fa779876998ad96ccac5c300d20a`, target Production and marked rollback candidate. No alias or Production environment was changed.
+
+The Supabase dashboard backup task requires an authenticated browser session because the connected database plugin exposes neither managed backup inventory nor Auth identity administration. Secure sign-in was attempted with the user-selected ChatGPT then Google method. The Google provider returned `502 Bad Gateway / Connection refused`; a fresh canonical backup-page check still redirected to Supabase sign-in. No password, session cookie or alternate identity was fabricated. Resolution: complete secure dashboard authentication, then verify hosted backups and supported temporary-reviewer provisioning.
+
+| Blocker | Evidence | Resolution |
+| --- | --- | --- |
+| Final report commit qualification | All implementation-SHA checks passed; this documentation commit requires its own runs | Record exact final head and completed CI/deployment evidence |
+| Hosted candidate schema/gate | Candidate objects absent; live two-journal baseline retained | Verify recoverable hosted backup, apply the reviewed candidate schema atomically for authorized UAT, verify baseline/customer operations and default-deny gate |
+| Hosted independent identities | Ordinary application sign-in requires mobile OTP; no usable maker/checker sessions established | Use the new scoped Preview reviewer form with two operator-issued temporary accounts and expiring leases; secure credential handling, no unnecessary phones/SMS |
+| Hosted Preview settings | Candidate financial writes/sign-in require explicit approved branch settings | Set only the finance branch Preview flags after schema and role/fixture restrictions pass; leave Production and the other active storefront branch unchanged |
+| Live recovery/release evidence | Dashboard remains signed out after selected provider connection failure; disposable restore does not establish shared hosted DB or original recovery | Verify actual hosted backup availability, recovery procedure and previous Production deployment before release |
+| Final release | Hosted mandatory UAT/signoff incomplete | Keep PR draft and Production financial writes locked; qualify then merge once as authorized |
+
+## Security findings and limitations
+
+The earlier hosted catalog checks found RLS on every finance/procurement/treasury table, no direct anon/authenticated financial DML grants, no anonymous financial RPC grants, and fixed empty search paths on public financial definer functions. Advisors also reported RPC-only RLS-without-policy notices, public QR definer warnings, application-wide authenticated definer notices and leaked-password-protection configuration. These require scoped assessment, not blanket permissive policies or a claim that all notices are exploits.
+
+Original-byte checks detect alteration relative to the captured upload hash. Manual bank/provider files and internal printable documents do not prove independent external bank authenticity. Forecast completeness remains explicit and provisional; unknown maturity/source dates are not fabricated. Legacy source records are not silently backfilled with inferred fulfilment price/date or cost.
+
+Original attachments, posted journals, inventory movements, customer source snapshots and financial audit history are retained. Voiding/archiving changes document lifecycle only and never deletes source evidence or reverses money; use independently reviewed credit/refund events for accounting corrections. Revoke temporary leases/sessions after UAT; preserve identities referenced by audit and finance rows. Do not delete old hosted audit records or fixtures to manufacture clean totals.
+
+Automatic approval review rejected a protected Vercel share-link request because it could expose the Preview to an unspecified audience. No bypass link was created or used; direct access to the verified candidate subsequently worked. Earlier local Supabase initialization was rejected for unsolicited telemetry and was not retried through an indirect workaround. Repository CI uses the already configured disposable database workflow.
+
+See `docs/issue-57-finance-release-runbook.md` for the remaining bulk-release sequence. This candidate has not merged, changed a Production alias, enabled Production financial writes, executed a real bank payment or mutated a real customer order.
