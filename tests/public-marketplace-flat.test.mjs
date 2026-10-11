@@ -10,7 +10,7 @@ const info=read('components/public-marketplace-lower.tsx')
 const css=read('app/marketplace-flat.css')
 test('public homepage uses full-width header and footer, with navigation in header',()=>{
  assert.match(home,/public-marketplace-flat/)
- assert.match(home,/actionLabel=\{authenticated\?'My dashboard':'Sign in'\} storefront/)
+ assert.match(catalog,/actionLabel=\{authenticated\?'My dashboard':'Sign in'\}/)
  assert.match(home,/<PublicFooter storefront\/>/)
  assert.match(header,/market-header-nav/)
  assert.match(header,/href:'#deals'/)

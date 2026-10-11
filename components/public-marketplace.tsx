@@ -1,10 +1,11 @@
 'use client'
 
-import {useMemo,useState} from 'react'
+import {useMemo,useState,useRef,useCallback,useEffect} from 'react'
 import Link from 'next/link'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
-import {chooseAreaByLocation,formatPrice} from '@/lib/storefront'
+import {chooseAreaByLocation,distanceMeters,formatPrice} from '@/lib/storefront'
 import {PublicMarketplaceLower} from '@/components/public-marketplace-lower'
+import {PublicHeader} from '@/components/public-header'
 import {FeaturedProductsCarousel} from '@/components/featured-products-carousel'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
@@ -13,6 +14,10 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
  const [search,setSearch]=useState('')
  const [gpsBusy,setGpsBusy]=useState(false)
  const [gpsMessage,setGpsMessage]=useState('')
+ const [locationState,setLocationState]=useState<'pending'|'matched'|'nearby'|'denied'|'unavailable'|'failed'|'manual'>('pending')
+ const [nearestAreas,setNearestAreas]=useState<Array<{id:string;meters:number}>>([])
+ const manualSelected=useRef(false)
+ const initialLocationRequested=useRef(false)
  const [mode,setMode]=useState<'all'|'group'|'pool'>('all')
  const [category,setCategory]=useState('all')
  const activeArea=areas.find(a=>a.community_id===area)
@@ -26,31 +31,83 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
  const spotlight=filtered.find(x=>x.offer_kind==='GROUP_DEAL')??filtered[0]
  const groupHref=authenticated?'/group-deals':'/login?next=%2Fgroup-deals'
  const poolHref=authenticated?'/pool':'/login?next=%2Fpool'
- function useLocation(){
-  if(!('geolocation' in navigator)){setGpsMessage('Location unavailable. Please select your area.');return}
+ const useLocation=useCallback(()=>{
+  if(!('geolocation' in navigator)){
+   setLocationState('unavailable')
+   setGpsMessage('Location is unavailable in this browser. Please choose your community manually.')
+   return
+  }
   setGpsBusy(true)
-  setGpsMessage('Checking your approximate area in this browser…')
-  navigator.geolocation.getCurrentPosition(p=>{
-    const match=chooseAreaByLocation(areas,p.coords.latitude,p.coords.longitude,p.coords.accuracy)
-    setGpsBusy(false)
-    if(match){setArea(match.community_id);setCategory('all');setGpsMessage('Showing '+match.community_name+'. Confirm your address before checkout.')}
-    else setGpsMessage('We could not confidently match your area. Please select it manually.')
-  },()=>{setGpsBusy(false);setGpsMessage('Location permission unavailable. Select your area instead.')},
-  {enableHighAccuracy:false,timeout:12000,maximumAge:60000})
+  setGpsMessage('Your browser may ask for location access. Allow to discover nearby community offers.')
+  navigator.geolocation.getCurrentPosition(position=>{
+   const {latitude,longitude,accuracy}=position.coords
+   const nearest=areas
+    .filter(a=>a.center_latitude!=null&&a.center_longitude!=null&&a.match_radius_m!=null)
+    .map(a=>({id:a.community_id,meters:Math.round(distanceMeters(latitude,longitude,Number(a.center_latitude),Number(a.center_longitude)))}))
+    .sort((a,b)=>a.meters-b.meters)
+    .filter(a=>a.meters<=15000).slice(0,4)
+   const match=chooseAreaByLocation(areas,latitude,longitude,accuracy)
+   setNearestAreas(nearest)
+   setGpsBusy(false)
+   if(match){
+    if(!manualSelected.current){setArea(match.community_id);setCategory('all')}
+    setLocationState('matched')
+    setGpsMessage('Nearby match: '+match.community_name+'. Location does not automatically enroll you; verify your address to join a Group Deal.')
+   }else{
+    setLocationState('nearby')
+    setGpsMessage(accuracy>1500
+      ? 'Your location is not accurate enough to confirm a nearby community. Please choose an area manually.'
+      : nearest.length?'Nearby communities are suggested below. Select one to view offers; joining still requires verification.':'No configured operating area matches your current location. You can still browse or select an area manually.')
+   }
+  },e=>{
+   setGpsBusy(false)
+   setLocationState(e.code===1?'denied':'failed')
+   setGpsMessage(e.code===1?'Location permission was denied. Browse freely, select your community manually, or change browser permission to retry.':'We could not determine your location. Please select a community manually.')
+  },{enableHighAccuracy:false,timeout:12000,maximumAge:60000})
+ },[areas])
+ useEffect(()=>{
+  // A single initial attempt: never watch, save or transmit browser GPS coordinates.
+  // React Strict Mode may repeat effects, so guard the permission prompt.
+  if(initialLocationRequested.current)return
+  initialLocationRequested.current=true
+  useLocation()
+ },[useLocation])
+ function selectArea(value:string){
+  manualSelected.current=true
+  setArea(value)
+  setCategory('all')
+  setLocationState('manual')
+  setGpsMessage(value?'Showing your chosen community. A verified address is required before joining a local Group Deal.':'Showing all operating areas.')
  }
+ const activeLocationLabel=activeArea?.community_name??(locationState==='denied'?'Choose area':'Find my community')
+
  return <>
+  <PublicHeader storefront actionHref={authenticated?'/home':'/login'} actionLabel={authenticated?'My dashboard':'Sign in'}
+   searchValue={search} onSearchChange={setSearch} onLocationClick={useLocation} locating={gpsBusy} locationLabel={activeLocationLabel}/>
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">
    {!catalogAvailable&&<p role="alert" className="mt-5 rounded-xl border border-amber-300/60 p-4 text-sm font-semibold">Storefront offers are being configured. Browse the site now; live product quotes will appear only after the verified catalog is connected.</p>}
-   <div className="mt-5 flex flex-wrap items-end gap-3">
-    <label className="min-w-[190px] flex-1"><span className="mb-1 block text-xs font-bold">Your community / area</span>
-     <select className="input w-full" value={area} onChange={e=>{setArea(e.target.value);setCategory('all');setGpsMessage('')}}>
+   <div className="market-location-panel">
+    <div className="market-location-intro">
+     <strong>📍 Find savings near your community</strong>
+     <p><b>Allow location</b> to discover eligible nearby groups, communities and area-based prices. Your browser asks permission; joining a Group Deal still needs secure location and account verification.</p>
+     <p lang="bn">আপনার এলাকার গ্রুপ ডিল ও কম দামে কেনার সুযোগ দেখতে লোকেশন অনুমতি দিন। যোগ দেওয়ার আগে যাচাই প্রয়োজন।</p>
+    </div>
+    <div className="market-location-control">
+     <label htmlFor="market-area-select">Your community / area</label>
+     <select id="market-area-select" className="input w-full" value={area} onChange={e=>selectArea(e.target.value)}>
       <option value="">All operating areas</option>{areas.map(a=><option key={a.community_id} value={a.community_id}>{a.community_name}</option>)}
-     </select></label>
-    <button type="button" onClick={useLocation} disabled={gpsBusy} className="btn-secondary min-h-11">{gpsBusy?'Locating…':'📍 Use my location'}</button>
-    <label className="min-w-[200px] flex-[1.5]"><span className="mb-1 block text-xs font-bold">Find groceries</span>
-     <input className="input w-full" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search oil, rice, groceries…" aria-label="Search products"/></label>
+     </select>
+     <button type="button" onClick={useLocation} disabled={gpsBusy} className="market-location-retry">{gpsBusy?'Locating…':'Use my location again'}</button>
+    </div>
    </div>
-   {gpsMessage&&<p role="status" className="mt-2 text-xs font-semibold text-slate-500">{gpsMessage}</p>}
+   <p role="status" aria-live="polite" className="market-location-status">{gpsMessage||(gpsBusy?'Requesting location permission…':'You can browse without sharing your location.')}</p>
+   {nearestAreas.length>0&&<div className="market-nearby-suggestions" aria-label="Nearby community suggestions">
+    <span className="market-nearby-heading">Near you <small>(approximate, not a verified membership)</small></span>
+    {nearestAreas.map(a=>{const community=areas.find(c=>c.community_id===a.id);if(!community)return null;return <button key={a.id} type="button" aria-pressed={area===a.id}
+      onClick={()=>selectArea(a.id)} className={area===a.id?'market-nearby-option is-selected':'market-nearby-option'}>
+      {community.community_name} <small>{a.meters<1000?Math.max(0.1,a.meters/1000).toFixed(1):Math.round(a.meters/1000)} km approx.</small>
+     </button>})}
+   </div>}
    <div className="market-hero-grid mt-6 grid gap-5 lg:grid-cols-[1.08fr_.92fr]">
     <section className="market-hero-copy flex flex-col justify-center rounded-[28px] border border-black/10 bg-white p-6 sm:p-8">
      <span className="text-xs font-black uppercase tracking-[.17em] text-teal-700">Local deals · Transparent prices</span>
@@ -115,6 +172,6 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
     <div className="market-exclusive-carousel"><FeaturedProductsCarousel products={featured}/></div>
    </div>
   </section>
-  <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={next=>{setArea(next);setCategory('all')}}/>
+  <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={selectArea}/>
  </>
 }
