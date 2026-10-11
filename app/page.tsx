@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { PublicHeader } from '@/components/public-header'
 import { PublicFooter } from '@/components/public-footer'
+import { FeaturedProductsCarousel } from '@/components/featured-products-carousel'
+import type { ShowcaseProduct } from '@/lib/showcase-media'
 import { PILOT_AREA, PUBLIC_CONTACT_EMAIL, SEO_UPDATED_AT, SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE_EN, SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
@@ -16,6 +18,12 @@ export default async function LandingPage() {
   const supabase = await createClient()
   const { data: claimsResult } = await supabase.auth.getClaims()
   if (claimsResult?.claims?.sub) redirect('/home')
+
+  // The public RPC exposes only explicitly published products, never costs or drafts.
+  const { data: featuredRows } = await supabase.rpc('get_public_own_product_showcase', {
+    p_product_id: null, p_featured_only: true,
+  })
+  const featuredProducts = (featuredRows ?? []) as ShowcaseProduct[]
 
   const schema = {
     '@context': 'https://schema.org',
@@ -98,7 +106,7 @@ export default async function LandingPage() {
             <div className="public-rule mt-8 rounded-2xl bg-black p-5 text-white"><p className="text-sm text-white/65">Our rule</p><p className="text-[11px] text-white/55" lang="bn">আমাদের নীতি</p><p className="mt-1 text-xl font-black">No hidden order. No fake saving.</p><p className="mt-1 text-[13px] text-white/75" lang="bn">গোপন অর্ডার নয়। ভুয়া সাশ্রয় নয়।</p></div>
           </section>
           <section className="flex min-w-0 flex-col overflow-hidden rounded-[28px] border border-black/10 bg-slate-50 lg:min-h-[540px]">
-            <div className="flex flex-1 items-center justify-center p-4 sm:p-6"><img src="/grocery-hero-glass.svg" alt="Fresh grocery essentials in a community grocery basket" decoding="async" fetchPriority="high" className="h-full max-h-[460px] w-full rounded-2xl object-contain" /></div>
+            <FeaturedProductsCarousel products={featuredProducts} />
             <div className="border-t border-black/10 bg-white px-6 py-5 sm:px-8"><p className="public-essentials-heading font-black">Everyday essentials, pooled locally.</p><p className="mt-1 text-[12px] font-semibold text-slate-500" lang="bn">প্রতিদিনের প্রয়োজনীয় পণ্য, স্থানীয়ভাবে একসাথে কেনা।</p><p className="muted mt-2">Start small with the products your community already buys every week.</p><p className="mt-1 text-[12px] leading-5 text-slate-500" lang="bn">শুরু করুন সেই পণ্য দিয়ে, যেগুলো আপনার কমিউনিটি প্রতি সপ্তাহেই কেনে।</p></div>
           </section>
         </div>
