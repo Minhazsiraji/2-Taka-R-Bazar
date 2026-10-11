@@ -103,7 +103,7 @@ export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,
 
   <section id="customer-experiences" className="market-story-section market-band"><div className="market-content">
    <Eyebrow>{t('Trust must be earned','বিশ্বাস অর্জন করতে হয়')}</Eyebrow>
-   <Heading title={t('Customer experiences','গ্রাহকদের অভিজ্ঞতা')} description={t('Only real, consented and moderated feedback is published.','শুধু প্রকৃত, অনুমতিপ্রাপ্ত ও যাচাইকৃত মতামত প্রকাশিত হবে।')}/>
+   <Heading title={t('Customer experiences','গ্রাহকদের অভিজ্ঞতা')} description={t('Only real feedback is published after a completed order and specific publication consent, with moderation.','শুধু প্রকৃত, অনুমতিপ্রাপ্ত ও যাচাইকৃত মতামত প্রকাশিত হবে।')}/>
    <div className="market-review-pending">
     <div className="market-review-mark" aria-hidden="true">“</div><div>
      <h3>{t('Real reviews are coming as the pilot grows.','পাইলট এগোলে গ্রাহকদের প্রকৃত মতামত আসবে।')}</h3>

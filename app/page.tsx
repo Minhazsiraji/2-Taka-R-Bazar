@@ -1,7 +1,6 @@
 import type {Metadata} from 'next'
 import {createClient} from '@/lib/supabase/server'
 import {demoStorefrontEnabled,DEMO_AREAS,DEMO_OFFERS,DEMO_SHOWCASE} from '@/lib/public-demo-products'
-import {PublicFooter} from '@/components/public-footer'
 import {PublicMarketplace} from '@/components/public-marketplace'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
@@ -48,6 +47,5 @@ export default async function Page(){
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
   <PublicMarketplace areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} featured={featured} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
-  <PublicFooter storefront/>
  </main>
 }
