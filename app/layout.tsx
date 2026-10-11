@@ -14,6 +14,7 @@ import './site-finance-clarity.css'
 import './showcase.css'
 import './marketplace-story.css'
 import './marketplace-flat.css'
+import './marketplace-unified.css'
 import { PwaRegister } from '@/components/pwa-register'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE_EN, SITE_URL } from '@/lib/site'
 

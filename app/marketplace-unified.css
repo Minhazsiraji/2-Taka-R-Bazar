@@ -1,0 +1,297 @@
+/* Public storefront unified transparent surfaces. Scoped to the homepage only.
+   Cards intentionally have 0% background opacity; separators replace alternating section fills. */
+body.site-glass-root:has(main.public-marketplace-flat){
+ --market-edge:rgba(73,80,105,.25);
+ --market-text:#17213b;
+ --market-muted:#55647c;
+ --market-accent:#07878a;
+ background:linear-gradient(125deg,#f0ecef 0%,#e9e5eb 49%,#e5e4eb 100%) fixed!important;
+}
+body.site-glass-root main.public-marketplace-flat{
+ background:transparent!important;color:var(--market-text)!important;
+ box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-band,
+body.site-glass-root main.public-marketplace-flat .market-hero-band,
+body.site-glass-root main.public-marketplace-flat .market-deals-band,
+body.site-glass-root main.public-marketplace-flat .market-exclusives-band,
+body.site-glass-root main.public-marketplace-flat .market-story .market-story-section,
+body.site-glass-root main.public-marketplace-flat .market-story .market-story-section:nth-of-type(even),
+body.site-glass-root main.public-marketplace-flat .market-story .market-story-section:nth-of-type(odd),
+body.site-glass-root main.public-marketplace-flat .market-story .market-closing{
+ background:transparent!important;
+ box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-band:not(.market-hero-band){
+ border:0!important;border-top:1px solid var(--market-edge)!important;border-radius:0!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-hero-content,
+body.site-glass-root main.public-marketplace-flat .market-hero-grid,
+body.site-glass-root main.public-marketplace-flat .market-hero-editorial,
+body.site-glass-root main.public-marketplace-flat .market-hero-copy.market-hero-flat{
+ background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ box-shadow:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-hero-copy.market-hero-flat{
+ border:0!important;border-radius:0!important;padding:14px 1px!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-hero-product.market-hero-pool-shell{
+ background:transparent!important;border:1px solid var(--market-edge)!important;
+ border-radius:16px!important;box-shadow:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-location-panel,
+body.site-glass-root main.public-marketplace-flat .market-featured-pool-image,
+body.site-glass-root main.public-marketplace-flat .market-pool-navigation,
+body.site-glass-root main.public-marketplace-flat .market-exclusive-carousel,
+body.site-glass-root main.public-marketplace-flat .market-exclusive-carousel .featured-showcase,
+body.site-glass-root main.public-marketplace-flat .market-product-card,
+body.site-glass-root main.public-marketplace-flat .market-product-card .market-product-image,
+body.site-glass-root main.public-marketplace-flat .market-product-prices>div,
+body.site-glass-root main.public-marketplace-flat .market-popular-card,
+body.site-glass-root main.public-marketplace-flat .market-popular-image,
+body.site-glass-root main.public-marketplace-flat .market-story .market-step,
+body.site-glass-root main.public-marketplace-flat .market-story .market-benefit,
+body.site-glass-root main.public-marketplace-flat .market-story .market-area-card,
+body.site-glass-root main.public-marketplace-flat .market-story .market-review-pending,
+body.site-glass-root main.public-marketplace-flat .market-story .market-dual-flow>div,
+body.site-glass-root main.public-marketplace-flat .market-story .market-supply-grid article,
+body.site-glass-root main.public-marketplace-flat .market-story .market-supplier-cta,
+body.site-glass-root main.public-marketplace-flat .market-story .market-delivery-panel,
+body.site-glass-root main.public-marketplace-flat .market-story .market-delivery-rates>div,
+body.site-glass-root main.public-marketplace-flat .market-story .market-faq,
+body.site-glass-root main.public-marketplace-flat .market-story .market-empty-real,
+body.site-glass-root main.public-marketplace-flat .market-demo-review{
+ background:transparent!important;background-image:none!important;
+ box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-product-card,
+body.site-glass-root main.public-marketplace-flat .market-popular-card,
+body.site-glass-root main.public-marketplace-flat .market-story .market-step,
+body.site-glass-root main.public-marketplace-flat .market-story .market-benefit,
+body.site-glass-root main.public-marketplace-flat .market-story .market-area-card,
+body.site-glass-root main.public-marketplace-flat .market-story .market-supply-grid article,
+body.site-glass-root main.public-marketplace-flat .market-story .market-faq,
+body.site-glass-root main.public-marketplace-flat .market-demo-review{
+ border:1px solid var(--market-edge)!important;border-radius:12px!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-location-panel{
+ border:0!important;border-bottom:1px solid var(--market-edge)!important;
+ padding:8px 0!important;border-radius:0!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-exclusive-carousel{
+ border:1px solid var(--market-edge)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-hero-main-title,
+body.site-glass-root main.public-marketplace-flat .market-featured-pool-copy h2,
+body.site-glass-root main.public-marketplace-flat .market-story-heading h2,
+body.site-glass-root main.public-marketplace-flat .market-product-title,
+body.site-glass-root main.public-marketplace-flat .market-demo-review h3{
+ color:var(--market-text)!important;
+}
+body.site-glass-root main.public-marketplace-flat :is(.text-slate-500,.text-slate-600),
+body.site-glass-root main.public-marketplace-flat .market-story-description,
+body.site-glass-root main.public-marketplace-flat .market-story .market-step p,
+body.site-glass-root main.public-marketplace-flat .market-story .market-benefit p,
+body.site-glass-root main.public-marketplace-flat .market-featured-pool-copy .market-pool-mini-line,
+body.site-glass-root main.public-marketplace-flat .market-pool-subtitle,
+body.site-glass-root main.public-marketplace-flat .market-demo-review p,
+body.site-glass-root main.public-marketplace-flat .market-demo-review blockquote{
+ color:var(--market-muted)!important;
+}
+body.site-glass-root main.public-marketplace-flat :is(.text-teal-700,.market-story-eyebrow,.market-featured-pool-eyebrow,.market-pool-slide-kind){
+ color:var(--market-accent)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-demo-pill,
+body.site-glass-root main.public-marketplace-flat .market-hero-editorial-kicker,
+body.site-glass-root main.public-marketplace-flat .market-demo-review-label,
+body.site-glass-root main.public-marketplace-flat .market-product-image>span{
+ background:transparent!important;color:var(--market-accent)!important;
+ border:1px solid var(--market-edge)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-navigation{
+ display:flex;align-items:center;gap:5px;color:var(--market-text);
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-nav-arrow{
+ cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+ min-width:39px;min-height:39px;border:1px solid var(--market-edge)!important;
+ border-radius:11px;color:var(--market-text)!important;font-size:1.42rem!important;
+ background:transparent!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-nav-arrow:hover{
+ border-color:var(--market-accent)!important;color:var(--market-accent)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-counter{
+ font-weight:800;font-size:.72rem;white-space:nowrap;padding:0 3px;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-slide-kind{
+ font-size:.67rem;font-weight:850;letter-spacing:.04em;text-transform:uppercase;
+}
+.market-auto-pool .market-pool-slide{
+ animation:market-pool-appear .35s ease-out both;
+}
+@keyframes market-pool-appear{
+ from{opacity:.65;transform:translateY(5px)}
+ to{opacity:1;transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce){
+ .market-auto-pool .market-pool-slide{animation:none!important}
+}
+body.site-glass-root main.public-marketplace-flat .market-clickable-product{
+ position:relative!important;
+ transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-product-overlay-link{
+ position:absolute;inset:0;z-index:2;border-radius:inherit;
+ display:block;background:transparent;
+}
+body.site-glass-root main.public-marketplace-flat .market-clickable-product .market-product-image,
+body.site-glass-root main.public-marketplace-flat .market-clickable-product .market-product-title,
+body.site-glass-root main.public-marketplace-flat .market-clickable-product .market-product-actions{
+ position:relative;z-index:3;
+}
+body.site-glass-root main.public-marketplace-flat .market-clickable-product .market-product-image img{
+ transition:transform .25s ease;
+}
+body.site-glass-root main.public-marketplace-flat .market-story .market-popular-card,
+body.site-glass-root main.public-marketplace-flat .market-story .market-area-card{
+ transition:transform .2s ease,border-color .2s ease!important;
+}
+@media(hover:hover) and (pointer:fine){
+ body.site-glass-root main.public-marketplace-flat .market-clickable-product:hover,
+ body.site-glass-root main.public-marketplace-flat .market-story .market-popular-card:hover,
+ body.site-glass-root main.public-marketplace-flat .market-story .market-area-card:hover{
+  transform:translateY(-5px)!important;border-color:var(--market-accent)!important;
+  box-shadow:0 12px 22px rgba(0,0,0,.09)!important;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-clickable-product:hover .market-product-image img{
+  transform:scale(1.055);
+ }
+}
+body.site-glass-root main.public-marketplace-flat .market-clickable-product:focus-within,
+body.site-glass-root main.public-marketplace-flat .market-story .market-popular-card:focus-visible{
+ outline:2px solid var(--market-accent);outline-offset:3px;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-reviews{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-review{
+ padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-review-label{
+ font-size:.65rem!important;line-height:1.4!important;
+ display:inline-flex;align-self:flex-start;padding:4px 8px;
+ border-radius:999px;font-weight:800;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-review-icon{
+ width:36px;height:36px;border-radius:11px;
+ border:1px solid var(--market-edge);display:grid;place-items:center;
+ color:var(--market-accent);font-weight:800;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-review h3{
+ font-size:1rem;font-weight:800;line-height:1.3;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-review blockquote{
+ font-size:.86rem;line-height:1.6;flex:1;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-review p{
+ font-size:.72rem;line-height:1.45;margin-top:auto;
+}
+body.site-glass-root main.public-marketplace-flat .market-story .market-supply-grid.market-demo-suppliers{
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-supplier{
+ display:flex;flex-direction:column;gap:8px;min-width:0;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-supplier .market-supply-icon{
+ font-size:1.55rem;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-supplier h3{margin:0}
+body.site-glass-root main.public-marketplace-flat .market-demo-supplier-bottom{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;
+ margin-top:auto;border-top:1px solid var(--market-edge);padding-top:10px;
+ font-size:.73rem;font-weight:750;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-supplier-bottom span{
+ color:var(--market-muted);
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-supplier-bottom a{
+ color:var(--market-accent);min-height:36px;display:inline-flex;align-items:center;
+}
+/* One continuous transparent footer and header, with readable sticky navigation. */
+body.site-glass-root:has(main.public-marketplace-flat) .site-unified-footer.market-full-footer{
+ background:transparent!important;border-top:1px solid var(--market-edge)!important;
+ box-shadow:none!important;backdrop-filter:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-full-footer .market-footer-bottom{
+ background:transparent!important;border-top:1px solid var(--market-edge)!important;
+}
+body.site-glass-root main.public-marketplace-flat .public-glass-header.market-flat-header{
+ background:transparent!important;border-bottom:1px solid var(--market-edge)!important;
+ box-shadow:none!important;backdrop-filter:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-flat-header .market-header-search{
+ background:transparent!important;border:1px solid var(--market-edge)!important;
+ box-shadow:none!important;backdrop-filter:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-flat-header .market-header-nav{
+ border-top:1px solid var(--market-edge)!important;
+}
+@media(max-width:980px){
+ body.site-glass-root main.public-marketplace-flat .market-demo-reviews,
+ body.site-glass-root main.public-marketplace-flat .market-story .market-supply-grid.market-demo-suppliers{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+}
+@media(max-width:640px){
+ body.site-glass-root main.public-marketplace-flat .market-demo-reviews,
+ body.site-glass-root main.public-marketplace-flat .market-story .market-supply-grid.market-demo-suppliers{
+  grid-template-columns:1fr;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-featured-pool-top{gap:6px!important}
+ body.site-glass-root main.public-marketplace-flat .market-pool-nav-arrow{
+  min-height:43px;min-width:43px;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-featured-pool-body{
+  grid-template-columns:minmax(95px,.78fr) minmax(0,1.22fr)!important;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-hero-copy.market-hero-flat{
+  padding:10px 0!important;
+ }
+}
+html[data-theme="dark"] body.site-glass-root:has(main.public-marketplace-flat){
+ --market-edge:rgba(180,204,223,.29);
+ --market-text:#f1f5fb;
+ --market-muted:#b9c9dc;
+ --market-accent:#7ae1db;
+ --theme-text:#f1f5fb;
+ --theme-muted:#b9c9dc;
+ --theme-accent:#7ae1db;
+ background:linear-gradient(125deg,#101c2a 0%,#192634 54%,#151e2b 100%) fixed!important;
+ color:#f1f5fb!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat{
+ color:var(--market-text)!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat :is(.text-slate-500,.text-slate-600){
+ color:var(--market-muted)!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-featured-pool-prices strong{
+ color:var(--market-accent)!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-featured-pool-prices s{
+ color:#b9c9dc!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-featured-pool-actions span{
+ color:#c5d1dd!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-demo-supplier-bottom a,
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-story a:not(.btn-primary):not(.btn-secondary){
+ color:var(--market-accent)!important;
+}
+@media(prefers-reduced-motion:reduce){
+ body.site-glass-root main.public-marketplace-flat .market-clickable-product,
+ body.site-glass-root main.public-marketplace-flat .market-clickable-product .market-product-image img{
+  transition:none!important;transform:none!important;
+ }
+}
