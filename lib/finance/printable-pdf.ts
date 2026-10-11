@@ -15,6 +15,8 @@ export function renderFinancePdf(d:PrintableRecord):Buffer{
  const label=bill?'SUPPLIER BILL REGISTER':'PURCHASE ORDER'
  const lines:string[]=[]
  const draw=(x:number,y:number,size:number,text:string,bold=false)=>{
+  // Explicitly reset fill color for every text operation: background rectangles must never tint subsequent text.
+  lines.push('0.1 0.22 0.27 rg')
   lines.push('BT /'+(bold?'F2':'F1')+' '+size+' Tf 1 0 0 1 '+x+' '+y+' Tm ('+pdfText(text)+') Tj ET')
  }
  lines.push('0.1 0.22 0.27 rg')
