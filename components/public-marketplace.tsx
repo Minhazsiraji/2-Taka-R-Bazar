@@ -10,6 +10,8 @@ import {PublicFooter} from '@/components/public-footer'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
 import {FeaturedProductsCarousel} from '@/components/featured-products-carousel'
+import {FeaturedPoolShowcase} from '@/components/featured-pool-showcase'
+import {getDemoFeaturedPools} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
 export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],demoMode=false}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];demoMode?:boolean}){
@@ -33,7 +35,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   (category==='all'||offer.category===category)&&
   [offer.product_name,offer.product_name_bn,offer.category,offer.category_bn,offer.brand,offer.offer_title].join(' ').toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
  ),[offers,area,search,mode,category])
- const spotlight=filtered.find(x=>x.offer_kind==='GROUP_DEAL')??filtered[0]
+ const heroPools=demoMode?getDemoFeaturedPools(offers):[]
  const groupHref=authenticated?'/group-deals':'/login?next=%2Fgroup-deals'
  const poolHref=authenticated?'/pool':'/login?next=%2Fpool'
  const useLocation=useCallback(()=>{
@@ -111,35 +113,23 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
       onClick={()=>selectArea(a.id)} className={area===a.id?'market-nearby-option is-selected':'market-nearby-option'}>
       {community.community_name} <small>{a.meters<1000?Math.max(0.1,a.meters/1000).toFixed(1):Math.round(a.meters/1000)} km</small></button>})}
    </div>}
-   <div className="market-hero-grid mt-6 grid gap-5 lg:grid-cols-[1.08fr_.92fr]">
-    <section className="market-hero-copy flex flex-col justify-center rounded-[28px] border border-black/10 bg-white p-6 sm:p-8">
-     <span className="text-xs font-black uppercase tracking-[.17em] text-teal-700">{t('Local deals · Transparent prices','স্থানীয় অফার · স্বচ্ছ মূল্য')}</span>
-     
-     <h1 className="market-hero-main-title mt-4 text-4xl font-black leading-tight tracking-[-.035em] sm:text-5xl">{t('Shop freely. Choose how you save.','নিজের মতো কিনুন। বেশি সাশ্রয় করুন।')}</h1>
-     <p className="market-hero-subtitle mt-4 text-base leading-7 text-slate-600">{t('Browse without login. Compare individual prices and local group prices. Login only when you order.','লগইন ছাড়াই পণ্য দেখুন। একা কেনা ও গ্রুপে কেনার দাম তুলনা করুন। অর্ডারের সময় লগইন করুন।')}</p>
-     
-     <div className="market-hero-actions mt-6 flex flex-wrap gap-3"><a href="#deals" className="btn-primary">{t('Explore local deals','স্থানীয় অফার দেখুন')}</a><a href="#how-it-works" className="btn-secondary">{t('How it works','যেভাবে কাজ করে')}</a></div>
-     <div className="market-hero-benefits mt-6 grid grid-cols-2 gap-3 text-xs font-semibold text-slate-600"><p>{t('✓ Free community pickup','✓ কমিউনিটি পয়েন্টে ফ্রি')}</p><p>{t('✓ Optional home delivery','✓ চাইলে হোম ডেলিভারি')}</p><p>{t('✓ No subscription fee','✓ সাবস্ক্রিপশন ফি নেই')}</p><p>{t('✓ No fake savings','✓ ভুয়া সাশ্রয় নয়')}</p></div>
+   <div className="market-hero-grid market-hero-editorial mt-6">
+    <section className="market-hero-copy market-hero-flat" aria-label={t('Shop together and save','একসাথে কিনে সাশ্রয় করুন')}>
+     <span className="market-hero-editorial-kicker">{t('Community-first grocery marketplace','আপনার কমিউনিটির স্মার্ট বাজার')}</span>
+     <h1 className="market-hero-main-title">{t('Shop smarter. Save more with your community.','নিজের এলাকায় স্মার্ট বাজার করুন।')} <span className="market-hero-green">{t('Keep more savings.','সাশ্রয় করুন একসাথে।')}</span></h1>
+     <p className="market-hero-subtitle">{t('Browse products without signing in. Compare individual and community Pool prices, then verify only when you decide to join or order.','লগইন ছাড়াই পণ্য দেখুন। একা কেনা ও কমিউনিটি পুলের দাম তুলনা করুন। যোগ দেওয়া বা অর্ডার করার সময় যাচাই করুন।')}</p>
+     <div className="market-hero-actions">
+      <a className="btn-primary" href="#deals">{t('Explore community deals','কমিউনিটি অফার দেখুন')}</a>
+      <a className="btn-secondary" href="#how-it-works">{t('How it works','যেভাবে কাজ করে')}</a>
+     </div>
+     <div className="market-hero-benefits" aria-label={t('Shopping benefits','কেনাকাটার সুবিধা')}>
+      <span>✓ {t('Free community pickup','কমিউনিটি পয়েন্টে ফ্রি')}</span>
+      <span>✓ {t('Optional home delivery','চাইলে হোম ডেলিভারি')}</span>
+      <span>✓ {t('Transparent pricing','স্বচ্ছ মূল্য')}</span>
+     </div>
     </section>
-    <section className="market-hero-product flex min-h-[410px] flex-col justify-center overflow-hidden rounded-[28px] border border-black/10 bg-white p-5 sm:p-7">
-     {spotlight?<div className="market-featured-content">
-      <div className="market-featured-image">
-       {spotlight.image_url?<img src={spotlight.image_url} alt={t(spotlight.product_name,spotlight.product_name_bn??spotlight.product_name)} />:
-        <img src="/grocery-hero-glass.svg" alt="" />}
-      </div>
-      <div className="market-featured-details">
-       <span className="market-featured-eyebrow">{spotlight.is_demo?t('DEMO · Sample featured product','ডেমো · নমুনা পণ্য'):
-        spotlight.offer_kind==='GROUP_DEAL'?t('Featured Group Deal','ফিচারড গ্রুপ ডিল'):t('Community Pool spotlight','কমিউনিটি পুলের বিশেষ অফার')}</span>
-       <h2>{t(spotlight.product_name,spotlight.product_name_bn??spotlight.product_name)}</h2>
-       <p className="market-featured-size">{spotlight.package_size}{spotlight.is_demo?' · DEMO / নমুনা':' · '+spotlight.offer_title}</p>
-       <strong className="market-featured-price">{formatPrice(spotlight.confirmed_price??spotlight.upcoming_price)}</strong>
-       <p className="market-featured-note">{spotlight.is_demo?t('Illustrative group price · no ordering','নমুনা গ্রুপ মূল্য · অর্ডার নয়'):
-        spotlight.confirmed_price?t('Currently unlocked price','বর্তমানে আনলক করা দাম'):t('Potential price; not yet unlocked','সম্ভাব্য মূল্য; এখনো চালু নয়')}</p>
-       <p className="market-featured-buyers">{spotlight.buyer_count} {t('buyers','জন ক্রেতা')}{spotlight.is_demo?' · DEMO / নমুনা':t(' qualified',' যাচাইকৃত')}</p>
-       <Link href={spotlight.is_demo?`/demo-product/${spotlight.product_id}`:spotlight.offer_kind==='GROUP_DEAL'?groupHref:poolHref}
-        className="btn-primary market-featured-button">{spotlight.is_demo?t('View sample product →','নমুনা পণ্য দেখুন →'):t('View local deal →','স্থানীয় ডিল দেখুন →')}</Link>
-      </div>
-     </div>:<><img src="/grocery-hero-glass.svg" alt="Grocery essentials" className="max-h-64 w-full object-contain"/><h2 className="mt-5 text-center text-xl font-black">{t('Your next community deal starts here','আপনার এলাকার পরবর্তী গ্রুপ ডিল এখানে আসবে')}</h2><p className="mt-2 text-center text-sm text-slate-500">{t('New approved offers will appear here when available.','যাচাইকৃত অফার প্রকাশিত হলে এখানে দেখানো হবে।')}</p></>}
+    <section className="market-hero-product market-hero-pool-shell" aria-label={t('Featured community Pool','বিশেষ কমিউনিটি পুল')}>
+     <FeaturedPoolShowcase pools={heroPools} language={language} areaName={activeArea?.community_name}/>
     </section>
    </div>
   </div></section>
