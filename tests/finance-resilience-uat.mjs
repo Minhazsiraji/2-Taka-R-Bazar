@@ -94,7 +94,8 @@ try{
   await new Promise(r=>setTimeout(r,1000))
  }
  assert.ok(ready,'Isolated restore database did not restart with cron configuration')
- execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-d','issue57_restore','-v','ON_ERROR_STOP=1','-c','drop schema public cascade'],{stdio:'pipe'})
+ // template0 supplies the standard public namespace; pg_dump may omit its
+ // CREATE statement. Keep that empty namespace for the restored public objects.
  execFileSync('docker',['exec',restoreName,'pg_restore','-U','supabase_admin','-d','issue57_restore','--no-owner','--exit-on-error','/restore/database.dump'],{stdio:'pipe'})
  const restored=s=>execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-d','issue57_restore','-tAX','-v','ON_ERROR_STOP=1','-c',s],{encoding:'utf8'}).trim()
  assert.equal(restored(fingerprint),before,'Restore changed financial rows, identities, original document metadata or audit history')
