@@ -49,8 +49,8 @@ export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,
   const inArea=offers.filter(o=>!selectedArea||o.community_id===selectedArea)
   const popular=[...inArea].sort((a,b)=>Number(b.buyer_count)-Number(a.buyer_count)||Number(b.quantity_joined)-Number(a.quantity_joined)).filter(o=>Number(o.buyer_count)>0).slice(0,4)
   const areaCards=areas.map(area=>({...area,live:offers.filter(o=>o.community_id===area.community_id).length}))
-  return <div className="market-story mx-auto max-w-6xl px-5 pb-10 md:px-8">
-    <section id="popular-nearby" className="market-story-section">
+  return <div className="market-story">
+    <section id="popular-nearby" className="market-story-section market-band"><div className="market-content">
       <Eyebrow>Real local buying activity</Eyebrow>
       <Heading english="Popular in your community" bangla="আপনার এলাকায় জনপ্রিয়" description="Qualified buyers and actual order interest from currently open, eligible offers—not simulated social activity."/>
       {popular.length>0?<div className="market-popular-grid">
@@ -59,9 +59,9 @@ export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,
           <div><span className="market-story-eyebrow">{offer.offer_kind==='GROUP_DEAL'?'Group Deal':'Community Pool'}</span><h3>{offer.product_name}</h3><p className="market-story-description">{Number(offer.buyer_count)} qualified {Number(offer.buyer_count)===1?'buyer':'buyers'} · {Number(offer.quantity_joined)} units</p><b>{formatPrice(offer.confirmed_price??offer.upcoming_price)}</b><p className="market-small-note">{offer.confirmed_price?'Published or unlocked price':'Potential next-tier price; not yet confirmed'}</p></div>
         </Link>)}
       </div>:<div className="market-empty-real"><span aria-hidden="true">◎</span><div><b>Your community’s next popular product starts with real demand.</b><p>We will show verified participation here as soon as eligible people join an open offer. No sample purchases or invented activity.</p></div><a href="#deals">See available offers →</a></div>}
-    </section>
+    </div></section>
 
-    <section id="how-it-works" className="market-story-section">
+    <section id="how-it-works" className="market-story-section market-band"><div className="market-content">
       <Eyebrow>Simple, open and community-first</Eyebrow>
       <Heading english="How 2-TAKA-R-BAZAR works" bangla="কীভাবে কাজ করে" description="Browse first. Compare prices. Verify when you decide. Receive only what you order."/>
       <div className="market-steps-grid">{steps.map(step=><article key={step.number} className="market-step">
@@ -71,9 +71,9 @@ export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,
         <div><span className="market-dual-chip">Buy Alone</span><h3>One basket. Your confirmed price.</h3><p>Both 2TBR-owned stock and verified supplier-listed goods will be eligible after the dedicated solo checkout and availability controls pass testing.</p><span className="market-small-note">Individual checkout is not open yet.</span></div>
         <div><span className="market-dual-chip">Group Buy</span><h3>Join neighbours. Unlock together.</h3><p>Community Pools build demand before the final price; Group Deals count verified nearby buyers toward price tiers. You pay only for your own confirmed order.</p><a href="#deals">Explore group opportunities →</a></div>
       </div>
-    </section>
+    </div></section>
 
-    <section id="our-communities" className="market-story-section">
+    <section id="our-communities" className="market-story-section market-band"><div className="market-content">
       <Eyebrow>Local before national</Eyebrow>
       <Heading english="Choose your community" bangla="আপনার কমিউনিটি বেছে নিন" description="Community selection changes the offers you see. A listed community does not necessarily have a live deal at this moment."/>
       {areaCards.length>0?<div className="market-area-grid">{areaCards.map(area=><button key={area.community_id} type="button" onClick={()=>{
@@ -84,9 +84,9 @@ export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,
         <strong>{area.community_name}</strong><span>{area.live>0?area.live+' current public '+(area.live===1?'offer':'offers'):'Area listed · deals not open yet'}</span><small>View area offers →</small>
       </button>)}</div>:<p className="market-empty-real">No operating communities have been published yet. Please check back after community setup.</p>}
       <p className="market-small-note mt-4">You may also scan an official building/community QR poster to enter its dedicated onboarding flow. QR scanning alone never joins a group or places an order.</p>
-    </section>
+    </div></section>
 
-    <section id="why-2tbr" className="market-story-section">
+    <section id="why-2tbr" className="market-story-section market-band"><div className="market-content">
       <Eyebrow>Why households choose this approach</Eyebrow>
       <Heading english="Why shop with 2-TAKA-R-BAZAR?" bangla="কেন 2-TAKA-R-BAZAR?" description="Real savings should be easy to understand before an order—not a surprise after checkout."/>
       <div className="market-benefits-grid">{benefits.map(benefit=><article className="market-benefit" key={benefit.title}>
@@ -97,9 +97,9 @@ export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,
         <div><span className="market-story-eyebrow">Your delivery choices</span><h3>Product savings and delivery cost are separate.</h3><p>We do not call a delivery charge a discount, and pickup charges do not hide inside a product price.</p></div>
         <div className="market-delivery-rates"><div><b>Free</b><span>Community-point pickup</span></div><div><b>৳20</b><span>Home delivery · basket ৳1,000 or less</span></div><div><b>৳30</b><span>Home delivery · basket over ৳1,000</span></div></div>
       </div>
-    </section>
+    </div></section>
 
-    <section id="customer-experiences" className="market-story-section">
+    <section id="customer-experiences" className="market-story-section market-band"><div className="market-content">
       <Eyebrow>Trust must be earned</Eyebrow>
       <Heading english="Customer experiences" bangla="গ্রাহকরা যা বলছেন" description="We publish authentic reviews only after a completed order, specific publication consent and moderation."/>
       <div className="market-review-pending">
@@ -108,9 +108,9 @@ export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,
           <Link href={authenticated?'/feedback':'/signup'}>{authenticated?'Share feedback on a completed order':'Join your community'} →</Link></div>
         <span className="market-review-note">Verified purchases only</span>
       </div>
-    </section>
+    </div></section>
 
-    <section id="supplier-network" className="market-story-section">
+    <section id="supplier-network" className="market-story-section market-band"><div className="market-content">
       <Eyebrow>Two sources · One clear customer experience</Eyebrow>
       <Heading english="Our products & supply partners" bangla="আমাদের পণ্য ও সরবরাহকারী" description="Buy Alone will support both 2TBR-held inventory and products supplied by approved partner companies."/>
       <div className="market-supply-grid">
@@ -119,9 +119,9 @@ export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,
       </div>
       <div className="market-supplier-cta"><div><strong>Are you a supplier, brand or local producer?</strong><p>Tell our operations team about your products, supply capacity and service area. Approval is required before listings go live.</p></div>
        <a href="mailto:business@agentsiraji.com?subject=2TBR%20Supplier%20Partnership" className="btn-secondary">Become a supply partner →</a></div>
-    </section>
+    </div></section>
 
-    <section id="marketplace-faq" className="market-story-section">
+    <section id="marketplace-faq" className="market-story-section market-band"><div className="market-content">
       <Eyebrow>Clear answers before checkout</Eyebrow>
       <Heading english="Frequently asked questions" bangla="সাধারণ প্রশ্নোত্তর"/>
       <div className="market-faqs">{faqs.map(faq=><details key={faq.question} className="market-faq">
@@ -129,11 +129,11 @@ export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,
         <p>{faq.answer}</p>
       </details>)}</div>
       <p className="market-small-note mt-4">For the full terms, read our <Link href="/faq">FAQ</Link>, <Link href="/return-policy">Return Policy</Link> and <Link href="/refund-policy">Refund Policy</Link>.</p>
-    </section>
+    </div></section>
 
-    <section className="market-closing">
+    <section className="market-closing market-band"><div className="market-content market-closing-inner">
       <div><span className="market-story-eyebrow">Ready for smarter local shopping?</span><h2>{SITE_TAGLINE_EN}</h2><p lang="bn">{SITE_TAGLINE_BN}</p><p>Find an actual offer in your community, or sign up with your mobile number to get ready for the next buying opportunity.</p></div>
       <div className="market-closing-actions"><a href="#deals" className="btn-primary">Explore local products</a><Link href={authenticated?'/home':'/signup'} className="btn-secondary">{authenticated?'My dashboard':'Join the community'}</Link></div>
-    </section>
+    </div></section>
   </div>
 }

@@ -39,12 +39,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   {enableHighAccuracy:false,timeout:12000,maximumAge:60000})
  }
  return <>
-  <div className="mx-auto max-w-6xl px-5 pt-5 md:px-8">
-   <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-black/10 pb-4 text-sm font-bold">
-    <a href="#deals" onClick={()=>setMode('group')}>Today's Group Deals</a><a href="#deals" onClick={()=>setMode('pool')}>Community Pools</a>
-    <a href="#how-it-works">How it works</a><a href="#our-communities">Our areas</a><a href="#customer-experiences">Reviews</a>
-    <Link href={authenticated?'/home':'/signup'}>{authenticated?'My dashboard':'Join community'}</Link>
-   </nav>
+  <section className="market-band market-hero-band"><div className="market-content market-hero-content">
    {!catalogAvailable&&<p role="alert" className="mt-5 rounded-xl border border-amber-300/60 p-4 text-sm font-semibold">Storefront offers are being configured. Browse the site now; live product quotes will appear only after the verified catalog is connected.</p>}
    <div className="mt-5 flex flex-wrap items-end gap-3">
     <label className="min-w-[190px] flex-1"><span className="mb-1 block text-xs font-bold">Your community / area</span>
@@ -56,8 +51,8 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      <input className="input w-full" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search oil, rice, groceries…" aria-label="Search products"/></label>
    </div>
    {gpsMessage&&<p role="status" className="mt-2 text-xs font-semibold text-slate-500">{gpsMessage}</p>}
-   <div className="mt-6 grid gap-5 lg:grid-cols-[1.08fr_.92fr]">
-    <section className="flex flex-col justify-center rounded-[28px] border border-black/10 bg-white p-6 sm:p-8">
+   <div className="market-hero-grid mt-6 grid gap-5 lg:grid-cols-[1.08fr_.92fr]">
+    <section className="market-hero-copy flex flex-col justify-center rounded-[28px] border border-black/10 bg-white p-6 sm:p-8">
      <span className="text-xs font-black uppercase tracking-[.17em] text-teal-700">Local deals · Transparent prices</span>
      <p className="mt-1 text-sm font-semibold text-slate-500" lang="bn">একসাথে কিনি, কম দামে পাই!</p>
      <h1 className="mt-4 text-4xl font-black leading-tight tracking-[-.035em] sm:text-5xl">Shop freely. Choose how you save.</h1>
@@ -66,7 +61,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      <div className="mt-6 flex flex-wrap gap-3"><a href="#deals" className="btn-primary">Explore local deals</a><a href="#how-it-works" className="btn-secondary">How it works</a></div>
      <div className="mt-6 grid grid-cols-2 gap-3 text-xs font-semibold text-slate-600"><p>✓ Free community pickup</p><p>✓ Optional home delivery</p><p>✓ No subscription fee</p><p>✓ No fake savings</p></div>
     </section>
-    <section className="flex min-h-[410px] flex-col justify-center overflow-hidden rounded-[28px] border border-black/10 bg-white p-5 sm:p-7">
+    <section className="market-hero-product flex min-h-[410px] flex-col justify-center overflow-hidden rounded-[28px] border border-black/10 bg-white p-5 sm:p-7">
      {spotlight?<><span className="text-xs font-black uppercase tracking-[.16em] text-teal-700">{spotlight.offer_kind==='GROUP_DEAL'?'Featured Group Deal':'Community Pool spotlight'}</span>
       <div className="mt-4 flex min-h-56 items-center justify-center">{spotlight.image_url?<img src={spotlight.image_url} alt={spotlight.product_name} className="max-h-60 w-full object-contain"/>:<img src="/grocery-hero-glass.svg" alt="Grocery basket illustration" className="max-h-52 w-full object-contain"/>}</div>
       <h2 className="mt-3 text-xl font-black">{spotlight.product_name}</h2><p className="mt-1 text-sm text-slate-500">{spotlight.package_size} · {spotlight.offer_title}</p>
@@ -77,8 +72,8 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      </>:<><img src="/grocery-hero-glass.svg" alt="Grocery essentials" className="max-h-64 w-full object-contain"/><h2 className="mt-5 text-center text-xl font-black">Your next community deal starts here</h2><p className="mt-2 text-center text-sm text-slate-500">There are no publicly available active product offers right now. New products will appear when verified and published.</p></>}
     </section>
    </div>
-  </div>
-  <section id="deals" className="mx-auto max-w-6xl px-5 py-10 md:px-8">
+  </div></section>
+  <section id="deals" className="market-band market-deals-band"><div className="market-content">
    <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.14em] text-teal-700">Shop by buying mode</p><h2 className="mt-2 text-2xl font-black">Products & local deals</h2><p className="mt-1 text-sm text-slate-500">{activeArea?activeArea.community_name:'Choose an area to see nearby offers'} · {filtered.length} active offers</p></div>
     <div className="flex flex-wrap gap-2" role="group" aria-label="Filter buying mode">{([['all','All products'],['group','Group Deals'],['pool','Community Pools']] as const).map(([val,label])=><button type="button" key={val} onClick={()=>setMode(val)} aria-pressed={mode===val} className={mode===val?'btn-primary':'btn-secondary'}>{label}</button>)}</div>
    </div>
@@ -87,10 +82,10 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
     {categories.map(c=><button type="button" key={c} aria-pressed={category===c} onClick={()=>setCategory(c)} className={category===c?'btn-primary text-xs':'btn-secondary text-xs'}>{c}</button>)}
    </div>
    {filtered.length===0?<div className="mt-6 rounded-3xl border border-black/10 bg-white p-8 text-center"><p className="text-xl font-black">No active local offers yet</p><p className="mt-2 text-sm text-slate-500">Try another area or check back when Operations publishes an eligible product and a live deal.</p></div>
-   :<div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filtered.map(offer=>{
+   :<div className="market-products-grid mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filtered.map(offer=>{
     const href=offer.offer_kind==='GROUP_DEAL'?groupHref:poolHref
     const hasPrice=Number(offer.confirmed_price)>0
-    return <article key={offer.offer_kind+offer.offer_id+offer.community_id} className="flex min-w-0 flex-col rounded-3xl border border-black/10 bg-white p-4">
+    return <article key={offer.offer_kind+offer.offer_id+offer.community_id} className="market-product-card flex min-w-0 flex-col rounded-3xl border border-black/10 bg-white p-4">
      <Link href={`/shop/${offer.product_id}?area=${offer.community_id}`} className="relative flex h-48 items-center justify-center overflow-hidden rounded-2xl bg-white/30" aria-label={`View details for ${offer.product_name}`}>{offer.image_url?<img src={offer.image_url} alt={offer.product_name} loading="lazy" className="h-full w-full object-contain"/>:<img src="/grocery-hero-glass.svg" alt="" className="h-44 w-full object-contain"/>}
       <span className="absolute left-2 top-2 rounded-full border border-teal-200 bg-white/95 px-3 py-1 text-xs font-bold text-teal-700">{offer.offer_kind==='GROUP_DEAL'?'Group Deal':'Pool'}</span></Link>
      <h3 className="mt-3 line-clamp-2 text-lg font-black"><Link href={`/shop/${offer.product_id}?area=${offer.community_id}`}>{offer.product_name}</Link></h3>
@@ -108,11 +103,18 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      </div>
     </article>
    })}</div>}
+  </div></section>
+  <section id="exclusive-products" className="market-band market-exclusives-band">
+   <div className="market-content market-exclusive-grid">
+    <div className="market-exclusive-intro">
+     <p className="text-xs font-bold uppercase tracking-[.15em] text-teal-700">Our own & exclusive products</p>
+     <h2 className="mt-2 text-2xl font-black sm:text-3xl">Discover our exclusive collection</h2>
+     <p className="mt-3 text-sm leading-7 text-slate-600">Explore 2-TAKA-R-BAZAR private-label and exclusive partner products, photos and short videos. Real approved products will appear as they are published.</p>
+     <a href="#deals" className="btn-secondary mt-4">Browse available offers →</a>
+    </div>
+    <div className="market-exclusive-carousel"><FeaturedProductsCarousel products={featured}/></div>
+   </div>
   </section>
-  {featured.length>0&&<section id="exclusive-products" className="mx-auto max-w-6xl px-5 py-7 md:px-8">
-    <div className="mb-4"><p className="text-xs font-bold uppercase tracking-[.15em] text-teal-700">Our own & exclusive products</p><h2 className="mt-2 text-2xl font-black">Explore the 2-TAKA-R-BAZAR collection</h2></div>
-    <div className="overflow-hidden rounded-[28px] border border-black/10 bg-white"><FeaturedProductsCarousel products={featured}/></div>
-   </section>}
   <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={next=>{setArea(next);setCategory('all')}}/>
  </>
 }

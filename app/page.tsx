@@ -40,10 +40,10 @@ export default async function Page(){
     url:SITE_URL,description:SITE_DESCRIPTION,inLanguage:['en-BD','bn-BD']},
   ],
  }
- return <main className="min-h-screen bg-white text-black">
-  <PublicHeader actionHref={authenticated?'/home':'/login'} actionLabel={authenticated?'My dashboard':'Sign in'}/>
+ return <main className="public-marketplace-flat min-h-screen bg-white text-black">
+  <PublicHeader actionHref={authenticated?'/home':'/login'} actionLabel={authenticated?'My dashboard':'Sign in'} storefront/>
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
   <PublicMarketplace areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} featured={featured} howLabelBn="কীভাবে কাজ করে"/>
-  <PublicFooter/>
+  <PublicFooter storefront/>
  </main>
 }
