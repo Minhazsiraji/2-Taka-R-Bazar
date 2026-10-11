@@ -25,7 +25,7 @@ test('full-bleed bands retain narrower readable inner content and product cards'
  assert.match(catalog,/market-products-grid/)
  assert.match(catalog,/market-product-card/)
  assert.match(catalog,/market-exclusives-band/)
- assert.match(catalog,/<FeaturedProductsCarousel products=\{featured\}/>)
+ assert.ok(catalog.includes('<FeaturedProductsCarousel products={featured}/>'))
  assert.doesNotMatch(catalog,/max-w-6xl/)
  assert.match(info,/market-story-section market-band/)
  assert.match(info,/market-content/)
