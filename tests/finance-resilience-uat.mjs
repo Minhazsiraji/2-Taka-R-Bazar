@@ -56,13 +56,17 @@ try{
  execFileSync('docker',['run','-d','--name',restoreName,'-e','POSTGRES_PASSWORD=postgres','-v','/tmp/issue57-restore:/restore:ro',image],{encoding:'utf8',stdio:'pipe'})
  let ready=false
  for(let i=0;i<45;i++){
-  try{execFileSync('docker',['exec',restoreName,'pg_isready','-U','postgres'],{stdio:'pipe'});ready=true;break}catch{}
+  try{execFileSync('docker',['exec',restoreName,'pg_isready','-h','127.0.0.1','-U','postgres'],{stdio:'pipe'});ready=true;break}catch{}
   await new Promise(r=>setTimeout(r,1000))
  }
  assert.ok(ready,'Isolated restore database did not become ready')
- execFileSync('docker',['exec',restoreName,'psql','-U','postgres','-v','ON_ERROR_STOP=1','-f','/restore/roles.sql'],{stdio:'pipe'})
- execFileSync('docker',['exec',restoreName,'pg_restore','-U','postgres','-d','postgres','--no-owner','--exit-on-error','/restore/database.dump'],{stdio:'pipe'})
- const restored=s=>execFileSync('docker',['exec',restoreName,'psql','-U','postgres','-d','postgres','-tAX','-v','ON_ERROR_STOP=1','-c',s],{encoding:'utf8'}).trim()
+ const existingRoles=execFileSync('docker',['exec',restoreName,'psql','-U','postgres','-tAX','-c','select rolname from pg_roles'],{encoding:'utf8'}).trim().split('\n')
+ const roleRestore=roles.split('\n').filter(line=>!existingRoles.some(role=>line==='CREATE ROLE '+role+';'||line==='CREATE ROLE "'+role+'";')).join('\n')
+ execFileSync('docker',['exec','-i',restoreName,'psql','-U','postgres','-v','ON_ERROR_STOP=1'],{input:roleRestore,stdio:['pipe','pipe','pipe']})
+ execFileSync('docker',['exec',restoreName,'createdb','-U','postgres','-T','template0','issue57_restore'],{stdio:'pipe'})
+ execFileSync('docker',['exec',restoreName,'psql','-U','postgres','-d','issue57_restore','-v','ON_ERROR_STOP=1','-c','drop schema public cascade'],{stdio:'pipe'})
+ execFileSync('docker',['exec',restoreName,'pg_restore','-U','postgres','-d','issue57_restore','--no-owner','--exit-on-error','/restore/database.dump'],{stdio:'pipe'})
+ const restored=s=>execFileSync('docker',['exec',restoreName,'psql','-U','postgres','-d','issue57_restore','-tAX','-v','ON_ERROR_STOP=1','-c',s],{encoding:'utf8'}).trim()
  assert.equal(restored(fingerprint),before,'Restore changed financial rows, identities, original document metadata or audit history')
  assert.equal(restored("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname like 'finance\\_%' escape '\\' and c.relkind='r' and not c.relrowsecurity"),'0')
  assert.equal(restored("select has_table_privilege('authenticated','public.finance_journals','INSERT')::text"),'false')

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(15);
 insert into auth.users(id,email,created_at,updated_at) values
  ('00000000-0000-4000-8000-000000000971','write-lock-owner@example.invalid',now(),now());
 insert into public.user_roles(user_id,role) values('00000000-0000-4000-8000-000000000971','super_admin');
@@ -18,6 +18,15 @@ insert into private.finance_uat_leases(actor_id,expires_at,reason)
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000971',true);
 select lives_ok($test$select public.treasury_create_account('Leased synthetic bank','bank','Synthetic','0057',current_date,100,'LOCK-TEST-03',0,null)$test$,'Operator lease permits otherwise authorized UAT RPC');
 select is((select count(*)::integer from public.treasury_accounts where name='Leased synthetic bank'),1,'Exactly one leased account was recorded');
+select set_config('request.jwt.claim.sub','',true);
+insert into auth.users(id,email,created_at,updated_at) values('00000000-0000-4000-8000-000000000972','non-uat-owner@example.invalid',now(),now());
+insert into public.finance_accounts(code,title,kind) values('T00000000000040008000000000000972','Unleased financial resource','asset');
+insert into public.treasury_accounts(id,name,account_kind,institution,ledger_code,opened_on,opening_reference,created_by)
+values('00000000-0000-4000-8000-000000000972','Non-fixture bank','bank','Synthetic','T00000000000040008000000000000972',current_date,'NON-UAT-RESOURCE','00000000-0000-4000-8000-000000000972');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000971',true);
+select throws_ok($test$select public.treasury_request_transaction('owner_capital',null,'00000000-0000-4000-8000-000000000972',null,null,1,0,0,current_date,'SCOPE-ESCAPE','Synthetic lease scope escape attempt')$test$,'42501','UAT scope denied: financial resource is not an active synthetic fixture','Leased caller cannot use a non-fixture bank');
+select throws_ok($test$update public.finance_accounts set title='Caller changed core chart' where code='4000'$test$,'42501','UAT scope denied: core chart of accounts is operator-only','Leased caller cannot rewrite core chart');
+select ok(not has_table_privilege('authenticated','private.finance_uat_entities','INSERT'),'Caller cannot register real source as a fixture');
 select set_config('request.jwt.claim.sub','',true);
 update private.finance_uat_leases set issued_at=clock_timestamp()-interval '2 hours',expires_at=clock_timestamp()-interval '1 hour';
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000971',true);

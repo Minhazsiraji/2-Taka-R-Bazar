@@ -21,7 +21,7 @@ function psql(sql){
  '-v','ON_ERROR_STOP=1','-c',sql],{env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8'}).trim()
 }
 const identities=new Map()
-async function viewer(role){
+async function viewer(role,identityKey=role){
  const email='uat-'+role+'-'+Date.now()+'@example.invalid'
  const password='LOCAL-ONLY-Synthetic!349'
  const {data,error}=await supa.auth.admin.createUser({email,password,email_confirm:true})
@@ -38,7 +38,7 @@ async function viewer(role){
  }})
  const login=await client.auth.signInWithPassword({email,password})
  if(login.error||!login.data.user)throw new Error('Local synthetic login failed '+login.error?.message)
- identities.set(role,{client,id})
+ identities.set(identityKey,{client,id})
  return [...jar.values()].filter(c=>c.value).map(c=>({
   name:c.name,value:c.value,url:base,httpOnly:c.options?.httpOnly??false,
   secure:false,sameSite:'Lax'
@@ -298,6 +298,114 @@ async function main(){
   assert.equal(psql("select count(*) from public.finance_document_events where request_id='"+pending+"' and stage='approved'"),'1')
   await snapshot(owner,'document-original-void')
   console.log('PASS original upload/hash/download, independent document void, original retained');stages++
+  // New customer source is operator-registered only in this disposable DB.
+  const source='f5000000-0000-4000-8000-000000000003',item='f6000000-0000-4000-8000-000000000003'
+  psql(`insert into private.finance_uat_entities(entity_type,entity_id,reason) values('order','${source}','Disposable browser synthetic completed customer source');
+  insert into public.orders(id,customer_id,pool_id,status,payment_status,product_subtotal,delivery_fee,total_amount,fulfillment_method,completed_at)
+  values('${source}','f0000000-0000-0000-0000-000000000001','f1000000-0000-4000-8000-000000000001','completed','paid_manually',980,0,980,'pickup',now());
+  insert into public.order_items(id,order_id,pool_item_id,product_id,quantity,benchmark_price_snapshot,unit_price)
+  values('${item}','${source}','f2000000-0000-4000-8000-000000000001','22222222-2222-2222-2222-222222222221',1,1000,980)`)
+  await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
+  const saleForm=maker.getByRole('button',{name:'Request customer sale posting'}).locator('xpath=ancestor::form')
+  await saleForm.getByLabel('Completed customer source').selectOption('order:'+source)
+  await saleForm.locator('select[name="bill_id_0"]').selectOption(bill)
+  await saleForm.locator('input[name="quantity_0"]').fill('1')
+  await saleForm.locator('input[name="reason"]').fill('Browser actual completed customer and cost lot review')
+  const saleProof=Buffer.from('%PDF-1.4\nBrowser actual completed sale original\n%%EOF')
+  await saleForm.locator('input[name="original_file"]').setInputFiles({name:'sale-original.pdf',mimeType:'application/pdf',buffer:saleProof})
+  await saleForm.getByRole('button',{name:'Request customer sale posting'}).click()
+  await maker.getByText('Customer sale submitted for independent revenue and inventory review').waitFor({timeout:45000})
+  const sale=psql(`select id from public.finance_customer_events where source_id='${source}' and kind='sale'`)
+  assert.match(sale,/^[0-9a-f-]{36}$/)
+  const self=await identities.get('admin').client.rpc('finance_review_customer_sale',{p_id:sale,p_approve:true,p_note:'Maker self approval must fail'})
+  assert.ok(self.error)
+  await visit(owner,'/admin/finance-customers','Customer revenue, inventory & refunds')
+  async function approveEvent(id){
+   const f=owner.locator('input[name="event_id"][value="'+id+'"]').locator('xpath=ancestor::form')
+   await f.locator('input[name="reason"]').fill('Independent original source and entitlement checked')
+   await f.getByRole('button',{name:'Approve customer accounting'}).click()
+   await owner.getByText('Independent customer accounting review recorded').waitFor({timeout:45000})
+  }
+  await approveEvent(sale)
+  const saleOriginal=await owner.request.get(base+'/api/finance/originals/customer_event/'+sale)
+  assert.equal(saleOriginal.status(),200);assert.deepEqual(await saleOriginal.body(),saleProof)
+  assert.equal(psql(`select status from public.finance_customer_events where id='${sale}'`),'posted')
+  console.log('PASS browser actual source sale, invoice-lot COGS, independent approval and original integrity');stages++
+  async function customerCash(kind,reference){
+   await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
+   const f=maker.getByRole('button',{name:'Request customer cash movement'}).locator('xpath=ancestor::form')
+   await f.locator('select[name="sale_id"]').selectOption(sale)
+   await f.locator('select[name="cash_kind"]').selectOption(kind)
+   await f.locator('select[name="account_id"]').selectOption(A)
+   await f.locator('input[name="amount"]').fill('980')
+   await f.locator('input[name="reference"]').fill(reference)
+   await f.locator('input[name="original_file"]').setInputFiles({name:kind+'.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\n'+reference+'\n%%EOF')})
+   await f.getByRole('button',{name:'Request customer cash movement'}).click()
+   await maker.getByText('Customer cash submitted to independent Treasury approval inbox').waitFor({timeout:45000})
+   const id=psql(`select id from public.treasury_transactions where external_reference='${reference}'`)
+   await visit(owner,'/super-admin/treasury','Cash flow & liquidity')
+   const approval=owner.locator('input[name="transaction_id"][value="'+id+'"]').locator('xpath=ancestor::form')
+   await approval.locator('input[name="note"]').fill('Independent actual customer bank evidence checked')
+   await approval.getByRole('button',{name:'Approve & post'}).click()
+   await owner.getByText('Treasury review recorded',{exact:false}).waitFor({timeout:45000})
+   assert.equal(psql(`select status from public.treasury_transactions where id='${id}'`),'posted')
+  }
+  await customerCash('customer_receipt','BROWSER-CUSTOMER-RECEIPT-980')
+  assert.equal(Number(psql(balance+A+"'")),10855)
+  console.log('PASS browser independent customer collection settles actual AR');stages++
+  await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
+  const creditForm=maker.getByRole('button',{name:'Request customer credit note'}).locator('xpath=ancestor::form')
+  await creditForm.locator('select[name="sale_id"]').selectOption(sale)
+  await creditForm.locator('input[name="credit_quantity_0"]').fill('1')
+  await creditForm.locator('input[name="restock"]').check()
+  await creditForm.locator('input[name="reason"]').fill('Browser original physical return and credit entitlement')
+  await creditForm.locator('input[name="original_file"]').setInputFiles({name:'credit.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\nActual synthetic browser return\n%%EOF')})
+  await creditForm.getByRole('button',{name:'Request customer credit note'}).click()
+  await maker.getByText('Customer credit submitted for independent return and refund review').waitFor({timeout:45000})
+  const credit=psql(`select id from public.finance_customer_events where source_id='${sale}' and kind='credit'`)
+  await visit(owner,'/admin/finance-customers','Customer revenue, inventory & refunds')
+  await approveEvent(credit)
+  await customerCash('customer_refund','BROWSER-CUSTOMER-REFUND-980')
+  assert.equal(Number(psql(balance+A+"'")),9875)
+  assert.deepEqual(psql(`select private.finance_customer_balance('${sale}','1100')||':'||private.finance_customer_balance('${sale}','2300')`).split(':').map(Number),[0,0])
+  console.log('PASS browser credit note, physical stock reversal and independent cash refund; no duplicated expense');stages++
+  await visit(maker,'/admin/finance-attribution','Expense attribution & campaign budgets')
+  const budgetForm=maker.getByRole('button',{name:'Request campaign budget'}).locator('xpath=ancestor::form')
+  await budgetForm.locator('input[name="code"]').fill('BROWSER-MARKETING-BUDGET')
+  await budgetForm.locator('input[name="month"]').fill(new Date().toISOString().slice(0,7))
+  await budgetForm.locator('input[name="amount"]').fill('100')
+  await budgetForm.locator('input[name="reason"]').fill('Synthetic browser offline campaign approval')
+  await budgetForm.getByRole('button',{name:'Request campaign budget'}).click()
+  await maker.getByText('Campaign budget submitted for independent review').waitFor({timeout:45000})
+  const budget=psql("select id from public.finance_campaign_budgets where code='BROWSER-MARKETING-BUDGET'")
+  await visit(owner,'/admin/finance-attribution','Expense attribution & campaign budgets')
+  const budgetReview=owner.locator('input[name="budget_id"][value="'+budget+'"]').locator('xpath=ancestor::form')
+  await budgetReview.locator('input[name="reason"]').fill('Independent offline campaign budget checked')
+  await budgetReview.getByRole('button',{name:'Approve budget'}).click()
+  await owner.getByText('Independent campaign budget review recorded').waitFor({timeout:45000})
+  assert.equal(psql(`select status from public.finance_campaign_budgets where id='${budget}'`),'approved')
+  console.log('PASS browser independent marketing budget approval');stages++
+  await visit(owner,'/super-admin/finance-report','Integrated accounting report & period close')
+  await snapshot(owner,'integrated-report')
+  await owner.getByText('BDT 93.00',{exact:true}).waitFor({timeout:30000})
+  const closeCookie=await viewer('super_admin','close_maker'),closeContext=await browser.newContext()
+  await closeContext.addCookies(closeCookie);const closeMaker=await closeContext.newPage()
+  await visit(closeMaker,'/super-admin/finance-report?month=2001-01','Integrated accounting report & period close')
+  const closeForm=closeMaker.getByRole('button',{name:'Request period close'}).locator('xpath=ancestor::form')
+  await closeForm.locator('input[name="reason"]').fill('Browser qualified empty ended accounting month')
+  await closeForm.getByRole('button',{name:'Request period close'}).click()
+  await closeMaker.getByText('Independent close request recorded').waitFor({timeout:45000})
+  const close=psql("select id from public.finance_period_close_requests where month_start='2001-01-01'")
+  const ownClose=await identities.get('close_maker').client.rpc('finance_review_period_close',{p_id:close,p_approve:true,p_note:'Self approval must be rejected'})
+  assert.ok(ownClose.error);assert.match(ownClose.error.message,/Independent maker-checker/)
+  await visit(owner,'/super-admin/finance-report?month=2001-01','Integrated accounting report & period close')
+  const closeReview=owner.locator('input[name="close_id"][value="'+close+'"]').locator('xpath=ancestor::form')
+  await closeReview.locator('input[name="reason"]').fill('Independent unchanged source snapshot confirmed')
+  await closeReview.getByRole('button',{name:'Approve period close'}).click()
+  await owner.getByText('Independent close request recorded').waitFor({timeout:45000})
+  assert.equal(psql("select state from public.finance_periods where month_start='2001-01-01'"),'locked')
+  await closeContext.close()
+  console.log('PASS browser integrated report, independent Super Admin close and self-approval denial');stages++
   const customerCookie=await viewer('customer')
   const customerContext=await browser.newContext()
   await customerContext.addCookies(customerCookie)
@@ -315,6 +423,14 @@ async function main(){
   assert.ok(overwrite.error,'Original storage file overwrite succeeded')
   const afterAttack=await owner.request.get(base+'/api/finance/attachments/'+attachment)
   assert.deepEqual(await afterAttack.body(),original,'Overwrite attack changed original bytes')
+  const restoreBucket='issue57-isolated-original-restore'
+  const createdBucket=await supa.storage.createBucket(restoreBucket,{public:false});assert.ok(!createdBucket.error)
+  const backupBytes=await afterAttack.body(),restoredObject='restore/'+attachment+'.pdf'
+  const restoreUpload=await supa.storage.from(restoreBucket).upload(restoredObject,backupBytes,{contentType:'application/pdf',upsert:false});assert.ok(!restoreUpload.error)
+  const restoredBytes=await supa.storage.from(restoreBucket).download(restoredObject);assert.ok(!restoredBytes.error)
+  assert.deepEqual(Buffer.from(await restoredBytes.data.arrayBuffer()),original)
+  for(const client of [customer,anonymous]){const denied=await client.storage.from(restoreBucket).download(restoredObject);assert.ok(denied.error,'Restored private file became public')}
+  console.log('PASS isolated original-file restore, exact byte hash and private access retained');stages++
   const ownerIdentity=identities.get('super_admin')
   psql("delete from private.finance_uat_leases where actor_id='"+ownerIdentity.id+"'")
   const locked=await ownerIdentity.client.rpc('treasury_create_account',{

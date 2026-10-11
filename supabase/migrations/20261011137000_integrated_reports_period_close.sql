@@ -48,10 +48,10 @@ begin
  from public.procurement_supplier_bills b join public.finance_journals j on j.id=b.journal_id and j.posting_date<v_end
  left join lateral(select sum(c.quantity*b.unit_price) credits from public.finance_supplier_credit_notes c join public.finance_journals cj on cj.id=c.journal_id where c.bill_id=b.id and c.status='posted' and cj.posting_date<v_end) c on true
  left join lateral(select sum(amount) paid from public.treasury_transactions t where t.supplier_bill_id=b.id and t.status='posted' and t.business_date<v_end) t on true;
- select v_ap_source+coalesce(sum(greatest(0,e.amount-coalesce(t.paid,0)-coalesce(s.paid,0))),0) into v_ap_source
+ select v_ap_source+coalesce(sum(greatest(0,e.amount-coalesce(t.paid,0)-coalesce(s.paid_count,0)*e.amount)),0) into v_ap_source
  from public.finance_expenses e
  left join lateral(select sum(amount) paid from public.treasury_transactions t where t.expense_id=e.id and t.status='posted' and t.business_date<v_end) t on true
- left join lateral(select sum(e.amount) paid from public.finance_settlement_requests s where s.expense_id=e.id and s.status='verified' and s.payment_date<v_end) s on true
+ left join lateral(select count(*) paid_count from public.finance_settlement_requests s where s.expense_id=e.id and s.status='verified' and s.payment_date<v_end) s on true
  where e.status in ('posted','settled','settlement_requested') and e.incurred_on<v_end;
  select coalesce(jsonb_agg(jsonb_build_object('key',x.key,'product_revenue',x.revenue,'cogs',x.cost,'product_gross_profit',x.revenue-x.cost) order by x.key),'[]') into v_models
  from (select coalesce(r->>'model','unallocated') key,

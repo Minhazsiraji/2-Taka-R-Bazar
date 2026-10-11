@@ -1,3 +1,7 @@
+insert into private.finance_uat_entities(entity_type,entity_id,reason) values
+ ('order','f5000000-0000-4000-8000-000000000001','Disposable synthetic Pool customer source'),
+ ('order','f5000000-0000-4000-8000-000000000002','Disposable synthetic Direct Product customer source'),
+ ('group_commitment','f7200000-0000-4000-8000-000000000001','Disposable synthetic Group Deal customer source');
 -- Included inside the supply transaction after inventory, AP, COD custody tests.
 -- Every customer source is synthetic; all journal constraints execute before rollback.
 insert into public.orders(id,customer_id,pool_id,status,payment_status,product_subtotal,delivery_fee,total_amount,fulfillment_method,delivery_address,delivery_actual_cost,completed_at)
@@ -122,6 +126,7 @@ insert into e2e_state select 'direct_refund',public.finance_request_customer_cas
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
 select public.treasury_review_transaction((select v::uuid from e2e_state where k='direct_refund'),true,'Independent bank direct product refund checked');
 
+select pg_temp.assert_true((select stock_on_hand=5 and fulfilled_quantity=0 from public.own_product_inventory where product_id='22222222-2222-2222-2222-222222222222'),'Direct returned physical stock not restored');
 -- Independent ledger arithmetic across all three buying models and their returns.
 select pg_temp.assert_true((select sum(credit-debit) from public.finance_journal_lines where account_code='4000')=1970,'Net product revenue should be 980 Pool + 990 Group + 0 returned Direct');
 select pg_temp.assert_true((select sum(credit-debit) from public.finance_journal_lines where account_code='4010')=50,'Delivery income must remain separate from product sales');
@@ -135,3 +140,7 @@ select pg_temp.assert_true((select sum(l.credit-l.debit) from public.finance_jou
 select pg_temp.assert_true(not exists(select 1 from public.finance_journal_lines group by journal_id having sum(debit)<>sum(credit)),'Customer lifecycle produced an unbalanced journal');
 set constraints all immediate;
 \echo 'ALL_BUYING_MODELS_REVENUE_COGS_COD_CREDITS_REFUNDS_E2E_PASS'
+select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'profit_before_tax')::numeric=93,'Integrated report profit differs from actual ledger');
+select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'inventory_source')::numeric=8750,'Integrated source inventory report mismatch');
+select pg_temp.assert_true((public.finance_integrated_report(date_trunc('month',current_date)::date)->>'ap_source')::numeric=4027,'Integrated independent AP report mismatch');
+\echo 'INTEGRATED_SOURCE_REPORT_RECONCILIATION_PASS'

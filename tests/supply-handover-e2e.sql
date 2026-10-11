@@ -71,6 +71,7 @@ insert into public.suppliers(id,business_name,reliability_status,active)
 values('33333333-3333-3333-3333-333333333333','E2E Synthetic Supplier','reliable',true);
 
 -- Admin setup.
+insert into private.finance_uat_entities(entity_type,entity_id,reason) values ('ops_day','f4000000-0000-4000-8000-000000000001','Disposable synthetic COD custody source');
 insert into private.finance_uat_leases(actor_id,expires_at,reason) select id,clock_timestamp()+interval '1 hour','Issue 57 disposable supply qualification' from auth.users where email like 'e2e-%@invalid.test' on conflict(actor_id) do nothing;
 
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
