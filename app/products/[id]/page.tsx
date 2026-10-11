@@ -35,7 +35,7 @@ export default async function ProductDetailsPage({params}:{params:Promise<{id:st
     image:images,category:product.category,sku:undefined,url:`${SITE_URL}/products/${product.product_id}`}
   return <main className="min-h-screen bg-white text-black">
     <PublicHeader actionHref="/login" actionLabel="Sign in"/>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}}/>
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-12">
       <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-2 text-sm text-slate-500"><Link href="/" className="underline">Home</Link><span>›</span><span>Exclusive products</span><span>›</span><span className="font-semibold">{product.name}</span></nav>
       <div className="grid gap-6 lg:grid-cols-2">
