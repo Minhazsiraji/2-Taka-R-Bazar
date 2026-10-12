@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import {Flash} from '@/components/flash'
 import {PoolStorefrontPublication} from '@/components/pool-storefront-publication'
 import { notFound } from 'next/navigation'
 import { AdminShell } from '@/components/admin-shell'
@@ -9,8 +10,8 @@ import { dateTime, taka } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
-export default async function Page({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default async function Page({ params,searchParams }: { params: Promise<{ id: string }>;searchParams:Promise<{error?:string;notice?:string}> }) {
+  const [{id},messages]=await Promise.all([params,searchParams])
   const { supabase } = await requireAdmin()
 
   const { data: pool } = await supabase.from('pools').select('id,community_id,title,status,cadence,commitment_closes_at,confirmation_closes_at,supplier_delivery_at,pickup_at,receiving_pickup_point_id,notes,is_paused,pause_reason,cancellation_reason').eq('id', id).maybeSingle()
@@ -32,7 +33,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const tiersFor = (itemId: string) => (quotes ?? []).filter((q: any) => q.pool_item_id === itemId).sort((a: any,b: any) => Number(a.threshold_quantity)-Number(b.threshold_quantity))
   const totalDemand = (items ?? []).reduce((sum: number, i: any) => sum + demandFor(i.id), 0)
 
-  return <AdminShell><div className="grid min-w-0 gap-5">
+  return <AdminShell><div className="grid min-w-0 gap-5"><Flash {...messages}/>
     <div className="flex flex-wrap items-center gap-2 text-sm"><Link className="font-bold text-cyan-800 underline" href="/admin/pools">← Pools</Link><span className="text-slate-400">/</span><span>{pool.title}</span></div>
 
     <section className="card p-4 sm:p-5">
