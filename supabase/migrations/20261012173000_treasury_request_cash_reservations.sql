@@ -1,18 +1,16 @@
--- Reserve spendable Treasury cash at request time. Checker approval retains a second balance check
--- so a request that was valid when submitted still fails closed if posted cash changes before approval.
+-- Reserve spendable Treasury cash at request time. Approval keeps a second live-balance check.
 create or replace function private.treasury_available_request_cash(p_account uuid)
 returns numeric language sql stable security definer set search_path='' as $fn$
  select private.treasury_account_balance(a.id)
         - a.restricted_amount
-        - coalesce((
-            select sum(t.amount+t.interest_amount+t.fee_amount)
-            from public.treasury_transactions t
-            where t.source_account_id=a.id and t.status='pending'
-          ),0)
+        - coalesce((select sum(t.amount+t.interest_amount+t.fee_amount)
+                    from public.treasury_transactions t
+                    where t.source_account_id=a.id and t.status='pending'),0)
  from public.treasury_accounts a
  where a.id=p_account and a.active and a.account_kind<>'credit_card'
 $fn$;
 revoke all on function private.treasury_available_request_cash(uuid) from public,anon,authenticated;
+
 
 create or replace function public.treasury_request_transaction(
  p_kind text,p_source uuid,p_target uuid,p_facility uuid,p_expense uuid,
@@ -86,9 +84,7 @@ begin
  if p_source is not null then
    v_total=p_amount+p_interest+p_fee;
    v_available=private.treasury_available_request_cash(p_source);
-   if v_available is null or v_total>v_available then
-     raise exception 'Insufficient unrestricted cash at source account';
-   end if;
+   if v_available is null or v_total>v_available then raise exception 'Insufficient unrestricted cash at source account'; end if;
  end if;
  insert into public.treasury_transactions(kind,source_account_id,target_account_id,facility_id,
  expense_id,amount,interest_amount,fee_amount,business_date,external_reference,memo,requested_by)
@@ -99,9 +95,6 @@ begin
  jsonb_build_object('kind',p_kind,'amount',p_amount,'interest',p_interest,'fee',p_fee));
  return v_id;
 end $$;
-revoke all on function public.treasury_request_transaction(text,uuid,uuid,uuid,uuid,numeric,numeric,numeric,date,text,text) from public,anon,authenticated;
-grant execute on function public.treasury_request_transaction(text,uuid,uuid,uuid,uuid,numeric,numeric,numeric,date,text,text) to authenticated;
-
 
 create or replace function public.treasury_request_supplier_payment(
  p_bill_id uuid,p_bank_account uuid,p_reference text,p_payment_date date,p_amount numeric
@@ -115,14 +108,14 @@ begin
  if not found or a.account_kind='credit_card' then raise exception 'An active liquid payment account is required'; end if;
  select * into b from public.procurement_supplier_bills where id=p_bill_id for update;
  if not found or b.status<>'posted' then raise exception 'Independently approved supplier invoice required'; end if;
- v_available=b.amount-coalesce((select sum(amount) from public.treasury_transactions
+ if exists(select 1 from public.finance_supplier_credit_notes where bill_id=b.id and status='pending') then raise exception 'Resolve pending supplier return before payment'; end if;
+ v_available=b.amount-private.finance_bill_credit_total(b.id)-coalesce((select sum(amount) from public.treasury_transactions
  where supplier_bill_id=b.id and status in ('pending','posted')),0);
  v_amount=coalesce(p_amount,v_available);
  if v_amount is null or v_amount<=0 or round(v_amount,2)<>v_amount or v_amount>v_available then
  raise exception 'Supplier payment exceeds unreserved payable or has invalid precision'; end if;
  v_cash_available=private.treasury_available_request_cash(p_bank_account);
- if v_cash_available is null or v_amount>v_cash_available then
- raise exception 'Insufficient unrestricted cash at source account'; end if;
+ if v_cash_available is null or v_amount>v_cash_available then raise exception 'Insufficient unrestricted cash at source account'; end if;
  if p_payment_date is null or p_payment_date>(now() at time zone 'Asia/Dhaka')::date then
  raise exception 'Cannot settle supplier invoice on a future date'; end if;
  perform private.finance_require_open(p_payment_date);
@@ -136,6 +129,67 @@ begin
  jsonb_build_object('treasury_transaction_id',v_id,'amount',v_amount,'account_id',a.id));
  return v_id;
 end $fn$;
+
+create or replace function public.finance_request_customer_cash(p_sale uuid,p_kind text,p_account uuid,p_amount numeric,p_date date,p_reference text,p_path text,p_sha256 text)
+returns uuid language plpgsql security definer set search_path='' as $$
+declare s public.finance_customer_events%rowtype;a public.treasury_accounts%rowtype;v_due numeric;v_id uuid;v_cash_available numeric;
+begin
+ if not private.finance_authorized(auth.uid()) then raise exception 'Finance role required'; end if;
+ perform private.finance_assert_write_allowed();
+ if p_kind='customer_refund' then perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||p_account::text,0)); end if;
+ select * into s from public.finance_customer_events where id=p_sale and kind='sale' and status='posted' for update;
+ if not found then raise exception 'Posted sale required'; end if;
+ if p_kind is null or p_kind not in ('customer_receipt','customer_refund') then raise exception 'Unsupported customer cash event'; end if;
+ if p_date is null or p_date<s.business_date or p_date>(now() at time zone 'Asia/Dhaka')::date then raise exception 'Invalid customer payment date'; end if;
+ perform private.finance_require_open(p_date);
+ select * into a from public.treasury_accounts where id=p_account and active and account_kind<>'credit_card';
+ if not found then raise exception 'Active liquid account required'; end if;
+ if exists(select 1 from public.finance_customer_events where kind='credit' and source_id=s.id and status='pending') or exists(select 1 from public.finance_customer_cod_allocations where sale_id=s.id and status='pending') then raise exception 'Resolve pending customer credit or COD before payment'; end if;
+ v_due=private.finance_customer_balance(s.id,case when p_kind='customer_receipt' then '1100' else '2300' end)-
+ coalesce((select sum(amount) from public.treasury_transactions where customer_event_id=s.id and kind=p_kind and status='pending'),0);
+ if p_amount is null or p_amount<=0 or round(p_amount,2)<>p_amount or p_amount>v_due then raise exception 'Customer payment exceeds unreserved receivable or refund payable'; end if;
+ if p_kind='customer_refund' then
+  v_cash_available=private.treasury_available_request_cash(p_account);
+  if v_cash_available is null or p_amount>v_cash_available then raise exception 'Insufficient unrestricted cash at source account'; end if;
+ end if;
+ if p_path is null or p_path not like auth.uid()::text||'/%' or p_sha256 is null or p_sha256 !~ '^[a-f0-9]{64}$' or
+ not exists(select 1 from storage.objects where bucket_id='finance-evidence' and name=p_path) then raise exception 'Original customer cash evidence required'; end if;
+ insert into public.treasury_transactions(kind,customer_event_id,source_account_id,target_account_id,amount,business_date,external_reference,memo,requested_by)
+ values(p_kind,s.id,case when p_kind='customer_refund' then a.id end,case when p_kind='customer_receipt' then a.id end,p_amount,p_date,btrim(p_reference),'Customer cash for approved sale '||s.id,auth.uid()) returning id into v_id;
+ insert into public.finance_customer_cash_evidence(transaction_id,evidence_path,evidence_sha256) values(v_id,p_path,p_sha256);
+ insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
+ values(auth.uid(),'customer_cash_requested','treasury_transaction',v_id,jsonb_build_object('sale_id',s.id,'kind',p_kind,'amount',p_amount));
+ return v_id;
+end $$;
+
+create or replace function public.finance_request_customer_deposit(p_source_kind text,p_source uuid,p_refund boolean,p_account uuid,p_amount numeric,p_date date,p_reference text,p_path text,p_sha256 text)
+returns uuid language plpgsql security definer set search_path='' as $$
+declare v_amount numeric;v_remaining numeric;v_id uuid;v_kind text;v_cash_available numeric;
+begin
+ if not private.finance_authorized(auth.uid()) then raise exception 'Finance role required'; end if;
+ perform private.finance_assert_write_allowed();perform private.finance_require_open(p_date);
+ if p_date is null or p_date>(now() at time zone 'Asia/Dhaka')::date or p_refund is null then raise exception 'Valid customer cash date and operation required'; end if;
+ if p_refund then perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||p_account::text,0)); end if;
+ perform pg_advisory_xact_lock(hashtextextended('finance:customer-source:'||p_source_kind||':'||p_source,0));
+ v_amount=private.finance_deposit_source(p_source_kind,p_source,p_refund,false);
+ v_kind=case when p_refund then 'cancellation_refund' else 'customer_deposit' end;
+ if exists(select 1 from public.treasury_transactions where customer_source_kind=p_source_kind and customer_source_id=p_source and status='pending' and kind<>v_kind) then raise exception 'Resolve other pending customer deposit operation'; end if;
+ if p_refund then v_remaining=private.finance_customer_deposit_balance(p_source_kind,p_source);
+ else v_remaining=v_amount-coalesce((select sum(amount) from public.treasury_transactions where customer_source_kind=p_source_kind and customer_source_id=p_source and kind='customer_deposit' and status='posted'),0); end if;
+ v_remaining=v_remaining-coalesce((select sum(amount) from public.treasury_transactions where customer_source_kind=p_source_kind and customer_source_id=p_source and kind=v_kind and status='pending'),0);
+ if p_amount is null or p_amount<=0 or round(p_amount,2)<>p_amount or p_amount>v_remaining then raise exception 'Customer deposit cash exceeds unreserved source entitlement'; end if;
+ if not exists(select 1 from public.treasury_accounts where id=p_account and active and account_kind<>'credit_card') then raise exception 'Liquid customer cash account required'; end if;
+ if p_refund then
+  v_cash_available=private.treasury_available_request_cash(p_account);
+  if v_cash_available is null or p_amount>v_cash_available then raise exception 'Insufficient unrestricted cash at source account'; end if;
+ end if;
+ if length(btrim(coalesce(p_reference,'')))<4 or p_path not like auth.uid()::text||'/%' or p_sha256 !~ '^[a-f0-9]{64}$' or not exists(select 1 from storage.objects where bucket_id='finance-evidence' and name=p_path) then raise exception 'Original customer deposit cash proof required'; end if;
+ insert into public.treasury_transactions(kind,source_account_id,target_account_id,customer_source_kind,customer_source_id,amount,business_date,external_reference,memo,requested_by)
+ values(v_kind,case when p_refund then p_account end,case when not p_refund then p_account end,p_source_kind,p_source,p_amount,p_date,btrim(p_reference),'Actual customer advance / cancelled source refund',auth.uid()) returning id into v_id;
+ insert into public.finance_customer_cash_evidence(transaction_id,evidence_path,evidence_sha256) values(v_id,p_path,p_sha256);
+ insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata) values(auth.uid(),'finance_customer_deposit_requested','treasury_transaction',v_id,jsonb_build_object('source_kind',p_source_kind,'source_id',p_source,'amount',p_amount,'refund',p_refund));
+ return v_id;
+end $$;
 
 create or replace function public.treasury_review_transaction(p_id uuid,p_approve boolean,p_note text)
 returns text language plpgsql security definer set search_path='' as $$
@@ -158,9 +212,7 @@ begin
   return 'rejected';
  end if;
  perform private.finance_require_open(t.business_date);
- if t.source_account_id is not null then
-   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||t.source_account_id::text,0));
- end if;
+ if t.source_account_id is not null then perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||t.source_account_id::text,0)); end if;
  -- Lock resources in deterministic UUID order before balance checks, avoiding simultaneous overspending.
  perform id from public.treasury_accounts
    where id in (t.source_account_id,t.target_account_id) order by id for update;
@@ -223,11 +275,39 @@ begin
      jsonb_build_object('account',dst.ledger_code,'credit',t.amount));
  elsif t.kind='supplier_payment' then
    select * into pb from public.procurement_supplier_bills where id=t.supplier_bill_id for update;
-   if not found or pb.status<>'posted' or t.amount>pb.amount-coalesce((select sum(amount) from public.treasury_transactions where supplier_bill_id=pb.id and status='posted'),0) then raise exception 'Supplier payable is missing, altered or already paid'; end if;
+   if not found or pb.status<>'posted' or t.amount>pb.amount-private.finance_bill_credit_total(pb.id)-coalesce((select sum(amount) from public.treasury_transactions where supplier_bill_id=pb.id and status='posted'),0) then raise exception 'Supplier payable is missing, altered or already paid'; end if;
+   if exists(select 1 from public.finance_supplier_credit_notes where bill_id=pb.id and status='pending') then raise exception 'Resolve pending supplier return before payment'; end if;
    if src.account_kind='credit_card' then raise exception 'Supplier payment must come from liquid account'; end if;
    v_lines=jsonb_build_array(
      jsonb_build_object('account','2100','debit',t.amount),
      jsonb_build_object('account',src.ledger_code,'credit',t.amount));
+ elsif t.kind in ('customer_deposit','cancellation_refund') then
+   perform pg_advisory_xact_lock(hashtextextended('finance:customer-source:'||t.customer_source_kind||':'||t.customer_source_id,0));
+   perform private.finance_deposit_source(t.customer_source_kind,t.customer_source_id,t.kind='cancellation_refund',true);
+   if t.kind='customer_deposit' then
+    if dst.account_kind='credit_card' then raise exception 'Customer deposit requires liquid account'; end if;
+    v_lines=jsonb_build_array(jsonb_build_object('account',dst.ledger_code,'debit',t.amount),jsonb_build_object('account','2200','credit',t.amount));
+   else
+    if src.account_kind='credit_card' or t.amount>private.finance_customer_deposit_balance(t.customer_source_kind,t.customer_source_id) then raise exception 'Cancellation refund exceeds actual unallocated customer deposit'; end if;
+    v_lines=jsonb_build_array(jsonb_build_object('account','2200','debit',t.amount),jsonb_build_object('account',src.ledger_code,'credit',t.amount));
+   end if;
+ elsif t.kind='supplier_credit_receipt' then
+   perform id from public.finance_supplier_credit_notes where id=t.supplier_credit_note_id and status='posted' for update;
+   if not found or t.amount>private.finance_supplier_credit_balance(t.supplier_credit_note_id) then raise exception 'Supplier recovery exceeds remaining credit receivable'; end if;
+   if dst.account_kind='credit_card' then raise exception 'Supplier recovery requires liquid account'; end if;
+   v_lines=jsonb_build_array(jsonb_build_object('account',dst.ledger_code,'debit',t.amount),jsonb_build_object('account','1300','credit',t.amount));
+ elsif t.kind in ('customer_receipt','customer_refund') then
+   perform id from public.finance_customer_events where id=t.customer_event_id and kind='sale' and status='posted' for update;
+   if not found then raise exception 'Posted customer sale required'; end if;
+   if exists(select 1 from public.finance_customer_events where kind='credit' and source_id=t.customer_event_id and status='pending') then raise exception 'Resolve pending customer credit before payment'; end if;
+   if t.amount>private.finance_customer_balance(t.customer_event_id,case when t.kind='customer_receipt' then '1100' else '2300' end) then raise exception 'Customer payment exceeds remaining receivable or refund payable'; end if;
+   if t.kind='customer_receipt' then
+    if dst.account_kind='credit_card' then raise exception 'Customer receipt requires liquid account'; end if;
+    v_lines=jsonb_build_array(jsonb_build_object('account',dst.ledger_code,'debit',t.amount),jsonb_build_object('account','1100','credit',t.amount));
+   else
+    if src.account_kind='credit_card' then raise exception 'Customer refund requires liquid account'; end if;
+    v_lines=jsonb_build_array(jsonb_build_object('account','2300','debit',t.amount),jsonb_build_object('account',src.ledger_code,'credit',t.amount));
+   end if;
  elsif t.kind='owner_capital' then
    v_lines=jsonb_build_array(
      jsonb_build_object('account',dst.ledger_code,'debit',t.amount),
@@ -244,7 +324,7 @@ begin
    update public.finance_expenses set status='settled',updated_at=now() where id=t.expense_id;
  end if;
  if t.kind='supplier_payment' then
-   update public.procurement_supplier_bills set status=case when amount=coalesce((select sum(amount) from public.treasury_transactions where supplier_bill_id=t.supplier_bill_id and status='posted'),0) then 'settled' else 'posted' end where id=t.supplier_bill_id;
+   update public.procurement_supplier_bills set status=case when amount-private.finance_bill_credit_total(t.supplier_bill_id)=coalesce((select sum(amount) from public.treasury_transactions where supplier_bill_id=t.supplier_bill_id and status='posted'),0) then 'settled' else 'posted' end where id=t.supplier_bill_id;
  end if;
  insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata)
  values(v_actor,'treasury_transaction_posted','treasury_transaction',t.id,
@@ -252,5 +332,3 @@ begin
    'fee',t.fee_amount,'journal_id',v_id,'bank_verified',false));
  return 'posted';
 end $$;
-revoke all on function public.treasury_review_transaction(uuid,boolean,text) from public,anon,authenticated;
-grant execute on function public.treasury_review_transaction(uuid,boolean,text) to authenticated;
