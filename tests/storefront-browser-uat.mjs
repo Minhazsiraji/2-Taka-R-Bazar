@@ -1,5 +1,6 @@
 // Synthetic disposable Supabase only; never run with a hosted project URL.
 import assert from 'node:assert/strict'
+import {randomUUID} from 'node:crypto'
 import {chromium} from 'playwright'
 const api=process.env.NEXT_PUBLIC_SUPABASE_URL
 if(!api||new URL(api).hostname!=='127.0.0.1')throw new Error('Disposable local Supabase required')
@@ -12,7 +13,17 @@ await insert('communities',{id:ids.community,name:'Synthetic browser community',
 await insert('products',{id:ids.product,name:'Synthetic browser rice',category:'Rice',package_size:'1 kg',unit:'bag',sku:'synthetic-browser-rice',active:true,is_demo:false,source_type:'PRIVATE_LABEL',image_url:null})
 await insert('pools',{id:ids.pool,community_id:ids.community,title:'Synthetic browser Pool',status:'open',cadence:'weekly',opens_at:new Date(Date.now()-60000).toISOString(),commitment_closes_at:new Date(Date.now()+86400000).toISOString(),confirmation_closes_at:new Date(Date.now()+172800000).toISOString()})
 await insert('pool_items',{id:ids.item,pool_id:ids.pool,product_id:ids.product,benchmark_price_snapshot:100})
-await insert('pool_storefront_publication',{pool_id:ids.pool,featured_product_ids:[ids.product],published:true})
+const email='storefront-browser-admin@example.invalid'
+const password=randomUUID()+'aA1!'
+const created=await fetch(`${api}/auth/v1/admin/users`,{method:'POST',headers,body:JSON.stringify({email,password,email_confirm:true})})
+if(!created.ok)throw new Error('Local synthetic admin creation failed')
+const user=await created.json()
+await insert('user_roles',{user_id:user.id,role:'admin'})
+const signed=await fetch(`${api}/auth/v1/token?grant_type=password`,{method:'POST',headers,body:JSON.stringify({email,password})})
+if(!signed.ok)throw new Error('Local synthetic admin sign-in failed')
+const session=await signed.json()
+const published=await fetch(`${api}/rest/v1/rpc/admin_publish_storefront_pool`,{method:'POST',headers:{...headers,Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({p_pool_id:ids.pool,p_product_ids:[ids.product],p_published:true,p_sort_order:100})})
+if(!published.ok)throw new Error(`Authorized publication failed: ${published.status} ${await published.text()}`)
 const browser=await chromium.launch({headless:true})
 const errors=[]
 try{
