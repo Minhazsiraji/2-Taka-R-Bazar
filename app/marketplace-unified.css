@@ -33,7 +33,7 @@ body.site-glass-root main.public-marketplace-flat .market-hero-copy.market-hero-
  box-shadow:none!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-copy.market-hero-flat{
- border:0!important;border-radius:0!important;padding:14px 1px!important;
+ border:0!important;border-radius:0!important;padding:0 1px!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-product.market-hero-pool-shell{
  background:transparent!important;border:1px solid var(--market-edge)!important;
@@ -256,7 +256,7 @@ body.site-glass-root main.public-marketplace-flat .market-flat-header .market-he
   grid-template-columns:minmax(95px,.78fr) minmax(0,1.22fr)!important;
  }
  body.site-glass-root main.public-marketplace-flat .market-hero-copy.market-hero-flat{
-  padding:10px 0!important;
+  padding:0!important;
  }
 }
 html[data-theme="dark"] body.site-glass-root:has(main.public-marketplace-flat){

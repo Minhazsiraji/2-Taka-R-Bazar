@@ -9,10 +9,10 @@ body.site-glass-root main.public-marketplace-flat{
  --shop-accent:var(--market-accent,#087f8d);
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-grid.market-hero-editorial{
- align-items:center!important;
+ align-items:start!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-pool-shell{
- align-self:center!important;height:auto!important;min-height:0!important;
+ align-self:start!important;height:auto!important;min-height:0!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-featured-pool{
  gap:10px!important;

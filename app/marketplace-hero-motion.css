@@ -8,10 +8,14 @@ body.site-glass-root main.public-marketplace-flat .market-hero-motion{
  width:100%;max-width:650px;min-width:0;
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-message-frame{
- min-height:245px;display:flex;align-items:center;
+ display:grid;grid-template-columns:minmax(0,1fr);align-items:start;
+ margin-top:12px;
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-message{
- width:100%;min-width:0;animation:market-hero-enter .5s ease-out both;
+ grid-area:1 / 1;width:100%;min-width:0;visibility:hidden;pointer-events:none;
+}
+body.site-glass-root main.public-marketplace-flat .market-hero-message.is-active{
+ visibility:visible;pointer-events:auto;animation:market-hero-enter .5s ease-out both;
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-message h1{
  margin:0!important;overflow-wrap:break-word;
@@ -23,14 +27,14 @@ body.site-glass-root main.public-marketplace-flat .market-hero-message h1>.marke
  display:block;margin-top:4px;
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-message .market-hero-subtitle{
- margin:12px 0 0!important;line-height:1.55!important;
+ margin:8px 0 0!important;line-height:1.55!important;
 }
 @keyframes market-hero-enter{
  from{opacity:0;transform:translateY(11px)}
  to{opacity:1;transform:translateY(0)}
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-message-controls{
- display:flex;align-items:center;gap:9px;min-height:41px;margin-top:6px;
+ display:flex;align-items:center;gap:9px;min-height:41px;margin-top:8px;
  color:var(--market-muted,#55647c);
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-message-dots{
@@ -67,10 +71,10 @@ body.site-glass-root main.public-marketplace-flat .market-hero-message-arrows bu
  outline:2px solid #0cb6b1!important;outline-offset:2px;
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-flat .market-hero-actions{
- margin-top:12px!important;
+ margin-top:8px!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-flat .market-hero-benefits{
- margin-top:14px!important;
+ margin-top:8px!important;
 }
 body.site-glass-root main.public-marketplace-flat :is(.btn-primary,.btn-secondary),
 body.site-glass-root main.public-marketplace-flat :is(button.market-demo-add-line,button.market-pool-nav-arrow),
@@ -186,10 +190,10 @@ body.site-glass-root:has(main.public-marketplace-flat) .market-mobile-nav-panel{
 }
 @media(max-width:640px){
  body.site-glass-root main.public-marketplace-flat .market-hero-message-frame{
-  min-height:265px;align-items:center;
+  margin-top:8px;
  }
  body.site-glass-root main.public-marketplace-flat .market-hero-message-controls{
-  margin-top:0;
+  margin-top:6px;
  }
  body.site-glass-root main.public-marketplace-flat .market-hero-flat .market-hero-main-title{
   font-size:clamp(1.34rem,5.8vw,1.72rem)!important;
@@ -229,9 +233,6 @@ body.site-glass-root:has(main.public-marketplace-flat) .market-mobile-nav-panel{
 @media(max-width:380px){
  body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-mobile-nav-panel{
   grid-template-columns:1fr;
- }
- body.site-glass-root main.public-marketplace-flat .market-hero-message-frame{
-  min-height:290px;
  }
 }
 html[data-theme="dark"] body.site-glass-root:has(main.public-marketplace-flat){

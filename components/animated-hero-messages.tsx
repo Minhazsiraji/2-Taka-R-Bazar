@@ -26,7 +26,6 @@ export function AnimatedHeroMessages({language}:{language:MarketplaceLanguage}){
   },HERO_ROTATION_MS)
   return ()=>window.clearInterval(timer)
  },[paused,reducedMotion])
- const message=HERO_MESSAGES[index]
  const select=(next:number)=>{setIndex((next+HERO_MESSAGES.length)%HERO_MESSAGES.length);setManual(true)}
  return <div className="market-hero-motion" lang={language}
   onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}
@@ -34,13 +33,14 @@ export function AnimatedHeroMessages({language}:{language:MarketplaceLanguage}){
   onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node|null))setPaused(false)}}
   role="region" aria-roledescription="carousel" aria-label={t('Why shop together','কেন একসাথে কেনাকাটা করবেন')}>
   <div className="market-hero-message-frame" aria-live="off">
-   <div className="market-hero-message" key={message.key}>
+   {/* Overlapping grid cells reserve the tallest real pair at this width and language. */}
+   {HERO_MESSAGES.map((message,i)=><div className={i===index?"market-hero-message is-active":"market-hero-message"} key={message.key} aria-hidden={i!==index} inert={i!==index}>
     <h1 className="market-hero-main-title">
      <span>{t(message.first.en,message.first.bn)}</span>
      <span className="market-hero-green">{t(message.accent.en,message.accent.bn)}</span>
     </h1>
     <p className="market-hero-subtitle">{t(message.detail.en,message.detail.bn)}</p>
-   </div>
+   </div>)}
   </div>
   <div className="market-hero-message-controls">
    <div className="market-hero-message-dots" role="group" aria-label={t('Choose hero message','হিরো বার্তা বেছে নিন')}>

@@ -23,7 +23,7 @@ test('community options use in-flow disclosure and native keyboard-operable radi
 test('late location callbacks cannot re-label a manually selected browsing community',()=>{
  assert.equal((market.match(/if\(manualSelected.current\)return/g)||[]).length,2)
  assert.match(market,/setLocationState\('manual'\)/)
- assert.match(market,/eligibility checked before joining/)
+ assert.match(market,/Manually selected for browsing; joining requires verification/)
 })
 test('gallery has one equal vertical slot per selected product and honest missing-image fallback',()=>{
  assert.match(gallery,/featuredProductIds[\s\S]*?\.map\(id=>pool.bundle.find/)
@@ -43,4 +43,23 @@ test('language wrapper contributes no second border and glossy tokens reach the 
  assert.match(css,/\.market-flat-header \.market-language-toggle\{[\s\S]*?border:0!important/)
  assert.match(css,/\.market-pool-detail-header \.market-language-toggle\{[\s\S]*?border:0!important/)
  assert.match(read('app/marketplace-unified.css'),/\.market-header-search\{[\s\S]*?border:1px solid var\(--gloss-rim\)/)
+})
+
+test('community status is inside the selector column and describes the disclosure',()=>{
+ const control=market.slice(market.indexOf('<div className="market-location-control">'),market.indexOf('{nearestAreas.length>0'))
+ assert.match(control,/<CommunityPicker[^>]*statusId="market-location-status"/)
+ assert.match(control,/<p id="market-location-status" role="status" aria-live="polite"/)
+ assert.ok(control.indexOf('market-location-status">{locationStatus}</p>')<control.indexOf('</div></div>'))
+ assert.match(picker,/aria-describedby=\{statusId\}/)
+ assert.match(market,/const locationStatus=gpsBusy\?/)
+})
+test('hero reserves actual longest slide content without fixed mobile blank space',()=>{
+ const hero=read('components/animated-hero-messages.tsx')
+ assert.match(hero,/HERO_MESSAGES.map\(\(message,i\)=>/)
+ assert.match(hero,/aria-hidden=\{i!==index\} inert=\{i!==index\}/)
+ assert.match(css,/market-hero-message-frame\{\s*display:grid/)
+ assert.match(css,/grid-area:1 \/ 1/)
+ assert.match(css,/market-hero-message.is-active/)
+ assert.ok(!/min-height:(245|265|290)px/.test(css))
+ assert.match(read('app/marketplace-shopper.css'),/align-self:start!important;height:auto/)
 })

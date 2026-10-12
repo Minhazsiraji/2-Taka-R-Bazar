@@ -7,7 +7,7 @@ import {chooseText} from '@/lib/storefront-language'
 
 /** In-flow disclosure: native option popups cannot be constrained by page CSS.
  * Native radio inputs provide Tab/arrow-key selection without a custom listbox. */
-export function CommunityPicker({areas,value,onChange,language}:{areas:StorefrontArea[];value:string;onChange:(value:string)=>void;language:MarketplaceLanguage}){
+export function CommunityPicker({areas,value,onChange,language,statusId}:{areas:StorefrontArea[];value:string;onChange:(value:string)=>void;language:MarketplaceLanguage;statusId?:string}){
  const disclosure=useRef<HTMLDetailsElement>(null)
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const label=t('Your community / area','আপনার কমিউনিটি / এলাকা')
@@ -21,7 +21,7 @@ export function CommunityPicker({areas,value,onChange,language}:{areas:Storefron
     disclosure.current?.querySelector('summary')?.focus()
    }
   }}>
-   <summary id="market-area-select" aria-labelledby="market-area-label market-area-value">
+   <summary id="market-area-select" aria-labelledby="market-area-label market-area-value" aria-describedby={statusId}>
     <span id="market-area-value">{options.find(option=>option.community_id===value)?.community_name??options[0].community_name}</span>
     <span aria-hidden="true">⌄</span>
    </summary>

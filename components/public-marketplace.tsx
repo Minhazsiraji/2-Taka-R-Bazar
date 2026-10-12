@@ -92,11 +92,14 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   setGpsMessage(value?'Showing your chosen community. A verified address is required before joining a local Group Deal.':'Showing all operating areas.')
  }
  const activeLocationLabel=activeArea?.community_name??(locationState==='denied'?t('Choose area','এলাকা বাছুন'):t('Find my community','আমার এলাকা খুঁজুন'))
- const locationStatus=locationState==='matched'?t('Nearby community selected; joining requires verification.','কাছের কমিউনিটি নির্বাচিত হয়েছে; যোগ দিতে যাচাই প্রয়োজন।'):
+ const locationStatus=gpsBusy?t('Requesting location…','লোকেশন চাওয়া হচ্ছে…'):
+ locationState==='matched'?t('Nearby community selected; joining requires verification.','কাছের কমিউনিটি নির্বাচিত হয়েছে; যোগ দিতে যাচাই প্রয়োজন।'):
  locationState==='denied'?t('Location denied. Select your area manually.','লোকেশন অনুমতি নেই। নিজে এলাকা বেছে নিন।'):
  locationState==='nearby'?t('No reliable match; select a community manually.','নির্ভরযোগ্য এলাকা মেলেনি; নিজে বেছে নিন।'):
- locationState==='manual'?t('Area selected; eligibility checked before joining.','এলাকা নির্বাচিত; যোগদানের আগে যাচাই হবে।'):
- gpsBusy?t('Requesting location…','লোকেশন চাওয়া হচ্ছে…'):t('You can browse without location.','লোকেশন ছাড়াও পণ্য দেখতে পারবেন।')
+ locationState==='manual'?(area?t('Manually selected for browsing; joining requires verification.','নিজে এলাকা বেছে নিয়েছেন; যোগ দিতে যাচাই প্রয়োজন।'):t('Showing all areas; no community selected.','সব এলাকার পণ্য দেখছেন; কমিউনিটি বাছা হয়নি।')):
+ locationState==='unavailable'?t('Location unavailable; choose your community manually.','লোকেশন পাওয়া যাচ্ছে না; নিজে এলাকা বেছে নিন।'):
+ locationState==='failed'?t('Location detection failed; retry or choose an area.','অবস্থান খোঁজা যায়নি; আবার চেষ্টা করুন বা এলাকা বাছুন।'):
+ t('You can browse without location.','লোকেশন ছাড়াও পণ্য দেখতে পারবেন।')
 
  return <>
   <PublicHeader storefront actionHref={authenticated?'/home':'/login'} actionLabel={authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Sign in','লগইন')}
@@ -105,19 +108,20 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">
    <div className="market-location-panel">
     <div className="market-location-intro"><strong>📍 {t('Find savings near your community','আপনার এলাকায় কম দামের অফার খুঁজুন')}</strong>
-     <p>{t('Allow location to suggest nearby communities and group prices. Joining requires verified eligibility.','কাছের কমিউনিটি ও গ্রুপের দাম দেখতে লোকেশন অনুমতি দিন। যোগ দিতে এলাকা যাচাই প্রয়োজন।')}</p></div>
+     <p>{t('Allow location to suggest nearby communities and group prices. Joining requires verified eligibility.','কাছের কমিউনিটি ও গ্রুপের দাম দেখতে লোকেশন অনুমতি দিন। যোগ দিতে এলাকা যাচাই প্রয়োজন।')}</p>
+     <p>{t('Browse without signing in.','লগইন ছাড়াই পণ্য দেখতে পারবেন।')}</p></div>
     <div className="market-location-control">
-     <CommunityPicker areas={areas} value={area} onChange={selectArea} language={language}/>
+     <CommunityPicker areas={areas} value={area} onChange={selectArea} language={language} statusId="market-location-status"/>
      <button type="button" className="market-location-retry" onClick={useLocation} disabled={gpsBusy}>{gpsBusy?t('Finding area…','এলাকা খোঁজা হচ্ছে…'):t('Detect my location','আমার অবস্থান খুঁজুন')}</button>
+     <p id="market-location-status" role="status" aria-live="polite" title={gpsMessage} className="market-location-status">{locationStatus}</p>
      </div></div>
-   <p role="status" aria-live="polite" title={gpsMessage} className="market-location-status">{locationStatus}</p>
    {nearestAreas.length>0&&<div className="market-nearby-suggestions" aria-label={t('Nearby communities','কাছের কমিউনিটি')}>
     <span className="market-nearby-heading">{t('Near you','কাছাকাছি')} <small>({t('approximate','আনুমানিক')})</small></span>
     {nearestAreas.map(a=>{const community=areas.find(c=>c.community_id===a.id);if(!community)return null;return <button key={a.id} type="button" aria-pressed={area===a.id}
       onClick={()=>selectArea(a.id)} className={area===a.id?'market-nearby-option is-selected':'market-nearby-option'}>
       {community.community_name} <small>{a.meters<1000?Math.max(0.1,a.meters/1000).toFixed(1):Math.round(a.meters/1000)} km</small></button>})}
    </div>}
-   <div className="market-hero-grid market-hero-editorial mt-6">
+   <div className="market-hero-grid market-hero-editorial">
     <section className="market-hero-copy market-hero-flat" aria-label={t('Shop together and save','একসাথে কিনে সাশ্রয় করুন')}>
      <span className="market-hero-editorial-kicker">{t('Community-first grocery marketplace','আপনার কমিউনিটির স্মার্ট বাজার')}</span>
      <AnimatedHeroMessages language={language}/>
