@@ -31,7 +31,7 @@ test('admin-only mutation and no surprise publish or unverified video URL',()=>{
 test('public details and carousel use same filtered catalog without inventing prices',()=>{
   assert.match(route,/get_public_own_product_showcase/)
   assert.match(route,/notFound\(\)/)
-  assert.match(carousel,/Explore product/)
+  assert.match(carousel,/View product/)
   assert.doesNotMatch(route,/own_product_costs|own_product_inventory|benchmark_price/)
   assert.doesNotMatch(carousel,/৳[0-9]/)
 })

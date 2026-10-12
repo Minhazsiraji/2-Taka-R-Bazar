@@ -180,7 +180,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      <p className="mt-3 text-sm leading-7 text-slate-600">{t('Explore 2TBR private-label and exclusive products, photos and videos.','2TBR-এর নিজস্ব ও এক্সক্লুসিভ পণ্যের ছবি, ভিডিও ও বিস্তারিত দেখুন।')}</p>
      <a href="#deals" className="btn-secondary mt-4">{t('Browse available offers →','অফার দেখুন →')}</a>
     </div>
-    <div className="market-exclusive-carousel"><FeaturedProductsCarousel products={featured} language={language}/></div>
+    <div className="market-exclusive-carousel"><FeaturedProductsCarousel products={featured} language={language} offers={offers} areas={areas} selectedArea={area}/></div>
    </div>
   </section>
   <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={selectArea} language={language} demoMode={demoMode}/>
