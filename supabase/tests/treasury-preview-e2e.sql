@@ -20,7 +20,7 @@ create temp table qa_tx(label text primary key,id uuid not null);
 create temp table qa_expenses(label text primary key,id uuid not null);
 create temp table qa_statements(label text primary key,id uuid not null);
 
-select plan(53);
+select plan(54);
 
 -- Operator-issued leases are transaction-local synthetic fixture authorization.
 insert into private.finance_uat_leases(actor_id,expires_at,reason)
@@ -175,18 +175,19 @@ select ok(pg_temp.expect_failure(
     (select id from qa_accounts where label='A'),(select id from qa_accounts where label='A'),null,null,
     10000,0,0,current_date,'SAME-ACCOUNT-TRANSFER','Invalid self transfer detection')$$,
  'Transfer requires two distinct liquid accounts'),'Self-transfer cannot create false cash flow');
-insert into qa_tx(label,id)
-select 'overdraft',public.treasury_request_transaction('transfer',
+select ok(pg_temp.expect_failure(
+ $select public.treasury_request_transaction('transfer',
     (select id from qa_accounts where label='A'),(select id from qa_accounts where label='B'),null,null,
-    9999999,0,0,current_date,'OVERDRAFT-TEST-01','Cannot overdraw bank beyond balance');
+    9999999,0,0,current_date,'OVERDRAFT-TEST-01','Cannot overdraw bank beyond balance')$,
+ 'Insufficient unrestricted cash'),'Insufficient unrestricted cash is rejected before approval');
+select is((select count(*)::integer from public.treasury_transactions
+ where external_reference='OVERDRAFT-TEST-01'),0,
+ 'Rejected overdraw never enters the Checker approval inbox');
 insert into qa_tx(label,id)
 select 'excess_debt',public.treasury_request_transaction('loan_repay',
     (select id from qa_accounts where label='A'),null,(select id from qa_debts where label='private'),null,
     9000,0,0,current_date,'LOAN-OVERPAY-001','Cannot pay more principal than remaining');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000951',true);
-select ok(pg_temp.expect_failure(
- format('select public.treasury_review_transaction(%L::uuid,true,%L)',(select id from qa_tx where label='overdraft'),'overdraw'),
- 'Insufficient unrestricted cash'),'Negative balance prevented at approval time');
 select ok(pg_temp.expect_failure(
  format('select public.treasury_review_transaction(%L::uuid,true,%L)',(select id from qa_tx where label='excess_debt'),'overpay'),
  'Loan principal payment exceeds'),'Loan overpayment blocked against posted outstanding debt');
