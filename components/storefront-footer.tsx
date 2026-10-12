@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import {BrandLogo} from '@/components/brand-logo'
 import {LEGAL_LINKS} from '@/lib/legal'
-import {SITE_TAGLINE_BN,SITE_TAGLINE_EN} from '@/lib/site'
+import {BUSINESS_CONTACT_EMAIL,SUPPORT_CONTACT_EMAIL,SITE_TAGLINE_BN,SITE_TAGLINE_EN} from '@/lib/site'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
 
@@ -18,8 +18,8 @@ export function StorefrontFooter({language='bn'}:{language?:MarketplaceLanguage}
     {LEGAL_LINKS.filter(([href])=>href!=='/about'&&href!=='/faq').map(([href,en,bn])=><Link key={href} href={href}>{t(en,bn)}</Link>)}
    </nav>
    <div className="market-footer-contact"><h2>{t('Contact us','যোগাযোগ করুন')}</h2><p>{t('For business and supplier enquiries','ব্যবসা ও সরবরাহকারী সংক্রান্ত যোগাযোগ')}</p>
-    <a href="mailto:business@2takarbazar.com">business@2takarbazar.com</a>
-    <p>{t('For customer support','গ্রাহক সহায়তার জন্য')}</p><a href="mailto:support@2takarbazar.com">support@2takarbazar.com</a>
+    <a href={`mailto:${BUSINESS_CONTACT_EMAIL}`}>{BUSINESS_CONTACT_EMAIL}</a>
+    <p>{t('For customer support','গ্রাহক সহায়তার জন্য')}</p><a href={`mailto:${SUPPORT_CONTACT_EMAIL}`}>{SUPPORT_CONTACT_EMAIL}</a>
     <a href="#supplier-network">{t('Become a supply partner →','সরবরাহকারী হতে যোগাযোগ করুন →')}</a>
    </div>
   </div>

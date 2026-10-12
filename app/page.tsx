@@ -4,7 +4,7 @@ import {demoStorefrontEnabled,DEMO_AREAS,DEMO_OFFERS,DEMO_SHOWCASE} from '@/lib/
 import {PublicMarketplace} from '@/components/public-marketplace'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
-import {PUBLIC_CONTACT_EMAIL,SITE_DESCRIPTION,SITE_NAME,SITE_TAGLINE_EN,SITE_URL} from '@/lib/site'
+import {BUSINESS_CONTACT_EMAIL,SUPPORT_CONTACT_EMAIL,SITE_DESCRIPTION,SITE_NAME,SITE_TAGLINE_EN,SITE_URL} from '@/lib/site'
 
 export const dynamic='force-dynamic'
 export const metadata:Metadata={
@@ -35,8 +35,8 @@ export default async function Page(){
   '@context':'https://schema.org',
   '@graph':[
    {'@type':'Organization','@id':`${SITE_URL}/#organization`,name:SITE_NAME,url:SITE_URL,
-    logo:`${SITE_URL}/brand-logo-header.png`,email:PUBLIC_CONTACT_EMAIL,slogan:SITE_TAGLINE_EN,
-    contactPoint:{'@type':'ContactPoint',contactType:'customer service',email:PUBLIC_CONTACT_EMAIL}},
+    logo:`${SITE_URL}/brand-logo-header.png`,email:BUSINESS_CONTACT_EMAIL,slogan:SITE_TAGLINE_EN,
+    contactPoint:{'@type':'ContactPoint',contactType:'customer service',email:SUPPORT_CONTACT_EMAIL}},
    {'@type':'WebSite','@id':`${SITE_URL}/#website`,name:SITE_NAME,url:SITE_URL,
     description:SITE_DESCRIPTION,publisher:{'@id':`${SITE_URL}/#organization`}},
    {'@type':'ImageObject','@id':`${SITE_URL}/#primaryimage`,contentUrl:`${SITE_URL}/grocery-hero-glass.svg`,caption:'Everyday essentials bought with community savings'},
