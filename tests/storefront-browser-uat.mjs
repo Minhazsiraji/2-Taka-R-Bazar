@@ -50,6 +50,7 @@ try{
   await page.getByRole('heading',{name:'Synthetic browser rice',exact:true}).first().waitFor()
   assert.ok(!page.url().includes('/login'))
   await page.getByRole('link',{name:'Sign in to join',exact:true}).click()
+  await page.waitForURL(url=>url.pathname==='/login')
   assert.ok(page.url().includes('/login'))
   assert.ok(!page.url().includes('/demo-'))
   await page.close()
