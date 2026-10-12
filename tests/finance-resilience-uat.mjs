@@ -18,8 +18,9 @@ const run=s=>new Promise(resolve=>{
  child.on('close',code=>resolve({code,out,error}))
 })
 function asActor(actor,s){return `begin; select set_config('request.jwt.claim.sub','${actor}',true); ${s}; set constraints all immediate; commit;`}
+const lastUuid=out=>out.split('\n').map(v=>v.trim()).filter(v=>/^[0-9a-f-]{36}$/.test(v)).at(-1)
 // Two real database sessions compete to reserve the same spendable cash at request creation.
-const raceBank=sql(asActor(checker,`select public.treasury_create_account('Request Reservation Race Bank','bank','Synthetic','9001',current_date,100000,'RACE-OPEN-100K',0,null)`)).split('\n').at(-1)
+const raceBank=lastUuid(sql(asActor(checker,`select public.treasury_create_account('Request Reservation Race Bank','bank','Synthetic','9001',current_date,100000,'RACE-OPEN-100K',0,null)`)))
 assert.match(raceBank,/^[0-9a-f-]{36}$/)
 const requestRace=await Promise.all(['ONE','TWO'].map(suffix=>run(asActor(maker,`select public.treasury_request_transaction('owner_draw','${raceBank}',null,null,null,60000,0,0,current_date,'RACE-DRAW-${suffix}','Synthetic concurrent draw ${suffix}')`))))
 assert.equal(requestRace.filter(r=>r.code===0).length,1,'Only one racing request may reserve insufficient shared cash')
@@ -37,10 +38,10 @@ const replay=await run(asActor(checker,`select public.treasury_review_transactio
 assert.notEqual(replay.code,0);assert.match(replay.error,/not pending/)
 console.log('CONCURRENT_REPLAY_PASS immutable one-post journal')
 // Approval still rechecks posted cash if the balance changes after a valid request.
-const staleBank=sql(asActor(checker,`select public.treasury_create_account('Stale Approval Guard Bank','bank','Synthetic','9002',current_date,1000,'STALE-OPEN-1K',0,null)`)).split('\n').at(-1)
+const staleBank=lastUuid(sql(asActor(checker,`select public.treasury_create_account('Stale Approval Guard Bank','bank','Synthetic','9002',current_date,1000,'STALE-OPEN-1K',0,null)`)))
 assert.match(staleBank,/^[0-9a-f-]{36}$/)
 const staleLedger=sql(`select ledger_code from public.treasury_accounts where id='${staleBank}'`)
-const staleRequest=sql(asActor(maker,`select public.treasury_request_transaction('owner_draw','${staleBank}',null,null,null,800,0,0,current_date,'STALE-BALANCE-REQ','Valid when submitted, stale before approval')`)).split('\n').at(-1)
+const staleRequest=lastUuid(sql(asActor(maker,`select public.treasury_request_transaction('owner_draw','${staleBank}',null,null,null,800,0,0,current_date,'STALE-BALANCE-REQ','Valid when submitted, stale before approval')`)))
 assert.match(staleRequest,/^[0-9a-f-]{36}$/)
 sql(asActor(checker,`select private.treasury_post('STALE-BALANCE-DRAIN',gen_random_uuid(),current_date,'Synthetic posted drain after request',jsonb_build_array(jsonb_build_object('account','3200','debit',300),jsonb_build_object('account','${staleLedger}','credit',300)),auth.uid())`))
 const staleReview=await run(asActor(checker,`select public.treasury_review_transaction('${staleRequest}',true,'Independent stale-balance approval attempt')`))
