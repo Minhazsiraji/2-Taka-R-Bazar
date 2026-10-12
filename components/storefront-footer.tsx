@@ -7,7 +7,7 @@ import {chooseText} from '@/lib/storefront-language'
 
 export function StorefrontFooter({language='bn'}:{language?:MarketplaceLanguage}){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
- return <footer className="market-information-footer" lang={language}>
+ return <><footer className="market-information-footer" lang={language}>
   <div className="market-content market-footer-information">
    <div className="market-footer-brand"><BrandLogo size={44}/><div><strong>2-TAKA-R-BAZAR</strong><p>{t(SITE_TAGLINE_EN,SITE_TAGLINE_BN)}</p></div></div>
    <nav aria-label={t('About and shopping help','পরিচিতি ও কেনাকাটার সহায়তা')}><h2>{t('Explore & get help','পরিচিতি ও সহায়তা')}</h2>
@@ -17,15 +17,22 @@ export function StorefrontFooter({language='bn'}:{language?:MarketplaceLanguage}
    <nav aria-label={t('Terms and policies','শর্তাবলি ও নীতিমালা')}><h2>{t('Terms & policies','শর্তাবলি ও নীতিমালা')}</h2>
     {LEGAL_LINKS.filter(([href])=>href!=='/about'&&href!=='/faq').map(([href,en,bn])=><Link key={href} href={href}>{t(en,bn)}</Link>)}
    </nav>
-   <div className="market-footer-contact"><h2>{t('Contact us','যোগাযোগ করুন')}</h2><p>{t('Questions or supplier enquiries? Email our team.','প্রশ্ন বা সরবরাহকারী হিসেবে যোগাযোগ করতে আমাদের ইমেইল করুন।')}</p>
-    <a href="mailto:business@agentsiraji.com">business@agentsiraji.com</a><a href="#supplier-network">{t('Become a supply partner →','সরবরাহকারী হতে যোগাযোগ করুন →')}</a>
+   <div className="market-footer-contact"><h2>{t('Contact us','যোগাযোগ করুন')}</h2><p>{t('For business and supplier enquiries','ব্যবসা ও সরবরাহকারী সংক্রান্ত যোগাযোগ')}</p>
+    <a href="mailto:business@2takarbazar.com">business@2takarbazar.com</a>
+    <p>{t('For customer support','গ্রাহক সহায়তার জন্য')}</p><a href="mailto:support@2takarbazar.com">support@2takarbazar.com</a>
+    <a href="#supplier-network">{t('Become a supply partner →','সরবরাহকারী হতে যোগাযোগ করুন →')}</a>
    </div>
   </div>
-  <div className="market-content market-footer-credits">© 2026 2-TAKA-R-BAZAR · {t('Developed by','তৈরি করেছেন')}: <a href="https://agentsiraji.com" target="_blank" rel="noreferrer">agentsiraji.com</a></div>
-  <nav className="market-content market-footer-shortcuts" aria-label={t('Shopping navigation','কেনাকাটার নেভিগেশন')}>
+  <div className="market-content market-footer-credits">© 2026 2-TAKA-R-BAZAR · {t('Developed by','তৈরি করেছেন')}: <a href="https://agentsiraji.com" target="_blank" rel="noreferrer">agentsiraji.com</a>
+   <div className="market-footer-developer-contact">{t('Contact','যোগাযোগ')}: <a href="mailto:business@agentsiraji.com">Business@agentsiraji.com</a></div>
+  </div>
+ </footer>
+  <nav className="app-mobile-nav market-storefront-dock" aria-label={t('Shopping navigation','কেনাকাটার নেভিগেশন')} lang={language}>
+   <div className="app-mobile-nav-inner">
    {[
     ['/', 'Home','হোম'],['/pool','Pools','পুল'],['/group-deals','Deals','ডিল'],['/orders','Orders','অর্ডার'],['/savings','Savings','সাশ্রয়'],
-   ].map(([href,en,bn])=><Link key={href} href={href} aria-current={href==='/'?'page':undefined}>{t(en,bn)}</Link>)}
+   ].map(([href,en,bn])=><Link className={'app-mobile-nav-link'+(href==='/'?' is-active':'')} key={href} href={href} aria-current={href==='/'?'page':undefined}><span>{t(en,bn)}</span></Link>)}
+   </div>
   </nav>
- </footer>
+ </>
 }
