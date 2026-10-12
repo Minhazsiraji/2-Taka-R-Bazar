@@ -451,9 +451,10 @@ async function main(){
   assert.notEqual(customerFile.headers()['content-type'],'application/pdf','Customer must not receive original finance evidence')
   const forbiddenLogin=await customerContext.newPage()
   await forbiddenLogin.goto(base+'/finance-uat/login')
-  await forbiddenLogin.getByLabel('Reviewer email').fill(identities.get('customer').email)
-  await forbiddenLogin.getByLabel('Password',{exact:true}).fill(identities.get('customer').password)
-  await forbiddenLogin.getByRole('button',{name:'Sign in for finance UAT'}).click()
+  const forbiddenReviewerForm=forbiddenLogin.getByLabel('Reviewer email').locator('xpath=ancestor::form')
+  await forbiddenReviewerForm.getByLabel('Reviewer email').fill(identities.get('customer').email)
+  await forbiddenReviewerForm.getByLabel('Password',{exact:true}).fill(identities.get('customer').password)
+  await forbiddenReviewerForm.getByRole('button',{name:'Sign in for finance UAT'}).click()
   await forbiddenLogin.getByText('Sign-in requires an authorized reviewer account with an active UAT lease.',{exact:true}).waitFor({timeout:45000})
   assert.match(forbiddenLogin.url(),/\/finance-uat\/login\?error=/)
   const customer=identities.get('customer').client
