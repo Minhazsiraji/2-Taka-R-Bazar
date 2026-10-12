@@ -13,10 +13,10 @@ import {chooseText} from '@/lib/storefront-language'
 import {FeaturedProductsCarousel} from '@/components/featured-products-carousel'
 import {FeaturedPoolShowcase} from '@/components/featured-pool-showcase'
 import {AnimatedHeroMessages} from '@/components/animated-hero-messages'
-import {getDemoFeaturedPools} from '@/lib/featured-pools'
+import {getDemoFeaturedPools,type DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
-export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],demoMode=false}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];demoMode?:boolean}){
+export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],demoMode=false,pools=[]}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];demoMode?:boolean;pools?:DemoFeaturedPool[]}){
  const [language,setLanguage]=useState<MarketplaceLanguage>('bn')
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const [area,setArea]=useState('')
@@ -37,7 +37,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   (category==='all'||offer.category===category)&&
   [offer.product_name,offer.product_name_bn,offer.category,offer.category_bn,offer.brand,offer.offer_title].join(' ').toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
  ),[offers,area,search,mode,category])
- const heroPools=demoMode?getDemoFeaturedPools(offers):[]
+ const heroPools=demoMode?getDemoFeaturedPools(offers):pools.filter(p=>!area||p.community_id===area)
  const groupHref=authenticated?'/group-deals':'/login?next=%2Fgroup-deals'
  const poolHref=authenticated?'/pool':'/login?next=%2Fpool'
  const useLocation=useCallback(()=>{

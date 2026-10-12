@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import {PoolStorefrontPublication} from '@/components/pool-storefront-publication'
 import { notFound } from 'next/navigation'
 import { AdminShell } from '@/components/admin-shell'
 import { ProductImage } from '@/components/product-image'
@@ -18,12 +19,13 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const [{ data: community }, { data: items }, { data: products }, { data: commitments }, { data: quotes }, { data: pickups }] = await Promise.all([
     supabase.from('communities').select('id,name').eq('id', pool.community_id).maybeSingle(),
     supabase.from('pool_items').select('id,product_id,benchmark_price_snapshot,final_customer_price').eq('pool_id', id),
-    supabase.from('products').select('id,name,package_size,source_type,image_url'),
+    supabase.from('products').select('id,name,package_size,source_type,image_url,active,is_demo'),
     supabase.from('commitments').select('pool_item_id,quantity,status'),
     supabase.from('supplier_quotes').select('pool_item_id,quote_phase,threshold_quantity,customer_ceiling_price').eq('quote_phase','planning_tier'),
     supabase.from('pickup_points').select('id,name,address').eq('community_id', pool.community_id).eq('active', true),
   ])
 
+  const {data:publication}=await supabase.from('pool_storefront_publication').select('published,featured_product_ids,sort_order').eq('pool_id',id).maybeSingle()
   const productById = new Map((products ?? []).map((p: any) => [p.id, p]))
   const selectedPickup = (pickups ?? []).find((p: any) => p.id === pool.receiving_pickup_point_id)
   const demandFor = (itemId: string) => (commitments ?? []).filter((c: any) => c.pool_item_id === itemId && ['active','confirmed'].includes(c.status)).reduce((sum: number, c: any) => sum + Number(c.quantity || 0), 0)
@@ -72,5 +74,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         </div>
       })}
     </section>
+    <PoolStorefrontPublication poolId={id} publication={publication} products={(products??[]).filter((p:any)=>p.active&&!p.is_demo&&(items??[]).some((i:any)=>i.product_id===p.id))}/>
   </div></AdminShell>
 }

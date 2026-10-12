@@ -2,7 +2,7 @@ name: Step 1 CI
 
 on:
   push:
-    branches: [main, feat/finance-treasury-integrated-20261009]
+    branches: [main, feat/finance-treasury-integrated-20261009, feat/storefront-home-integration-20261012]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -29,6 +29,8 @@ jobs:
         id: security_audit
         continue-on-error: true
         run: npm audit --omit=dev --audit-level=high
+      - name: Approved Home design lock
+        run: node scripts/check-home-design-lock.mjs
       - name: Domain tests
         run: npm test
       - name: Lint

@@ -1,3 +1,4 @@
+import type {DemoFeaturedPool} from '@/lib/featured-pools'
 import type {Metadata} from 'next'
 import {createClient} from '@/lib/supabase/server'
 import {demoStorefrontEnabled,DEMO_AREAS,DEMO_OFFERS,DEMO_SHOWCASE} from '@/lib/public-demo-products'
@@ -15,11 +16,12 @@ export const metadata:Metadata={
 
 export default async function Page(){
  const supabase=await createClient()
- const [claims,areasRes,offersRes,featuredRes]=await Promise.all([
+ const [claims,areasRes,offersRes,featuredRes,poolsRes]=await Promise.all([
   supabase.auth.getClaims(),
   supabase.rpc('get_public_storefront_areas'),
   supabase.rpc('get_public_storefront_offers',{p_community_id:null}),
   supabase.rpc('get_public_own_product_showcase',{p_product_id:null,p_featured_only:true}),
+  supabase.rpc('get_public_featured_pools',{p_community_id:null}),
  ])
  const authenticated=Boolean(claims.data?.claims?.sub)
  const realAreas=(areasRes.data??[]) as StorefrontArea[]
@@ -47,6 +49,6 @@ export default async function Page(){
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
   {/* Bangla default; switching the storefront language lives inside the client component. */}
-  <PublicMarketplace areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} featured={featured} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
+  <PublicMarketplace areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
  </main>
 }

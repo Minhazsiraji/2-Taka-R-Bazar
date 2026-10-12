@@ -98,6 +98,8 @@ as $$
   where pi.active and not coalesce(po.is_paused,false)
     and po.status in ('open','pricing','final_price','confirmation')
     and (po.opens_at is null or po.opens_at<=now())
+    and case when po.status in ('open','pricing') then po.commitment_closes_at is not null and po.commitment_closes_at>now()
+      else po.confirmation_closes_at is not null and po.confirmation_closes_at>now() end
     and (p_community_id is null or po.community_id=p_community_id)
   order by 18 nulls last,11
   limit 150;

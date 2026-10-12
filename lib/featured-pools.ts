@@ -14,7 +14,10 @@ export type DemoFeaturedPool={
  minHouseholds:number
  sampleHouseholds:number
  collection:{en:string;bn:string}
- isDemo:true
+ isDemo:boolean
+ id?:string
+ community_id?:string
+ livePricing?:{currentPrice:number|null;nextPrice:number|null;upcoming:number|null;householdsNeeded:number;soloPrice:number|null}
 }
 export function getDemoFeaturedPools(offers:StorefrontOffer[]):DemoFeaturedPool[]{
  const item=(id:string,qty:number)=>{
