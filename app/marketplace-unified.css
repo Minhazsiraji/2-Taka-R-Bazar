@@ -326,8 +326,8 @@ html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .publi
 }
 html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-header-location,
 html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-product-actions button[disabled]{
- background:transparent!important;color:var(--market-muted)!important;
- border-color:var(--market-edge)!important;
+ background:transparent!important;color:var(--market-text)!important;
+ border-color:var(--gloss-rim)!important;
 }
 html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-featured-pool-copy h2,
 html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-demo-review h3,
