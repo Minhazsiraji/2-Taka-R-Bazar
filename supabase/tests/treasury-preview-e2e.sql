@@ -176,9 +176,9 @@ select ok(pg_temp.expect_failure(
     10000,0,0,current_date,'SAME-ACCOUNT-TRANSFER','Invalid self transfer detection')$$,
  'Transfer requires two distinct liquid accounts'),'Self-transfer cannot create false cash flow');
 select ok(pg_temp.expect_failure(
- $select public.treasury_request_transaction('transfer',
+ $q$select public.treasury_request_transaction('transfer',
     (select id from qa_accounts where label='A'),(select id from qa_accounts where label='B'),null,null,
-    9999999,0,0,current_date,'OVERDRAFT-TEST-01','Cannot overdraw bank beyond balance')$,
+    9999999,0,0,current_date,'OVERDRAFT-TEST-01','Cannot overdraw bank beyond balance')$q$,
  'Insufficient unrestricted cash'),'Insufficient unrestricted cash is rejected before approval');
 select is((select count(*)::integer from public.treasury_transactions
  where external_reference='OVERDRAFT-TEST-01'),0,
