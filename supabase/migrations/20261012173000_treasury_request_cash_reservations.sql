@@ -1,6 +1,6 @@
 -- Reserve spendable Treasury cash at request time. Approval keeps a second live-balance check.
 create or replace function private.treasury_available_request_cash(p_account uuid)
-returns numeric language sql stable security definer set search_path='' as $fn$
+returns numeric language sql volatile security definer set search_path='' as $fn$
  select private.treasury_account_balance(a.id)
         - a.restricted_amount
         - coalesce((select sum(t.amount+t.interest_amount+t.fee_amount)
@@ -103,9 +103,9 @@ declare v_actor uuid:=auth.uid(); b public.procurement_supplier_bills%rowtype;
  a public.treasury_accounts%rowtype;v_id uuid;v_available numeric;v_amount numeric;v_cash_available numeric;
 begin
  if not private.finance_authorized(v_actor) then raise exception 'Finance staff role required'; end if;
- perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||p_bank_account::text,0));
  select * into a from public.treasury_accounts where id=p_bank_account and active;
  if not found or a.account_kind='credit_card' then raise exception 'An active liquid payment account is required'; end if;
+ perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||a.id::text,0));
  select * into b from public.procurement_supplier_bills where id=p_bill_id for update;
  if not found or b.status<>'posted' then raise exception 'Independently approved supplier invoice required'; end if;
  if exists(select 1 from public.finance_supplier_credit_notes where bill_id=b.id and status='pending') then raise exception 'Resolve pending supplier return before payment'; end if;
@@ -136,7 +136,7 @@ declare s public.finance_customer_events%rowtype;a public.treasury_accounts%rowt
 begin
  if not private.finance_authorized(auth.uid()) then raise exception 'Finance role required'; end if;
  perform private.finance_assert_write_allowed();
- if p_kind='customer_refund' then perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||p_account::text,0)); end if;
+ if p_kind='customer_refund' and p_account is not null then perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||p_account::text,0)); end if;
  select * into s from public.finance_customer_events where id=p_sale and kind='sale' and status='posted' for update;
  if not found then raise exception 'Posted sale required'; end if;
  if p_kind is null or p_kind not in ('customer_receipt','customer_refund') then raise exception 'Unsupported customer cash event'; end if;
@@ -169,7 +169,7 @@ begin
  if not private.finance_authorized(auth.uid()) then raise exception 'Finance role required'; end if;
  perform private.finance_assert_write_allowed();perform private.finance_require_open(p_date);
  if p_date is null or p_date>(now() at time zone 'Asia/Dhaka')::date or p_refund is null then raise exception 'Valid customer cash date and operation required'; end if;
- if p_refund then perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||p_account::text,0)); end if;
+ if p_refund and p_account is not null then perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||p_account::text,0)); end if;
  perform pg_advisory_xact_lock(hashtextextended('finance:customer-source:'||p_source_kind||':'||p_source,0));
  v_amount=private.finance_deposit_source(p_source_kind,p_source,p_refund,false);
  v_kind=case when p_refund then 'cancellation_refund' else 'customer_deposit' end;
@@ -203,6 +203,7 @@ begin
  select * into t from public.treasury_transactions where id=p_id for update;
  if not found or t.status<>'pending' then raise exception 'Treasury request not pending'; end if;
  if t.requested_by=v_actor then raise exception 'Independent maker-checker required'; end if;
+ if t.source_account_id is not null then perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||t.source_account_id::text,0)); end if;
  if not coalesce(p_approve,false) then
   if length(btrim(coalesce(p_note,'')))<5 then raise exception 'Treasury rejection reason required'; end if;
   update public.treasury_transactions set status='rejected',approved_by=v_actor,approved_at=now(),
@@ -212,7 +213,6 @@ begin
   return 'rejected';
  end if;
  perform private.finance_require_open(t.business_date);
- if t.source_account_id is not null then perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended('treasury-source:'||t.source_account_id::text,0)); end if;
  -- Lock resources in deterministic UUID order before balance checks, avoiding simultaneous overspending.
  perform id from public.treasury_accounts
    where id in (t.source_account_id,t.target_account_id) order by id for update;
