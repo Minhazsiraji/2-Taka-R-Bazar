@@ -60,6 +60,7 @@ test('hero reserves actual longest slide content without fixed mobile blank spac
  assert.match(css,/market-hero-message-frame\{\s*display:grid/)
  assert.match(css,/grid-area:1 \/ 1/)
  assert.match(css,/market-hero-message.is-active/)
+ assert.match(css,/market-hero-subtitle\{[\s\S]*?color:var\(--market-muted\)!important/)
  assert.ok(!/min-height:(245|265|290)px/.test(css))
  assert.match(read('app/marketplace-shopper.css'),/align-self:start!important;height:auto/)
 })

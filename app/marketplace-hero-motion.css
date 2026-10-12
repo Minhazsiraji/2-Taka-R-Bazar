@@ -27,7 +27,7 @@ body.site-glass-root main.public-marketplace-flat .market-hero-message h1>.marke
  display:block;margin-top:4px;
 }
 body.site-glass-root main.public-marketplace-flat .market-hero-message .market-hero-subtitle{
- margin:8px 0 0!important;line-height:1.55!important;
+ margin:8px 0 0!important;line-height:1.55!important;color:var(--market-muted)!important;
 }
 @keyframes market-hero-enter{
  from{opacity:0;transform:translateY(11px)}
