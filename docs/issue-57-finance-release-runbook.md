@@ -44,3 +44,17 @@ Retain original bytes and hashes, lifecycle events, source snapshots, posted jou
 Candidate controls were applied to the existing project through named migrations. The connector assigns hosted timestamps, so match source filenames by migration name rather than replaying their timestamps. Supplier partial-payment request and review definitions were installed separately; the legacy `treasury_one_supplier_bill_payment` index remains because its removal repeatedly returned `INVALID_ARGUMENT: Invalid or expired requestState`. Resolve that index removal through a reviewed, authorized connector fallback before partial-payment acceptance. Never classify this incomplete migration as a passed hosted test.
 
 Live checks passed: all 29 financial tables have RLS and the common write-lock trigger; direct authenticated Super Admin financial RPC writes without a lease fail; forged caller metadata cannot unlock writes; unleased reviewer sessions fail closed; no direct anon/authenticated financial DML grants, anonymous financial RPC grants or unfixed financial definer search paths. No operator leases or synthetic source registrations have been issued. The original two journals and 346 audit events retain their full-row fingerprints, and all five original evidence objects remain. Hosted independent browser/accounting UAT is still required; PR #58 remains draft and Production financial writes remain disabled.
+# Password sign-in follow-up — 2026-10-12
+
+Owner deferred paid SMS OTP integration to the first week of November 2026.
+Existing verified mobile accounts may use Supabase password authentication;
+no fixed test OTP expiry is extended, phone ownership is not auto-confirmed,
+and no identity, credential, or permanent role is changed by the application.
+The normal login defaults to mobile/password. Existing OTP code remains available
+at `/login?method=otp`; new customer registration still requires phone verification.
+Preview finance reviewers may use email/password or verified mobile/password,
+with the same database-backed independent role and expiring UAT lease checks.
+Passwords are never trimmed, logged, committed, or included in redirect URLs.
+New branch changes require new exact-SHA CI, READY Preview, and hosted UAT;
+the prior SHA64 qualification cannot certify this follow-up. Production remains HOLD.
+November reminder creation failed because all five automation slots are occupied.

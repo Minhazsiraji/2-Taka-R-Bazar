@@ -139,13 +139,22 @@ async function main(){
   async function loginReviewer(page,key){
    await page.goto(base+'/finance-uat/login')
    await page.getByLabel('Reviewer email').fill(identities.get(key).email)
-   await page.getByLabel('Password',{exact:true}).fill(identities.get(key).password)
+   await page.getByLabel('Password',{exact:true}).first().fill(identities.get(key).password)
    await page.getByRole('button',{name:'Sign in for finance UAT'}).click()
    await page.getByRole('heading',{name:'Customer revenue, inventory & refunds'}).waitFor({timeout:90000})
   }
   await loginReviewer(owner,'super_admin')
   await loginReviewer(maker,'admin')
   console.log('PASS separate browser password sign-in verifies active reviewer leases without phones or SMS');stages++
+  const mobileMaker = await supa.auth.admin.updateUserById(identities.get('admin').id,{phone:'+8801999990057',phone_confirm:true})
+  assert.equal(mobileMaker.error,null,'Disposable Maker mobile credential setup failed')
+  await makerContext.clearCookies()
+  await maker.goto(base+'/finance-uat/login')
+  await maker.locator('input[name="phone"]').fill('01999990057')
+  await maker.getByLabel('Password',{exact:true}).last().fill(identities.get('admin').password)
+  await maker.getByRole('button',{name:'Sign in with mobile and password',exact:true}).click()
+  await maker.getByRole('heading',{name:'Customer revenue, inventory & refunds'}).waitFor({timeout:90000})
+  console.log('PASS verified mobile/password reviewer sign-in preserves independent Maker identity without SMS');stages++
   await visit(owner,'/super-admin/finance','Finance intelligence')
   await assertFinancialDesign(owner,'Finance')
   await snapshot(owner,'finance')

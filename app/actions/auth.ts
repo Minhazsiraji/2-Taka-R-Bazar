@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { requireUser } from '@/lib/auth'
 import { toBdE164Phone } from '@/lib/bd-phone.mjs'
+import { passwordCredentials } from '@/lib/password-login.mjs'
 import {
   COMMUNITY_QR_CODE_COOKIE,
   COMMUNITY_QR_SCAN_COOKIE,
@@ -52,6 +53,22 @@ async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
 
 export async function requestSignupOtp(formData: FormData) { return requestPhoneOtp(formData, 'signup') }
 export async function requestLoginOtp(formData: FormData) { return requestPhoneOtp(formData, 'login') }
+
+export async function signInPhonePassword(formData: FormData) {
+  const credentials = passwordCredentials(formData)
+  if (!credentials) redirect('/login?error=Enter+a+valid+mobile+number+and+password')
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.signInWithPassword(credentials)
+  if (error || !data.user?.phone_confirmed_at) {
+    await supabase.auth.signOut()
+    redirect('/login?error=Mobile+number+or+password+was+not+accepted')
+  }
+  revalidatePath('/', 'layout')
+  const cookieStore = await cookies()
+  const qrCode = normalizeCommunityQrCode(cookieStore.get(COMMUNITY_QR_CODE_COOKIE)?.value)
+  if (qrCode) redirect('/community-invite/' + encodeURIComponent(qrCode))
+  redirect('/home')
+}
 
 export async function verifyPhoneOtp(formData: FormData) {
   const token = getText(formData, 'token')
