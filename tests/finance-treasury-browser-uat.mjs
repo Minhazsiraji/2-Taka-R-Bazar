@@ -148,6 +148,8 @@ async function main(){
   console.log('PASS separate browser password sign-in verifies active reviewer leases without phones or SMS');stages++
   const mobileMaker = await supa.auth.admin.updateUserById(identities.get('admin').id,{phone:'+8801999990057',phone_confirm:true})
   assert.equal(mobileMaker.error,null,'Disposable Maker mobile credential setup failed')
+  const mobileProbe = await identities.get('admin').client.auth.signInWithPassword({phone:'+8801999990057',password:identities.get('admin').password})
+  assert.equal(mobileProbe.error?.code??null,null,'Disposable verified mobile/password Auth rejected the credential')
   await makerContext.clearCookies()
   await maker.goto(base+'/finance-uat/login')
   await maker.locator('input[name="phone"]').fill('01999990057')
