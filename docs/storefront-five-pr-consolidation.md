@@ -30,3 +30,10 @@ This isolated candidate is based on the qualified #61 commit `1ca209aca42e912882
 5. Obtain final release decision for main/Production separately after outstanding hosted gates pass. Leave original PRs open/draft until reconciliation proof and review are accepted; close duplicates only after verifying the consolidated candidate contains their intended features.
 
 This is an engineering consolidation and code-review candidate, not a certification that real commerce can accept orders today.
+
+## Verification record — 2026-10-12
+
+- Baseline candidate `5eeed9f6c5b9ada79431bfa11c505351eae3a285` passed [Step 1 CI](https://github.com/Minhazsiraji/2-Taka-R-Bazar/actions/runs/38256172956): 238/238 application tests, 0 production dependency vulnerabilities, approved Home design-lock validation, lint, TypeScript, Production build, disposable migrations and pgTAP, synthetic supply tests, and production-build storefront browser UAT at five viewport widths.
+- Baseline exact-SHA **Vercel CLI Preview** reached READY: `https://2-taka-r-bazar-chzkdiq76-minhazs-projects-d28f7aed.vercel.app/` (deployment `dpl_GepCe5oTNHWZSfC7fJiabqqQoAnQ`). Authenticated Preview smoke tests returned HTTP 200 for `/` and `/faq`, with Vercel SSO protection retained.
+- Two earlier API-created attempts failed with `git_info_fail`; they were transport/source errors and are not successful application builds. Their legacy GitHub Vercel failure check is **not** to be manually spoofed or overridden. This documentation refresh requests fresh standard branch CI and deployment checks at the new HEAD; the baseline Preview does not certify a later SHA.
+- Owner instruction: **prepare for merge review only, do not merge**, do not change Production or unfreeze customer purchasing/finance. The hosted commerce/real-data gates remain separate from Preview code qualification.
