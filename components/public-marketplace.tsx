@@ -108,13 +108,13 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">
    <div className="market-location-panel">
     <div className="market-location-intro"><strong>📍 {t('Find savings near your community','আপনার এলাকায় কম দামের অফার খুঁজুন')}</strong>
-     <p>{t('Allow location to suggest nearby communities and group prices. Joining requires verified eligibility.','কাছের কমিউনিটি ও গ্রুপের দাম দেখতে লোকেশন অনুমতি দিন। যোগ দিতে এলাকা যাচাই প্রয়োজন।')}</p>
-     <p>{t('Browse without signing in.','লগইন ছাড়াই পণ্য দেখতে পারবেন।')}</p></div>
+     <p>{t('Allow location to suggest nearby communities and group prices. Joining requires verified eligibility.','কাছের কমিউনিটি ও গ্রুপের দাম দেখতে লোকেশন অনুমতি দিন। যোগ দিতে এলাকা যাচাই প্রয়োজন।')}</p></div>
     <div className="market-location-control">
      <CommunityPicker areas={areas} value={area} onChange={selectArea} language={language} statusId="market-location-status"/>
+     <div className="market-location-feedback">
      <button type="button" className="market-location-retry" onClick={useLocation} disabled={gpsBusy}>{gpsBusy?t('Finding area…','এলাকা খোঁজা হচ্ছে…'):t('Detect my location','আমার অবস্থান খুঁজুন')}</button>
      <p id="market-location-status" role="status" aria-live="polite" title={gpsMessage} className="market-location-status">{locationStatus}</p>
-     </div></div>
+     </div></div></div>
    {nearestAreas.length>0&&<div className="market-nearby-suggestions" aria-label={t('Nearby communities','কাছের কমিউনিটি')}>
     <span className="market-nearby-heading">{t('Near you','কাছাকাছি')} <small>({t('approximate','আনুমানিক')})</small></span>
     {nearestAreas.map(a=>{const community=areas.find(c=>c.community_id===a.id);if(!community)return null;return <button key={a.id} type="button" aria-pressed={area===a.id}
@@ -141,7 +141,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
    </div>
   </div></section>
   <section id="deals" className="market-band market-deals-band"><div className="market-content">
-   <div className="flex flex-wrap items-center justify-between gap-3"><div>{demoMode&&<span className="market-demo-banner">{t('DEMO CATALOG · sample prices, no ordering','ডেমো পণ্য · নমুনা মূল্য, অর্ডার নয়')}</span>}<p className="text-xs font-bold uppercase tracking-[.14em] text-teal-700">{t('Shop by buying mode','কেনার ধরন বেছে নিন')}</p><h2 className="mt-2 text-2xl font-black">{t('Products & local deals','পণ্য ও স্থানীয় অফার')}</h2><p className="mt-1 text-sm text-slate-500">{activeArea?activeArea.community_name:t('Choose an area to see nearby offers','কাছের অফার দেখতে এলাকা বাছুন')} · {filtered.length} {demoMode?t('demo offers','নমুনা অফার'):t('active offers','সক্রিয় অফার')}</p></div>
+   <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.14em] text-teal-700">{t('Shop by buying mode','কেনার ধরন বেছে নিন')}</p><h2 className="mt-2 text-2xl font-black">{t('Products & local deals','পণ্য ও স্থানীয় অফার')}</h2><p className="mt-1 text-sm text-slate-500">{activeArea?activeArea.community_name:t('Choose an area to see nearby offers','কাছের অফার দেখতে এলাকা বাছুন')} · {filtered.length} {demoMode?t('demo offers','নমুনা অফার'):t('active offers','সক্রিয় অফার')}</p></div>
     <div className="flex flex-wrap gap-2" role="group" aria-label="Filter buying mode">{([['all','All products','সব পণ্য'],['group','Group Deals','গ্রুপ ডিল'],['pool','Community Pools','কমিউনিটি পুল']] as const).map(([val,label,labelBn])=><button type="button" key={val} onClick={()=>setMode(val)} aria-pressed={mode===val} className={mode===val?'btn-primary':'btn-secondary'}>{t(label,labelBn)}</button>)}</div>
    </div>
    <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter product category">
@@ -155,7 +155,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
     return <article key={offer.offer_kind+offer.offer_id+offer.community_id} className="market-product-card market-clickable-product flex min-w-0 flex-col rounded-3xl border border-black/10 bg-white p-4">
       <Link href={offer.is_demo?`/demo-product/${offer.product_id}`:`/shop/${offer.product_id}?area=${offer.community_id}`} className="market-product-overlay-link" aria-label={t('Open product details: ','পণ্যের বিস্তারিত দেখুন: ')+t(offer.product_name,offer.product_name_bn??offer.product_name)}/>
      <Link href={offer.is_demo?`/demo-product/${offer.product_id}`:`/shop/${offer.product_id}?area=${offer.community_id}`} className="market-product-image relative flex h-48 items-center justify-center overflow-hidden rounded-2xl bg-white/30" aria-label={`View details for ${t(offer.product_name,offer.product_name_bn??offer.product_name)}`}>{offer.image_url?<img src={offer.image_url} alt={t(offer.product_name,offer.product_name_bn??offer.product_name)} loading="lazy" className="h-full w-full object-contain"/>:<img src="/grocery-hero-glass.svg" alt="" className="h-44 w-full object-contain"/>}
-      <span className="absolute left-2 top-2 rounded-full border border-teal-200 bg-white/95 px-3 py-1 text-xs font-bold text-teal-700">{offer.is_demo?'DEMO / নমুনা':offer.offer_kind==='GROUP_DEAL'?t('Group Deal','গ্রুপ ডিল'):t('Pool','পুল')}</span></Link>
+      {!offer.is_demo&&<span className="absolute left-2 top-2 rounded-full border border-teal-200 bg-white/95 px-3 py-1 text-xs font-bold text-teal-700">{offer.offer_kind==='GROUP_DEAL'?t('Group Deal','গ্রুপ ডিল'):t('Pool','পুল')}</span>}</Link>
      <h3 className="market-product-title mt-3 line-clamp-2 text-lg font-black"><Link href={offer.is_demo?`/demo-product/${offer.product_id}`:`/shop/${offer.product_id}?area=${offer.community_id}`}>{t(offer.product_name,offer.product_name_bn??offer.product_name)}</Link></h3>
      <p className="market-product-meta mt-1 text-xs text-slate-500">{[offer.brand,offer.package_size].filter(Boolean).join(' · ')}</p>
      <p className="market-product-community mt-2 text-xs text-slate-500">{areas.find(a=>a.community_id===offer.community_id)?.community_name??'Local community'}</p>
@@ -166,8 +166,8 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      <p className="market-product-count mt-3 text-xs text-slate-500">{offer.buyer_count} {t('buyers','জন ক্রেতা')} · {offer.quantity_joined} {t('units','ইউনিট')}{offer.is_demo?' (DEMO)':''}{offer.next_threshold? ` · ${t('Next threshold','পরের লক্ষ্য')} ${offer.next_threshold}`:''}</p>
      {offer.next_threshold&&offer.next_threshold>0&&<div className="market-product-progress mt-2 h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-label="Verified buyers towards next price tier" aria-valuemin={0} aria-valuemax={offer.next_threshold} aria-valuenow={Math.min(offer.buyer_count,offer.next_threshold)}><div className="h-full rounded-full bg-teal-600" style={{width:`${Math.min(100,Math.round(100*offer.buyer_count/offer.next_threshold))}%`}}/></div>}
      <div className="market-product-actions mt-auto grid grid-cols-2 gap-2 pt-4">
-      <button type="button" disabled aria-disabled="true" title="Individual checkout is not released yet" className="cursor-not-allowed rounded-xl border border-slate-200 px-2 py-3 text-xs font-black opacity-60">{offer.is_demo?t('Buy Alone · Demo','একা কিনুন · ডেমো'):t('Buy Alone · Soon','একা কেনা · শিগগিরই')}</button>
-      {offer.is_demo?<button type="button" disabled aria-disabled="true" className="btn-primary cursor-not-allowed opacity-65 text-xs">{t('Group Buy · Demo','গ্রুপে কিনুন · ডেমো')}</button>:<Link href={href} className="btn-primary flex items-center justify-center text-center text-xs">{authenticated?t('Join / View group','গ্রুপ দেখুন / যোগ দিন'):t('Sign in to join','যোগ দিতে লগইন')}</Link>}
+      <button type="button" disabled aria-disabled="true" title="Individual checkout is not released yet" className="btn-secondary cursor-not-allowed px-2 py-3 text-xs font-black">{offer.is_demo?t('Buy Alone · Demo','একা কিনুন · ডেমো'):t('Buy Alone · Soon','একা কেনা · শিগগিরই')}</button>
+      {offer.is_demo?<button type="button" disabled aria-disabled="true" className="btn-primary cursor-not-allowed text-xs">{t('Group Buy · Demo','গ্রুপে কিনুন · ডেমো')}</button>:<Link href={href} className="btn-primary flex items-center justify-center text-center text-xs">{authenticated?t('Join / View group','গ্রুপ দেখুন / যোগ দিন'):t('Sign in to join','যোগ দিতে লগইন')}</Link>}
      </div>
     </article>
    })}</div>}

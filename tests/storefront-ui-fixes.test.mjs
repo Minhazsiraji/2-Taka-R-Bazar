@@ -64,3 +64,21 @@ test('hero reserves actual longest slide content without fixed mobile blank spac
  assert.ok(!/min-height:(245|265|290)px/.test(css))
  assert.match(read('app/marketplace-shopper.css'),/align-self:start!important;height:auto/)
 })
+
+test('header controls share the menu rim and location feedback uses an adjacent wrapping column',()=>{
+ assert.match(css,/market-header-location,\.theme-toggle,\.market-mobile-menu-button/)
+ assert.match(css,/background:transparent!important;background-image:none!important/)
+ assert.match(market,/market-location-feedback/)
+ assert.match(css,/grid-template-columns:auto minmax\(0,1fr\)/)
+ assert.match(css,/market-location-status\{[\s\S]*?overflow-wrap:anywhere/)
+})
+test('removed catalog/image demo badges leave truthful sample pricing and disabled clear actions',()=>{
+ assert.ok(!market.includes('market-demo-banner'))
+ assert.ok(!market.includes('DEMO / নমুনা'))
+ assert.match(market,/!offer.is_demo&&<span/)
+ assert.match(market,/Sample price only · DEMO/)
+ assert.match(market,/disabled aria-disabled="true"/)
+ assert.ok(!market.includes('opacity-60'))
+ assert.ok(!market.includes('opacity-65'))
+ assert.match(css,/market-product-actions>button:disabled\{\s*opacity:1!important;filter:none!important/)
+})

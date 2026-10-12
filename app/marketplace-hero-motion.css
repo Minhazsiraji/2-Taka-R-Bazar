@@ -309,7 +309,7 @@ body.site-glass-root main.public-marketplace-flat .market-community-done{
  border-radius:999px;color:var(--market-accent);cursor:pointer;background:transparent;
 }
 body.site-glass-root main.public-marketplace-flat .market-location-control .market-location-retry{
- min-height:44px;margin-top:6px;padding:6px 10px!important;
+ min-height:44px;margin-top:0;padding:6px 10px!important;
  color:var(--market-accent)!important;border-color:var(--gloss-rim)!important;
 }
 body.site-glass-root main.public-marketplace-flat .market-featured-pool-body{
@@ -321,9 +321,35 @@ body.site-glass-root main.public-marketplace-flat .market-pool-progress>div:firs
 }
 body.site-glass-root main.public-marketplace-flat .market-featured-pool-actions{flex-wrap:wrap}
 body.site-glass-root main.public-marketplace-flat .market-pool-detail-header .market-single-language,
-body.site-glass-root main.public-marketplace-flat .market-flat-header :is(.market-single-language,.public-header-action,.market-header-location){
+body.site-glass-root main.public-marketplace-flat .market-flat-header :is(.market-single-language,.public-header-action,.market-header-location,.theme-toggle,.market-mobile-menu-button){
+ min-height:42px!important;min-width:42px;border-radius:999px!important;
  border:1px solid var(--gloss-rim)!important;
- box-shadow:inset 0 1px 0 var(--gloss-inner),0 1px 5px var(--gloss-shadow)!important;
+ background:transparent!important;background-image:none!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.3)!important;
+ color:var(--market-text)!important;opacity:1!important;filter:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-flat-header :is(.market-single-language,.public-header-action,.market-header-location,.theme-toggle,.market-mobile-menu-button)::before,
+body.site-glass-root main.public-marketplace-flat .market-flat-header :is(.market-single-language,.public-header-action,.market-header-location,.theme-toggle,.market-mobile-menu-button)::after{
+ content:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-flat-header :is(.market-single-language,.public-header-action,.market-header-location,.theme-toggle,.market-mobile-menu-button):focus-visible{
+ outline:2px solid #0cb6b1!important;outline-offset:2px;
+}
+body.site-glass-root main.public-marketplace-flat .market-location-feedback{
+ display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;
+ gap:8px;margin-top:6px;min-width:0;
+}
+body.site-glass-root main.public-marketplace-flat .market-location-feedback .market-location-status{
+ margin:0!important;min-width:0;white-space:normal;overflow-wrap:anywhere;
+ color:var(--market-muted)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-product-actions>button:disabled{
+ opacity:1!important;filter:none!important;color:var(--market-text)!important;
+ background:transparent!important;box-shadow:inset 0 1px 0 var(--gloss-inner)!important;
+ border:1px solid var(--gloss-rim)!important;cursor:not-allowed;
+}
+body.site-glass-root main.public-marketplace-flat .market-product-actions>button.btn-primary:disabled{
+ background:#19c7c3!important;background-image:none!important;color:#06343a!important;
 }
 @media(max-width:640px){
  body.site-glass-root main.public-marketplace-flat .market-featured-pool-body{
