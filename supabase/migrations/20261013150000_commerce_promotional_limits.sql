@@ -210,10 +210,11 @@ begin
   if v_household is null then
    -- SOLO cart browse is non-binding; staff verification remains mandatory before quote.
    -- Pool/Group commitments must never count unverified households toward unlocks.
-   if p_include_cart and r.mode='SOLO' then return;end if;
-   raise exception 'Verified household required for this limited offer';
-  end if;
-  select coalesce(sum(i.quantity),0) into v_used
+   if not (p_include_cart and r.mode='SOLO') then
+    raise exception 'Verified household required for this limited offer';
+   end if;
+  else
+   select coalesce(sum(i.quantity),0) into v_used
   from public.commerce_order_items i join public.commerce_orders ord on ord.id=i.order_id
   join public.commerce_verified_household_members m on m.customer_id=ord.customer_id
   join public.commerce_offers o on o.id=i.offer_id
@@ -221,7 +222,8 @@ begin
   where m.household_id=v_household and o.sku_id=r.sku_id
    and o.community_id=r.community_id and l.campaign_key=r.campaign_key;
   if v_used+p_quantity>r.household_cap then
-   raise exception 'Promotion limit reached for this verified household (% item total)',r.household_cap;end if;
+    raise exception 'Promotion limit reached for this verified household (% item total)',r.household_cap;end if;
+  end if;
  end if;
  if p_include_cart and p_cart is not null then
   select coalesce(sum(ci.quantity),0) into v_cart_used
