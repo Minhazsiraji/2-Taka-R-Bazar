@@ -10,8 +10,10 @@ const fixtures=read('lib/public-demo-products.ts')
 const details=read('app/demo-product/[id]/page.tsx')
 const detailsClient=read('components/demo-product-details.tsx')
 const css=read('app/marketplace-flat.css')
-test('Bangla storefront is default and language switching applies throughout homepage',()=>{
- assert.match(market,/useState<MarketplaceLanguage>\('bn'\)/)
+test('English storefront is default and persistent language switching applies throughout homepage',()=>{
+ assert.match(market,/useStorefrontLanguage\(initialLanguage,hasLanguageCookie\)/)
+ assert.match(page,/languageFromPreference\(storedLanguage\)/)
+ assert.match(page,/hasLanguageCookie=\{isValidLanguagePreference\(storedLanguage\)\}/)
  assert.match(header,/onLanguageChange/)
  assert.match(header,/language==='bn'\?'EN':'BAN'/)
  assert.match(header,/market-single-language/)

@@ -3,11 +3,12 @@ import {useState} from 'react'
 import Link from 'next/link'
 import type {StorefrontOffer} from '@/lib/storefront'
 import {chooseText} from '@/lib/storefront-language'
+import {useStorefrontLanguage} from '@/lib/use-storefront-language'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {formatPrice} from '@/lib/storefront'
 type BuyMode='solo'|'group'
-export function DemoProductDetails({offer}:{offer:StorefrontOffer}){
- const [lang,setLang]=useState<MarketplaceLanguage>('bn')
+export function DemoProductDetails({offer,initialLanguage='en',hasLanguageCookie=false}:{offer:StorefrontOffer;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean}){
+ const [lang,setLang]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
  const [quantity,setQuantity]=useState(1)
  const [mode,setMode]=useState<BuyMode>('group')
  const [cart,setCart]=useState<Record<BuyMode,number>>({solo:0,group:0})

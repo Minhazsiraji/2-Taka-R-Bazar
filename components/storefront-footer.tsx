@@ -5,7 +5,7 @@ import {SITE_TAGLINE_BN,SITE_TAGLINE_EN} from '@/lib/site'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
 
-export function StorefrontFooter({language='bn'}:{language?:MarketplaceLanguage}){
+export function StorefrontFooter({language='en'}:{language?:MarketplaceLanguage}){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  return <><footer className="market-information-footer" lang={language}>
   <div className="market-content market-footer-information">

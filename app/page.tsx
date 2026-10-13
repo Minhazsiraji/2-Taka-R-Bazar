@@ -1,4 +1,6 @@
 import {withCommerceOffers} from '@/lib/commerce/storefront'
+import {cookies} from 'next/headers'
+import {languageFromPreference,isValidLanguagePreference,STOREFRONT_LANGUAGE_COOKIE} from '@/lib/storefront-language'
 import type {DemoFeaturedPool} from '@/lib/featured-pools'
 import type {Metadata} from 'next'
 import {createClient} from '@/lib/supabase/server'
@@ -16,7 +18,9 @@ export const metadata:Metadata={
 }
 
 export default async function Page({searchParams}:{searchParams:Promise<{area?:string}>}){
- const {area:requestedArea}=await searchParams
+ const [{area:requestedArea},cookieStore]=await Promise.all([searchParams,cookies()])
+ const storedLanguage=cookieStore.get(STOREFRONT_LANGUAGE_COOKIE)?.value
+ const initialLanguage=languageFromPreference(storedLanguage)
  const supabase=await createClient()
  const [claims,areasRes,offersRes,featuredRes,poolsRes]=await Promise.all([
   supabase.auth.getClaims(),
@@ -50,7 +54,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  }
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
-  {/* Bangla default; switching the storefront language lives inside the client component. */}
-  <PublicMarketplace initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
+  {/* English is the first-visit default. A previously selected BN/EN cookie wins on reload. */}
+  <PublicMarketplace initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
  </main>
 }

@@ -25,7 +25,7 @@ const storefrontNav=[
 ] as const
 
 export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefront=false,
- searchValue='',onSearchChange,onLocationClick,locating=false,locationLabel='Find my community',language='bn',onLanguageChange}:HeaderProps){
+ searchValue='',onSearchChange,onLocationClick,locating=false,locationLabel='Find my community',language='en',onLanguageChange}:HeaderProps){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const [menuOpen,setMenuOpen]=useState(false)
  if(storefront)return <header className="public-glass-header market-flat-header" aria-label="2-TAKA-R-BAZAR public shop header">
