@@ -9,7 +9,7 @@ export type StorefrontArea = {
 }
 export type StorefrontOffer = {
   offer_id: string
-  offer_kind: 'GROUP_DEAL'|'COMMUNITY_POOL'
+  offer_kind: 'GROUP_DEAL'|'COMMUNITY_POOL'|'SOLO'
   community_id: string
   product_id: string
   product_name: string
@@ -27,6 +27,11 @@ export type StorefrontOffer = {
   next_threshold: number|null
   closes_at: string|null
   price_status: 'unlocked'|'awaiting_threshold'|'final'|'pending_final_price'
+  commerce_solo_id?: string
+  commerce_solo_available?: boolean
+  commerce_group_id?: string
+  commerce_group_phase?: string
+  commerce_synthetic?: boolean
   is_demo?: boolean
   solo_price?: number | null
   product_name_bn?: string

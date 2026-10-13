@@ -1,5 +1,5 @@
 // Keep post-OTP navigation strictly within internal customer-facing routes.
-const ALLOWED=new Set(['/group-deals','/pool','/shop','/home'])
+const ALLOWED=new Set(['/group-deals','/pool','/shop','/home','/cart','/checkout','/account'])
 export function safeAuthReturnPath(value:string|null|undefined){
  const raw=String(value??'').trim()
  if(!raw.startsWith('/')||raw.startsWith('//')||raw.includes('\\')||raw.includes('#')||raw.length>100)return null

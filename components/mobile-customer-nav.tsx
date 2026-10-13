@@ -7,8 +7,8 @@ const nav = [
   ['/home', 'Home'],
   ['/pool', 'Pools'],
   ['/group-deals', 'Deals'],
-  ['/orders', 'Orders'],
-  ['/savings', 'Savings'],
+  ['/cart', 'Cart'],
+  ['/account', 'Account'],
 ] as const
 
 export function MobileCustomerNav(){

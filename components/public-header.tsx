@@ -21,7 +21,7 @@ const storefrontNav=[
  {href:'#how-it-works',label:'How It Works',bn:'যেভাবে কাজ করে'},
  {href:'#our-communities',label:'Our Areas',bn:'এলাকা'},
  {href:'#customer-experiences',label:'Reviews',bn:'মতামত'},
- {href:'#marketplace-faq',label:'FAQ',bn:'প্রশ্নোত্তর'},
+ {href:'/cart',label:'Cart',bn:'কার্ট'},
 ] as const
 
 export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefront=false,

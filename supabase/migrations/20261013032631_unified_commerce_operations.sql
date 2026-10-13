@@ -88,9 +88,10 @@ declare o public.commerce_orders%rowtype;r record;begin
  update public.commerce_supplier_stock set available_quantity=available_quantity-r.quantity,reserved_quantity=reserved_quantity-r.quantity where id=r.supplier_stock_id and reserved_quantity>=r.quantity;
  if not found then raise exception 'Supplier stock reconciliation required';end if;end if;
  update public.commerce_order_items set reserved=false,fulfilled=true where id=r.id;
- if r.group_commitment_id is not null then update public.group_deal_commitments set status='fulfilled',fulfilled_at=now(),fulfilled_unit_price=r.unit_price where id=r.group_commitment_id;end if;
+
  end loop;
  update public.commerce_orders set status='completed',completed_at=now(),delivery_actual_cost=case when fulfillment_method='home_delivery' then p_delivery_cost else 0 end,handover_reference=p_reference,handover_evidence_path=p_path,handover_sha256=p_sha where id=o.id;
+ update public.group_deal_commitments g set status='fulfilled',fulfilled_at=o.completed_at,fulfilled_unit_price=i.unit_price from public.commerce_order_items i join public.commerce_orders o on o.id=i.order_id where i.order_id=p_order and i.group_commitment_id=g.id and i.fulfilled and o.status='completed';
  else raise exception 'Unsupported fulfillment action';end if;
  perform private.commerce_event(o.id,p_action,p_note);return (select status from public.commerce_orders where id=o.id);end $$;
 create function public.commerce_record_cod(p_order uuid,p_product numeric,p_delivery numeric,p_reference text,p_path text,p_sha text,p_proof text) returns uuid language plpgsql security definer set search_path='' as $$ declare o public.commerce_orders%rowtype;v_id uuid;begin

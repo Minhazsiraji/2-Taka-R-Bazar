@@ -1,0 +1,68 @@
+-- Disposable database only; rollback preserves all fixture-independent data.
+begin;
+create extension if not exists pgtap with schema extensions;
+select no_plan();
+select ok(not has_table_privilege('anon','public.commerce_carts','SELECT'),'Guest carts are private');
+select ok(not has_table_privilege('authenticated','public.commerce_orders','UPDATE'),'Customers cannot directly forge orders');
+select ok(not has_table_privilege('service_role','private.commerce_configuration','UPDATE'),'API service cannot enable purchases');
+select ok(not has_function_privilege('anon','public.commerce_confirm_checkout(uuid,uuid,text,text)','EXECUTE'),'Guest cannot checkout');
+select ok(not has_function_privilege('authenticated','private.commerce_reserve(uuid,integer)','EXECUTE'),'Reservation helper private');
+select is((select production_purchases_enabled from private.commerce_configuration),false,'Production purchases default disabled');
+update private.commerce_configuration set preview_secret_hash=encode(extensions.digest('synthetic-disposable-commerce-proof-64','sha256'),'hex');
+insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) values
+('00000000-0000-4000-8000-000000006401','00000000-0000-0000-0000-000000000000','authenticated','authenticated','commerce-buyer@example.invalid',now(),now()),
+('00000000-0000-4000-8000-000000006402','00000000-0000-0000-0000-000000000000','authenticated','authenticated','commerce-other@example.invalid',now(),now()),
+('00000000-0000-4000-8000-000000006403','00000000-0000-0000-0000-000000000000','authenticated','authenticated','commerce-admin@example.invalid',now(),now()),
+('00000000-0000-4000-8000-000000006404','00000000-0000-0000-0000-000000000000','authenticated','authenticated','commerce-reviewer@example.invalid',now(),now());
+insert into public.user_roles(user_id,role) values('00000000-0000-4000-8000-000000006403','admin'),('00000000-0000-4000-8000-000000006404','super_admin');
+insert into public.communities(id,name,slug) values('00000000-0000-4000-8000-000000006410','Synthetic commerce community','synthetic-commerce-6410');
+update public.profiles set full_name='Synthetic buyer',phone='01700006401',community_id='00000000-0000-4000-8000-000000006410' where id in ('00000000-0000-4000-8000-000000006401','00000000-0000-4000-8000-000000006402');
+insert into public.pickup_points(id,community_id,name,address) values('00000000-0000-4000-8000-000000006411','00000000-0000-4000-8000-000000006410','Synthetic point','Synthetic address only');
+insert into public.products(id,name,category,package_size,unit,sku,source_type,is_demo) values('00000000-0000-4000-8000-000000006420','Synthetic SOLO rice','Rice','1 kg','bag','commerce-6420','PRIVATE_LABEL',false);
+insert into public.own_product_inventory(product_id,stock_on_hand) values('00000000-0000-4000-8000-000000006420',3) on conflict(product_id) do update set stock_on_hand=3;
+select is((select count(*)::integer from public.commerce_skus where product_id='00000000-0000-4000-8000-000000006420'),1,'New product has canonical SKU');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006403',true);
+create temp table commerce_test_ids(key text primary key,id uuid);
+insert into commerce_test_ids values('offer',public.commerce_request_offer((select id from public.commerce_skus where product_id='00000000-0000-4000-8000-000000006420'),'00000000-0000-4000-8000-000000006410','SOLO',null,null,null,100,now()+interval '1 day',true,true,60,'synthetic-disposable-commerce-proof-64'));
+select is(jsonb_array_length(public.commerce_catalog(true,'00000000-0000-4000-8000-000000006410')),0,'Unapproved offer hidden');
+select throws_like($$select public.commerce_review_offer((select id from commerce_test_ids where key='offer'),true,'Synthetic self approval denied','synthetic-disposable-commerce-proof-64')$$,'%Super Admin required%','Admin cannot approve');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006404',true);
+select lives_ok($$select public.commerce_review_offer((select id from commerce_test_ids where key='offer'),true,'Synthetic independent review','synthetic-disposable-commerce-proof-64')$$,'Independent reviewer approves');
+select is(jsonb_array_length(public.commerce_catalog(false,'00000000-0000-4000-8000-000000006410')),0,'Synthetic offers absent from Production projection');
+select is(jsonb_array_length(public.commerce_catalog(true,'00000000-0000-4000-8000-000000006410')),1,'Approved offer visible');
+select set_config('request.jwt.claim.sub','',true);
+select throws_like($$select public.commerce_set_cart_item(repeat('a',64),(select id from commerce_test_ids where key='offer'),1,'wrong-proof')$$,'%disabled%','Invalid Preview proof denied');
+select throws_like($$select public.commerce_get_cart('bad-token','synthetic-disposable-commerce-proof-64')$$,'%Invalid guest cart session%','Malformed guest capability denied');
+select lives_ok($$select public.commerce_set_cart_item(repeat('a',64),(select id from commerce_test_ids where key='offer'),2,'synthetic-disposable-commerce-proof-64')$$,'Guest SOLO cart persists');
+select is((public.commerce_get_cart(repeat('a',64),'synthetic-disposable-commerce-proof-64')->'items'->0->>'quantity')::integer,2,'Guest quantity persists');
+select is(jsonb_array_length(public.commerce_get_cart(repeat('b',64),'synthetic-disposable-commerce-proof-64')->'items'),0,'Another guest cannot read cart');
+select throws_like($$select public.commerce_create_quote(repeat('a',64),'pickup','00000000-0000-4000-8000-000000006411',null,'synthetic-disposable-commerce-proof-64')$$,'%Sign in to checkout%','Guest cannot issue payable quote');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006401',true);
+select lives_ok($$select public.commerce_get_cart(repeat('a',64),'synthetic-disposable-commerce-proof-64')$$,'Login merges guest cart');
+select is((public.commerce_get_cart(repeat('a',64),'synthetic-disposable-commerce-proof-64')->'items'->0->>'quantity')::integer,2,'Repeated login merge does not duplicate quantities');
+insert into commerce_test_ids select 'quote',(public.commerce_create_quote(repeat('a',64),'home_delivery',null,'Synthetic full address only','synthetic-disposable-commerce-proof-64')->>'id')::uuid;
+select is((public.commerce_get_quote((select id from commerce_test_ids where key='quote'),'synthetic-disposable-commerce-proof-64')->>'total_amount')::numeric,220::numeric,'Server quote uses actual product price plus one basket fee');
+select is((select reserved_quantity from public.own_product_inventory where product_id='00000000-0000-4000-8000-000000006420'),0,'Quote does not reserve or charge');
+select throws_like($$select public.commerce_confirm_checkout((select id from commerce_test_ids where key='quote'),'00000000-0000-4000-8000-000000006450','old-policy','synthetic-disposable-commerce-proof-64')$$,'%accept current policies%','Explicit current policy required');
+insert into commerce_test_ids select 'order',(public.commerce_confirm_checkout((select id from commerce_test_ids where key='quote'),'00000000-0000-4000-8000-000000006450','2026-10-05','synthetic-disposable-commerce-proof-64')->>0)::uuid;
+select is((select reserved_quantity from public.own_product_inventory where product_id='00000000-0000-4000-8000-000000006420'),2,'Checkout atomically reserves stock');
+select is((select payment_status from public.commerce_orders where id=(select id from commerce_test_ids where key='order')),'unpaid','COD checkout never marks paid');
+select lives_ok($$select public.commerce_confirm_checkout((select id from commerce_test_ids where key='quote'),'00000000-0000-4000-8000-000000006450','2026-10-05','synthetic-disposable-commerce-proof-64')$$,'Same key retry succeeds idempotently');
+select lives_ok($$select public.commerce_confirm_checkout((select id from commerce_test_ids where key='quote'),'00000000-0000-4000-8000-000000006451','2026-10-05','synthetic-disposable-commerce-proof-64')$$,'Same quote different key returns existing order');
+select is((select count(*)::integer from public.commerce_orders where customer_id='00000000-0000-4000-8000-000000006401'),1,'Retries create exactly one order');
+select throws_like($$update public.commerce_orders set product_subtotal=1,total_amount=21 where id=(select id from commerce_test_ids where key='order')$$,'%terms are immutable%','Even privileged mutation cannot reprice a confirmed order');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006402',true);
+select throws_like($$select public.commerce_get_order((select id from commerce_test_ids where key='order'))$$,'%Order not accessible%','Customer IDOR denied');
+select lives_ok($$select public.commerce_set_cart_item(null,(select id from commerce_test_ids where key='offer'),2,'synthetic-disposable-commerce-proof-64')$$,'Second buyer can request cart quantity');
+insert into commerce_test_ids select 'quote2',(public.commerce_create_quote(null,'pickup','00000000-0000-4000-8000-000000006411',null,'synthetic-disposable-commerce-proof-64')->>'id')::uuid;
+select throws_like($$select public.commerce_confirm_checkout((select id from commerce_test_ids where key='quote2'),'00000000-0000-4000-8000-000000006452','2026-10-05','synthetic-disposable-commerce-proof-64')$$,'%insufficient stock%','Second buyer cannot oversell reserved stock');
+select is((select reserved_quantity from public.own_product_inventory where product_id='00000000-0000-4000-8000-000000006420'),2,'Failed checkout rolls back all stock writes');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006401',true);
+insert into commerce_test_ids values('cancel',public.commerce_request((select id from commerce_test_ids where key='order'),'cancel','Synthetic cancellation reason','synthetic-disposable-commerce-proof-64'));
+select is((select status from public.commerce_orders where id=(select id from commerce_test_ids where key='order')),'confirmed','Request alone does not cancel order');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006404',true);
+select lives_ok($$select public.commerce_review_request((select id from commerce_test_ids where key='cancel'),true,'Independent synthetic cancellation review','synthetic-disposable-commerce-proof-64')$$,'Independent cancellation releases order');
+select is((select reserved_quantity from public.own_product_inventory where product_id='00000000-0000-4000-8000-000000006420'),0,'Cancellation releases reservation exactly once');
+select throws_like($$select public.commerce_review_request((select id from commerce_test_ids where key='cancel'),true,'Duplicate review rejected','synthetic-disposable-commerce-proof-64')$$,'%pending request%','Duplicate cancellation review denied');
+select throws_like($$update public.commerce_order_events set note='forged' where order_id=(select id from commerce_test_ids where key='order')$$,'%history is immutable%','Tracking history immutable');
+select * from finish();rollback;

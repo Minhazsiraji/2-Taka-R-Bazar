@@ -30,7 +30,7 @@ export function StorefrontFooter({language='bn'}:{language?:MarketplaceLanguage}
   <nav className="app-mobile-nav market-storefront-dock" aria-label={t('Shopping navigation','কেনাকাটার নেভিগেশন')} lang={language}>
    <div className="app-mobile-nav-inner">
    {[
-    ['/', 'Home','হোম'],['/pool','Pools','পুল'],['/group-deals','Deals','ডিল'],['/orders','Orders','অর্ডার'],['/savings','Savings','সাশ্রয়'],
+    ['/', 'Home','হোম'],['/pool','Pools','পুল'],['/group-deals','Deals','ডিল'],['/cart','Cart','কার্ট'],['/account','Account','অ্যাকাউন্ট'],
    ].map(([href,en,bn])=><Link className={'app-mobile-nav-link'+(href==='/'?' is-active':'')} key={href} href={href} aria-current={href==='/'?'page':undefined}><span>{t(en,bn)}</span></Link>)}
    </div>
   </nav>

@@ -11,8 +11,12 @@
     "app/marketplace-story.css": "c2a36662a999814ce542b718930c8b8c3996840f778871a69bf28b62e9c7be1b",
     "app/marketplace-unified.css": "8654c2e5c47343e4a058ec97066aa139db068192bd84c166d4300b6d4fd60def",
     "components/animated-hero-messages.tsx": "7787d408afa61296ea499bacff02f6e7c06212cc41ed49e7b9a1b5f9b378f2cc",
-    "components/public-header.tsx": "91c9bbcf49e1749bea2e81a53ff3573106b074901f6bc9fae193f86f278e694f",
-    "components/storefront-footer.tsx": "78be0214361406599d5b7aae5795a3598a74257ffea64676116c0f9e08469a5f",
+    "components/public-header.tsx": "8bcdd20a3047f4fc6f55e648f9336ab73107320d1aee1c6fb4995283a09e46b5",
+    "components/storefront-footer.tsx": "36b9c9c4dcd00c9720897f2925679dac8fd16a095153c4f40f0d58eda43b7825",
     "lib/hero-messages.ts": "1d9d0f793ce30114647b0ad66c3196ceedd3698ce71da273b2cf8a7b270ff89a"
+  },
+  "navigation_change": {
+    "source": "Issue #64, approved functional navigation",
+    "changes": "Mobile Home/Pools/Deals/Cart/Account; header Cart destination. No CSS, layout classes, footer contacts or branding changes."
   }
 }

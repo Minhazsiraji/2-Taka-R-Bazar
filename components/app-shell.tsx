@@ -8,7 +8,7 @@ import { MobileCustomerNav } from '@/components/mobile-customer-nav'
 import { SITE_TAGLINE_BN, SITE_TAGLINE_EN } from '@/lib/site'
 import { SiteFooter } from '@/components/site-footer'
 
-const primaryNav = [['/home', 'Home'], ['/pool', 'Pools'], ['/group-deals', 'Group Deals'], ['/orders', 'Orders'], ['/savings', 'Savings']]
+const primaryNav = [['/home', 'Home'], ['/pool', 'Pools'], ['/group-deals', 'Group Deals'], ['/cart', 'Cart'], ['/account', 'Account']]
 
 function NotificationBellFallback(){
   return <Link href="/notifications" className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm" aria-label="Notifications"><span aria-hidden="true" className="text-base">🔔</span></Link>

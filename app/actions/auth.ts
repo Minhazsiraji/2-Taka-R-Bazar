@@ -71,7 +71,8 @@ export async function signInPhonePassword(formData: FormData) {
   const cookieStore = await cookies()
   const qrCode = normalizeCommunityQrCode(cookieStore.get(COMMUNITY_QR_CODE_COOKIE)?.value)
   if (qrCode) redirect('/community-invite/' + encodeURIComponent(qrCode))
-  redirect('/home')
+  const returnTo=safeAuthReturnPath(getText(formData,'next'))
+  redirect(returnTo??'/home')
 }
 
 export async function verifyPhoneOtp(formData: FormData) {

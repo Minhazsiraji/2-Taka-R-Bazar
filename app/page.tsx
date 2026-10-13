@@ -1,3 +1,4 @@
+import {withCommerceOffers} from '@/lib/commerce/storefront'
 import type {DemoFeaturedPool} from '@/lib/featured-pools'
 import type {Metadata} from 'next'
 import {createClient} from '@/lib/supabase/server'
@@ -26,7 +27,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  ])
  const authenticated=Boolean(claims.data?.claims?.sub)
  const realAreas=(areasRes.data??[]) as StorefrontArea[]
- const realOffers=(offersRes.data??[]) as StorefrontOffer[]
+ const realOffers=await withCommerceOffers((offersRes.data??[]) as StorefrontOffer[])
  const realFeatured=(featuredRes.data??[]) as ShowcaseProduct[]
  // Seed presentation data only when Preview has no public active offers; never write fixtures to the DB.
  const demoMode=demoStorefrontEnabled() && realOffers.length===0
