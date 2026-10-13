@@ -8,7 +8,7 @@ import type {DemoFeaturedPool} from '@/lib/featured-pools'
 import {demoPoolTierState} from '@/lib/featured-pools'
 
 const ROTATION_MS=6500
-export function FeaturedPoolShowcase({pools,language,areaName}:{pools:DemoFeaturedPool[];language:MarketplaceLanguage;areaName?:string}){
+export function FeaturedPoolShowcase({pools,language,areaName,selectedArea=''}:{pools:DemoFeaturedPool[];language:MarketplaceLanguage;areaName?:string;selectedArea?:string}){
  const [activeIndex,setActiveIndex]=useState(0)
  const [paused,setPaused]=useState(false)
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
@@ -69,7 +69,7 @@ export function FeaturedPoolShowcase({pools,language,areaName}:{pools:DemoFeatur
       pool.isDemo?t('Example final tier reached','নমুনা শেষ স্তরে পৌঁছেছে'):t('Final price and collection schedule are confirmed inside the Pool','চূড়ান্ত দাম ও সংগ্রহের সময়সূচি পুলে নিশ্চিত করা হয়')}</p>
     </div>
     <p className="market-pool-mini-line">{pool.bundle.length} {t('products','টি পণ্য')} · {t('Basket','মোট বাজার')}: {(tier.soloPrice??0)>(tier.currentPrice??0)?formatPrice(tier.soloPrice):pool.isDemo?t('No saving at this tier','এই স্তরে ছাড় নেই'):t('Reference basket not published','তুলনামূলক মোট দাম প্রকাশিত হয়নি')} · {areaName??t('Choose community','এলাকা বাছুন')}</p>
-    <div className="market-featured-pool-actions"><Link href={pool.isDemo?`/demo-pool/${pool.slug}`:`/pool#pool-${pool.id}`} className="btn-primary">{t('Open Pool details →','পুলের বিস্তারিত →')}</Link><span>{pool.isDemo?t('Sample only · no checkout','ডেমো · অর্ডার নয়'):t('Verified community membership required','যাচাইকৃত কমিউনিটির সদস্য হতে হবে')}</span></div>
+    <div className="market-featured-pool-actions"><Link href={pool.isDemo?`/demo-pool/${pool.slug}${selectedArea?'?area='+encodeURIComponent(selectedArea):''}`:`/pool#pool-${pool.id}`} className="btn-primary">{t('Open Pool details →','পুলের বিস্তারিত →')}</Link><span>{pool.isDemo?t('Sample only · no checkout','ডেমো · অর্ডার নয়'):t('Verified community membership required','যাচাইকৃত কমিউনিটির সদস্য হতে হবে')}</span></div>
    </div>
   </div>
  </div>

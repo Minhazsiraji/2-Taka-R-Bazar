@@ -25,7 +25,7 @@ test('weekly monthly special Pools auto rotate and retain manual navigation',()=
  assert.match(showcase,/advance\(1\)/)
  assert.doesNotMatch(showcase,/market-pool-tabs/)
  assert.match(showcase,/\/demo-pool\/\$\{pool.slug\}/)
- assert.match(home,/getDemoFeaturedPools\(offers\)/)
+ assert.match(home,/getCommunityDemoFeaturedPools\(offers,area\)/)
 })
 test('Preview-only sample pools cannot be bought or published',()=>{
  assert.match(route,/demoStorefrontEnabled\(\)/)

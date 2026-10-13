@@ -7,6 +7,7 @@ import Link from 'next/link'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {chooseAreaByLocation,distanceMeters,formatPrice} from '@/lib/storefront'
 import {pickStoredBrowsingArea} from '@/lib/smart-location.mjs'
+import {browseCatalogOffers} from '@/lib/catalog-discovery.mjs'
 import {PublicMarketplaceLower} from '@/components/public-marketplace-lower'
 import {CommunityPicker} from '@/components/community-picker'
 import {PublicHeader} from '@/components/public-header'
@@ -17,7 +18,7 @@ import {useStorefrontLanguage} from '@/lib/use-storefront-language'
 import {FeaturedProductsCarousel} from '@/components/featured-products-carousel'
 import {FeaturedPoolShowcase} from '@/components/featured-pool-showcase'
 import {AnimatedHeroMessages} from '@/components/animated-hero-messages'
-import {getDemoFeaturedPools,type DemoFeaturedPool} from '@/lib/featured-pools'
+import {getCommunityDemoFeaturedPools,type DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
 export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],demoMode=false,pools=[],initialArea='',initialLanguage='en',hasLanguageCookie=false}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];demoMode?:boolean;pools?:DemoFeaturedPool[];initialArea?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean}){
@@ -35,13 +36,11 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
  const [category,setCategory]=useState('all')
  const activeArea=areas.find(a=>a.community_id===area)
  const categories=useMemo(()=>[...new Set(offers.filter(o=>!area||o.community_id===area).map(o=>o.category).filter(Boolean))].sort(),[offers,area])
- const filtered=useMemo(()=>offers.filter(offer=>
-  (!area||offer.community_id===area)&&
-  (mode==='all'||(mode==='group'?offer.offer_kind==='GROUP_DEAL':offer.offer_kind==='COMMUNITY_POOL'))&&
-  (category==='all'||offer.category===category)&&
-  [offer.product_name,offer.product_name_bn,offer.category,offer.category_bn,offer.brand,offer.offer_title].join(' ').toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
- ),[offers,area,search,mode,category])
- const heroPools=demoMode?getDemoFeaturedPools(offers):pools.filter(p=>!area||p.community_id===area)
+ // First visit: discover all products. After area selection: only that community's offers.
+ // Server-side checkout must independently verify membership and delivery eligibility.
+ const filtered=useMemo(()=>browseCatalogOffers(offers,{area,mode,category,search}),[offers,area,search,mode,category])
+ const localOfferCount=filtered.length
+ const heroPools=demoMode?getCommunityDemoFeaturedPools(offers,area):pools.filter(p=>!area||p.community_id===area)
  const groupHref=authenticated?'/group-deals':'/login?next=%2Fgroup-deals'
  const poolHref=authenticated?'/pool':'/login?next=%2Fpool'
  const useLocation=useCallback(()=>{
@@ -150,39 +149,47 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      </div>
     </section>
     <section className="market-hero-product market-hero-pool-shell" aria-label={t('Featured community Pool','বিশেষ কমিউনিটি পুল')}>
-     <FeaturedPoolShowcase pools={heroPools} language={language} areaName={activeArea?.community_name}/>
+     <FeaturedPoolShowcase pools={heroPools} language={language} areaName={activeArea?.community_name} selectedArea={area}/>
     </section>
    </div>
   </div></section>
   <section id="deals" className="market-band market-deals-band"><div className="market-content">
-   <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.14em] text-teal-700">{t('Shop by buying mode','কেনার ধরন বেছে নিন')}</p><h2 className="mt-2 text-2xl font-black">{t('Products & local deals','পণ্য ও স্থানীয় অফার')}</h2><p className="mt-1 text-sm text-slate-500">{activeArea?activeArea.community_name:t('Choose an area to see nearby offers','কাছের অফার দেখতে এলাকা বাছুন')} · {filtered.length} {demoMode?t('demo offers','নমুনা অফার'):t('active offers','সক্রিয় অফার')}</p></div>
+   <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.14em] text-teal-700">{t('Shop by buying mode','কেনার ধরন বেছে নিন')}</p><h2 className="mt-2 text-2xl font-black">{t('Products & local deals','পণ্য ও স্থানীয় অফার')}</h2><p className="mt-1 text-sm text-slate-500">{activeArea?activeArea.community_name:t('All communities · choose an area to shop','সব এলাকা · কিনতে এলাকা বাছুন')} · {localOfferCount} {demoMode?t('demo products','নমুনা পণ্য'):t('listed offers','তালিকাভুক্ত অফার')}</p></div>
     <div className="flex flex-wrap gap-2" role="group" aria-label="Filter buying mode">{([['all','All products','সব পণ্য'],['group','Group Deals','গ্রুপ ডিল'],['pool','Community Pools','কমিউনিটি পুল']] as const).map(([val,label,labelBn])=><button type="button" key={val} onClick={()=>setMode(val)} aria-pressed={mode===val} className={mode===val?'btn-primary':'btn-secondary'}>{t(label,labelBn)}</button>)}</div>
    </div>
    <div className="mt-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter product category">
     <button type="button" onClick={()=>setCategory('all')} aria-pressed={category==='all'} className={category==='all'?'btn-primary text-xs':'btn-secondary text-xs'}>{t('All categories','সব ক্যাটাগরি')}</button>
     {categories.map(c=><button type="button" key={c} aria-pressed={category===c} onClick={()=>setCategory(c)} className={category===c?'btn-primary text-xs':'btn-secondary text-xs'}>{t(c,offers.find(o=>o.category===c)?.category_bn??c)}</button>)}
    </div>
-   {filtered.length===0?<div className="mt-6 rounded-3xl border border-black/10 bg-white p-8 text-center"><p className="text-xl font-black">{t('No active local offers yet','এখন কোনো সক্রিয় অফার নেই')}</p><p className="mt-2 text-sm text-slate-500">{t('Try another area or check back when new deals are published.','অন্য এলাকা বেছে নিন অথবা নতুন অফার প্রকাশিত হলে আবার দেখুন।')}</p></div>
+   {!area&&<p className="mt-3 text-sm text-slate-500">{t('Browse all communities freely. Choose your community to see only its eligible offers before joining or buying.','সব এলাকার পণ্য দেখুন। কিনতে বা যোগ দিতে এলাকা বেছে নিলে শুধু ওই এলাকার অফার দেখানো হবে।')}</p>}
+   {filtered.length===0?<div className="mt-6 rounded-3xl border border-black/10 bg-white p-8 text-center"><p className="text-xl font-black">{t('No matching products yet','মিলছে এমন কোনো পণ্য নেই')}</p><p className="mt-2 text-sm text-slate-500">{t('Try another category or search again.','অন্য ক্যাটাগরি বা শব্দ দিয়ে খুঁজুন।')}</p></div>
    :<div className="market-products-grid mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filtered.map(offer=>{
     const href=offer.offer_kind==='GROUP_DEAL'?groupHref:poolHref
     const hasPrice=Number(offer.confirmed_price)>0
+    const offerCommunity=areas.find(a=>a.community_id===offer.community_id)?.community_name??t('Other community','অন্য কমিউনিটি')
+    const productHref=offer.is_demo?`/demo-product/${offer.product_id}`:`/shop/${offer.product_id}?area=${offer.community_id}`
     return <article key={offer.offer_kind+offer.offer_id+offer.community_id} className="market-product-card market-clickable-product flex min-w-0 flex-col rounded-3xl border border-black/10 bg-white p-4">
       <Link href={offer.is_demo?`/demo-product/${offer.product_id}`:`/shop/${offer.product_id}?area=${offer.community_id}`} className="market-product-overlay-link" aria-label={t('Open product details: ','পণ্যের বিস্তারিত দেখুন: ')+t(offer.product_name,offer.product_name_bn??offer.product_name)}/>
      <Link href={offer.is_demo?`/demo-product/${offer.product_id}`:`/shop/${offer.product_id}?area=${offer.community_id}`} className="market-product-image relative flex h-48 items-center justify-center overflow-hidden rounded-2xl bg-white/30" aria-label={`View details for ${t(offer.product_name,offer.product_name_bn??offer.product_name)}`}>{offer.image_url?<img src={offer.image_url} alt={t(offer.product_name,offer.product_name_bn??offer.product_name)} loading="lazy" className="h-full w-full object-contain"/>:<img src="/grocery-hero-glass.svg" alt="" className="h-44 w-full object-contain"/>}
       {!offer.is_demo&&<span className="absolute left-2 top-2 rounded-full border border-teal-200 bg-white/95 px-3 py-1 text-xs font-bold text-teal-700">{offer.offer_kind==='SOLO'?t('Buy Alone','একা কিনুন'):offer.offer_kind==='GROUP_DEAL'?t('Group Deal','গ্রুপ ডিল'):t('Pool','পুল')}</span>}</Link>
      <h3 className="market-product-title mt-3 line-clamp-2 text-lg font-black"><Link href={offer.is_demo?`/demo-product/${offer.product_id}`:`/shop/${offer.product_id}?area=${offer.community_id}`}>{t(offer.product_name,offer.product_name_bn??offer.product_name)}</Link></h3>
      <p className="market-product-meta mt-1 text-xs text-slate-500">{[offer.brand,offer.package_size].filter(Boolean).join(' · ')}</p>
-     <p className="market-product-community mt-2 text-xs text-slate-500">{areas.find(a=>a.community_id===offer.community_id)?.community_name??'Local community'}</p>
+     <p className="market-product-community mt-2 text-xs text-slate-500">{offerCommunity}</p>
+
+     {offer.commerce_synthetic&&<p className="mt-2 text-xs font-bold text-amber-700">{t('Synthetic Preview offer · no real payment','পরীক্ষামূলক অফার · বাস্তব পেমেন্ট নয়')}</p>}
      <div className="market-product-prices mt-3 grid grid-cols-2 gap-3">
       <div className="rounded-xl border border-black/10 p-3"><p className="text-xs font-bold">{t('Buy Alone','একা কিনুন')}</p><p className="mt-2 text-sm font-black">{offer.is_demo||offer.commerce_solo_id?formatPrice(offer.solo_price):t('Not quoted yet','দাম দেওয়া হয়নি')}</p><p className="mt-1 text-xs text-slate-500">{offer.is_demo?t('Sample price only · DEMO','শুধু নমুনা মূল্য · ডেমো'):offer.commerce_solo_id?t('Published individual price','একা কেনার প্রকাশিত দাম'):t('Separate individual price required','একা কেনার আলাদা দাম প্রয়োজন')}</p></div>
       <div className="rounded-xl border border-teal-200 p-3"><p className="text-xs font-bold text-teal-700">{offer.offer_kind==='SOLO'?t('Community offers','কমিউনিটি অফার'):t('Group Buy','গ্রুপে কিনুন')}</p><p className="mt-2 text-lg font-black text-teal-700">{formatPrice(offer.confirmed_price??offer.upcoming_price)}</p><p className="mt-1 text-xs text-slate-500">{offer.is_demo?t('Sample price · DEMO','নমুনা মূল্য · ডেমো'):hasPrice?t('Published / unlocked','প্রকাশিত / আনলক হয়েছে'):t('Target or price pending','লক্ষ্য বা দাম বাকি')}</p></div>
      </div>
      <p className="market-product-count mt-3 text-xs text-slate-500">{offer.buyer_count} {t('buyers','জন ক্রেতা')} · {offer.quantity_joined} {t('units','ইউনিট')}{offer.is_demo?' (DEMO)':''}{offer.next_threshold? ` · ${t('Next threshold','পরের লক্ষ্য')} ${offer.next_threshold}`:''}</p>
      {offer.next_threshold&&offer.next_threshold>0&&<div className="market-product-progress mt-2 h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-label="Verified buyers towards next price tier" aria-valuemin={0} aria-valuemax={offer.next_threshold} aria-valuenow={Math.min(offer.buyer_count,offer.next_threshold)}><div className="h-full rounded-full bg-teal-600" style={{width:`${Math.min(100,Math.round(100*offer.buyer_count/offer.next_threshold))}%`}}/></div>}
-     <div className="market-product-actions mt-auto grid grid-cols-2 gap-2 pt-4">
+     {!area?<div className="market-product-actions mt-auto grid grid-cols-2 gap-2 pt-4">
+      <Link href={productHref} className="btn-secondary flex items-center justify-center text-center text-xs">{t('View product','পণ্য দেখুন')}</Link>
+      <button type="button" className="btn-primary text-xs" onClick={()=>{selectArea(offer.community_id);document.getElementById('deals')?.scrollIntoView({behavior:'smooth',block:'start'})}}>{t('Select community','এলাকা বাছুন')}</button>
+     </div>:<div className="market-product-actions mt-auto grid grid-cols-2 gap-2 pt-4">
       {offer.commerce_solo_id?<form action={setCommerceCartItem} className="contents"><input type="hidden" name="offer_id" value={offer.commerce_solo_id}/><input type="hidden" name="quantity" value="1"/><button type="submit" disabled={!offer.commerce_solo_available} className="btn-secondary px-2 py-3 text-xs font-black">{offer.commerce_solo_available?t('Buy Alone','একা কিনুন'):t('Sold out','স্টক শেষ')}</button></form>:<button type="button" disabled aria-disabled="true" title="Individual checkout is not released yet" className="btn-secondary cursor-not-allowed px-2 py-3 text-xs font-black">{offer.is_demo?t('Buy Alone · Demo','একা কিনুন · ডেমো'):t('Buy Alone · Soon','একা কেনা · শিগগিরই')}</button>}
       {offer.commerce_group_id?<form action={setCommerceCartItem} className="contents"><input type="hidden" name="offer_id" value={offer.commerce_group_id}/><input type="hidden" name="quantity" value="1"/><button type="submit" className="btn-primary text-xs">{offer.commerce_group_phase==='ready'?t('Add unlocked offer','আনলক অফার নিন'):t('Join commitment','যোগ দিন')}</button></form>:offer.offer_kind==='SOLO'?<Link className="btn-primary flex items-center justify-center text-xs" href="/cart">{t('View cart','কার্ট দেখুন')}</Link>:offer.is_demo?<button type="button" disabled aria-disabled="true" className="btn-primary cursor-not-allowed text-xs">{t('Group Buy · Demo','গ্রুপে কিনুন · ডেমো')}</button>:<Link href={href} className="btn-primary flex items-center justify-center text-center text-xs">{authenticated?t('Join / View group','গ্রুপ দেখুন / যোগ দিন'):t('Sign in to join','যোগ দিতে লগইন')}</Link>}
-     </div>
+     </div>}
     </article>
    })}</div>}
   </div></section>

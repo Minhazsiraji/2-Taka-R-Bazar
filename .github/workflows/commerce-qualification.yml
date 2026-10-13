@@ -65,6 +65,7 @@ jobs:
           if [ "$ONLINE" != true ]; then tail -n 80 /tmp/commerce-server.log; exit 1; fi
           FINANCE_RESULT=0
           BROWSER_RESULT=0
+          node tests/customer-demo-browser-uat.mjs
           node tests/commerce-finance-uat.mjs || FINANCE_RESULT=$?
           node tests/commerce-browser-uat.mjs || BROWSER_RESULT=$?
           if [ "$FINANCE_RESULT" != 0 ] || [ "$BROWSER_RESULT" != 0 ]; then
