@@ -7,6 +7,7 @@ import Link from 'next/link'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {chooseAreaByLocation,distanceMeters,formatPrice} from '@/lib/storefront'
 import {pickStoredBrowsingArea} from '@/lib/smart-location.mjs'
+import {browseCatalogOffers} from '@/lib/catalog-discovery.mjs'
 import {PublicMarketplaceLower} from '@/components/public-marketplace-lower'
 import {CommunityPicker} from '@/components/community-picker'
 import {PublicHeader} from '@/components/public-header'
@@ -37,14 +38,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
  const categories=useMemo(()=>[...new Set(offers.map(o=>o.category).filter(Boolean))].sort(),[offers])
  // Discovery is broader than eligibility: list local offers first but retain other-area products.
  // Every purchase action is gated by the selected community and server-side eligibility.
- const filtered=useMemo(()=>{
-  const matching=offers.filter(offer=>
-   (mode==='all'||(mode==='group'?offer.offer_kind==='GROUP_DEAL':offer.offer_kind==='COMMUNITY_POOL'))&&
-   (category==='all'||offer.category===category)&&
-   [offer.product_name,offer.product_name_bn,offer.category,offer.category_bn,offer.brand,offer.offer_title].join(' ').toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
-  )
-  return area?[...matching.filter(o=>o.community_id===area),...matching.filter(o=>o.community_id!==area)]:matching
- },[offers,area,search,mode,category])
+ const filtered=useMemo(()=>browseCatalogOffers(offers,{area,mode,category,search}),[offers,area,search,mode,category])
  const nearbyOfferCount=area?filtered.filter(o=>o.community_id===area).length:filtered.length
  const otherAreaOfferCount=area?filtered.length-nearbyOfferCount:0
  const heroPools=demoMode?getDemoFeaturedPools(offers):pools.filter(p=>!area||p.community_id===area)
