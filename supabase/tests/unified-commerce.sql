@@ -16,7 +16,7 @@ insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) valu
 ('00000000-0000-4000-8000-000000006404','00000000-0000-0000-0000-000000000000','authenticated','authenticated','commerce-reviewer@example.invalid',now(),now());
 insert into public.user_roles(user_id,role) values('00000000-0000-4000-8000-000000006403','admin'),('00000000-0000-4000-8000-000000006404','super_admin');
 insert into public.communities(id,name,slug) values('00000000-0000-4000-8000-000000006410','Synthetic commerce community','synthetic-commerce-6410');
-update public.profiles set full_name='Synthetic buyer',phone='01700006401',community_id='00000000-0000-4000-8000-000000006410' where id in ('00000000-0000-4000-8000-000000006401','00000000-0000-4000-8000-000000006402');
+update public.profiles set full_name='Synthetic buyer',phone='017'||right(replace(id::text,'-',''),8),community_id='00000000-0000-4000-8000-000000006410' where id in ('00000000-0000-4000-8000-000000006401','00000000-0000-4000-8000-000000006402');
 insert into public.pickup_points(id,community_id,name,address) values('00000000-0000-4000-8000-000000006411','00000000-0000-4000-8000-000000006410','Synthetic point','Synthetic address only');
 insert into public.products(id,name,category,package_size,unit,sku,source_type,is_demo) values('00000000-0000-4000-8000-000000006420','Synthetic SOLO rice','Rice','1 kg','bag','commerce-6420','PRIVATE_LABEL',false);
 insert into public.own_product_inventory(product_id,stock_on_hand) values('00000000-0000-4000-8000-000000006420',3) on conflict(product_id) do update set stock_on_hand=3;

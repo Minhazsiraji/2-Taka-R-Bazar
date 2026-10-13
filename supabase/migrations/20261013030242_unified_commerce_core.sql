@@ -161,6 +161,7 @@ begin
  if po.status in ('final_price','confirmation') and po.confirmation_closes_at>now() and pi.final_customer_price>0 then return jsonb_build_object('phase','ready','price',pi.final_customer_price);end if;
  if po.status='open' and po.commitment_closes_at>now() then return jsonb_build_object('phase','waiting','price',pi.expected_pool_price);end if;
  else
+ if not exists(select 1 from public.group_deal_communities where group_deal_id=o.group_deal_id and community_id=o.community_id) then return jsonb_build_object('phase','unavailable','price',null);end if;
  select * into g from public.group_deals where id=o.group_deal_id;
  if g.status in ('locked','procurement','fulfilling') and g.locked_unit_price>0 and g.pickup_at>now() then return jsonb_build_object('phase','ready','price',g.locked_unit_price);end if;
  if g.status='open' and now() between g.opens_at and g.closes_at then return jsonb_build_object('phase','waiting','price',private.group_deal_price(g.id,(select count(distinct customer_id) from public.group_deal_commitments where group_deal_id=g.id and status='qualified')));end if;
@@ -253,7 +254,7 @@ begin
  else
  if st->>'phase'='waiting' then
  select * into v_result from public.join_group_deal(o.group_deal_id,p_quantity);
- if not v_result.accepted then raise exception '%',v_result.message;end if;end if;
+ if not v_result.accepted then return jsonb_build_object('error',v_result.message);end if;end if;
  select id into v_group from public.group_deal_commitments where group_deal_id=o.group_deal_id and customer_id=auth.uid() and status in ('forming','qualified') and quantity=p_quantity;
  if v_group is null then raise exception 'Existing qualified Group commitment required';end if;
  end if;
@@ -332,6 +333,8 @@ begin
  if not exists(select 1 from public.profiles where id=auth.uid() and community_id=q.community_id and phone is not null and full_name is not null) then raise exception 'Verified community changed';end if;
  for line in select value from jsonb_array_elements(q.lines) order by value->>'sku_id',value->>'offer_id' loop
  select * into o from public.commerce_offers where id=(line->>'offer_id')::uuid for share;
+ if o.mode='POOL' then perform pi.id from public.pool_items pi join public.pools po on po.id=pi.pool_id where pi.id=o.pool_item_id for share of pi,po;
+ elsif o.mode='GROUP_DEAL' then perform id from public.group_deals where id=o.group_deal_id for share;end if;
  st=private.commerce_offer_state(o.id);
  if not o.is_synthetic or o.version<>(line->>'version')::integer or st->>'phase'<>'ready' or (st->>'price')::numeric is distinct from (line->>'unit_price')::numeric then raise exception 'Price or offer changed; review a fresh quote';end if;
  if not exists(select 1 from public.commerce_cart_items where id=(line->>'item_id')::uuid and cart_id=q.cart_id and state='ready' and quantity=(line->>'quantity')::integer) then raise exception 'Cart item changed';end if;

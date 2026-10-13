@@ -24,7 +24,7 @@ create function public.commerce_request_offer(p_sku uuid,p_community uuid,p_mode
  select s.id into v_stock from public.commerce_supplier_stock s join public.supplier_products sp on sp.supplier_id=s.supplier_id and sp.product_id=v_product join public.suppliers su on su.id=s.supplier_id where s.sku_id=p_sku and s.supplier_id=p_supplier and s.verified_at>now()-interval '1 day' and sp.active and su.active and su.reliability_status<>'blocked';
  if v_stock is null then raise exception 'Fresh independently verified seller stock required';end if;end if;
  if p_mode='POOL' and not exists(select 1 from public.pool_items pi join public.pools po on po.id=pi.pool_id where pi.id=p_pool_item and pi.product_id=v_product and po.community_id=p_community and pi.active) then raise exception 'Pool product and community must match';end if;
- if p_mode='GROUP_DEAL' and not exists(select 1 from public.group_deals where id=p_group and product_id=v_product) then raise exception 'Group Deal product must match';end if;
+ if p_mode='GROUP_DEAL' and not exists(select 1 from public.group_deals g join public.group_deal_communities dc on dc.group_deal_id=g.id where g.id=p_group and g.product_id=v_product and dc.community_id=p_community) then raise exception 'Group Deal product must match';end if;
  insert into public.commerce_offers(sku_id,community_id,mode,supplier_id,supplier_stock_id,pool_item_id,group_deal_id,unit_price,valid_until,allows_pickup,allows_delivery,supplier_sla_minutes,requested_by,is_synthetic) values(p_sku,p_community,p_mode,p_supplier,v_stock,p_pool_item,p_group,p_price,p_until,p_pickup,p_delivery,p_sla,auth.uid(),true) returning id into v_id;return v_id;end $$;
 create function public.commerce_review_offer(p_id uuid,p_approve boolean,p_note text,p_proof text) returns text language plpgsql security definer set search_path='' as $$ declare o public.commerce_offers%rowtype;begin
  perform private.commerce_assert_preview(p_proof);if not private.has_role(auth.uid(),'super_admin') then raise exception 'Super Admin required';end if;
@@ -34,11 +34,14 @@ create function public.commerce_review_offer(p_id uuid,p_approve boolean,p_note 
  insert into public.audit_events(actor_user_id,event_type,entity_type,entity_id,metadata) values(auth.uid(),'commerce_offer_reviewed','commerce_offer',o.id,jsonb_build_object('approve',p_approve,'note',p_note));return case when p_approve then 'approved' else 'rejected' end;end $$;
 create function public.commerce_workbench() returns jsonb language plpgsql stable security definer set search_path='' as $$ begin
  if auth.uid() is null then raise exception 'Sign in required';end if;
- return jsonb_build_object('orders',public.commerce_orders_list(true),
+ return jsonb_build_object('orders',public.commerce_orders_list(true),'can_admin',private.commerce_admin(),'can_review',private.has_role(auth.uid(),'super_admin'),
+ 'suppliers',coalesce((select jsonb_agg(jsonb_build_object('id',id,'name',name)) from public.suppliers where active and (private.commerce_admin() or private.commerce_supplier(id))),'[]'),
+ 'communities',case when private.commerce_admin() then coalesce((select jsonb_agg(jsonb_build_object('id',id,'name',name)) from public.communities where active),'[]') else '[]'::jsonb end,
+ 'supplier_skus',coalesce((select jsonb_agg(jsonb_build_object('id',s.id,'name',p.name,'supplier_id',sp.supplier_id)) from public.commerce_skus s join public.products p on p.id=s.product_id join public.supplier_products sp on sp.product_id=p.id where sp.active and (private.commerce_admin() or private.commerce_supplier(sp.supplier_id))),'[]'),
  'skus',case when private.commerce_admin() then coalesce((select jsonb_agg(to_jsonb(s)||jsonb_build_object('name',p.name)) from public.commerce_skus s join public.products p on p.id=s.product_id where s.active),'[]') else '[]'::jsonb end,
  'stock_reports',coalesce((select jsonb_agg(to_jsonb(r)) from public.commerce_stock_reports r where private.commerce_admin() or private.commerce_supplier(r.supplier_id)),'[]'),
  'offers',coalesce((select jsonb_agg(to_jsonb(o)) from public.commerce_offers o where private.commerce_admin() or private.commerce_supplier(o.supplier_id)),'[]'),
- 'requests',case when private.has_role(auth.uid(),'super_admin') then coalesce((select jsonb_agg(to_jsonb(r)-array['evidence_path','evidence_sha256']) from public.commerce_requests r where status in ('pending','approved','received')),'[]') else '[]'::jsonb end);end $$;
+ 'requests',coalesce((select jsonb_agg(to_jsonb(r)-array['evidence_path','evidence_sha256','customer_id','requested_by','reviewed_by']||jsonb_build_object('lines',(select jsonb_agg(jsonb_build_object('id',id,'name',name_snapshot,'quantity',quantity-returned_quantity)) from public.commerce_order_items where order_id=r.order_id))) from public.commerce_requests r join public.commerce_orders o on o.id=r.order_id where r.status in ('pending','approved','received') and (private.commerce_admin() or private.commerce_operator(o.community_id))),'[]'));end $$;
 create function public.commerce_receive_return(p_request uuid,p_lines jsonb,p_restock boolean,p_path text,p_sha text,p_proof text) returns text language plpgsql security definer set search_path='' as $$ declare r public.commerce_requests%rowtype;o public.commerce_orders%rowtype;x jsonb;begin
  perform private.commerce_assert_preview(p_proof);select * into r from public.commerce_requests where id=p_request for update;o=private.commerce_access_order(r.order_id,true);select * into o from public.commerce_orders where id=o.id for update;
  if r.status<>'approved' or r.kind<>'return' or not(private.commerce_admin() or private.commerce_operator(o.community_id)) or r.requested_by=auth.uid() or p_restock is null or p_lines is null or jsonb_typeof(p_lines)<>'array' or jsonb_array_length(p_lines) not between 1 and 50 then raise exception 'Approved return, assigned receiver and returned lines required';end if;
@@ -52,7 +55,7 @@ create function public.commerce_receive_return(p_request uuid,p_lines jsonb,p_re
 create function private.commerce_credit_guard() returns trigger language plpgsql security definer set search_path='' as $$ declare s public.finance_customer_events%rowtype;x jsonb;v_received integer;v_used integer;begin
  if new.kind<>'credit' then return new;end if;
  select * into s from public.finance_customer_events where id=new.source_id;
- if s.source_kind<>'commerce_order' then return new;end if;
+ if s.id is null or s.source_kind is distinct from 'commerce_order' then return new;end if;
  perform id from public.commerce_orders where id=s.source_id for update;
  if not exists(select 1 from public.commerce_requests where order_id=s.source_id and ((kind='return' and status='received') or (kind='refund' and status='approved' and not new.restock))) then raise exception 'Independent approved commerce return or refund required';end if;
  if new.restock then
@@ -67,7 +70,7 @@ create function private.commerce_finance_sync() returns trigger language plpgsql
  if tg_table_name='finance_customer_events' then
  if new.kind<>'credit' then return new;end if;select * into s from public.finance_customer_events where id=new.source_id;
  else select * into s from public.finance_customer_events where id=new.customer_event_id;end if;
- if s.source_kind<>'commerce_order' then return new;end if;
+ if s.id is null or s.source_kind is distinct from 'commerce_order' then return new;end if;
  select * into o from public.commerce_orders where id=s.source_id for update;
  if tg_table_name='finance_customer_events' and coalesce((to_jsonb(new)->>'restock')::boolean,false) then
  for x in select value from jsonb_array_elements(new.allocations) loop
