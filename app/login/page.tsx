@@ -1,12 +1,13 @@
 import Link from 'next/link'
-import { requestLoginOtp } from '@/app/actions/auth'
+import { requestLoginOtp, signInPhonePassword } from '@/app/actions/auth'
 import { BdPhoneInput } from '@/components/bd-phone-input'
 import { PublicHeader } from '@/components/public-header'
 import { PublicFooter } from '@/components/public-footer'
 import { SubmitButton } from '@/components/submit-button'
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
-  const { error, notice } = await searchParams
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; method?: string }> }) {
+  const { error, notice, method } = await searchParams
+  const useOtp = method === 'otp'
   const previewMode = process.env.VERCEL_ENV === 'preview'
 
   return <main className="min-h-screen bg-slate-50 text-black">
@@ -16,8 +17,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-black">Sign in</h1>
           <p className="mt-1 text-sm font-semibold text-slate-600" lang="bn">সাইন ইন করুন</p>
-          <p className="muted mt-3">Use your Bangladesh mobile number. We’ll send a 6-digit OTP.</p>
-          <p className="mt-1 text-[12px] leading-5 text-slate-500" lang="bn">আপনার বাংলাদেশি মোবাইল নম্বর দিন। আমরা ৬ সংখ্যার একটি OTP পাঠাব।</p>
+          <p className="muted mt-3">{useOtp ? 'Use your Bangladesh mobile number. We’ll send a 6-digit OTP.' : 'Sign in to your existing account with your Bangladesh mobile number and password.'}</p>
+          <p className="mt-1 text-[12px] leading-5 text-slate-500" lang="bn">{useOtp ? 'আপনার বাংলাদেশি মোবাইল নম্বর দিন। আমরা ৬ সংখ্যার একটি OTP পাঠাব।' : 'আপনার মোবাইল নম্বর ও পাসওয়ার্ড দিয়ে সাইন ইন করুন।'}</p>
         </div>
 
         {notice && <div className="success mb-4">{notice}</div>}
@@ -29,10 +30,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <Link href="/preview-demo" className="btn-primary mt-3 w-full">Open Preview without OTP</Link>
         </div>}
 
-        <form action={requestLoginOtp} className="grid gap-4">
+        <form action={useOtp ? requestLoginOtp : signInPhonePassword} className="grid gap-4">
           <BdPhoneInput />
-          <SubmitButton>Send OTP</SubmitButton>
+          {!useOtp && <label>Password<input className="input mt-1 w-full" name="password" type="password" autoComplete="current-password" required maxLength={256} /></label>}
+          <SubmitButton>{useOtp ? 'Send OTP' : 'Sign in with password'}</SubmitButton>
         </form>
+        {useOtp && <Link href="/login" className="mt-4 block text-center underline">Use password instead</Link>}
 
         <p className="mt-5 text-center text-sm text-slate-600">New here? <Link className="font-bold text-black underline underline-offset-4" href="/signup">Join the community pool</Link><span className="mt-1 block text-[12px] text-slate-500" lang="bn">নতুন? <Link className="font-bold text-black underline underline-offset-4" href="/signup">কমিউনিটি পুলে যোগ দিন</Link></span></p>
       </section>

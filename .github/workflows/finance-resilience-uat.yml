@@ -1,0 +1,38 @@
+name: Finance concurrency and isolated restore UAT
+on:
+  push:
+    branches: [feat/finance-complete-release-uat-20261011]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  resilience:
+    if: github.event_name != 'pull_request' || github.head_ref == 'feat/finance-complete-release-uat-20261011'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+      - name: Start disposable local Supabase
+        run: supabase start
+      - name: Apply candidate schema from zero
+        run: |
+          supabase db reset
+          # Disposable fixtures must never execute the operational hosted push schedules.
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select cron.alter_job(job_id := jobid, active := false) from cron.job;"
+      - name: Concurrent financial writes and independent restore
+        env:
+          ISSUE57_DISPOSABLE_DB: 'true'
+        run: node tests/finance-resilience-uat.mjs
+      - name: Destroy disposable database and temporary backups
+        if: always()
+        run: |
+          supabase stop --no-backup
+          rm -rf /tmp/issue57-restore

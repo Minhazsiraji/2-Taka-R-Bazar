@@ -1,3 +1,4 @@
+import {verifyOriginal} from '@/lib/finance/original-integrity'
 import { NextRequest,NextResponse } from 'next/server'
 import { renderFinancePdf } from '@/lib/finance/printable-pdf'
 import { requireAdmin } from '@/lib/auth'
@@ -9,7 +10,16 @@ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export async function GET(request:NextRequest,context:{params:Promise<{kind:string;id:string}>}){
  const {supabase}=await requireAdmin()
  const {kind,id}=await context.params
- if(!uuid.test(id)||!['po','bill','proof'].includes(kind)) return new NextResponse('Invalid document',{status:400})
+ if(!uuid.test(id)||!['po','bill','proof','customer_event','supplier_credit_note','cash_transaction'].includes(kind)) return new NextResponse('Invalid document',{status:400})
+ if(['customer_event','supplier_credit_note','cash_transaction'].includes(kind)){
+  const {data,error}=await supabase.rpc('finance_printable_snapshot',{p_kind:kind,p_id:id})
+  if(error||!data)return new NextResponse('Financial snapshot unavailable',{status:404})
+  const record=data as PrintableRecord
+  try{
+   const download=request.nextUrl.searchParams.get('download')==='1'
+   return new NextResponse(download?new Uint8Array(renderFinancePdf(record)):renderFinanceDocument(record),{headers:{'Content-Type':download?'application/pdf':'text/html; charset=utf-8','Content-Disposition':download?`attachment; filename="${kind}-${id}.pdf"`:'inline','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"}})
+  }catch{return new NextResponse('Snapshot validation failed',{status:422})}
+ }
  const {data,error}=await supabase.rpc('procurement_workbench')
  if(error)return new NextResponse('Document access unavailable',{status:503})
  const record=data as {purchase_orders?:Array<Record<string,unknown>>;bills?:Array<Record<string,unknown>>}
@@ -20,6 +30,8 @@ export async function GET(request:NextRequest,context:{params:Promise<{kind:stri
   const {data:file,error:downloadError}=await supabase.storage.from('finance-evidence').download(bill.evidence_path)
   if(downloadError||!file)return new NextResponse('Private proof unavailable',{status:404})
   const buf=await file.arrayBuffer()
+  const {data:hash,error:hashError}=await supabase.rpc('finance_original_fingerprint',{p_entity_type:'bill',p_id:id})
+  if(hashError||!verifyOriginal(buf,hash))return new NextResponse('Original evidence integrity failed',{status:409})
   const type=file.type
   if(!['application/pdf','image/jpeg','image/png'].includes(type))return new NextResponse('Unsupported proof format',{status:415})
   const extension=type==='application/pdf'?'pdf':type==='image/png'?'png':'jpg'

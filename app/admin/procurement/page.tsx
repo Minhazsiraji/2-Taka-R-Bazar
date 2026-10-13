@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/auth'
 import {
  procurementCreatePO,procurementReviewPO,procurementLinkDispatch,
  procurementSubmitBill,procurementReviewBill,procurementRequestPayment,
- procurementPostCommunityCash,procurementAttachDocument
+ procurementPostCommunityCash,procurementAttachDocument,procurementDocumentLifecycle,procurementReviewDocument,procurementSupplierReturn,procurementReviewSupplierReturn,procurementRecoverSupplierCredit
 } from '@/app/actions/procurement'
 
 export const dynamic='force-dynamic'
@@ -58,7 +58,9 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
   (!String(process.env.NEXT_PUBLIC_SUPABASE_URL).includes('sukabonfjcnaavjgjyuy')||process.env.FINANCE_SHARED_DB_UAT_ENABLED==='true')
  const {data,error}=demoMode?{data:demo,error:null}:await supabase.rpc('procurement_workbench')
  const {data:attachmentData}=demoMode?{data:[]}:await supabase.rpc('finance_document_attachment_index')
- const attachments=(Array.isArray(attachmentData)?attachmentData:[]) as Array<{id:string;entity_type:string;entity_id:string;kind:string;name:string;uploaded_at:string}>
+ const {data:stockData}=demoMode?{data:null}:await supabase.rpc('finance_inventory_source')
+ const stock=(stockData??{}) as {lots?:Array<{bill_id:string;product:string;reference:string;available:number;unit_cost:number;reserved_returns:number}>;credits?:Array<{id:string;reference:string;quantity:number;amount:number;reason:string;status:string}>;unreconciled_historical_bills?:number}
+ const attachments=(Array.isArray(attachmentData)?attachmentData:[]) as Array<{id:string;entity_type:string;entity_id:string;kind:string;name:string;uploaded_at:string;state?:string;pending_request?:string|null}>
  const d=(data??{selected_quotes:[],purchase_orders:[],dispatches:[],bills:[],liquid_accounts:[],cash_receipts_pending:[]}) as Data
  const quote=d.selected_quotes??[],po=d.purchase_orders??[],dispatch=d.dispatches??[],bills=d.bills??[],accounts=d.liquid_accounts??[],cash=d.cash_receipts_pending??[]
  const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'})
@@ -124,6 +126,7 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
    <Panel heading="6 · Request supplier bank settlement" detail="Approving this Treasury request debits supplier payable and credits the actual bank account. Independent statement matching follows.">
     <form action={procurementRequestPayment} className="grid gap-2">
      <label className="text-xs font-bold">Matched unpaid supplier invoice<select name="bill_id" className={style} required><option value="">Choose posted invoice</option>{bills.filter(x=>x.status==='posted').map(x=><option key={x.id} value={x.id}>{x.vendor} · {x.ref} · {taka(x.amount)}</option>)}</select></label>
+     <label className="text-xs font-bold">Partial payment amount (leave blank for unreserved balance)<input name="payment_amount" type="number" min=".01" step=".01" className={style}/></label>
      <label className="text-xs font-bold">Pay from account<select name="account_id" className={style} required><option value="">Choose liquid account</option>{accounts.map(x=><option key={x.id} value={x.id}>{x.name} · {x.kind}</option>)}</select></label>
      <div className="grid grid-cols-2 gap-2"><label className="text-xs font-bold">Payment date<input name="payment_date" type="date" className={style} defaultValue={today} required/></label><label className="text-xs font-bold">Bank reference<input name="external_reference" minLength={4} className={style} required/></label></div>
      <button disabled={!isolated||demoMode} className="rounded-xl bg-teal-700 px-3 py-2.5 text-sm font-black text-white disabled:opacity-40">Request independent Treasury settlement</button>
@@ -138,6 +141,30 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
     <label className="text-xs font-bold">Signed custody reference<input name="cash_custody_reference" minLength={4} required className={style}/></label>
     <button disabled={!isolated||demoMode} className="rounded-xl bg-teal-700 px-3 py-2.5 text-xs font-black text-white disabled:opacity-40">Post accepted cash to Treasury</button>
    </form>)}{!cash.length&&<p className="text-sm text-slate-500">No accepted Community cash handovers are awaiting a ledger entry.</p>}</div>
+  </Panel>
+  <Panel heading="Recover supplier credit receivable" detail="Record only actual cash recovered from a posted supplier credit. Treasury checks the proof and remaining entitlement independently.">
+   <form action={procurementRecoverSupplierCredit} encType="multipart/form-data" className="grid gap-2">
+    <label>Posted supplier credit<select name="credit_id" required className={style}><option value="">Choose posted credit</option>{stock.credits?.filter(c=>c.status==='posted').map(c=><option key={c.id} value={c.id}>{c.reference} · BDT {c.amount}</option>)}</select></label>
+    <label>Actual receiving account<select name="account_id" required className={style}><option value="">Choose liquid account</option>{d.liquid_accounts.map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>
+    <label>Recovered BDT<input name="amount" type="number" min=".01" step=".01" required className={style}/></label><label>Cash receipt date<input name="business_date" type="date" defaultValue={today} required className={style}/></label>
+    <label>Bank / cash reference<input name="reference" required minLength={4} className={style}/></label><label>Original receipt proof<input name="invoice_file" type="file" required accept=".pdf,.jpg,.jpeg,.png" className={style}/></label>
+    <button disabled={demoMode||!isolated} className="rounded-lg border p-2">Request supplier credit recovery</button>
+   </form>
+  </Panel>
+  <Panel heading="Supplier returns and credit notes" detail="Return only available inventory from a matched invoice. Independent approval reduces stock and AP; credit on a paid invoice becomes a supplier receivable, never invented cash.">
+   {Boolean(stock.unreconciled_historical_bills)&&<p role="alert">Historical stock reconciliation required for {stock.unreconciled_historical_bills} invoices.</p>}
+   <form action={procurementSupplierReturn} className="grid gap-2" encType="multipart/form-data">
+    <label className="text-xs font-bold">Matched inventory lot<select name="bill_id" required className={style}><option value="">Choose stock lot</option>{stock.lots?.map(l=><option key={l.bill_id} value={l.bill_id}>{l.reference} · {l.product} · available {l.available-l.reserved_returns} · {taka(l.unit_cost)}</option>)}</select></label>
+    <label className="text-xs font-bold">Returned units<input name="quantity" type="number" min="1" step="1" required className={style}/></label>
+    <label className="text-xs font-bold">Supplier credit-note reference<input name="credit_reference" minLength={4} maxLength={100} required className={style}/></label>
+    <label className="text-xs font-bold">Return date<input name="business_date" type="date" defaultValue={today} required className={style}/></label>
+    <label className="text-xs font-bold">Return reason<input name="reason" minLength={10} maxLength={1000} required className={style}/></label>
+    <label className="text-xs font-bold">Original supplier credit and return proof<input name="invoice_file" type="file" required accept=".pdf,.jpg,.jpeg,.png" className={style}/></label>
+    <button disabled={demoMode||!isolated} className="rounded-lg border p-2 font-bold">Request supplier return</button>
+   </form>
+   <div className="mt-3 grid gap-2">{stock.credits?.map(c=><div key={c.id} className="rounded-lg border p-3 text-xs"><b>{c.reference} · {c.quantity} units · {taka(c.amount)} · {c.status}</b><p>{c.reason}</p>
+    {c.status==='pending'&&<form action={procurementReviewSupplierReturn} className="mt-2 grid gap-2"><input type="hidden" name="credit_id" value={c.id}/><label>Independent return review<input name="reason" required minLength={10} className={style}/></label><div className="flex gap-2"><button name="decision" value="approve" disabled={demoMode||!isolated} className="rounded-lg bg-teal-700 p-2 font-bold text-white">Approve stock return & credit</button><button name="decision" value="reject" disabled={demoMode||!isolated} className="rounded-lg border p-2">Reject stock return</button></div></form>}
+   </div>)}</div>
   </Panel>
   <Panel heading="Document center · generate, save, print or use manual proof" detail="Generate print-ready purchase orders and internal supplier bill copies. Print to PDF or download a PDF copy. Original supplier invoices remain independent evidence and must be uploaded before approval. If generation is unavailable, use a signed manual PO and upload the supplier-issued PDF/JPEG/PNG invoice in step 4; do not bypass approval or invoice checks.">
    <p className="mb-3 rounded-lg bg-amber-50 p-3 text-xs text-amber-900">The generated supplier bill is an internal register, not a supplier-issued VAT/tax invoice. Keep the real supplier document and authorized approval record. Demo records do not create genuine evidence.</p>
@@ -161,7 +188,18 @@ export default async function ProcurementControl({searchParams}:{searchParams:Pr
      <label className="text-xs font-bold">Upload PDF, JPG or PNG (up to 1.5 MB)<input className={style} name="document_file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required/></label>
      <button disabled={demoMode||!isolated} className="rounded-xl bg-teal-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-40">Save immutable evidence to record</button>
     </form>
-    <div className="mt-3 space-y-1">{attachments.map(a=><div key={a.id} className="flex flex-wrap justify-between gap-2 border-t border-teal-100 py-2 text-xs"><span>{a.name} · {a.kind} · {a.entity_type} · {a.uploaded_at?.slice(0,10)}</span><a className="font-black text-teal-800 underline" href={`/api/finance/attachments/${a.id}`}>Download original</a></div>)}{!attachments.length&&<p className="text-xs text-slate-600">No additional signed documents attached.</p>}</div>
+    <div className="mt-3 space-y-3">{attachments.map(a=><div key={a.id} className="border-t border-teal-100 py-2 text-xs">
+     <p>{a.name} · {a.kind} · {a.state??'active'} · {new Date(a.uploaded_at).toLocaleDateString('en-GB')}</p>
+     <a href={`/api/finance/attachments/${a.id}`} className="font-bold text-teal-800 underline">Download original (integrity checked)</a>
+     {a.pending_request?<form action={procurementReviewDocument} className="mt-2 grid gap-2">
+      <input type="hidden" name="request_id" value={a.pending_request}/><label>Independent review reason<input name="reason" minLength={10} maxLength={1000} required className={style}/></label>
+      <div className="flex gap-2"><button name="decision" value="approve" disabled={demoMode||!isolated} className="rounded-lg bg-teal-700 p-2 font-bold text-white">Approve document action</button><button name="decision" value="reject" disabled={demoMode||!isolated} className="rounded-lg border p-2">Reject document action</button></div>
+     </form>:<form action={procurementDocumentLifecycle} className="mt-2 grid gap-2">
+      <input type="hidden" name="attachment_id" value={a.id}/><label>Document action<select name="document_action" className={style}><option value="void">Void document</option><option value="archive">Archive document</option></select></label>
+      <label>Reason (original and journals remain retained)<input name="reason" required minLength={10} maxLength={1000} className={style}/></label>
+      <button disabled={demoMode||!isolated} className="rounded-lg border p-2 font-bold">Request independent document review</button>
+     </form>}
+    </div>)}</div>
    </div>
    <p className="mt-3 text-xs text-slate-600">Manual fallback: prepare and sign documents offline; attach original supplier invoice as PDF/JPEG/PNG in step 4. For any additional manual PO or custody evidence, keep the signed original under controlled records until a dedicated linked upload register is available. No manual document may substitute for verified payment or physical receipt.</p>
   </Panel>

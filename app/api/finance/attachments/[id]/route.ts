@@ -1,3 +1,4 @@
+import {verifyOriginal} from '@/lib/finance/original-integrity'
 import {NextResponse} from 'next/server'
 import {requireAdmin} from '@/lib/auth'
 export const dynamic='force-dynamic'
@@ -10,10 +11,13 @@ export async function GET(_request:Request,context:{params:Promise<{id:string}>}
  if(error||!path)return new NextResponse('Attachment not found',{status:404})
  const {data:file,error:failed}=await supabase.storage.from('finance-evidence').download(path)
  if(failed||!file)return new NextResponse('Evidence unavailable',{status:404})
+ const bytes=await file.arrayBuffer()
+ const {data:hash,error:hashError}=await supabase.rpc('finance_original_fingerprint',{p_entity_type:'attachment',p_id:id})
+ if(hashError||!verifyOriginal(bytes,hash))return new NextResponse('Original evidence integrity failed',{status:409})
  const type=file.type
  if(!['application/pdf','image/jpeg','image/png'].includes(type))return new NextResponse('Unsupported file',{status:415})
  const ext=type==='application/pdf'?'pdf':type==='image/png'?'png':'jpg'
- return new NextResponse(await file.arrayBuffer(),{headers:{
+ return new NextResponse(bytes,{headers:{
   'Content-Type':type,'Content-Disposition':'attachment; filename="finance-attachment-'+id+'.'+ext+'"',
   'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'
  }})

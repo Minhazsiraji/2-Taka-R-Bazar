@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { mkdir } from 'node:fs/promises'
+import {readFileSync} from 'node:fs'
+import {createHash} from 'node:crypto'
 import { chromium } from 'playwright'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
@@ -18,15 +20,17 @@ function psql(sql){
  return execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-tAX',
  '-v','ON_ERROR_STOP=1','-c',sql],{env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8'}).trim()
 }
-async function viewer(role){
+const identities=new Map()
+async function viewer(role,identityKey=role){
  const email='uat-'+role+'-'+Date.now()+'@example.invalid'
  const password='LOCAL-ONLY-Synthetic!349'
  const {data,error}=await supa.auth.admin.createUser({email,password,email_confirm:true})
  if(error||!data?.user?.id)throw new Error('Synthetic user failed '+error?.message)
  const id=data.user.id
  assert.match(id,/^[0-9a-f-]{36}$/i)
- assert.ok(['admin','super_admin'].includes(role))
+ assert.ok(['admin','super_admin','customer','pickup_operator'].includes(role))
  psql("insert into public.user_roles(user_id,role) values('"+id+"','"+role+"') on conflict do nothing")
+ if(['admin','super_admin'].includes(role))psql("insert into private.finance_uat_leases(actor_id,expires_at,reason) values('"+id+"',clock_timestamp()+interval '1 hour','Issue 57 disposable browser maker checker UAT')")
  const jar=new Map()
  const client=createServerClient(db,key,{cookies:{
   getAll:()=>[...jar.values()].map(c=>({name:c.name,value:c.value})),
@@ -34,6 +38,7 @@ async function viewer(role){
  }})
  const login=await client.auth.signInWithPassword({email,password})
  if(login.error||!login.data.user)throw new Error('Local synthetic login failed '+login.error?.message)
+ identities.set(identityKey,{client,id,email,password})
  return [...jar.values()].filter(c=>c.value).map(c=>({
   name:c.name,value:c.value,url:base,httpOnly:c.options?.httpOnly??false,
   secure:false,sameSite:'Lax'
@@ -118,16 +123,40 @@ async function snapshot(page,label){
 }
 async function main(){
  await mkdir('artifacts',{recursive:true})
- const ownerCookie=await viewer('super_admin')
- const makerCookie=await viewer('admin')
+ // Retain the fully asserted synthetic supply chain only in this disposable DB.
+ // No hosted target is accepted by the guard above; CI destroys the entire stack.
+ const fixture=readFileSync('tests/supply-handover-e2e.sql','utf8').replace('\\ir finance-customer-lifecycle-e2e.sql','\\i tests/finance-customer-lifecycle-e2e.sql').replace(/rollback;\s*$/,'set constraints all immediate; commit;')
+ execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],{
+  input:fixture,env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8',stdio:['pipe','pipe','pipe']})
+ await viewer('super_admin')
+ await viewer('admin')
  const browser=await chromium.launch({headless:true})
  let stages=0
  try{
   const ownerContext=await browser.newContext({viewport:{width:1440,height:900}})
   const makerContext=await browser.newContext({viewport:{width:1440,height:900}})
-  await ownerContext.addCookies(ownerCookie)
-  await makerContext.addCookies(makerCookie)
   const owner=await ownerContext.newPage(),maker=await makerContext.newPage()
+  async function loginReviewer(page,key){
+   await page.goto(base+'/finance-uat/login')
+   await page.getByLabel('Reviewer email').fill(identities.get(key).email)
+   await page.getByLabel('Password',{exact:true}).first().fill(identities.get(key).password)
+   await page.getByRole('button',{name:'Sign in for finance UAT'}).click()
+   await page.getByRole('heading',{name:'Customer revenue, inventory & refunds'}).waitFor({timeout:90000})
+  }
+  await loginReviewer(owner,'super_admin')
+  await loginReviewer(maker,'admin')
+  console.log('PASS separate browser password sign-in verifies active reviewer leases without phones or SMS');stages++
+  const mobileMaker = await supa.auth.admin.updateUserById(identities.get('admin').id,{phone:'+8801999990057',phone_confirm:true})
+  assert.equal(mobileMaker.error,null,'Disposable Maker mobile credential setup failed')
+  const mobileProbe = await identities.get('admin').client.auth.signInWithPassword({phone:'+8801999990057',password:identities.get('admin').password})
+  assert.equal(mobileProbe.error?.code??null,null,'Disposable verified mobile/password Auth rejected the credential')
+  await makerContext.clearCookies()
+  await maker.goto(base+'/finance-uat/login')
+  await maker.locator('input[name="phone"]').fill('01999990057')
+  await maker.getByLabel('Password',{exact:true}).last().fill(identities.get('admin').password)
+  await maker.getByRole('button',{name:'Sign in with mobile and password',exact:true}).click()
+  await maker.getByRole('heading',{name:'Customer revenue, inventory & refunds'}).waitFor({timeout:90000})
+  console.log('PASS verified mobile/password reviewer sign-in preserves independent Maker identity without SMS');stages++
   await visit(owner,'/super-admin/finance','Finance intelligence')
   await assertFinancialDesign(owner,'Finance')
   await snapshot(owner,'finance')
@@ -243,6 +272,7 @@ async function main(){
   await maker.locator('input[name="external_line_id"]').fill('LOCAL-STATEMENT-125')
   await maker.locator('input[name="signed_amount"]').fill('-125')
   await maker.locator('input[name="reference"]').fill('LOCAL-BANK-TRANSFER-125')
+  await maker.locator('input[name="original_file"]').setInputFiles({name:'original-statement.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\nActual synthetic browser bank statement\n%%EOF')})
   await maker.getByRole('button',{name:/Import for independent bank reconciliation/}).click()
   await maker.getByText('Statement line imported as unmatched',{exact:false}).waitFor({timeout:45000})
   console.log('PASS statement imported as UNMATCHED');stages++
@@ -255,6 +285,236 @@ async function main(){
   await owner.getByText('Statement line matched to posted ledger transaction',{exact:false}).waitFor({timeout:45000})
   assert.equal(psql("select (matched_transaction_id is not null)::text from public.treasury_statement_lines where id='"+line+"'"),'true')
   console.log('PASS independent statement matching');stages++
+  // Upload real original bytes through the maker form, then void in a second browser session.
+  const bill=psql("select id from public.procurement_supplier_bills where invoice_reference='QA-SUPPLIER-INV-9500'")
+  const original=Buffer.from('%PDF-1.4\nSynthetic original receipt for browser UAT\n%%EOF')
+  await maker.goto(base+'/admin/procurement',{waitUntil:'domcontentloaded'})
+  const upload=maker.locator('input[name="document_file"]').locator('xpath=ancestor::form')
+  await upload.locator('select[name="entity_type"]').selectOption('bill')
+  await upload.locator('select[name="entity_id"]').selectOption(bill)
+  await upload.locator('select[name="document_kind"]').selectOption('goods_receipt')
+  await upload.locator('input[name="display_name"]').fill('Browser original signed synthetic receipt')
+  await upload.locator('input[name="document_file"]').setInputFiles({name:'synthetic-original.pdf',mimeType:'application/pdf',buffer:original})
+  await upload.getByRole('button',{name:'Save immutable evidence to record'}).click()
+  await maker.getByText('Evidence attached permanently to the selected financial record').waitFor({timeout:45000})
+  const attachment=psql("select id from public.finance_document_attachments where display_name='Browser original signed synthetic receipt'")
+  assert.match(attachment,/^[0-9a-f-]{36}$/)
+  assert.equal(psql("select evidence_sha256 from public.finance_document_attachments where id='"+attachment+"'"),createHash('sha256').update(original).digest('hex'))
+  const downloaded=await maker.request.get(base+'/api/finance/attachments/'+attachment)
+  assert.equal(downloaded.status(),200);assert.deepEqual(await downloaded.body(),original)
+  const lifecycle=maker.locator('input[name="attachment_id"][value="'+attachment+'"]').locator('xpath=ancestor::form')
+  await lifecycle.locator('select[name="document_action"]').selectOption('void')
+  await lifecycle.locator('input[name="reason"]').fill('Synthetic paper document superseded in browser qualification')
+  await lifecycle.getByRole('button',{name:'Request independent document review'}).click()
+  await maker.getByText('Document lifecycle request submitted for independent review; original retained').waitFor({timeout:45000})
+  const pending=psql("select id from public.finance_document_events where attachment_id='"+attachment+"' and stage='requested'")
+  await owner.goto(base+'/admin/procurement',{waitUntil:'domcontentloaded'})
+  const review=owner.locator('input[name="request_id"][value="'+pending+'"]').locator('xpath=ancestor::form')
+  await review.locator('input[name="reason"]').fill('Original retained and void reason independently reviewed')
+  await review.getByRole('button',{name:'Approve document action'}).click()
+  await owner.getByText('Document lifecycle review recorded; original and accounting history retained').waitFor({timeout:45000})
+  const retained=await owner.request.get(base+'/api/finance/attachments/'+attachment)
+  assert.equal(retained.status(),200);assert.deepEqual(await retained.body(),original)
+  assert.equal(psql("select count(*) from public.finance_document_events where request_id='"+pending+"' and stage='approved'"),'1')
+  await snapshot(owner,'document-original-void')
+  console.log('PASS original upload/hash/download, independent document void, original retained');stages++
+  // New customer source is operator-registered only in this disposable DB.
+  const source='f5000000-0000-4000-8000-000000000003',item='f6000000-0000-4000-8000-000000000003'
+  psql(`insert into private.finance_uat_entities(entity_type,entity_id,reason) values('order','${source}','Disposable browser synthetic completed customer source');
+  insert into public.orders(id,customer_id,pool_id,status,payment_status,product_subtotal,delivery_fee,total_amount,fulfillment_method,pickup_point_id,completed_at)
+  values('${source}','${identities.get('admin').id}','f1000000-0000-4000-8000-000000000001','completed','paid_manually',980,0,980,'pickup',(select id from public.pickup_points where community_id='11111111-1111-1111-1111-111111111111' limit 1),now());
+  insert into public.order_items(id,order_id,pool_item_id,product_id,quantity,benchmark_price_snapshot,unit_price)
+  values('${item}','${source}','f2000000-0000-4000-8000-000000000001','22222222-2222-2222-2222-222222222221',1,1000,980)`)
+  await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
+  let saleForm=maker.getByRole('button',{name:'Request customer sale posting'}).locator('xpath=ancestor::form')
+  await saleForm.getByLabel('Completed customer source').selectOption('order:'+source)
+  await saleForm.locator('select[name="bill_id_0"]').selectOption(bill)
+  await saleForm.locator('input[name="quantity_0"]').fill('1')
+  await saleForm.locator('input[name="reason"]').fill('Browser actual completed customer and cost lot review')
+  await saleForm.locator('input[name="original_file"]').setInputFiles({name:'forged.pdf',mimeType:'application/pdf',buffer:Buffer.from('<script>invalid original</script>')})
+  await saleForm.getByRole('button',{name:'Request customer sale posting'}).click()
+  await maker.getByText('Original bytes do not match file format',{exact:true}).waitFor({timeout:45000})
+  assert.equal(psql(`select count(*) from public.finance_customer_events where source_id='${source}'`),'0','Failed upload created a financial event')
+  console.log('PASS forged original rejected through Server Action with no financial event');stages++
+  await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
+  saleForm=maker.getByRole('button',{name:'Request customer sale posting'}).locator('xpath=ancestor::form')
+  await saleForm.getByLabel('Completed customer source').selectOption('order:'+source)
+  await saleForm.locator('select[name="bill_id_0"]').selectOption(bill)
+  await saleForm.locator('input[name="quantity_0"]').fill('1')
+  await saleForm.locator('input[name="reason"]').fill('Browser actual completed customer and cost lot review')
+  const saleProof=Buffer.from('%PDF-1.4\nBrowser actual completed sale original\n%%EOF')
+  await saleForm.locator('input[name="original_file"]').setInputFiles({name:'sale-original.pdf',mimeType:'application/pdf',buffer:saleProof})
+  await saleForm.getByRole('button',{name:'Request customer sale posting'}).click()
+  await maker.getByText('Customer sale submitted for independent revenue and inventory review').waitFor({timeout:45000})
+  const sale=psql(`select id from public.finance_customer_events where source_id='${source}' and kind='sale'`)
+  assert.match(sale,/^[0-9a-f-]{36}$/)
+  const self=await identities.get('admin').client.rpc('finance_review_customer_sale',{p_id:sale,p_approve:true,p_note:'Maker self approval must fail'})
+  assert.ok(self.error)
+  await visit(owner,'/admin/finance-customers','Customer revenue, inventory & refunds')
+  async function approveEvent(id){
+   const f=owner.locator('input[name="event_id"][value="'+id+'"]').locator('xpath=ancestor::form')
+   await f.locator('input[name="reason"]').fill('Independent original source and entitlement checked')
+   await f.getByRole('button',{name:'Approve customer accounting'}).click()
+   await owner.getByText('Independent customer accounting review recorded').waitFor({timeout:45000})
+  }
+  await approveEvent(sale)
+  const saleOriginal=await owner.request.get(base+'/api/finance/originals/customer_event/'+sale)
+  assert.equal(saleOriginal.status(),200);assert.deepEqual(await saleOriginal.body(),saleProof)
+  const register=await owner.request.get(base+'/api/finance/documents/customer_event/'+sale+'?download=1')
+  assert.equal(register.status(),200);assert.equal((await register.body()).subarray(0,5).toString(),'%PDF-')
+  assert.equal(psql(`select status from public.finance_customer_events where id='${sale}'`),'posted')
+  console.log('PASS browser actual source sale, invoice-lot COGS, independent approval and original integrity');stages++
+  async function customerCash(kind,reference){
+   await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
+   const f=maker.getByRole('button',{name:'Request customer cash movement'}).locator('xpath=ancestor::form')
+   await f.locator('select[name="sale_id"]').selectOption(sale)
+   await f.locator('select[name="cash_kind"]').selectOption(kind)
+   await f.locator('select[name="account_id"]').selectOption(A)
+   await f.locator('input[name="amount"]').fill('980')
+   await f.locator('input[name="reference"]').fill(reference)
+   await f.locator('input[name="original_file"]').setInputFiles({name:kind+'.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\n'+reference+'\n%%EOF')})
+   await f.getByRole('button',{name:'Request customer cash movement'}).click()
+   await maker.getByText('Customer cash submitted to independent Treasury approval inbox').waitFor({timeout:45000})
+   const id=psql(`select id from public.treasury_transactions where external_reference='${reference}'`)
+   await visit(owner,'/super-admin/treasury','Cash flow & liquidity')
+   const approval=owner.locator('input[name="transaction_id"][value="'+id+'"]').locator('xpath=ancestor::form')
+   await approval.locator('input[name="note"]').fill('Independent actual customer bank evidence checked')
+   await approval.getByRole('button',{name:'Approve & post'}).click()
+   await owner.getByText('Treasury review recorded',{exact:false}).waitFor({timeout:45000})
+   assert.equal(psql(`select status from public.treasury_transactions where id='${id}'`),'posted')
+  }
+  await customerCash('customer_receipt','BROWSER-CUSTOMER-RECEIPT-980')
+  assert.equal(Number(psql(balance+A+"'")),10855)
+  console.log('PASS browser independent customer collection settles actual AR');stages++
+  await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
+  const creditForm=maker.getByRole('button',{name:'Request customer credit note'}).locator('xpath=ancestor::form')
+  await creditForm.locator('select[name="sale_id"]').selectOption(sale)
+  await creditForm.locator('input[name="credit_quantity_0"]').fill('1')
+  await creditForm.locator('input[name="restock"]').check()
+  await creditForm.locator('input[name="reason"]').fill('Browser original physical return and credit entitlement')
+  await creditForm.locator('input[name="original_file"]').setInputFiles({name:'credit.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\nActual synthetic browser return\n%%EOF')})
+  await creditForm.getByRole('button',{name:'Request customer credit note'}).click()
+  await maker.getByText('Customer credit submitted for independent return and refund review').waitFor({timeout:45000})
+  const credit=psql(`select id from public.finance_customer_events where source_id='${sale}' and kind='credit'`)
+  await visit(owner,'/admin/finance-customers','Customer revenue, inventory & refunds')
+  await approveEvent(credit)
+  await customerCash('customer_refund','BROWSER-CUSTOMER-REFUND-980')
+  assert.equal(Number(psql(balance+A+"'")),9875)
+  assert.deepEqual(psql(`select private.finance_customer_balance('${sale}','1100')||':'||private.finance_customer_balance('${sale}','2300')`).split(':').map(Number),[0,0])
+  console.log('PASS browser credit note, physical stock reversal and independent cash refund; no duplicated expense');stages++
+  await visit(maker,'/admin/finance-attribution','Expense attribution & campaign budgets')
+  const budgetForm=maker.getByRole('button',{name:'Request campaign budget'}).locator('xpath=ancestor::form')
+  await budgetForm.locator('input[name="code"]').fill('BROWSER-MARKETING-BUDGET')
+  await budgetForm.locator('input[name="month"]').fill(new Date().toISOString().slice(0,7))
+  await budgetForm.locator('input[name="amount"]').fill('100')
+  await budgetForm.locator('input[name="reason"]').fill('Synthetic browser offline campaign approval')
+  await budgetForm.getByRole('button',{name:'Request campaign budget'}).click()
+  await maker.getByText('Campaign budget submitted for independent review').waitFor({timeout:45000})
+  const budget=psql("select id from public.finance_campaign_budgets where code='BROWSER-MARKETING-BUDGET'")
+  await visit(owner,'/admin/finance-attribution','Expense attribution & campaign budgets')
+  const budgetReview=owner.locator('input[name="budget_id"][value="'+budget+'"]').locator('xpath=ancestor::form')
+  await budgetReview.locator('input[name="reason"]').fill('Independent offline campaign budget checked')
+  await budgetReview.getByRole('button',{name:'Approve budget'}).click()
+  await owner.getByText('Independent campaign budget review recorded').waitFor({timeout:45000})
+  assert.equal(psql(`select status from public.finance_campaign_budgets where id='${budget}'`),'approved')
+  console.log('PASS browser independent marketing budget approval');stages++
+  await visit(owner,'/super-admin/finance-report','Integrated accounting report & period close')
+  await snapshot(owner,'integrated-report')
+  await owner.getByText('BDT 93.00',{exact:true}).waitFor({timeout:30000})
+  const auditExport=await owner.request.get(base+'/api/finance/export?month='+new Date().toISOString().slice(0,7))
+  assert.equal(auditExport.status(),200);const exported=await auditExport.json()
+  assert.equal(Number(exported.report.profit_before_tax),93);assert.ok(exported.audit.rows.length>0)
+  assert.match(exported.report.ledger_sha256,/^[a-f0-9]{64}$/)
+  console.log('PASS authorized accounting and immutable audit export bound to journal fingerprint');stages++
+  const closeCookie=await viewer('super_admin','close_maker'),closeContext=await browser.newContext()
+  await closeContext.addCookies(closeCookie);const closeMaker=await closeContext.newPage()
+  await visit(closeMaker,'/super-admin/finance-report?month=2001-01','Integrated accounting report & period close')
+  const closeForm=closeMaker.getByRole('button',{name:'Request period close'}).locator('xpath=ancestor::form')
+  await closeForm.locator('input[name="reason"]').fill('Browser qualified empty ended accounting month')
+  await closeForm.getByRole('button',{name:'Request period close'}).click()
+  await closeMaker.getByText('Independent close request recorded').waitFor({timeout:45000})
+  const close=psql("select id from public.finance_period_close_requests where month_start='2001-01-01'")
+  const ownClose=await identities.get('close_maker').client.rpc('finance_review_period_close',{p_id:close,p_approve:true,p_note:'Self approval must be rejected'})
+  assert.ok(ownClose.error);assert.match(ownClose.error.message,/Independent maker-checker/)
+  await visit(owner,'/super-admin/finance-report?month=2001-01','Integrated accounting report & period close')
+  const closeReview=owner.locator('input[name="close_id"][value="'+close+'"]').locator('xpath=ancestor::form')
+  await closeReview.locator('input[name="reason"]').fill('Independent unchanged source snapshot confirmed')
+  await closeReview.getByRole('button',{name:'Approve period close'}).click()
+  await owner.getByText('Independent close request recorded').waitFor({timeout:45000})
+  assert.equal(psql("select state from public.finance_periods where month_start='2001-01-01'"),'locked')
+  await closeContext.close()
+  console.log('PASS browser integrated report, independent Super Admin close and self-approval denial');stages++
+  const customerCookie=await viewer('customer')
+  const customerContext=await browser.newContext()
+  await customerContext.addCookies(customerCookie)
+  const customerFile=await customerContext.request.get(base+'/api/finance/attachments/'+attachment)
+  assert.notEqual(customerFile.headers()['content-type'],'application/pdf','Customer must not receive original finance evidence')
+  const forbiddenLogin=await customerContext.newPage()
+  await forbiddenLogin.goto(base+'/finance-uat/login')
+  const forbiddenReviewerForm=forbiddenLogin.getByLabel('Reviewer email').locator('xpath=ancestor::form')
+  await forbiddenReviewerForm.getByLabel('Reviewer email').fill(identities.get('customer').email)
+  await forbiddenReviewerForm.getByLabel('Password',{exact:true}).fill(identities.get('customer').password)
+  await forbiddenReviewerForm.getByRole('button',{name:'Sign in for finance UAT'}).click()
+  await forbiddenLogin.getByText('Sign-in requires an authorized reviewer account with an active UAT lease.',{exact:true}).waitFor({timeout:45000})
+  assert.match(forbiddenLogin.url(),/\/finance-uat\/login\?error=/)
+  const customer=identities.get('customer').client
+  const anonymous=createClient(db,key,{auth:{persistSession:false}})
+  await viewer('pickup_operator','community_operator')
+  await viewer('customer','supplier_owner')
+  psql(`insert into public.supplier_memberships(supplier_id,user_id,role,active) values('33333333-3333-3333-3333-333333333333','${identities.get('supplier_owner').id}','owner',true)`)
+  const forbidden=[customer,anonymous,identities.get('community_operator').client,identities.get('supplier_owner').client]
+  for(const client of forbidden){
+   const report=await client.rpc('finance_inventory_source');assert.ok(report.error,'Unauthorized inventory read succeeded')
+   const journals=await client.from('finance_journals').select('*');assert.ok(journals.error,'Unauthorized raw ledger read succeeded')
+   const file=await client.storage.from('finance-evidence').download(psql("select evidence_path from public.finance_document_attachments where id='"+attachment+"'"));assert.ok(file.error,'Unauthorized original file access succeeded')
+  }
+  for(const key of ['community_operator','supplier_owner']){
+   const client=identities.get(key).client
+   const denied=await client.rpc('finance_integrated_report',{p_month:new Date().toISOString().slice(0,7)+'-01'})
+   assert.ok(denied.error,'Operational identity accessed Super Admin financial report')
+  }
+  console.log('PASS supplier and pickup operator identities cannot read finance ledger, originals or company report');stages++
+  const originalPath=psql("select evidence_path from public.finance_document_attachments where id='"+attachment+"'")
+  const overwrite=await identities.get('admin').client.storage.from('finance-evidence').update(originalPath,Buffer.from('%PDF-1.4 altered'),{contentType:'application/pdf'})
+  assert.ok(overwrite.error,'Original storage file overwrite succeeded')
+  const afterAttack=await owner.request.get(base+'/api/finance/attachments/'+attachment)
+  assert.deepEqual(await afterAttack.body(),original,'Overwrite attack changed original bytes')
+  const restoreBucket='issue57-isolated-original-restore'
+  const createdBucket=await supa.storage.createBucket(restoreBucket,{public:false});assert.ok(!createdBucket.error)
+  const backupBytes=await afterAttack.body(),restoredObject='restore/'+attachment+'.pdf'
+  const restoreUpload=await supa.storage.from(restoreBucket).upload(restoredObject,backupBytes,{contentType:'application/pdf',upsert:false});assert.ok(!restoreUpload.error)
+  const restoredBytes=await supa.storage.from(restoreBucket).download(restoredObject);assert.ok(!restoredBytes.error)
+  assert.deepEqual(Buffer.from(await restoredBytes.data.arrayBuffer()),original)
+  for(const client of [customer,anonymous]){const denied=await client.storage.from(restoreBucket).download(restoredObject);assert.ok(denied.error,'Restored private file became public')}
+  console.log('PASS isolated original-file restore, exact byte hash and private access retained');stages++
+  const ownerIdentity=identities.get('super_admin')
+  psql("delete from private.finance_uat_leases where actor_id='"+ownerIdentity.id+"'")
+  const locked=await ownerIdentity.client.rpc('treasury_create_account',{
+   p_name:'Blocked direct API bank',p_kind:'bank',p_institution:'Synthetic',p_last_four:'0057',
+   p_open_date:new Date().toISOString().slice(0,10),p_opening_balance:1,p_opening_reference:'REVOKED-LEASE',p_restricted:0,p_credit_limit:null})
+  assert.ok(locked.error);assert.match(locked.error.message,/Financial writes locked/)
+  console.log('PASS real authenticated/customer/anonymous RPC and storage security, overwrite attack, revoked owner lease');stages++
+  const journalsBeforeCleanup=psql('select count(*) from public.finance_journals')
+  const withdrawRole=await identities.get('close_maker').client.rpc('super_admin_set_role',{
+   p_user_id:ownerIdentity.id,p_role:'super_admin',p_enabled:false})
+  assert.ok(!withdrawRole.error,'Independent operator could not withdraw temporary reviewer role')
+  const staleReviewerReport=await ownerIdentity.client.rpc('finance_integrated_report',{
+   p_month:new Date().toISOString().slice(0,7)+'-01'})
+  assert.ok(staleReviewerReport.error,'Withdrawn reviewer retained report access through existing token')
+  const staleReviewerInventory=await ownerIdentity.client.rpc('finance_inventory_source')
+  assert.ok(staleReviewerInventory.error,'Withdrawn reviewer retained inventory access through existing token')
+  const staleReviewerOriginal=await owner.request.get(base+'/api/finance/attachments/'+attachment,{maxRedirects:0})
+  assert.equal(staleReviewerOriginal.status(),307,'Withdrawn reviewer must be redirected before original download')
+  assert.notEqual(staleReviewerOriginal.headers()['content-type'],'application/pdf')
+  assert.equal(psql('select count(*) from public.finance_journals'),journalsBeforeCleanup,'Reviewer cleanup changed journal history')
+  assert.equal(psql("select count(*) from auth.users where id='"+ownerIdentity.id+"'"),'1','Reviewer identity referenced by audit must be retained')
+  assert.ok(Number(psql("select count(*) from public.audit_events where event_type='role_revoked' and entity_id='"+ownerIdentity.id+"'"))>0,'Role withdrawal lacks immutable audit evidence')
+  const reviewerSession=await ownerIdentity.client.auth.getSession()
+  assert.ok(reviewerSession.data.session)
+  const revokeSession=await supa.auth.admin.signOut(reviewerSession.data.session.access_token,'global')
+  assert.ok(!revokeSession.error,'Reviewer session revocation failed')
+  console.log('PASS independent temporary role withdrawal denies existing-token reports and browser originals; sessions revoked, identity/journals/audit retained');stages++
+  await customerContext.close()
   console.log('SYNTHETIC_BROWSER_UAT_PASS '+stages+' stages, viewport 1440/768/360')
  }finally{await browser.close()}
 }

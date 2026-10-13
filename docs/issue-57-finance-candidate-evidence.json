@@ -1,0 +1,112 @@
+{
+  "implementation_sha": "e40aece3132378f0a67d6bd551132e24bd975978",
+  "date": "2026-10-11",
+  "application_tests": 203,
+  "sql_suites": 10,
+  "sql_assertions": 199,
+  "browser_stages": 27,
+  "viewports": [
+    1440,
+    768,
+    360
+  ],
+  "concurrency_scenarios": 5,
+  "isolated_database_restore": "PASS",
+  "original_file_restore": "PASS",
+  "production_dependency_vulnerabilities": 0,
+  "workflow_runs": [
+    {
+      "id": 38154072208,
+      "name": "Step 1 CI",
+      "status": "completed",
+      "conclusion": "success",
+      "run_number": 738,
+      "jobs_url": "https://api.github.com/repos/Minhazsiraji/2-Taka-R-Bazar/actions/runs/38154072208/jobs",
+      "logs_url": "https://api.github.com/repos/Minhazsiraji/2-Taka-R-Bazar/actions/runs/38154072208/logs",
+      "workflow_id": 366718138
+    },
+    {
+      "id": 38154072220,
+      "name": "Finance concurrency and isolated restore UAT",
+      "status": "completed",
+      "conclusion": "success",
+      "run_number": 36,
+      "jobs_url": "https://api.github.com/repos/Minhazsiraji/2-Taka-R-Bazar/actions/runs/38154072220/jobs",
+      "logs_url": "https://api.github.com/repos/Minhazsiraji/2-Taka-R-Bazar/actions/runs/38154072220/logs",
+      "workflow_id": 381091732
+    },
+    {
+      "id": 38154072210,
+      "name": "Finance and Treasury isolated browser UAT",
+      "status": "completed",
+      "conclusion": "success",
+      "run_number": 158,
+      "jobs_url": "https://api.github.com/repos/Minhazsiraji/2-Taka-R-Bazar/actions/runs/38154072210/jobs",
+      "logs_url": "https://api.github.com/repos/Minhazsiraji/2-Taka-R-Bazar/actions/runs/38154072210/logs",
+      "workflow_id": 379412738
+    }
+  ],
+  "preview": {
+    "id": "dpl_DLEKGW9ZVZSw7h2yXoaC8NtfjMUP",
+    "name": "2-taka-r-bazar",
+    "url": "2-taka-r-bazar-64phfy41f-minhazs-projects-d28f7aed.vercel.app",
+    "created": 1791734788595,
+    "state": "READY",
+    "target": null,
+    "creator": {
+      "uid": "FJ9uUS0ehscqqg68jKhO2Xxm",
+      "username": "minhazsiraji"
+    },
+    "meta": {
+      "githubCommitRef": "feat/finance-complete-release-uat-20261011",
+      "githubCommitSha": "e40aece3132378f0a67d6bd551132e24bd975978",
+      "githubCommitMessage": "test(finance): reject forged and failed originals before financial posting",
+      "githubRepo": "2-Taka-R-Bazar",
+      "githubOrg": "Minhazsiraji"
+    },
+    "inspectorUrl": "https://vercel.com/minhazs-projects-d28f7aed/2-taka-r-bazar/DLEKGW9ZVZSw7h2yXoaC8NtfjMUP",
+    "isRollbackCandidate": false
+  },
+  "production_rollback": {
+    "id": "dpl_iYF4sHWTzfsKvNyvB7DigA1gP2BS",
+    "name": "2-taka-r-bazar",
+    "url": "2-taka-r-bazar-9vp551aos-minhazs-projects-d28f7aed.vercel.app",
+    "created": 1791699434473,
+    "state": "READY",
+    "target": "production",
+    "creator": {
+      "uid": "FJ9uUS0ehscqqg68jKhO2Xxm",
+      "username": "minhazsiraji"
+    },
+    "meta": {
+      "githubCommitRef": "main",
+      "githubCommitSha": "e74b798b60c4fa779876998ad96ccac5c300d20a",
+      "githubCommitMessage": "Merge Finance, Treasury, Procurement and document controls\n\nAll final-commit CI and synthetic browser UAT passed. Production financial write gates remain disabled pending independent reviewer, bank reconciliation, revenue/COGS and security acceptance.",
+      "githubRepo": "2-Taka-R-Bazar",
+      "githubOrg": "Minhazsiraji"
+    },
+    "inspectorUrl": "https://vercel.com/minhazs-projects-d28f7aed/2-taka-r-bazar/iYF4sHWTzfsKvNyvB7DigA1gP2BS",
+    "isRollbackCandidate": true
+  },
+  "hosted_gate_installed": false,
+  "hosted_journals": 2,
+  "hosted_backup_verified": false,
+  "hosted_finance_uat": "BLOCKED: recoverable manual hosted DB and original-byte backups unverified; supported temporary reviewer provisioning and candidate hosted schema preparation pending",
+  "production_release_decision": "HOLD",
+  "merged": false,
+  "report_qualified_sha": "58e3f3d9a1c341e520a64b0484e58e978af8629c",
+  "report_workflows": [
+    38155020484,
+    38155020536,
+    38155020473
+  ],
+  "hosted_dashboard_authenticated": true,
+  "hosted_plan": "Free",
+  "managed_backups_available": false,
+  "security_advisors": {
+    "rls_without_policy_info": 33,
+    "anonymous_qr_definers_warn": 2,
+    "authenticated_definers_warn": 128,
+    "leaked_password_protection_disabled": true
+  }
+}
