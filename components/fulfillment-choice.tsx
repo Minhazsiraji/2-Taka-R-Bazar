@@ -23,7 +23,7 @@ export function FulfillmentChoice({pickupOptions,defaultAddress,estimatedProduct
  const deliveryFee=useMemo(()=>method==='pickup'?0:(estimatedProductSubtotal<=1000?20:30),[method,estimatedProductSubtotal])
  const newAddress=[unit,building,street,landmark].map(x=>x.trim()).filter(Boolean).join(', ')
  return <div className="grid gap-3">
-  <fieldset className="grid gap-2"><legend className="label">How do you want to receive this Pool basket?</legend>
+  <fieldset className="grid gap-2"><legend className="label">How do you want to receive this order?</legend>
    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3"><input className="mt-1" type="radio" name="fulfillment_method" value="pickup" checked={method==='pickup'} onChange={()=>setMethod('pickup')}/><span><b>Community delivery-point collection — FREE</b><span className="mt-1 block text-xs text-slate-600">Collect from an enabled point and keep your full product saving.</span></span></label>
    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-sky-200 bg-sky-50 p-3"><input className="mt-1" type="radio" name="fulfillment_method" value="home_delivery" checked={method==='home_delivery'} onChange={()=>setMethod('home_delivery')}/><span><b>Home delivery inside your community</b><span className="mt-1 block text-xs text-slate-600">৳20 when the confirmed product basket is ৳1,000 or less; ৳30 above ৳1,000. Delivery stays separate from product savings.</span></span></label>
   </fieldset>

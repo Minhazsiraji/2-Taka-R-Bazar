@@ -6,7 +6,7 @@ const migration=read('supabase/migrations/20261013150000_commerce_promotional_li
 const admin=read('app/commerce/purchase-limits/page.tsx')
 const action=read('app/actions/commerce.ts')
 const catalog=read('components/public-marketplace.tsx')
-const core=read('lib/commerce/server.ts')
+const core=read('lib/commerce/errors.mjs')
 const sqlTest=read('supabase/tests/commerce-promotional-limits.sql')
 
 test('promotion limit is staff-controlled with independent review, no customer writes',()=>{
