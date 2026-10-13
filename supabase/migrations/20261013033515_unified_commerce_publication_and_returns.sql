@@ -17,9 +17,10 @@ create function public.commerce_review_stock(p_id uuid,p_approve boolean,p_note 
 create function public.commerce_request_offer(p_sku uuid,p_community uuid,p_mode text,p_supplier uuid,p_pool_item uuid,p_group uuid,p_price numeric,p_until timestamptz,p_pickup boolean,p_delivery boolean,p_sla integer,p_proof text) returns uuid language plpgsql security definer set search_path='' as $$ declare v_product uuid;v_stock uuid;v_id uuid;begin
  perform private.commerce_assert_preview(p_proof);
  if not private.commerce_admin() then raise exception 'Admin required';end if;
- select product_id into v_product from public.commerce_skus where id=p_sku and active;
+ select s.product_id into v_product from public.commerce_skus s join public.products p on p.id=s.product_id where s.id=p_sku and s.active and p.active and not p.is_demo;
  if v_product is null or p_until<=now() or not exists(select 1 from public.communities where id=p_community and active) then raise exception 'Active SKU, community and future expiry required';end if;
  if p_supplier is null and exists(select 1 from public.products where id=v_product and source_type='SUPPLIER_POOL') then raise exception 'Supplier product requires its verified seller';end if;
+ if p_supplier is null and not exists(select 1 from public.own_product_costs where product_id=v_product and total_landed_cost>0 and p_price>=total_landed_cost) then raise exception 'Own-product landed cost and price above cost required before commercialization';end if;
  if p_supplier is not null then
  select s.id into v_stock from public.commerce_supplier_stock s join public.supplier_products sp on sp.supplier_id=s.supplier_id and sp.product_id=v_product join public.suppliers su on su.id=s.supplier_id where s.sku_id=p_sku and s.supplier_id=p_supplier and s.verified_at>now()-interval '1 day' and sp.active and su.active and su.reliability_status<>'blocked';
  if v_stock is null then raise exception 'Fresh independently verified seller stock required';end if;end if;

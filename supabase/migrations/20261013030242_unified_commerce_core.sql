@@ -136,7 +136,7 @@ do $$ declare t text;begin
  end loop;
 end $$;
 create function private.commerce_admin() returns boolean language sql stable security definer set search_path='' as $$ select auth.uid() is not null and (private.has_role(auth.uid(),'admin') or private.has_role(auth.uid(),'super_admin')); $$;
-create function private.commerce_supplier(p_supplier uuid) returns boolean language sql stable security definer set search_path='' as $$ select exists(select 1 from public.supplier_memberships where supplier_id=p_supplier and user_id=auth.uid() and active and role in ('owner','manager')); $$;
+create function private.commerce_supplier(p_supplier uuid) returns boolean language sql stable security definer set search_path='' as $$ select exists(select 1 from public.supplier_memberships sm join public.suppliers su on su.id=sm.supplier_id where sm.supplier_id=p_supplier and sm.user_id=auth.uid() and sm.active and su.active and su.reliability_status<>'blocked' and sm.role in ('owner','manager')); $$;
 create function private.commerce_operator(p_community uuid) returns boolean language sql stable security definer set search_path='' as $$ select exists(select 1 from public.community_ops_assignments where user_id=auth.uid() and community_id=p_community and active); $$;
 create function private.commerce_assert_preview(p_proof text) returns void language plpgsql stable security definer set search_path='' as $$ begin
  if p_proof is null or length(p_proof)<32 or not exists(select 1 from private.commerce_configuration where preview_secret_hash=encode(extensions.digest(p_proof,'sha256'),'hex')) then raise exception using errcode='42501',message='Commerce purchases are disabled outside authorized synthetic Preview';end if;
@@ -151,9 +151,9 @@ create function private.commerce_offer_state(p_offer uuid) returns jsonb languag
 declare o public.commerce_offers%rowtype;pi public.pool_items%rowtype;po public.pools%rowtype;g public.group_deals%rowtype;v_price numeric;
 begin
  select * into o from public.commerce_offers where id=p_offer;
- if not found or o.status<>'approved' or o.valid_until<=now() or not exists(select 1 from public.commerce_skus s join public.products p on p.id=s.product_id join public.communities c on c.id=o.community_id where s.id=o.sku_id and s.active and p.active and c.active) then return jsonb_build_object('phase','unavailable','price',null);end if;
+ if not found or o.status<>'approved' or o.valid_until<=now() or not exists(select 1 from public.commerce_skus s join public.products p on p.id=s.product_id join public.communities c on c.id=o.community_id where s.id=o.sku_id and s.active and p.active and not p.is_demo and c.active) then return jsonb_build_object('phase','unavailable','price',null);end if;
  if o.supplier_id is not null and not exists(select 1 from public.suppliers s join public.supplier_products sp on sp.supplier_id=s.id join public.commerce_skus sk on sk.product_id=sp.product_id where s.id=o.supplier_id and s.active and s.reliability_status<>'blocked' and sp.active and sk.id=o.sku_id) then return jsonb_build_object('phase','unavailable','price',null);end if;
- if o.mode='SOLO' then return jsonb_build_object('phase','ready','price',o.unit_price);end if;
+ if o.mode='SOLO' then if o.supplier_id is null and not exists(select 1 from public.own_product_costs c join public.commerce_skus s on s.product_id=c.product_id where s.id=o.sku_id and c.total_landed_cost>0 and o.unit_price>=c.total_landed_cost) then return jsonb_build_object('phase','unavailable','price',null);end if;return jsonb_build_object('phase','ready','price',o.unit_price);end if;
  if o.mode='POOL' then
  select * into pi from public.pool_items where id=o.pool_item_id and active;
  select * into po from public.pools where id=pi.pool_id;
@@ -197,7 +197,7 @@ begin
  if v_guest is not null then
  for r in select * from public.commerce_cart_items where cart_id=v_guest and state='ready' order by offer_id loop
  if (private.commerce_offer_state(r.offer_id)->>'phase')<>'unavailable' then
- insert into public.commerce_cart_items(cart_id,offer_id,quantity,state) values(v_id,r.offer_id,r.quantity,'ready') on conflict(cart_id,offer_id) where state<>'ordered' do update set quantity=least(100,public.commerce_cart_items.quantity+excluded.quantity),state='ready' where public.commerce_cart_items.state in ('ready','expired','cancelled');
+ insert into public.commerce_cart_items(cart_id,offer_id,quantity,state) values(v_id,r.offer_id,r.quantity,'ready') on conflict(cart_id,offer_id) where state<>'ordered' do update set quantity=case when public.commerce_cart_items.state='ready' then least(100,public.commerce_cart_items.quantity+excluded.quantity) else excluded.quantity end,state='ready' where public.commerce_cart_items.state in ('ready','expired','cancelled');
  end if;
  end loop;
  delete from public.commerce_carts where id=v_guest;
@@ -218,7 +218,7 @@ begin
  c=private.commerce_cart(p_guest);
  perform private.commerce_refresh_cart(c);
  select coalesce(jsonb_agg(jsonb_build_object('item_id',ci.id,'offer_id',o.id,'product_id',p.id,'name',p.name,'image_url',p.image_url,'quantity',ci.quantity,'mode',o.mode,'state',ci.state,'phase',states.st->>'phase','unit_price',states.st->'price','community_id',o.community_id,'community_name',co.name,'is_synthetic',o.is_synthetic) order by ci.created_at),'[]') into v_rows
- from public.commerce_cart_items ci join public.commerce_offers o on o.id=ci.offer_id join public.commerce_skus sk on sk.id=o.sku_id join public.products p on p.id=sk.product_id join public.communities co on co.id=o.community_id cross join lateral (select private.commerce_offer_state(o.id) as st) states where ci.cart_id=c and ci.state<>'ordered';
+ from public.commerce_cart_items ci join public.commerce_offers o on o.id=ci.offer_id join public.commerce_skus sk on sk.id=o.sku_id join public.products p on p.id=sk.product_id join public.communities co on co.id=o.community_id cross join lateral (select private.commerce_offer_state(o.id) as st) states where ci.cart_id=c and ci.state not in ('ordered','cancelled');
  return jsonb_build_object('cart_id',c,'revision',(select revision from public.commerce_carts where id=c),'authenticated',auth.uid() is not null,'items',v_rows);
 end $$;
 create function public.commerce_set_cart_item(p_guest text,p_offer uuid,p_quantity integer,p_proof text) returns jsonb language plpgsql security definer set search_path='' as $$

@@ -70,8 +70,10 @@ export async function signInPhonePassword(formData: FormData) {
   revalidatePath('/', 'layout')
   const cookieStore = await cookies()
   const qrCode = normalizeCommunityQrCode(cookieStore.get(COMMUNITY_QR_CODE_COOKIE)?.value)
-  if (qrCode) redirect('/community-invite/' + encodeURIComponent(qrCode))
   const returnTo=safeAuthReturnPath(getText(formData,'next'))
+  if(returnTo)cookieStore.set('bp_post_auth_next',returnTo,{httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',maxAge:1800,path:'/'})
+  else cookieStore.delete('bp_post_auth_next')
+  if (qrCode) redirect('/community-invite/' + encodeURIComponent(qrCode))
   redirect(returnTo??'/home')
 }
 

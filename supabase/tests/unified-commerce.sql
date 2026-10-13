@@ -19,6 +19,7 @@ insert into public.communities(id,name,slug) values('00000000-0000-4000-8000-000
 update public.profiles set full_name='Synthetic buyer',phone='017'||right(replace(id::text,'-',''),8),community_id='00000000-0000-4000-8000-000000006410' where id in ('00000000-0000-4000-8000-000000006401','00000000-0000-4000-8000-000000006402');
 insert into public.pickup_points(id,community_id,name,address) values('00000000-0000-4000-8000-000000006411','00000000-0000-4000-8000-000000006410','Synthetic point','Synthetic address only');
 insert into public.products(id,name,category,package_size,unit,sku,source_type,is_demo) values('00000000-0000-4000-8000-000000006420','Synthetic SOLO rice','Rice','1 kg','bag','commerce-6420','PRIVATE_LABEL',false);
+insert into public.own_product_costs(product_id,purchase_cost) values('00000000-0000-4000-8000-000000006420',80);
 insert into public.own_product_inventory(product_id,stock_on_hand) values('00000000-0000-4000-8000-000000006420',3) on conflict(product_id) do update set stock_on_hand=3;
 select is((select count(*)::integer from public.commerce_skus where product_id='00000000-0000-4000-8000-000000006420'),1,'New product has canonical SKU');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006403',true);
