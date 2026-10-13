@@ -36,8 +36,8 @@ try{
  await qaPage.getByLabel('Test email',{exact:true}).fill(b.email);
  await qaPage.getByLabel('Password',{exact:true}).fill(b.password);
  await qaPage.getByRole('button',{name:'Sign in to Preview',exact:true}).click();
- await qaPage.getByRole('alert').waitFor();
- assert.ok(qaPage.url().includes('/commerce-uat/login?error='));
+ await qaPage.waitForURL(url=>url.pathname==='/commerce-uat/login'&&url.searchParams.has('error'));
+ await qaPage.getByText('Test email or password was not accepted, or test access has expired',{exact:true}).waitFor();
  const preservedSession=await b.client.auth.refreshSession();assert.ifError(preservedSession.error);
  sql(`insert into private.commerce_uat_signin_leases(actor_id,expires_at,reason) values('${a.id}',clock_timestamp()+interval '1 hour','Disposable browser email sign-in qualification')`);
  await qaPage.getByLabel('Test email',{exact:true}).fill(a.email);
