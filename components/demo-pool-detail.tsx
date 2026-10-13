@@ -159,7 +159,7 @@ export function DemoPoolDetail({pool,communityName,initialLanguage='en',hasLangu
      <thead><tr><th>{t('Households','পরিবার')}</th><th>{t('Selected basket at this tier','এই ধাপে নির্বাচিত বাজারের দাম')}</th><th>{t('Status','অবস্থা')}</th></tr></thead>
      <tbody>{tiers.map(threshold=><tr key={threshold} data-current={tier.current===threshold}>
       <td>{threshold===1?'1+':`${threshold}+`}</td>
-      <td>{quantities&&itemCount===0?'৳0':formatPrice(demoPoolBasketTotal(pool,threshold,quantities))}</td>
+      <td>{itemCount===0?'৳0':formatPrice(demoPoolBasketTotal(pool,threshold,quantities))}</td>
       <td>{tier.current===threshold?t('Current example tier','বর্তমান নমুনা স্তর'):tier.upcoming===threshold?t('Next potential tier','পরবর্তী সম্ভাব্য স্তর'):threshold<tier.current?t('Earlier tier','আগের স্তর'):t('Future tier · conditional','ভবিষ্যৎ স্তর · শর্তসাপেক্ষ')}</td>
      </tr>)}</tbody>
     </table></div>
