@@ -23,3 +23,34 @@ export async function requestCommerceStock(fd:FormData){await requireUser();awai
 export async function reviewCommerceStock(fd:FormData){await requireUser();await call('commerce_review_stock',{p_id:value(fd,'stock_report_id'),p_approve:value(fd,'decision')==='approve',p_note:value(fd,'reason')},'/commerce');revalidatePath('/commerce');redirect('/commerce')}
 export async function receiveCommerceReturn(fd:FormData){await requireUser();let proof;try{proof=await uploadEvidence(fd)}catch{redirect('/commerce?error=Valid+original+return+evidence+required')};const lines=[];for(let i=0;i<50;i++){const quantity=Number(value(fd,'return_quantity_'+i));if(quantity>0)lines.push({line_id:value(fd,'line_id_'+i),quantity})};await call('commerce_receive_return',{p_request:value(fd,'request_id'),p_lines:lines,p_restock:fd.get('restock')==='on',p_path:proof.path,p_sha:proof.sha},'/commerce');revalidatePath('/commerce');redirect('/commerce')}
 export async function saveCommerceAddress(fd:FormData){const {supabase}=await requireOnboardedUser();try{commerceProof()}catch{redirect('/account/addresses?error=Address+updates+are+awaiting+Preview+qualification')};const {error}=await supabase.rpc('save_my_delivery_address',{p_building_label:value(fd,'building_label'),p_unit_label:value(fd,'unit_label'),p_street_line:value(fd,'street_line'),p_landmark:value(fd,'landmark')||null,p_default:true});if(error)fail('/account/addresses','Complete delivery address could not be saved');revalidatePath('/account/addresses');redirect('/account/addresses')}
+
+export async function requestCommercePurchaseLimit(fd:FormData){
+ await requireUser()
+ const qty=(key:string)=>{const raw=value(fd,key);return raw===''?null:Number(raw)}
+ const perAccount=qty('max_per_account'),perHousehold=qty('max_per_household')
+ if((perAccount===null&&perHousehold===null)||[perAccount,perHousehold].some(v=>v!==null&&(!Number.isInteger(v)||v<1||v>100)))
+  fail('/commerce/purchase-limits','Set an integer maximum of 1 to 100 for account or verified household')
+ await call('commerce_request_purchase_limit',{
+  p_offer:value(fd,'offer_id'),p_campaign:value(fd,'campaign_key'),
+  p_account:perAccount,p_household:perHousehold,p_reason:value(fd,'reason'),
+ },'/commerce/purchase-limits')
+ revalidatePath('/commerce/purchase-limits')
+ redirect('/commerce/purchase-limits?notice=Submitted+for+independent+promotion+limit+approval')
+}
+export async function reviewCommercePurchaseLimit(fd:FormData){
+ await requireUser()
+ await call('commerce_review_purchase_limit',{
+  p_id:value(fd,'limit_id'),p_approve:value(fd,'decision')==='approve',
+  p_note:value(fd,'reason'),
+ },'/commerce/purchase-limits')
+ revalidatePath('/commerce/purchase-limits')
+ redirect('/commerce/purchase-limits?notice=Independent+review+recorded')
+}
+export async function verifyCommerceHouseholdAddress(fd:FormData){
+ await requireUser()
+ await call('commerce_verify_household_address',{
+  p_address:value(fd,'address_id'),p_evidence:value(fd,'reason'),
+ },'/commerce/purchase-limits')
+ revalidatePath('/commerce/purchase-limits')
+ redirect('/commerce/purchase-limits?notice=Trusted+household+assignment+recorded')
+}

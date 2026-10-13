@@ -1,7 +1,7 @@
 name: Unified commerce isolated qualification
 on:
   push:
-    branches: [feat/unified-commerce-issue64-20261013]
+    branches: [feat/unified-commerce-issue64-20261013, feat/issue64-per-customer-promo-limits-20261013]
   pull_request:
     branches: [main]
   workflow_dispatch:
