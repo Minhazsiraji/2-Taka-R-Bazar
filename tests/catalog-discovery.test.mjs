@@ -19,32 +19,35 @@ test('preview catalog contains nine explicitly demo-only distinct product illust
   assert.ok(existsSync(new URL('../public/demo-products/'+img+'.svg',import.meta.url)))
  }
 })
-test('selected community sorts its products first without hiding other communities',()=>{
+test('first arrival shows all products; community selection filters to only eligible offers',()=>{
  const offers=[
   mk('rice','DOHS'),mk('sugar','AMT'),mk('oil','NIR'),mk('lentils','AMT'),
   mk('sugar','DOHS'),
  ]
+ assert.deepEqual(browseCatalogOffers(offers).map(o=>o.product_id),['rice','sugar','oil','lentils'])
  const found=browseCatalogOffers(offers,{area:'AMT'})
- assert.deepEqual(found.map(o=>o.product_id),['sugar','lentils','rice','oil'])
- assert.equal(found.filter(o=>o.community_id==='AMT').length,2)
- assert.equal(found.length,4)
+ assert.deepEqual(found.map(o=>o.product_id),['sugar','lentils'])
+ assert.equal(found.length,2)
+ assert.equal(found.every(o=>o.community_id==='AMT'),true)
+ assert.equal(browseCatalogOffers(offers,{area:'UNKNOWN'}).length,0)
 })
-test('mode, category and search operate across all areas, not only selected community',()=>{
+test('category, mode and search always respect the selected community',()=>{
  const offers=[
   mk('rice','AMT','GROUP_DEAL','Rice'),
   mk('flour','DOHS','COMMUNITY_POOL','Flour'),
   mk('sugar','NIR','GROUP_DEAL','Sugar'),
+  mk('oil','AMT','COMMUNITY_POOL','Oil'),
  ]
- assert.deepEqual(browseCatalogOffers(offers,{area:'AMT',mode:'pool'}).map(o=>o.product_id),['flour'])
- assert.deepEqual(browseCatalogOffers(offers,{area:'AMT',category:'Sugar'}).map(o=>o.product_id),['sugar'])
- assert.deepEqual(browseCatalogOffers(offers,{area:'AMT',search:'SUGAR'}).map(o=>o.product_id),['sugar'])
+ assert.deepEqual(browseCatalogOffers(offers,{mode:'pool'}).map(o=>o.product_id),['flour','oil'])
+ assert.deepEqual(browseCatalogOffers(offers,{area:'AMT',mode:'pool'}).map(o=>o.product_id),['oil'])
+ assert.deepEqual(browseCatalogOffers(offers,{area:'AMT',category:'Sugar'}),[])
+ assert.deepEqual(browseCatalogOffers(offers,{area:'NIR',search:'SUGAR'}).map(o=>o.product_id),['sugar'])
  assert.deepEqual(browseCatalogOffers(offers,{area:'AMT',search:'no-results'}),[])
 })
-test('other-community cards cannot directly submit Buy Alone cart or Group Deal commitment',()=>{
- assert.match(market,/const isOutsideArea=Boolean\(area&&offer.community_id!==area\)/)
- assert.match(market,/isOutsideArea\?<div className="market-product-actions/)
- assert.match(market,/onClick=\{\(\)=>selectArea\(offer.community_id\)\}/)
- assert.match(market,/Your community offers appear first/)
+test('unselected shoppers can discover, but cannot add cart items before choosing a community',()=>{
+ assert.match(market,/!area\?<div className="market-product-actions/)
+ assert.match(market,/onClick=\{\(\)=>\{selectArea\(offer.community_id\)/)
+ assert.match(market,/Browse all communities freely/)
  assert.match(market,/browseCatalogOffers\(offers,\{area,mode,category,search\}\)/)
  assert.match(market,/commerce_solo_id\?<form action=\{setCommerceCartItem\}/)
  assert.match(market,/commerce_group_id\?<form action=\{setCommerceCartItem\}/)
