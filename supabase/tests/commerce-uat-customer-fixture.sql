@@ -9,6 +9,7 @@ insert into public.communities(id,name,slug) values('00000000-0000-4000-8000-000
 insert into public.pickup_points(id,community_id,name,address) values('00000000-0000-4000-8000-000000006922','00000000-0000-4000-8000-000000006921','Synthetic pickup','Synthetic test street');
 insert into public.products(id,name,category,package_size,unit,sku,source_type,is_demo) values
  ('00000000-0000-4000-8000-000000006923','Synthetic fixture rice','Rice','1 kg','bag','fixture-6923','PRIVATE_LABEL',false);
+insert into public.own_product_costs(product_id,purchase_cost) values('00000000-0000-4000-8000-000000006923',80);
 insert into public.own_product_inventory(product_id,stock_on_hand) values('00000000-0000-4000-8000-000000006923',10) on conflict(product_id) do update set stock_on_hand=10;
 insert into public.commerce_offers(id,sku_id,community_id,mode,unit_price,valid_until,status,requested_by,reviewed_by) select
  '00000000-0000-4000-8000-000000006924',id,'00000000-0000-4000-8000-000000006921','SOLO',100,now()+interval '1 day','approved','00000000-0000-4000-8000-000000006912','00000000-0000-4000-8000-000000006913' from public.commerce_skus where product_id='00000000-0000-4000-8000-000000006923';
