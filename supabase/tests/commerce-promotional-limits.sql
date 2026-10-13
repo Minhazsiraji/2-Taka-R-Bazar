@@ -42,33 +42,33 @@ insert into promo_test_ids values ('offer1',public.commerce_request_offer(
 '00000000-0000-4000-8000-000000006810','SOLO',null,null,null,100,now()+interval '2 days',true,true,60,
 'synthetic-disposable-commerce-proof-64'));
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006806',true);
-select lives_ok($$$select public.commerce_review_offer((select id from promo_test_ids where key='offer1'),
-true,'Independent synthetic promotion offer review','synthetic-disposable-commerce-proof-64')$$$,
+select lives_ok($$select public.commerce_review_offer((select id from promo_test_ids where key='offer1'),
+true,'Independent synthetic promotion offer review','synthetic-disposable-commerce-proof-64')$$,
 'Checker can approve synthetic offer');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006805',true);
 insert into promo_test_ids values('limit1',public.commerce_request_purchase_limit(
 (select id from promo_test_ids where key='offer1'),'SOY5L_20PCT',1,null,'One bottle promotional allowance',
 'synthetic-disposable-commerce-proof-64'));
-select throws_like($$$select public.commerce_review_purchase_limit((select id from promo_test_ids where key='limit1'),true,'Self review should be blocked','synthetic-disposable-commerce-proof-64')$$$,'%Super Admin required%','Maker cannot approve its own cap');
+select throws_like($$select public.commerce_review_purchase_limit((select id from promo_test_ids where key='limit1'),true,'Self review should be blocked','synthetic-disposable-commerce-proof-64')$$,'%Super Admin required%','Maker cannot approve its own cap');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006806',true);
-select lives_ok($$$select public.commerce_review_purchase_limit((select id from promo_test_ids where key='limit1'),
-true,'Approved synthetic one-bottle campaign','synthetic-disposable-commerce-proof-64')$$$,'Independent checker approves cap');
+select lives_ok($$select public.commerce_review_purchase_limit((select id from promo_test_ids where key='limit1'),
+true,'Approved synthetic one-bottle campaign','synthetic-disposable-commerce-proof-64')$$,'Independent checker approves cap');
 select is((public.commerce_catalog(true,'00000000-0000-4000-8000-000000006810')->0->>'max_per_account')::integer,1,
 'Public card discloses approved one-per-account cap');
 select set_config('request.jwt.claim.sub','',true);
-select throws_like($$$select public.commerce_set_cart_item(repeat('a',64),(select id from promo_test_ids where key='offer1'),2,'synthetic-disposable-commerce-proof-64')$$$,'%Promotion limit%','Guest cannot put two discounted bottles in cart');
-select lives_ok($$$select public.commerce_set_cart_item(repeat('a',64),(select id from promo_test_ids where key='offer1'),1,'synthetic-disposable-commerce-proof-64')$$$,'Guest can preview one');
+select throws_like($$select public.commerce_set_cart_item(repeat('a',64),(select id from promo_test_ids where key='offer1'),2,'synthetic-disposable-commerce-proof-64')$$,'%Promotion limit%','Guest cannot put two discounted bottles in cart');
+select lives_ok($$select public.commerce_set_cart_item(repeat('a',64),(select id from promo_test_ids where key='offer1'),1,'synthetic-disposable-commerce-proof-64')$$,'Guest can preview one');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006801',true);
-select lives_ok($$$select public.commerce_get_cart(repeat('a',64),'synthetic-disposable-commerce-proof-64')$$$,'Guest merges one item at login');
+select lives_ok($$select public.commerce_get_cart(repeat('a',64),'synthetic-disposable-commerce-proof-64')$$,'Guest merges one item at login');
 insert into promo_test_ids select 'quote1',(public.commerce_create_quote(repeat('a',64),'pickup',
 '00000000-0000-4000-8000-000000006811',null,'synthetic-disposable-commerce-proof-64')->>'id')::uuid;
 insert into promo_test_ids select 'order1',(public.commerce_confirm_checkout((select id from promo_test_ids where key='quote1'),
 '00000000-0000-4000-8000-000000006850','2026-10-05','synthetic-disposable-commerce-proof-64')->>0)::uuid;
 select is((select sum(quantity)::integer from public.commerce_order_items where order_id=(select id from promo_test_ids where key='order1')),1,
 'First one-bottle checkout recorded');
-select throws_like($$$select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='offer1'),1,'synthetic-disposable-commerce-proof-64')$$$,'%Promotion limit reached for this account%','Same customer cannot reopen offer in new cart');
-select lives_ok($$$select public.commerce_confirm_checkout((select id from promo_test_ids where key='quote1'),
-'00000000-0000-4000-8000-000000006850','2026-10-05','synthetic-disposable-commerce-proof-64')$$$,'Idempotent checkout retry does not consume allowance twice');
+select throws_like($$select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='offer1'),1,'synthetic-disposable-commerce-proof-64')$$,'%Promotion limit reached for this account%','Same customer cannot reopen offer in new cart');
+select lives_ok($$select public.commerce_confirm_checkout((select id from promo_test_ids where key='quote1'),
+'00000000-0000-4000-8000-000000006850','2026-10-05','synthetic-disposable-commerce-proof-64')$$,'Idempotent checkout retry does not consume allowance twice');
 
 -- Another independently approved offer using the SAME SKU/campaign cannot reset the allowance.
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006805',true);
@@ -87,7 +87,7 @@ select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006806'
 select public.commerce_review_purchase_limit((select id from promo_test_ids where key='limit2'),
 true,'Approve common campaign cap','synthetic-disposable-commerce-proof-64');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006801',true);
-select throws_like($$$select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='offer2'),1,'synthetic-disposable-commerce-proof-64')$$$,'%Promotion limit reached for this account%','Second same-campaign offer cannot evade cap');
+select throws_like($$select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='offer2'),1,'synthetic-disposable-commerce-proof-64')$$,'%Promotion limit reached for this account%','Second same-campaign offer cannot evade cap');
 
 -- Optional stricter verified HOUSEHOLD cap. No GPS/typed household_name grants membership.
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006805',true);
@@ -116,19 +116,19 @@ values
 ('00000000-0000-4000-8000-000000006841','00000000-0000-4000-8000-000000006803','00000000-0000-4000-8000-000000006810','00000000-0000-4000-8000-000000006831','Synthetic building','Flat A','Road 1','Flat A, Synthetic building, Road 1','operator_verified'),
 ('00000000-0000-4000-8000-000000006842','00000000-0000-4000-8000-000000006804','00000000-0000-4000-8000-000000006810','00000000-0000-4000-8000-000000006831','Synthetic building','Flat A','Road 1','Flat A, Synthetic building, Road 1','operator_verified');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006806',true);
-select lives_ok($$$select public.commerce_verify_household_address('00000000-0000-4000-8000-000000006841',
-'Independently confirmed same checked building and flat','synthetic-disposable-commerce-proof-64')$$$,'Staff can verify first account household');
-select lives_ok($$$select public.commerce_verify_household_address('00000000-0000-4000-8000-000000006842',
-'Independently confirmed second occupant at checked flat','synthetic-disposable-commerce-proof-64')$$$,'Staff can verify second account household');
+select lives_ok($$select public.commerce_verify_household_address('00000000-0000-4000-8000-000000006841',
+'Independently confirmed same checked building and flat','synthetic-disposable-commerce-proof-64')$$,'Staff can verify first account household');
+select lives_ok($$select public.commerce_verify_household_address('00000000-0000-4000-8000-000000006842',
+'Independently confirmed second occupant at checked flat','synthetic-disposable-commerce-proof-64')$$,'Staff can verify second account household');
 select is((select count(distinct household_id)::integer from public.commerce_verified_household_members where customer_id in
 ('00000000-0000-4000-8000-000000006803','00000000-0000-4000-8000-000000006804')),1,'Both independently verified accounts share one trusted household');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006803',true);
 insert into promo_test_ids select 'quote3',(public.commerce_create_quote(null,'pickup',
 '00000000-0000-4000-8000-000000006811',null,'synthetic-disposable-commerce-proof-64')->>'id')::uuid;
-select lives_ok($$$select public.commerce_confirm_checkout((select id from promo_test_ids where key='quote3'),
-'00000000-0000-4000-8000-000000006853','2026-10-05','synthetic-disposable-commerce-proof-64')$$$,
+select lives_ok($$select public.commerce_confirm_checkout((select id from promo_test_ids where key='quote3'),
+'00000000-0000-4000-8000-000000006853','2026-10-05','synthetic-disposable-commerce-proof-64')$$,
 'First verified household account purchases one promotional bottle');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006804',true);
-select throws_like($$$select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='offer3'),1,'synthetic-disposable-commerce-proof-64')$$$,'%Promotion limit reached for this verified household%','Second account of same verified family denied');
+select throws_like($$select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='offer3'),1,'synthetic-disposable-commerce-proof-64')$$,'%Promotion limit reached for this verified household%','Second account of same verified family denied');
 select * from finish();
 rollback;
