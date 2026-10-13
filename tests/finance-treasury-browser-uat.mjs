@@ -328,6 +328,33 @@ async function main(){
   await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
   let saleForm=maker.getByRole('button',{name:'Request customer sale posting'}).locator('xpath=ancestor::form')
   await saleForm.getByLabel('Completed customer source').selectOption('order:'+source)
+  assert.equal(await saleForm.getByRole('button',{name:'Add inventory allocation'}).isDisabled(),true,'One fulfilled unit must not allow extra allocation rows')
+  // A separate disposable three-unit source exercises removal of a middle row.
+  // Surviving rows must retain their invoice and quantity after field names shift.
+  const allocationSource='f5000000-0000-4000-8000-000000000004',allocationItem='f6000000-0000-4000-8000-000000000004'
+  psql(`insert into private.finance_uat_entities(entity_type,entity_id,reason) values('order','${allocationSource}','Disposable allocation row browser regression');
+  insert into public.orders(id,customer_id,pool_id,status,payment_status,product_subtotal,delivery_fee,total_amount,fulfillment_method,pickup_point_id,completed_at)
+  values('${allocationSource}','${identities.get('admin').id}','f1000000-0000-4000-8000-000000000001','completed','paid_manually',2940,0,2940,'pickup',(select id from public.pickup_points where community_id='11111111-1111-1111-1111-111111111111' limit 1),now());
+  insert into public.order_items(id,order_id,pool_item_id,product_id,quantity,benchmark_price_snapshot,unit_price)
+  values('${allocationItem}','${allocationSource}','f2000000-0000-4000-8000-000000000001','22222222-2222-2222-2222-222222222221',3,1000,980)`)
+  await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
+  saleForm=maker.getByRole('button',{name:'Request customer sale posting'}).locator('xpath=ancestor::form')
+  await saleForm.getByLabel('Completed customer source').selectOption('order:'+allocationSource)
+  await saleForm.locator('select[name="bill_id_0"]').selectOption(bill)
+  await saleForm.locator('input[name="quantity_0"]').fill('1')
+  await saleForm.getByRole('button',{name:'Add inventory allocation'}).click()
+  await saleForm.getByRole('button',{name:'Add inventory allocation'}).click()
+  await saleForm.locator('select[name="bill_id_2"]').selectOption(bill)
+  await saleForm.locator('input[name="quantity_2"]').fill('2')
+  await saleForm.getByRole('button',{name:'Remove inventory allocation 2',exact:true}).click()
+  assert.equal(await saleForm.locator('fieldset').count(),2)
+  assert.equal(await saleForm.locator('select[name="bill_id_1"]').inputValue(),bill)
+  assert.equal(await saleForm.locator('input[name="quantity_1"]').inputValue(),'2')
+  assert.equal(await saleForm.locator('select[name="bill_id_0"]').inputValue(),bill)
+  assert.equal(await saleForm.locator('input[name="quantity_0"]').inputValue(),'1')
+  await saleForm.getByLabel('Completed customer source').selectOption('order:'+source)
+  psql(`delete from public.order_items where id='${allocationItem}';delete from public.orders where id='${allocationSource}';delete from private.finance_uat_entities where entity_type='order' and entity_id='${allocationSource}'`)
+  console.log('PASS one-unit allocation cap and middle-row removal preserve surviving lot and quantity inputs');stages++
   await saleForm.locator('select[name="bill_id_0"]').selectOption(bill)
   await saleForm.locator('input[name="quantity_0"]').fill('1')
   await saleForm.locator('input[name="reason"]').fill('Browser actual completed customer and cost lot review')
@@ -350,6 +377,9 @@ async function main(){
   assert.match(sale,/^[0-9a-f-]{36}$/)
   const self=await identities.get('admin').client.rpc('finance_review_customer_sale',{p_id:sale,p_approve:true,p_note:'Maker self approval must fail'})
   assert.ok(self.error)
+  const makerReview=maker.locator('input[name="event_id"][value="'+sale+'"]')
+  assert.equal(await makerReview.count(),0,'Maker must not see a form requiring Super Admin approval')
+  await maker.getByText('A different Super Admin must review this customer accounting request.').first().waitFor()
   await visit(owner,'/admin/finance-customers','Customer revenue, inventory & refunds')
   async function approveEvent(id){
    const f=owner.locator('input[name="event_id"][value="'+id+'"]').locator('xpath=ancestor::form')

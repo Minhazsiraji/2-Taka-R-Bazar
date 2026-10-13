@@ -36,11 +36,11 @@ function Card({children,className=''}:{children:React.ReactNode;className?:strin
 function Metric({name,value,description,color='text-slate-950'}:{name:string;value:string;description:string;color?:string}){
  return <Card><p className="text-[10px] font-black uppercase tracking-[.16em] text-slate-500">{name}</p><p className={'mt-3 break-words text-2xl font-black tracking-tight '+color}>{value}</p><p className="mt-2 text-xs leading-5 text-slate-500">{description}</p></Card>
 }
-function Movements({data}:{data:Trend[]}){
+function Movements({data,demo}:{data:Trend[];demo:boolean}){
  return <Card>
   <div className="flex flex-wrap items-start justify-between gap-3">
    <div><h2 className="text-lg font-black">Cash movements</h2><p className="mt-1 text-xs text-slate-500">Six-month posted cash activity · management reporting</p></div>
-   <span className="finance-verified-badge rounded-lg px-3 py-1.5 text-xs font-bold">Illustrative ledger · demo data</span>
+   <span className="finance-verified-badge rounded-lg px-3 py-1.5 text-xs font-bold">{demo?'Illustrative ledger · demo data':'Posted ledger · selected environment'}</span>
   </div>
   <TreasuryCashMovementChart data={data}/>
   <p className="mt-3 text-xs leading-5 text-slate-500">Transfers between company accounts and non-cash card charges are excluded. Card-bill cash movements and loan interest require final IAS 7 classification.</p>
@@ -143,7 +143,7 @@ export default async function TreasuryOwner({searchParams}:{searchParams:Promise
     <Metric name="Unmatched bank lines" value={dbError?'—':String(summary?.unmatched_statement_lines??0)} color="text-amber-700" description="Book balance is not certified by external statements"/>
    </div>
    <div className="grid gap-4 lg:grid-cols-[1.05fr_.95fr]">
-    <Movements data={trends}/>
+    <Movements data={trends} demo={demo}/>
     <Card>
      <div className="flex flex-wrap justify-between gap-2"><div><h2 className="text-lg font-black">Liquidity protection</h2><p className="mt-1 text-xs text-slate-500">Cash not available for discretionary debt repayment</p></div><span className="rounded-lg bg-teal-50 px-2.5 py-1 text-xs font-bold text-teal-700">14-day horizon</span></div>
      <div className="mt-7 space-y-3">
