@@ -43,6 +43,23 @@ export function getDemoFeaturedPools(offers:StorefrontOffer[]):DemoFeaturedPool[
    minHouseholds:30,sampleHouseholds:12,collection:{en:'Community pickup (when enabled)',bn:'কমিউনিটি সংগ্রহ পয়েন্ট (চালু হলে)'},isDemo:true},
  ]
 }
+/**
+ * Demo Pool basket is scoped to the area picked by the shopper.
+ * This is presentation-only: all offers are still synthetic and cannot be ordered.
+ */
+export function getCommunityDemoFeaturedPools(offers:StorefrontOffer[],selectedArea=''):DemoFeaturedPool[]{
+ const pools=getDemoFeaturedPools(offers)
+ if(!selectedArea)return pools
+ const local=offers.filter(offer=>offer.community_id===selectedArea)
+ if(!local.length)return []
+ return pools.map(pool=>{
+  const chosen=pool.slug==='monthly'?local:pool.slug==='weekly'?local.slice(0,2):local.slice(-2)
+  const bundle=chosen.map((offer,i)=>({offer,qty:pool.slug==='monthly'?(i<2?2:1):pool.slug==='special'?2:1}))
+  return {...pool,community_id:selectedArea,image:chosen[0].image_url??pool.image,
+   featuredProductIds:chosen.map(offer=>offer.product_id),bundle}
+ })
+}
+
 export function featuredPoolTotals(pool:DemoFeaturedPool){
  return pool.bundle.reduce((sum,row)=>({
   solo:sum.solo+(Number(row.offer.solo_price)||0)*row.qty,
