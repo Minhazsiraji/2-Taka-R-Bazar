@@ -111,5 +111,32 @@ try{
  await page.goto(base+'/account/savings',{waitUntil:'networkidle'});await page.getByRole('heading',{name:'Savings report',exact:true}).waitFor();assert.ok((await page.locator('main').innerText()).includes('Synthetic order examples'));
  results.push('PASS fulfilled-only customer savings, no invented comparison savings, explicit synthetic label and cross-customer privacy');
  results.push('PASS browser Group join -> five independently located buyers -> actual locked tier -> explicit checkout -> Group fulfillment');
+
+ // Two verified accounts in one household race separate quotes with ample stock.
+ const promoProduct=id(),building=id(),addressC=id(),addressD=id();
+ const c=await actor('customer'),d=await actor('customer');
+ sql(`insert into public.products(id,name,category,package_size,unit,sku,source_type,is_demo) values('${promoProduct}','Synthetic one-per-family oil','Oil','5 L','bottle','promo-${promoProduct}','PRIVATE_LABEL',false);insert into public.own_product_costs(product_id,purchase_cost) values('${promoProduct}',80);insert into public.own_product_inventory(product_id,stock_on_hand) values('${promoProduct}',10) on conflict(product_id) do update set stock_on_hand=10;insert into public.delivery_buildings(id,community_id,zone_code,building_code,display_name,verified_at) values('${building}','${community}','QA','${building}','Synthetic verified building',now());insert into public.customer_delivery_addresses(id,customer_id,community_id,building_id,building_label,unit_label,street_line,address_text,verification_status) values('${addressC}','${c.id}','${community}','${building}','Synthetic building','Flat A','QA Road','Flat A, Synthetic building, QA Road','operator_verified'),('${addressD}','${d.id}','${community}','${building}','Synthetic building','Flat A','QA Road','Flat A, Synthetic building, QA Road','operator_verified');`);
+ const promoOffer=await offer(promoProduct);
+ const rule=await rpc(maker,'commerce_request_purchase_limit',{...p,p_offer:promoOffer,p_campaign:'QA_FAMILY_OIL',p_account:1,p_household:1,p_reason:'Synthetic permanent campaign limit qualification'});
+ await rpc(reviewer,'commerce_review_purchase_limit',{...p,p_id:rule,p_approve:true,p_note:'Independent synthetic campaign approval'});
+ for(const address of [addressC,addressD])await rpc(reviewer,'commerce_verify_household_address',{...p,p_address:address,p_evidence:'Independent fixture verification of exact building and flat'});
+ await Promise.all([rpc(c,'commerce_set_cart_item',cartArgs(promoOffer)),rpc(d,'commerce_set_cart_item',cartArgs(promoOffer))]);
+ const [qc,qd]=await Promise.all([rpc(c,'commerce_create_quote',quoteArgs),rpc(d,'commerce_create_quote',quoteArgs)]);
+ const promotionRace=await Promise.all([c.client.rpc('commerce_confirm_checkout',confirm(qc)),d.client.rpc('commerce_confirm_checkout',confirm(qd))]);
+ assert.equal(promotionRace.filter(r=>!r.error).length,1);
+ assert.match(promotionRace.find(r=>r.error).error.message,/Promotion limit reached for this verified household/);
+ assert.equal(sql(`select reserved_quantity from public.own_product_inventory where product_id='${promoProduct}'`),'1');
+ const promoWinner=promotionRace[0].error?d:c,promoQuote=promotionRace[0].error?qd:qc,promoOrder=promotionRace.find(r=>!r.error).data[0];
+ const promoRetries=await Promise.all(Array.from({length:8},()=>rpc(promoWinner,'commerce_confirm_checkout',confirm(promoQuote))));
+ assert.ok(promoRetries.every(ids=>ids[0]===promoOrder));
+ const promoCancel=await rpc(promoWinner,'commerce_request',{...p,p_order:promoOrder,p_kind:'cancel',p_reason:'Synthetic promotion cancellation retains allowance'});
+ await rpc(reviewer,'commerce_review_request',{...p,p_request:promoCancel,p_approve:true,p_note:'Independent synthetic cancellation approval'});
+ await denied(promoWinner,'commerce_set_cart_item',cartArgs(promoOffer),/Promotion limit reached for this account/);
+ await page.goto(base+'/?area='+community,{waitUntil:'networkidle'});
+ const limitedCard=page.locator('.market-product-card').filter({hasText:'Synthetic one-per-family oil'});
+ await limitedCard.getByText('Max 1 per account',{exact:false}).waitFor();
+ await staffPage.goto(base+'/commerce/purchase-limits',{waitUntil:'networkidle'});
+ await staffPage.getByRole('heading',{name:'Campaign rules / ক্যাম্পেইন সীমা',exact:true}).waitFor();
+ results.push('PASS permanent promotion UI and two verified household accounts racing ample stock: one order, retry idempotency and no cancellation allowance reset');
  assert.deepEqual(browserErrors,[]);await context.close();
 }finally{await browser.close();await writeFile('artifacts/commerce-test-report.txt',results.join('\n')+'\n');console.log(results.join('\n'))}

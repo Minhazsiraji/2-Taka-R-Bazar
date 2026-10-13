@@ -124,7 +124,7 @@ begin
  select * into a from public.customer_delivery_addresses
  where id=p_address and verification_status='operator_verified' and building_id is not null
  for update;
- if a.id is null or a.customer_id=auth.uid() then raise exception 'Independently verified delivery address required';end if;
+ if a.id is null or a.customer_id=auth.uid() or not exists(select 1 from public.delivery_buildings b where b.id=a.building_id and b.community_id=a.community_id and b.active and b.verified_at is not null) then raise exception 'Independently verified delivery address required';end if;
  if exists(select 1 from public.commerce_verified_household_members where customer_id=a.customer_id) then
   raise exception 'Account already assigned a verified household; independent correction required';end if;
  v_unit=lower(btrim(a.unit_label));
@@ -173,7 +173,7 @@ create function private.commerce_assert_purchase_limit(
  p_offer uuid,p_quantity integer,p_customer uuid,p_cart uuid default null,p_exclude_item uuid default null,
  p_include_cart boolean default false
 ) returns void language plpgsql security definer set search_path='' as $$
-declare r record;v_used integer;v_cart_used integer;v_household uuid;
+declare r record;v_used integer;v_cart_used integer;v_household uuid;v_account_used integer:=0;v_household_used integer:=0;
 begin
  select o.sku_id,o.community_id,o.mode,l.campaign_key,
   (select min(z.max_per_account) from public.commerce_offer_purchase_limits z
@@ -201,6 +201,7 @@ begin
   join public.commerce_offer_purchase_limits l on l.offer_id=o.id and l.status='approved'
   where ord.customer_id=p_customer and o.sku_id=r.sku_id and o.community_id=r.community_id
     and l.campaign_key=r.campaign_key;
+  v_account_used:=v_used;
   if r.account_cap is not null and v_used+p_quantity>r.account_cap then
    raise exception 'Promotion limit reached for this account (% item total)',r.account_cap;end if;
  end if;
@@ -221,6 +222,7 @@ begin
   join public.commerce_offer_purchase_limits l on l.offer_id=o.id and l.status='approved'
   where m.household_id=v_household and o.sku_id=r.sku_id
    and o.community_id=r.community_id and l.campaign_key=r.campaign_key;
+  v_household_used:=v_used;
   if v_used+p_quantity>r.household_cap then
     raise exception 'Promotion limit reached for this verified household (% item total)',r.household_cap;end if;
   end if;
@@ -233,9 +235,9 @@ begin
   where ci.cart_id=p_cart and ci.state in ('ready','waiting') and
    (p_exclude_item is null or ci.id<>p_exclude_item) and
    o.sku_id=r.sku_id and o.community_id=r.community_id and l.campaign_key=r.campaign_key;
-  if r.account_cap is not null and v_cart_used+p_quantity>r.account_cap then
+  if r.account_cap is not null and v_account_used+v_cart_used+p_quantity>r.account_cap then
    raise exception 'Promotion cart limit: maximum % item(s) per account',r.account_cap;end if;
-  if r.household_cap is not null and v_cart_used+p_quantity>r.household_cap then
+  if r.household_cap is not null and v_household_used+v_cart_used+p_quantity>r.household_cap then
    raise exception 'Promotion cart limit: maximum % item(s) per household',r.household_cap;end if;
  end if;
 end $$;
@@ -243,10 +245,26 @@ revoke all on function private.commerce_assert_purchase_limit(uuid,integer,uuid,
 
 -- Cart guard also covers guest sessions; upon login it additionally checks prior purchases.
 create function private.commerce_cart_limit_guard() returns trigger language plpgsql security definer set search_path='' as $$
-declare v_customer uuid;
+declare v_customer uuid;r record;v_household uuid;v_committed integer;
 begin
  if new.state not in ('ready','waiting') then return new;end if;
  select customer_id into v_customer from public.commerce_carts where id=new.cart_id;
+ select o.sku_id,o.community_id,o.mode,l.campaign_key,l.max_per_household into r
+ from public.commerce_offers o join public.commerce_offer_purchase_limits l on l.offer_id=o.id and l.status='approved'
+ where o.id=new.offer_id;
+ if found and r.mode<>'SOLO' and r.max_per_household is not null then
+  perform pg_advisory_xact_lock(hashtextextended('commerce:promotion:'||r.sku_id||':'||r.community_id||':'||r.campaign_key,0));
+  select household_id into v_household from public.commerce_verified_household_members where customer_id=coalesce(v_customer,auth.uid());
+  select coalesce(sum(ci.quantity),0) into v_committed
+  from public.commerce_cart_items ci join public.commerce_carts c on c.id=ci.cart_id
+  join public.commerce_verified_household_members m on m.customer_id=c.customer_id
+  join public.commerce_offers o on o.id=ci.offer_id
+  join public.commerce_offer_purchase_limits l on l.offer_id=o.id and l.status='approved'
+  where m.household_id=v_household and ci.cart_id<>new.cart_id and ci.state in ('ready','waiting')
+   and o.mode<>'SOLO' and o.sku_id=r.sku_id and o.community_id=r.community_id and l.campaign_key=r.campaign_key;
+  if v_committed+new.quantity>r.max_per_household then
+   raise exception 'Promotion limit: verified household already committed to this campaign';end if;
+ end if;
  perform private.commerce_assert_purchase_limit(
   new.offer_id,new.quantity,coalesce(v_customer,auth.uid()),new.cart_id,
   case when tg_op='UPDATE' then old.id else null end,true);
