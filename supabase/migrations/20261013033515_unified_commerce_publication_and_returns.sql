@@ -35,7 +35,7 @@ create function public.commerce_review_offer(p_id uuid,p_approve boolean,p_note 
 create function public.commerce_workbench() returns jsonb language plpgsql stable security definer set search_path='' as $$ begin
  if auth.uid() is null then raise exception 'Sign in required';end if;
  return jsonb_build_object('orders',public.commerce_orders_list(true),'can_admin',private.commerce_admin(),'can_review',private.has_role(auth.uid(),'super_admin'),
- 'suppliers',coalesce((select jsonb_agg(jsonb_build_object('id',id,'name',name)) from public.suppliers where active and (private.commerce_admin() or private.commerce_supplier(id))),'[]'),
+ 'suppliers',coalesce((select jsonb_agg(jsonb_build_object('id',id,'name',business_name)) from public.suppliers where active and (private.commerce_admin() or private.commerce_supplier(id))),'[]'),
  'communities',case when private.commerce_admin() then coalesce((select jsonb_agg(jsonb_build_object('id',id,'name',name)) from public.communities where active),'[]') else '[]'::jsonb end,
  'supplier_skus',coalesce((select jsonb_agg(jsonb_build_object('id',s.id,'name',p.name,'supplier_id',sp.supplier_id)) from public.commerce_skus s join public.products p on p.id=s.product_id join public.supplier_products sp on sp.product_id=p.id where sp.active and (private.commerce_admin() or private.commerce_supplier(sp.supplier_id))),'[]'),
  'skus',case when private.commerce_admin() then coalesce((select jsonb_agg(to_jsonb(s)||jsonb_build_object('name',p.name)) from public.commerce_skus s join public.products p on p.id=s.product_id where s.active),'[]') else '[]'::jsonb end,

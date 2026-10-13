@@ -223,7 +223,7 @@ begin
  update public.commerce_cart_items set state='ready' where id=r.id;
  insert into public.notifications(user_id,kind,title,body,href,dedupe_key) select auth.uid(),'commerce','Price unlocked','Review the final price and explicitly confirm checkout. No payment has been taken.','/cart','commerce:unlock:'||r.id where auth.uid() is not null on conflict(user_id,dedupe_key) do nothing;
  end if;end loop;
- select coalesce(jsonb_agg(jsonb_build_object('item_id',ci.id,'offer_id',o.id,'product_id',p.id,'name',p.name,'image_url',p.image_url,'quantity',ci.quantity,'mode',o.mode,'state',ci.state,'phase',st->>'phase','unit_price',st->'price','community_id',o.community_id,'community_name',co.name,'is_synthetic',o.is_synthetic) order by ci.created_at),'[]') into v_rows
+ select coalesce(jsonb_agg(jsonb_build_object('item_id',ci.id,'offer_id',o.id,'product_id',p.id,'name',p.name,'image_url',p.image_url,'quantity',ci.quantity,'mode',o.mode,'state',ci.state,'phase',states.st->>'phase','unit_price',states.st->'price','community_id',o.community_id,'community_name',co.name,'is_synthetic',o.is_synthetic) order by ci.created_at),'[]') into v_rows
  from public.commerce_cart_items ci join public.commerce_offers o on o.id=ci.offer_id join public.commerce_skus sk on sk.id=o.sku_id join public.products p on p.id=sk.product_id join public.communities co on co.id=o.community_id cross join lateral (select private.commerce_offer_state(o.id) as st) states where ci.cart_id=c and ci.state<>'ordered';
  return jsonb_build_object('cart_id',c,'revision',(select revision from public.commerce_carts where id=c),'authenticated',auth.uid() is not null,'items',v_rows);
 end $$;

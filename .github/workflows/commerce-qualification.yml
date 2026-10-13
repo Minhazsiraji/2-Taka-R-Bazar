@@ -61,6 +61,7 @@ jobs:
             sleep 2
           done
           if [ "$ONLINE" != true ]; then tail -n 80 /tmp/commerce-server.log; exit 1; fi
+          node tests/commerce-finance-uat.mjs
           node tests/commerce-browser-uat.mjs || { tail -n 80 /tmp/commerce-server.log; exit 1; }
       - uses: actions/upload-artifact@v4
         if: always()
