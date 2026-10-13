@@ -57,6 +57,11 @@ body.site-glass-root .market-pool-detail-page .market-pool-detail-intro{
  font-size:clamp(1.7rem,3.3vw,2.7rem);line-height:1.2;color:#17213b;margin:8px 0 12px;
 }
 .market-pool-detail-page .market-pool-detail-intro p{font-size:.91rem}
+.market-pool-detail-page .market-demo-area-pill{
+ display:inline-flex;align-items:center;gap:5px;max-width:100%;margin:6px 0 2px;
+ padding:6px 10px;border:1px solid rgba(16,156,150,.28);border-radius:999px;
+ background:rgba(231,255,250,.45);font-size:.77rem;font-weight:650;color:#087a80;
+}
 .market-pool-detail-page .market-pool-detail-stats>div{flex:1 1 155px;min-width:0;background:rgba(255,255,255,.28);border-color:rgba(44,152,150,.22)}
 .market-pool-detail-page .market-pool-detail-stats b{font-size:1.16rem}
 .market-pool-detail-page .market-pool-quick-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
