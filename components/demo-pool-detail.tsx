@@ -7,6 +7,10 @@ import {formatPrice} from '@/lib/storefront'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
 import {useStorefrontLanguage} from '@/lib/use-storefront-language'
+import {BrandLogo} from '@/components/brand-logo'
+import {ThemeToggle} from '@/components/theme-toggle'
+import {PublicFooter} from '@/components/public-footer'
+import {SITE_TAGLINE_EN,SITE_TAGLINE_BN} from '@/lib/site'
 
 type Delivery='pickup'|'home'
 const clamp=(n:number)=>Math.min(20,Math.max(0,Math.round(n)))
@@ -37,12 +41,6 @@ export function DemoPoolDetail({pool,initialLanguage='en',hasLanguageCookie=fals
   setQuantities(previous=>({...previous,[id]:clamp((previous[id]??0)+step)}))
   setStatus('')
  }
- function addOne(id:string){
-  const qty=quantities[id]??0
-  if(qty<=0)return
-  setCart(previous=>({...previous,[id]:clamp((previous[id]??0)+qty)}))
-  setStatus(t('Added to your on-screen demo basket; no real cart or order was created.','স্ক্রিনের ডেমো বাস্কেটে যোগ হয়েছে; বাস্তব কার্ট বা অর্ডার তৈরি হয়নি।'))
- }
  function addBundle(){
   if(!itemCount)return
   setCart(previous=>{
@@ -53,17 +51,28 @@ export function DemoPoolDetail({pool,initialLanguage='en',hasLanguageCookie=fals
   setStatus(t('Selected items added to the demo basket. No checkout or payment is available.','পণ্য ডেমো বাস্কেটে যোগ হয়েছে। চেকআউট বা পেমেন্ট চালু নেই।'))
  }
  return <main className="public-marketplace-flat market-pool-detail-page min-h-screen">
-  <header className="market-pool-detail-header">
-   <Link href="/" className="market-pool-home-link">← 2-TAKA-R-BAZAR</Link>
-   <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
-    <button className="market-single-language" type="button"
-     onClick={()=>setLanguage(language==='bn'?'en':'bn')}
-     aria-label={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}>
-     {language==='bn'?'EN':'BAN'}
-    </button>
+  <header className="public-glass-header market-flat-header market-pool-universal-header" aria-label={t('Pool details navigation','পুলের বিস্তারিত নেভিগেশন')}>
+   <div className="market-header-inner market-pool-header-inner">
+    <Link href="/" className="market-brand-lockup" aria-label="2-TAKA-R-BAZAR home">
+     <BrandLogo size={46}/>
+     <span className="market-brand-copy"><strong>2-TAKA-R-BAZAR</strong><small>{SITE_TAGLINE_EN}</small><small lang="bn">{SITE_TAGLINE_BN}</small></span>
+    </Link>
+    <div className="market-pool-header-actions">
+     <Link href="/#deals" className="btn-secondary">{t('Back to shopping','বাজারে ফিরুন')}</Link>
+     <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
+      <button className="market-single-language" type="button" onClick={()=>setLanguage(language==='bn'?'en':'bn')}
+       aria-label={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}>{language==='bn'?'EN':'BAN'}</button>
+     </div>
+     <ThemeToggle/>
+    </div>
    </div>
   </header>
   <div className="market-pool-detail-content" lang={language}>
+   <nav className="market-pool-breadcrumb" aria-label={t('Breadcrumb','পথ নির্দেশনা')}>
+    <Link href="/">{t('Home','হোম')}</Link><span aria-hidden="true">/</span>
+    <Link href="/#deals">{t('Community Pools','কমিউনিটি পুল')}</Link><span aria-hidden="true">/</span>
+    <span aria-current="page">{t(pool.title.en,pool.title.bn)}</span>
+   </nav>
    <div className="market-demo-detail-banner" role="status">{t('DEMO ONLY — fictional households, prices and quantities. No live availability, order or payment.','শুধু ডেমো — পরিবার, মূল্য ও পরিমাণ কাল্পনিক। বাস্তব মজুত, অর্ডার বা পেমেন্ট নেই।')}</div>
    <div className="market-pool-detail-intro market-ui-card">
     <img src={pool.image} alt={t(pool.title.en,pool.title.bn)}/>
@@ -80,6 +89,10 @@ export function DemoPoolDetail({pool,initialLanguage='en',hasLanguageCookie=fals
       <div className="market-tier-track" role="progressbar" aria-valuemin={0} aria-valuemax={progressTarget} aria-valuenow={pool.sampleHouseholds} aria-label={t('Example household progress','নমুনা পরিবারের অগ্রগতি')}><span style={{width:`${progress}%`}}/></div>
       <p>{tier.upcoming?t(`${tier.householdsNeeded} more households needed for the next illustrative price.`,`পরের নমুনা দাম পেতে আরও ${tier.householdsNeeded} পরিবার দরকার।`):t('Example final tier reached.','নমুনায় সর্বশেষ স্তর অর্জিত।')}</p>
      </div>
+     <div className="market-pool-quick-actions">
+      <a className="btn-primary" href="#pool-products">{t('Choose products','পণ্য বেছে নিন')} ↓</a>
+      <a className="btn-secondary" href="#pool-tiers">{t('See price tiers','দামের ধাপ দেখুন')}</a>
+     </div>
     </div>
    </div>
    <div className="market-shopper-essentials">
@@ -88,19 +101,8 @@ export function DemoPoolDetail({pool,initialLanguage='en',hasLanguageCookie=fals
     <div><b>{t('Collection / delivery','সংগ্রহ / ডেলিভারি')}</b><span>{t('Date and location confirmed only when a real Pool opens','বাস্তব পুল চালু হলে দিন ও স্থান নিশ্চিত হবে')}</span></div>
     <div><b>{t('If target is not reached','লক্ষ্য পূরণ না হলে')}</b><span>{t('No automatic payment; next steps must be confirmed','স্বয়ংক্রিয় টাকা কাটা নয়; পরবর্তী ধাপ নিশ্চিত করতে হবে')}</span></div>
    </div>
-   <section className="market-pool-detail-section">
-    <h2>{t('See exactly how the example prices unlock','নমুনা মূল্য কীভাবে আনলক হবে দেখুন')}</h2>
-    <div className="market-tier-table-wrap"><table className="market-tier-table">
-     <thead><tr><th>{t('Households','পরিবার')}</th><th>{t('Example basket price','নমুনা বাজারের দাম')}</th><th>{t('Status','অবস্থা')}</th></tr></thead>
-     <tbody>{tiers.map(threshold=><tr key={threshold} data-current={tier.current===threshold}>
-      <td>{threshold===1?'1+':`${threshold}+`}</td>
-      <td>{formatPrice(demoPoolBasketTotal(pool,threshold))}</td>
-      <td>{tier.current===threshold?t('Current example tier','বর্তমান নমুনা স্তর'):tier.upcoming===threshold?t('Next potential tier','পরবর্তী সম্ভাব্য স্তর'):threshold<tier.current?t('Earlier tier','আগের স্তর'):t('Future tier · conditional','ভবিষ্যৎ স্তর · শর্তসাপেক্ষ')}</td>
-     </tr>)}</tbody>
-    </table></div>
-    <p className="market-demo-disclaimer">{t('Prices are illustrative, not quotes. Real tiers must be backed by supplier pricing, eligibility, group commitments and confirmed fulfillment.','এগুলো প্রকৃত অফার নয়, শুধু উদাহরণ। বাস্তব দাম নির্ভর করবে সরবরাহকারীর কোটেশন, যোগ্যতা, অংশগ্রহণ ও সরবরাহ নিশ্চিত হওয়ার ওপর।')}</p>
-   </section>
-   <section className="market-pool-detail-section">
+   <div className="market-pool-detail-shop-grid">
+   <section id="pool-products" className="market-pool-detail-section">
     <h2>{t('Choose products & quantities','পণ্য ও পরিমাণ নির্বাচন করুন')}</h2>
     <p className="market-demo-disclaimer">{t('Change quantities to preview your basket total. Each item is optional in this UI example.','পরিমাণ কমবেশি করে মোট দাম দেখুন। এই ডেমোতে প্রতিটি পণ্য ঐচ্ছিক।')}</p>
     <div className="market-pool-detail-items">{pool.bundle.map(({offer})=>{
@@ -119,12 +121,12 @@ export function DemoPoolDetail({pool,initialLanguage='en',hasLanguageCookie=fals
         <button type="button" onClick={()=>adjust(offer.product_id,1)} disabled={qty===20} aria-label={t('Increase quantity','পরিমাণ বাড়ান')}>+</button>
        </div>
        <strong>{formatPrice(unit*qty)}</strong>
-       <button type="button" className="market-demo-add-line" onClick={()=>addOne(offer.product_id)} disabled={qty===0}>{t('Add to demo basket','ডেমো কার্টে যোগ')}</button>
+
       </div>
      </article>
     })}</div>
    </section>
-   <section className="market-pool-detail-section market-pool-detail-terms market-ui-card">
+   <aside className="market-pool-detail-section market-pool-detail-terms market-ui-card" aria-label={t('Demo basket summary','ডেমো বাস্কেট সারাংশ')}>
     <h2>{t('Your basket estimate · DEMO','আপনার বাজারের হিসাব · ডেমো')}</h2>
     <div className="market-basket-totals">
      <div><span>{t('Selected units','নির্বাচিত ইউনিট')}</span><b>{itemCount}</b></div>
@@ -137,7 +139,7 @@ export function DemoPoolDetail({pool,initialLanguage='en',hasLanguageCookie=fals
      <label><input type="radio" name="demo-delivery" checked={delivery==='pickup'} onChange={()=>setDelivery('pickup')}/>{t('Community pickup · Free','কমিউনিটি পয়েন্ট থেকে সংগ্রহ · ফ্রি')}</label>
      <label><input type="radio" name="demo-delivery" checked={delivery==='home'} onChange={()=>setDelivery('home')}/>{t('Home delivery · ৳20/৳30','হোম ডেলিভারি · ৳২০/৳৩০')}</label>
     </div>
-    <div className="market-basket-grand"><span>{t('Demo total (products + delivery)','ডেমো মোট (পণ্য + ডেলিভারি)')}</span><strong>{formatPrice(currentTotal+deliveryFee)}</strong></div>
+    <div className="market-basket-grand"><span>{t('Demo total (products + delivery)','ডেমো মোট (পণ্য + ডেলিভারি)')}</span><strong>{currentTotal===0?'৳0':formatPrice(currentTotal+deliveryFee)}</strong></div>
     <p className="market-demo-disclaimer">{t('Delivery: free community pickup; home delivery within community ৳20 for subtotals of ৳1,000 or less, ৳30 above ৳1,000. Charges are separate from savings.','ডেলিভারি: কমিউনিটি পয়েন্টে ফ্রি; বাসায় ৳১,০০০ পর্যন্ত পণ্যে ৳২০, তার বেশি হলে ৳৩০। ডেলিভারি সাশ্রয় থেকে আলাদা।')}</p>
     <button type="button" className="btn-primary" onClick={addBundle} disabled={itemCount===0}>{t('Add selected items to Demo Basket','নির্বাচিত পণ্য ডেমো কার্টে যোগ করুন')}</button>
     <div aria-live="polite" className="market-demo-status">{status}</div>
@@ -147,8 +149,22 @@ export function DemoPoolDetail({pool,initialLanguage='en',hasLanguageCookie=fals
      <button type="button" onClick={()=>{setCart({});setStatus('')}}>{t('Clear preview basket','ডেমো কার্ট খালি করুন')}</button>
     </div>}
     <button type="button" disabled aria-disabled="true" className="btn-secondary">{t('Join / Buy · unavailable in Demo','যোগ দিন / কিনুন · ডেমোতে বন্ধ')}</button>
-    <Link href="/" className="btn-secondary">{t('Return to storefront','দোকানে ফিরুন')}</Link>
+    <Link href="/#deals" className="btn-secondary">{t('Return to storefront','দোকানে ফিরুন')}</Link>
+   </aside>
+   </div>
+   <section id="pool-tiers" className="market-pool-detail-section market-pool-detail-tier-section">
+    <h2>{t('See exactly how the example prices unlock','নমুনা মূল্য কীভাবে আনলক হবে দেখুন')}</h2>
+    <div className="market-tier-table-wrap"><table className="market-tier-table">
+     <thead><tr><th>{t('Households','পরিবার')}</th><th>{t('Example basket price','নমুনা বাজারের দাম')}</th><th>{t('Status','অবস্থা')}</th></tr></thead>
+     <tbody>{tiers.map(threshold=><tr key={threshold} data-current={tier.current===threshold}>
+      <td>{threshold===1?'1+':`${threshold}+`}</td>
+      <td>{formatPrice(demoPoolBasketTotal(pool,threshold))}</td>
+      <td>{tier.current===threshold?t('Current example tier','বর্তমান নমুনা স্তর'):tier.upcoming===threshold?t('Next potential tier','পরবর্তী সম্ভাব্য স্তর'):threshold<tier.current?t('Earlier tier','আগের স্তর'):t('Future tier · conditional','ভবিষ্যৎ স্তর · শর্তসাপেক্ষ')}</td>
+     </tr>)}</tbody>
+    </table></div>
+    <p className="market-demo-disclaimer">{t('Prices are illustrative, not quotes. Real tiers must be backed by supplier pricing, eligibility, group commitments and confirmed fulfillment.','এগুলো প্রকৃত অফার নয়, শুধু উদাহরণ। বাস্তব দাম নির্ভর করবে সরবরাহকারীর কোটেশন, যোগ্যতা, অংশগ্রহণ ও সরবরাহ নিশ্চিত হওয়ার ওপর।')}</p>
    </section>
   </div>
+  <PublicFooter storefront language={language}/>
  </main>
 }
