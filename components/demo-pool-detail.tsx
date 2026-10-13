@@ -82,8 +82,8 @@ export function DemoPoolDetail({pool,communityName,initialLanguage='en',hasLangu
      <h1>{t(pool.title.en,pool.title.bn)}</h1>
      <p>{t(pool.description.en,pool.description.bn)}</p>
      <div className="market-pool-detail-stats">
-      <div><span>{t('Current unlocked example','বর্তমানে আনলক · ডেমো')}</span><b>{formatPrice(tier.currentPrice)}</b></div>
-      <div><span>{t('Next potential example','পরবর্তী সম্ভাব্য · ডেমো')}</span><b>{tier.nextPrice===null?'—':formatPrice(tier.nextPrice)}</b></div>
+      <div><span>{t('Current example basket','বর্তমান নমুনা বাজার')}</span><b>{formatPrice(tier.currentPrice)}</b></div>
+      <div><span>{t('Next example basket tier','পরবর্তী নমুনা বাজার')}</span><b>{tier.nextPrice===null?'—':formatPrice(tier.nextPrice)}</b></div>
       <div><span>{t('Example households','নমুনা পরিবার')}</span><b>{pool.sampleHouseholds}/{progressTarget} · {t('Final','শেষ')} {pool.minHouseholds}</b></div>
      </div>
      <div className="market-tier-progress">
@@ -154,16 +154,16 @@ export function DemoPoolDetail({pool,communityName,initialLanguage='en',hasLangu
    </aside>
    </div>
    <section id="pool-tiers" className="market-pool-detail-section market-pool-detail-tier-section">
-    <h2>{t('See exactly how the example prices unlock','নমুনা মূল্য কীভাবে আনলক হবে দেখুন')}</h2>
+    <h2>{t('See how your basket price changes by tier','ধাপ অনুযায়ী আপনার বাজারের দাম দেখুন')}</h2>
     <div className="market-tier-table-wrap"><table className="market-tier-table">
-     <thead><tr><th>{t('Households','পরিবার')}</th><th>{t('Example basket price','নমুনা বাজারের দাম')}</th><th>{t('Status','অবস্থা')}</th></tr></thead>
+     <thead><tr><th>{t('Households','পরিবার')}</th><th>{t('Selected basket at this tier','এই ধাপে নির্বাচিত বাজারের দাম')}</th><th>{t('Status','অবস্থা')}</th></tr></thead>
      <tbody>{tiers.map(threshold=><tr key={threshold} data-current={tier.current===threshold}>
       <td>{threshold===1?'1+':`${threshold}+`}</td>
-      <td>{formatPrice(demoPoolBasketTotal(pool,threshold))}</td>
+      <td>{quantities&&itemCount===0?'৳0':formatPrice(demoPoolBasketTotal(pool,threshold,quantities))}</td>
       <td>{tier.current===threshold?t('Current example tier','বর্তমান নমুনা স্তর'):tier.upcoming===threshold?t('Next potential tier','পরবর্তী সম্ভাব্য স্তর'):threshold<tier.current?t('Earlier tier','আগের স্তর'):t('Future tier · conditional','ভবিষ্যৎ স্তর · শর্তসাপেক্ষ')}</td>
      </tr>)}</tbody>
     </table></div>
-    <p className="market-demo-disclaimer">{t('Prices are illustrative, not quotes. Real tiers must be backed by supplier pricing, eligibility, group commitments and confirmed fulfillment.','এগুলো প্রকৃত অফার নয়, শুধু উদাহরণ। বাস্তব দাম নির্ভর করবে সরবরাহকারীর কোটেশন, যোগ্যতা, অংশগ্রহণ ও সরবরাহ নিশ্চিত হওয়ার ওপর।')}</p>
+    <p className="market-demo-disclaimer">{t('Tier totals update with your selected product quantities. Prices are illustrative, not quotes. Real tiers must be backed by supplier pricing, eligibility, group commitments and confirmed fulfillment.','পণ্যের পরিমাণ পরিবর্তন করলে প্রতিটি ধাপের মোট দামও বদলাবে। এগুলো প্রকৃত অফার নয়, শুধু উদাহরণ। বাস্তব দাম নির্ভর করবে সরবরাহকারীর কোটেশন, যোগ্যতা, অংশগ্রহণ ও সরবরাহ নিশ্চিত হওয়ার ওপর।')}</p>
    </section>
   </div>
   <PublicFooter storefront language={language}/>
