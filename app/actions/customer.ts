@@ -49,15 +49,38 @@ export async function submitPoolItemReview(formData:FormData){
 }
 
 export async function confirmCommitment(formData: FormData) {
-  const { supabase } = await requireOnboardedUser()
+  const { supabase, user, profile } = await requireOnboardedUser()
   const commitmentId = text(formData, 'commitment_id')
   const fulfillmentMethod = text(formData, 'fulfillment_method')
   const pickupPointId = text(formData, 'pickup_point_id') || null
-  const deliveryAddress = text(formData, 'delivery_address') || null
   const policyAccepted = formData.get('policy_accepted') === 'on'
   const policyVersion = text(formData, 'policy_version')
-  if (!commitmentId || !['pickup','home_delivery'].includes(fulfillmentMethod)) redirect('/orders?error=Choose+pickup+or+home+delivery+before+confirming+your+purchase')
-  if (!policyAccepted || policyVersion !== CURRENT_POLICY_VERSION) redirect('/orders?error=Please+review+and+accept+the+current+Terms,+Return+Policy+and+Refund+Policy+before+confirming.')
+  if (!commitmentId || !['pickup','home_delivery'].includes(fulfillmentMethod))
+    redirect('/orders?error=Choose+pickup+or+home+delivery+before+confirming+your+purchase')
+  if (!policyAccepted || policyVersion !== CURRENT_POLICY_VERSION)
+    redirect('/orders?error=Please+review+and+accept+the+current+Terms,+Return+Policy+and+Refund+Policy+before+confirming.')
+
+  let deliveryAddress:string|null=null
+  const savedId=text(formData,'delivery_address_id')
+  const building=text(formData,'building_label')
+  const unit=text(formData,'unit_label')
+  const street=text(formData,'street_line')
+  const landmark=text(formData,'landmark')
+  if(fulfillmentMethod==='home_delivery'){
+    if(savedId){
+      if(!/^[0-9a-f-]{36}$/i.test(savedId))redirect('/orders?error=Select+a+valid+saved+address')
+      const {data:address,error:addressError}=await supabase.from('customer_delivery_addresses')
+        .select('address_text').eq('id',savedId).eq('customer_id',user.id)
+        .eq('community_id',profile.community_id).neq('verification_status','rejected').maybeSingle()
+      if(addressError||!address)redirect('/orders?error=Please+confirm+your+delivery+address+again')
+      deliveryAddress=String(address.address_text)
+    }else{
+      if(building.length<2||building.length>120||unit.length<1||unit.length>80||
+         street.length<3||street.length>240||landmark.length>240)
+        redirect('/orders?error=Please+enter+building,+flat+and+street+before+home+delivery')
+      deliveryAddress=[unit,building,street,landmark].filter(Boolean).join(', ')
+    }
+  }
   const { error } = await supabase.rpc('confirm_commitment_order', {
     p_commitment_id: commitmentId,
     p_fulfillment_method: fulfillmentMethod,
@@ -65,6 +88,21 @@ export async function confirmCommitment(formData: FormData) {
     p_delivery_address: deliveryAddress,
   })
   if (error) redirect(`/orders?error=${encodeURIComponent(error.message)}`)
+  // Saving the address is an optional convenience, not a second purchase or payment.
+  // Its failure never changes an already-confirmed order.
+  let linkAddressId=savedId
+  if(fulfillmentMethod==='home_delivery'&&!savedId&&formData.get('save_address')==='on'){
+    const saved=await supabase.rpc('save_my_delivery_address',{
+      p_building_label:building,p_unit_label:unit,p_street_line:street,
+      p_landmark:landmark||null,p_default:true,
+    })
+    if(!saved.error && typeof saved.data==='string')linkAddressId=saved.data
+  }
+  if(fulfillmentMethod==='home_delivery'&&linkAddressId){
+    await supabase.rpc('attach_my_delivery_address_to_order',{
+      p_commitment_id:commitmentId,p_address_id:linkAddressId,
+    })
+  }
   revalidatePath('/orders'); revalidatePath('/home'); revalidatePath('/pool')
   redirect('/orders?notice=Purchase+confirmed.+Product+savings+and+delivery+charges+are+shown+separately.')
 }

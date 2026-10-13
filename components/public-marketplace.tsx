@@ -4,6 +4,7 @@ import {useMemo,useState,useRef,useCallback,useEffect} from 'react'
 import Link from 'next/link'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {chooseAreaByLocation,distanceMeters,formatPrice} from '@/lib/storefront'
+import {pickStoredBrowsingArea} from '@/lib/smart-location.mjs'
 import {PublicMarketplaceLower} from '@/components/public-marketplace-lower'
 import {CommunityPicker} from '@/components/community-picker'
 import {PublicHeader} from '@/components/public-header'
@@ -16,17 +17,17 @@ import {AnimatedHeroMessages} from '@/components/animated-hero-messages'
 import {getDemoFeaturedPools,type DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
-export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],demoMode=false,pools=[]}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];demoMode?:boolean;pools?:DemoFeaturedPool[]}){
+export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],demoMode=false,pools=[],initialArea=''}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];demoMode?:boolean;pools?:DemoFeaturedPool[];initialArea?:string}){
  const [language,setLanguage]=useState<MarketplaceLanguage>('bn')
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
- const [area,setArea]=useState('')
+ const [area,setArea]=useState(()=>areas.some(a=>a.community_id===initialArea)?initialArea:'')
  const [search,setSearch]=useState('')
  const [gpsBusy,setGpsBusy]=useState(false)
  const [gpsMessage,setGpsMessage]=useState('')
  const [locationState,setLocationState]=useState<'pending'|'matched'|'nearby'|'denied'|'unavailable'|'failed'|'manual'>('pending')
  const [nearestAreas,setNearestAreas]=useState<Array<{id:string;meters:number}>>([])
  const manualSelected=useRef(false)
- const initialLocationRequested=useRef(false)
+ const initialSelectionApplied=useRef(false)
  const [mode,setMode]=useState<'all'|'group'|'pool'>('all')
  const [category,setCategory]=useState('all')
  const activeArea=areas.find(a=>a.community_id===area)
@@ -61,9 +62,9 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
    // A delayed GPS response must not re-label a manually selected browsing area.
    if(manualSelected.current)return
    if(match){
-    if(!manualSelected.current){setArea(match.community_id);setCategory('all')}
+    if(!manualSelected.current){setArea(match.community_id);setCategory('all');try{window.localStorage.setItem('2tbr-browsing-area-v1',match.community_id)}catch{/* browsing still works */}}
     setLocationState('matched')
-    setGpsMessage('Nearby match: '+match.community_name+'. Location does not automatically enroll you; verify your address to join a Group Deal.')
+    setGpsMessage('Suggested area: '+match.community_name+'. Your address must still be verified before a restricted purchase.')
    }else{
     setLocationState('nearby')
     setGpsMessage(accuracy>1500
@@ -75,18 +76,28 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
    if(manualSelected.current)return
    setLocationState(e.code===1?'denied':'failed')
    setGpsMessage(e.code===1?'Location permission was denied. Browse freely, select your community manually, or change browser permission to retry.':'We could not determine your location. Please select a community manually.')
-  },{enableHighAccuracy:false,timeout:12000,maximumAge:60000})
+  },{enableHighAccuracy:true,timeout:12000,maximumAge:30000})
  },[areas])
  useEffect(()=>{
-  // A single initial attempt: never watch, save or transmit browser GPS coordinates.
-  // React Strict Mode may repeat effects, so guard the permission prompt.
-  if(initialLocationRequested.current)return
-  initialLocationRequested.current=true
-  useLocation()
- },[useLocation])
+  // Restore only a public browsing area ID; NEVER cache GPS coordinates or inferred households.
+  // An explicit QR-origin area takes precedence over any earlier browsing preference.
+  if(initialSelectionApplied.current)return
+  initialSelectionApplied.current=true
+  if(areas.some(a=>a.community_id===initialArea)){
+   manualSelected.current=true
+   setLocationState('manual')
+   try{window.localStorage.setItem('2tbr-browsing-area-v1',initialArea)}catch{/* ignore storage restrictions */}
+   return
+  }
+  let stored:string|null=null
+  try{stored=window.localStorage.getItem('2tbr-browsing-area-v1')}catch{/* private browsing can restrict storage */}
+  const selected=pickStoredBrowsingArea(stored,areas.map(a=>a.community_id))
+  if(selected){manualSelected.current=true;setArea(selected);setLocationState('manual')}
+ },[areas,initialArea])
  function selectArea(value:string){
   manualSelected.current=true
   setArea(value)
+  try{if(value)window.localStorage.setItem('2tbr-browsing-area-v1',value);else window.localStorage.removeItem('2tbr-browsing-area-v1')}catch{/* optional persistence */}
   setCategory('all')
   setLocationState('manual')
   setGpsMessage(value?'Showing your chosen community. A verified address is required before joining a local Group Deal.':'Showing all operating areas.')
@@ -99,7 +110,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
  locationState==='manual'?(area?t('Manually selected for browsing; joining requires verification.','নিজে এলাকা বেছে নিয়েছেন; যোগ দিতে যাচাই প্রয়োজন।'):t('Showing all areas; no community selected.','সব এলাকার পণ্য দেখছেন; কমিউনিটি বাছা হয়নি।')):
  locationState==='unavailable'?t('Location unavailable; choose your community manually.','লোকেশন পাওয়া যাচ্ছে না; নিজে এলাকা বেছে নিন।'):
  locationState==='failed'?t('Location detection failed; retry or choose an area.','অবস্থান খোঁজা যায়নি; আবার চেষ্টা করুন বা এলাকা বাছুন।'):
- t('You can browse without location.','লোকেশন ছাড়াও পণ্য দেখতে পারবেন।')
+ t('Browse freely. Detect your area only when you want.','লোকেশন ছাড়াই বাজার দেখুন। চাইলে এলাকা খুঁজুন।')
 
  return <>
   <PublicHeader storefront actionHref={authenticated?'/home':'/login'} actionLabel={authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Sign in','লগইন')}
@@ -108,7 +119,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">
    <div className="market-location-panel">
     <div className="market-location-intro"><strong>📍 {t('Find savings near your community','আপনার এলাকায় কম দামের অফার খুঁজুন')}</strong>
-     <p>{t('Allow location to suggest nearby communities and group prices. Joining requires verified eligibility.','কাছের কমিউনিটি ও গ্রুপের দাম দেখতে লোকেশন অনুমতি দিন। যোগ দিতে এলাকা যাচাই প্রয়োজন।')}</p></div>
+     <p>{t('Browse without GPS. You can select an area or detect nearby offers when needed.','GPS ছাড়াই বাজার দেখুন। চাইলে এলাকা বাছুন অথবা কাছের অফার খুঁজুন।')}</p></div>
     <div className="market-location-control">
      <CommunityPicker areas={areas} value={area} onChange={selectArea} language={language} statusId="market-location-status"/>
      <div className="market-location-feedback">

@@ -82,6 +82,7 @@ export default async function CommunityInvitePage({
         </div>
 
         <div className="mt-6">
+          <Link className="btn-secondary mb-3 inline-flex min-h-12 items-center justify-center px-5" href={'/?area='+encodeURIComponent(String(qr.community_id))+'#deals'}>Browse community offers without signing in →</Link>
           {!user&&<div className="grid gap-3 sm:grid-cols-2">
             <Link className="btn-primary min-h-12 text-center" href="/signup">Register with mobile</Link>
             <Link className="btn-secondary min-h-12 text-center" href="/login">I already have an account</Link>

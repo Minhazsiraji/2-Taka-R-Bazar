@@ -15,9 +15,10 @@ export const dynamic='force-dynamic'
 export default async function OrdersPage({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}){
   const {user,profile,roles,supabase}=await requireOnboardedUser()
   const {error,notice}=await searchParams
-  const [{data:commitments},{data:orders}]=await Promise.all([
+  const [{data:commitments},{data:orders},{data:savedAddresses}]=await Promise.all([
     supabase.from('commitments').select('*,pool_items(*,products(name,package_size,image_url),pools(id,title,status,cadence))').eq('customer_id',user.id).order('committed_at',{ascending:false}),
     supabase.from('orders').select('*,pickup_points(id,name,address,google_maps_url),order_items(*,products(name,package_size,image_url))').eq('customer_id',user.id).order('created_at',{ascending:false}),
+    supabase.from('customer_delivery_addresses').select('id,address_text,verification_status,is_default').eq('customer_id',user.id).eq('community_id',profile.community_id).order('is_default',{ascending:false}).limit(10),
   ])
 
   const confirmable=(commitments??[]).filter((c:any)=>c.status==='active'&&c.pool_items?.pools?.status==='confirmation')
@@ -157,7 +158,7 @@ export default async function OrdersPage({searchParams}:{searchParams:Promise<{e
                       ? <><p className="mt-1">Home delivery · current basket fee {taka(existingOrder.delivery_fee??0)}</p><p className="muted mt-1">{existingOrder.delivery_address}</p></>
                       : <><p className="mt-1 text-emerald-700">FREE community pickup</p><p className="muted mt-1">{existingOrder.pickup_points?.name} · {existingOrder.pickup_points?.address}</p></>}
                   </div>
-                : <FulfillmentChoice pickupOptions={pickupOptions} defaultAddress={profile.address_hint??''} estimatedProductSubtotal={itemSubtotal}/>}
+                : <FulfillmentChoice pickupOptions={pickupOptions} defaultAddress={profile.address_hint??''} estimatedProductSubtotal={itemSubtotal} savedAddresses={(savedAddresses??[]) as any[]}/>}
 
               <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 sm:text-sm">
                 <input className="mt-1 h-4 w-4 shrink-0" type="checkbox" name="policy_accepted" required/>

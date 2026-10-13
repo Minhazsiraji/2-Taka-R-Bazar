@@ -1,3 +1,4 @@
+import {matchConfidentCommunity} from './smart-location.mjs'
 export type StorefrontArea = {
   community_id: string
   community_name: string
@@ -37,12 +38,8 @@ export function distanceMeters(lat1:number,lon1:number,lat2:number,lon2:number){
   return 2*r*Math.asin(Math.min(1,Math.sqrt(a)))
 }
 export function chooseAreaByLocation(areas:StorefrontArea[],latitude:number,longitude:number,accuracy:number){
-  if(!Number.isFinite(latitude)||!Number.isFinite(longitude)||!Number.isFinite(accuracy)||accuracy>1500||accuracy<=0)return null
-  const possible=areas.filter(a=>a.center_latitude!=null&&a.center_longitude!=null&&a.match_radius_m!=null)
-    .map(a=>({area:a,d:distanceMeters(latitude,longitude,Number(a.center_latitude),Number(a.center_longitude))}))
-    .filter(a=>a.d<=Number(a.area.match_radius_m))
-    .sort((a,b)=>a.d-b.d)
-  return possible[0]?.area??null
+  // Browse suggestions only. Neither GPS nor a manually selected area proves residency.
+  return matchConfidentCommunity(areas,latitude,longitude,accuracy,distanceMeters) as StorefrontArea|null
 }
 export function formatPrice(value:number|null|undefined){
   return value!=null&&Number(value)>0?`৳${Number(value).toLocaleString('en-BD',{maximumFractionDigits:2})}`:'Price pending'

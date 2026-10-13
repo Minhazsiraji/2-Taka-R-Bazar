@@ -115,13 +115,11 @@ test('Group Deal UI shows compact buyer progress toward the next price tier',()=
   assert.match(customerPage,/Invite neighbours/i)
 })
 
-test('mobile Group Deal location requests automatically once when verification is needed',()=>{
-  assert.match(geoComponent,/useEffect/i)
-  assert.match(geoComponent,/Android\|iPhone\|iPad\|iPod\|Mobile/i)
-  assert.match(geoComponent,/pointer: coarse/i)
-  assert.match(geoComponent,/2tbr-group-location-auto-requested-v1/i)
-  assert.match(geoComponent,/await verify\(true\)/i)
-  assert.match(geoComponent,/sessionStorage/i)
+test('Group Deal location verification is explicit, not an automatic permission popup',()=>{
+  assert.doesNotMatch(geoComponent,/await verify\(true\)/i)
+  assert.doesNotMatch(geoComponent,/2tbr-group-location-auto-requested-v1/i)
+  assert.match(geoComponent,/onClick=\{\(\)=>void verify\(false\)\}/i)
+  assert.match(geoComponent,/enableHighAccuracy:true/i)
   assert.match(customerPage,/location\?\.verified[\s\S]*Community location verified/i)
   assert.match(customerPage,/initialVerified=\{false\}/i)
 })

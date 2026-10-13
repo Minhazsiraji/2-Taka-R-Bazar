@@ -39,20 +39,21 @@ test('design affects only the public landing route; dark mode and mobile are sty
  assert.doesNotMatch(css,/\.site-glass-root\s+main\{/)
 })
 
-test('header search and auto-location use guest-only browser matching with manual fallback',()=>{
+test('header search and opt-in geolocation keep guest browsing and manual fallback',()=>{
  assert.match(header,/market-header-product-search/)
  assert.match(header,/onSearchChange\?\./)
  assert.match(header,/onLocationClick/)
  assert.match(catalog,/navigator\.geolocation\.getCurrentPosition/)
  assert.match(catalog,/useEffect\(\(\)=>/)
- assert.match(catalog,/initialLocationRequested\.current/)
+ assert.doesNotMatch(catalog,/initialLocationRequested\.current/)
+ assert.match(catalog,/pickStoredBrowsingArea/)
  assert.match(catalog,/chooseAreaByLocation\(areas/)
  assert.match(catalog,/manualSelected\.current/)
  assert.match(catalog,/nearestAreas\.map/)
  assert.match(catalog,/onChange=\{selectArea\}/)
- assert.match(catalog,/Joining requires verified eligibility|joining a Group Deal still needs secure location|Joining requires verified eligibility/i)
+ assert.match(catalog,/verified address is required|joining still requires verification|Joining requires verified eligibility/i)
  assert.doesNotMatch(catalog,/watchPosition\(/)
- assert.doesNotMatch(catalog,/localStorage\.setItem\(/)
+ assert.match(catalog,/localStorage\.setItem\('2tbr-browsing-area-v1'/)
 });
 test('pearl glass styles retained and location controls adapt to mobile',()=>{
  assert.match(css,/#eee9eb/)

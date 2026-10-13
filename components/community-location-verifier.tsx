@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { verifyAdminUatLocation, verifyCommunityLocation } from '@/app/actions/group-deals'
 
 type Props={
@@ -18,7 +18,6 @@ export function CommunityLocationVerifier({
   const [uatBusy,setUatBusy]=useState(false)
   const [message,setMessage]=useState('')
   const [ok,setOk]=useState<boolean|null>(initialVerified?true:null)
-  const autoStarted=useRef(false)
 
   const permissionState=useCallback(async()=>{
     try{
@@ -98,29 +97,6 @@ export function CommunityLocationVerifier({
     }
   },[describeFailure,getPosition,submitPosition])
 
-  useEffect(()=>{
-    if(initialVerified||autoStarted.current||typeof window==='undefined')return
-    const mobileUserAgent=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
-    const coarsePointer=window.matchMedia?.('(pointer: coarse)').matches??false
-    if(!mobileUserAgent&&!coarsePointer)return
-
-    const storageKey='2tbr-group-location-auto-requested-v1'
-    if(window.sessionStorage.getItem(storageKey)==='1')return
-    autoStarted.current=true
-
-    void (async()=>{
-      const state=await permissionState()
-      if(state==='denied'){
-        setOk(false)
-        setMessage('Location is blocked for this site. Allow Location in your mobile browser settings, then tap Verify my location.')
-        window.sessionStorage.setItem(storageKey,'1')
-        return
-      }
-
-      window.sessionStorage.setItem(storageKey,'1')
-      await verify(true)
-    })()
-  },[initialVerified,permissionState,verify])
 
   async function useUatFallback(){
     setUatBusy(true)
@@ -143,7 +119,7 @@ export function CommunityLocationVerifier({
     <div>
       <div className="card-title">Nearby verification</div>
       <h2 className="mt-1 text-lg font-black">Verify that you are inside your community</h2>
-      <p className="muted mt-1 text-sm">On a phone, 2-TAKA-R-BAZAR requests Location automatically once when verification is still needed. Your exact GPS point is used only for secure qualification and nearby-circle matching; other customers and suppliers never receive your coordinates.</p>
+      <p className="muted mt-1 text-sm">Browse without location access. Tap Verify only when you are ready to join a location-restricted deal. This check does not identify your building or flat; delivery addresses are confirmed separately. Other customers and suppliers never receive your coordinates.</p>
     </div>
     <div className="flex flex-wrap gap-2">
       <button type="button" className="btn-primary w-fit" onClick={()=>void verify(false)} disabled={busy||uatBusy}>{busy?'Checking…':'Verify my location'}</button>
