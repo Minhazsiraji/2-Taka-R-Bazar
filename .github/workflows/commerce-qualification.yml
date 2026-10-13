@@ -49,6 +49,7 @@ jobs:
           export LOCAL_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
           export NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000
           export VERCEL_ENV=preview
+          export COMMERCE_UAT_LOGIN_ENABLED=true
           export COMMERCE_PREVIEW_SECRET=$(openssl rand -hex 32)
           echo "::add-mask::${COMMERCE_PREVIEW_SECRET}"
           export FINANCE_PREVIEW_SUPABASE_URL="$API_URL"

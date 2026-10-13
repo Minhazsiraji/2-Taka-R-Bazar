@@ -31,6 +31,7 @@ const NOINDEX_PREFIXES = [
   '/supplier',
   '/preview-demo',
   '/finance-uat',
+  '/commerce-uat',
   '/qr',
 ]
 

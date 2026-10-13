@@ -12,7 +12,7 @@ const base='http://127.0.0.1:3000',admin=createClient(api,secret,{auth:{persistS
 function sql(s){return execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-tAX','-v','ON_ERROR_STOP=1','-c',s],{env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8'}).trim()}
 let actorSequence=6400;
 const id=()=>randomUUID(),community=id(),product=id(),lastProduct=id(),point=id();
-async function actor(role){const password='Synthetic-'+id()+'Aa1!',email='commerce-'+role+'-'+id()+'@example.invalid';const {data,error}=await admin.auth.admin.createUser({email,password,email_confirm:true});assert.ifError(error);const uid=data.user.id;sql(`insert into public.user_roles(user_id,role) values('${uid}','${role}') on conflict do nothing;update public.profiles set full_name='Synthetic commerce ${role}',household_name='Synthetic commerce household',phone='017${String(++actorSequence).padStart(8,'0')}',community_id='${community}',onboarding_completed_at=now() where id='${uid}'`);const jar=new Map();const client=createServerClient(api,key,{cookies:{getAll:()=>[...jar.values()],setAll:cs=>cs.forEach(c=>jar.set(c.name,c))}});const login=await client.auth.signInWithPassword({email,password});assert.ifError(login.error);return {id:uid,client,cookies:()=>[...jar.values()].filter(c=>c.value).map(c=>({name:c.name,value:c.value,url:base,secure:false,sameSite:'Lax'}))}}
+async function actor(role){const password='Synthetic-'+id()+'Aa1!',email='commerce-'+role+'-'+id()+'@example.invalid';const {data,error}=await admin.auth.admin.createUser({email,password,email_confirm:true});assert.ifError(error);const uid=data.user.id;sql(`insert into public.user_roles(user_id,role) values('${uid}','${role}') on conflict do nothing;update public.profiles set full_name='Synthetic commerce ${role}',household_name='Synthetic commerce household',phone='017${String(++actorSequence).padStart(8,'0')}',community_id='${community}',onboarding_completed_at=now() where id='${uid}'`);const jar=new Map();const client=createServerClient(api,key,{cookies:{getAll:()=>[...jar.values()],setAll:cs=>cs.forEach(c=>jar.set(c.name,c))}});const login=await client.auth.signInWithPassword({email,password});assert.ifError(login.error);return {id:uid,email,password,client,cookies:()=>[...jar.values()].filter(c=>c.value).map(c=>({name:c.name,value:c.value,url:base,secure:false,sameSite:'Lax'}))}}
 async function rpc(a,name,args){const {data,error}=await a.client.rpc(name,args);assert.ifError(error);return data}
 async function denied(a,name,args,pattern){const {error}=await a.client.rpc(name,args);assert.ok(error,name+' must be rejected');if(pattern)assert.match(error.message,pattern)}
 const p={p_proof:proof};
@@ -31,6 +31,24 @@ await rpc(a,'commerce_set_cart_item',cartArgs(last,0));await rpc(b,'commerce_set
 await rpc(a,'commerce_set_cart_item',cartArgs(solo));const stale=await rpc(a,'commerce_create_quote',quoteArgs);sql(`update public.commerce_offers set unit_price=110,version=version+1 where id='${solo}'`);await denied(a,'commerce_confirm_checkout',confirm(stale),/Price or offer changed/);await rpc(a,'commerce_set_cart_item',cartArgs(solo,0));results.push('PASS stale server quote rejected without stock movement');
 const browser=await chromium.launch({headless:true});await mkdir('artifacts',{recursive:true});const browserErrors=[];
 try{
+ const qaContext=await browser.newContext(),qaPage=await qaContext.newPage();
+ await qaPage.goto(base+'/commerce-uat/login',{waitUntil:'networkidle'});
+ await qaPage.getByLabel('Test email',{exact:true}).fill(b.email);
+ await qaPage.getByLabel('Password',{exact:true}).fill(b.password);
+ await qaPage.getByRole('button',{name:'Sign in to Preview',exact:true}).click();
+ await qaPage.getByRole('alert').waitFor();
+ assert.ok(qaPage.url().includes('/commerce-uat/login?error='));
+ sql(`insert into private.commerce_uat_signin_leases(actor_id,expires_at,reason) values('${a.id}',clock_timestamp()+interval '1 hour','Disposable browser email sign-in qualification')`);
+ await qaPage.getByLabel('Test email',{exact:true}).fill(a.email);
+ await qaPage.getByLabel('Password',{exact:true}).fill(a.password);
+ await qaPage.getByRole('button',{name:'Sign in to Preview',exact:true}).click();
+ await qaPage.waitForURL('**/account');
+ assert.ok((await qaContext.cookies()).some(cookie=>cookie.name.includes('-auth-token')));
+ assert.equal(sql(`select count(*) from private.finance_uat_leases where actor_id='${a.id}'`),'0');
+ sql(`delete from private.commerce_uat_signin_leases where actor_id='${a.id}'`);
+ assert.equal(await rpc(a,'commerce_uat_session_active',{}),false);
+ await qaContext.close();
+ results.push('PASS Preview-only normal email/password sign-in rejects unleased identity, admits approved customer, preserves roles and grants no financial writes');
  const context=await browser.newContext({viewport:{width:393,height:900}}),page=await context.newPage();page.on('pageerror',e=>browserErrors.push(e.message));
  await page.goto(base+'/?area='+community,{waitUntil:'networkidle'});const card=page.locator('.market-product-card').filter({hasText:'Synthetic checkout rice'}).first();await card.getByRole('button',{name:'Buy Alone',exact:true}).click();await page.waitForURL('**/cart');assert.equal(await page.getByRole('link',{name:'Synthetic checkout rice',exact:true}).count(),1);const guestCookie=(await context.cookies()).find(c=>c.name==='2tbr_cart');assert.ok(guestCookie?.httpOnly);await page.reload();assert.equal(await page.getByRole('link',{name:'Synthetic checkout rice',exact:true}).count(),1);results.push('PASS guest Add to cart through real Server Action persists an HttpOnly cart across reload');
  await context.addCookies(a.cookies());await page.goto(base+'/cart',{waitUntil:'networkidle'});await page.getByRole('link',{name:'Checkout',exact:true}).click();await page.waitForURL('**/checkout');await page.getByRole('link',{name:'Choose delivery'}).click();await page.locator('select[name="pickup_point_id"]').selectOption(point);await page.getByRole('button',{name:'Review final quote'}).click();await page.waitForURL('**/checkout?quote=*');await page.locator('input[name="policy_accepted"]').check();await page.getByRole('button',{name:'Confirm order'}).click();await page.waitForURL('**/account/orders/*');const purchased=page.url().split('/').at(-1);assert.equal(sql(`select customer_id from public.commerce_orders where id='${purchased}'`),a.id);assert.equal(sql(`select product_subtotal from public.commerce_orders where id='${purchased}'`),'110.00');assert.equal(sql(`select payment_status from public.commerce_orders where id='${purchased}'`),'unpaid');results.push('PASS guest merge -> authenticated three-step checkout -> server-priced persistent COD order -> tracking page');
