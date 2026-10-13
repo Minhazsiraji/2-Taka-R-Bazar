@@ -82,8 +82,8 @@ export function DemoPoolDetail({pool,communityName,initialLanguage='en',hasLangu
      <h1>{t(pool.title.en,pool.title.bn)}</h1>
      <p>{t(pool.description.en,pool.description.bn)}</p>
      <div className="market-pool-detail-stats">
-      <div><span>{t('Current example basket','বর্তমান নমুনা বাজার')}</span><b>{formatPrice(tier.currentPrice)}</b></div>
-      <div><span>{t('Next example basket tier','পরবর্তী নমুনা বাজার')}</span><b>{tier.nextPrice===null?'—':formatPrice(tier.nextPrice)}</b></div>
+      <div><span>{t('Current example basket','বর্তমান নমুনা বাজার')}</span><b>{itemCount===0?'৳0':formatPrice(currentTotal)}</b></div>
+      <div><span>{t('Next example basket tier','পরবর্তী নমুনা বাজার')}</span><b>{nextTotal===null?'—':itemCount===0?'৳0':formatPrice(nextTotal)}</b></div>
       <div><span>{t('Example households','নমুনা পরিবার')}</span><b>{pool.sampleHouseholds}/{progressTarget} · {t('Final','শেষ')} {pool.minHouseholds}</b></div>
      </div>
      <div className="market-tier-progress">
