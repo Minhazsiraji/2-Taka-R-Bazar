@@ -18,7 +18,7 @@ import {useStorefrontLanguage} from '@/lib/use-storefront-language'
 import {FeaturedProductsCarousel} from '@/components/featured-products-carousel'
 import {FeaturedPoolShowcase} from '@/components/featured-pool-showcase'
 import {AnimatedHeroMessages} from '@/components/animated-hero-messages'
-import {getDemoFeaturedPools,type DemoFeaturedPool} from '@/lib/featured-pools'
+import {getCommunityDemoFeaturedPools,type DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
 export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],demoMode=false,pools=[],initialArea='',initialLanguage='en',hasLanguageCookie=false}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];demoMode?:boolean;pools?:DemoFeaturedPool[];initialArea?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean}){
@@ -40,7 +40,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
  // Server-side checkout must independently verify membership and delivery eligibility.
  const filtered=useMemo(()=>browseCatalogOffers(offers,{area,mode,category,search}),[offers,area,search,mode,category])
  const localOfferCount=filtered.length
- const heroPools=demoMode?getDemoFeaturedPools(offers):pools.filter(p=>!area||p.community_id===area)
+ const heroPools=demoMode?getCommunityDemoFeaturedPools(offers,area):pools.filter(p=>!area||p.community_id===area)
  const groupHref=authenticated?'/group-deals':'/login?next=%2Fgroup-deals'
  const poolHref=authenticated?'/pool':'/login?next=%2Fpool'
  const useLocation=useCallback(()=>{
@@ -149,7 +149,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
      </div>
     </section>
     <section className="market-hero-product market-hero-pool-shell" aria-label={t('Featured community Pool','বিশেষ কমিউনিটি পুল')}>
-     <FeaturedPoolShowcase pools={heroPools} language={language} areaName={activeArea?.community_name}/>
+     <FeaturedPoolShowcase pools={heroPools} language={language} areaName={activeArea?.community_name} selectedArea={area}/>
     </section>
    </div>
   </div></section>
