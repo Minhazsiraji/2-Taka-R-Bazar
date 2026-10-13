@@ -32,6 +32,8 @@ export type StorefrontOffer = {
   commerce_group_id?: string
   commerce_group_phase?: string
   commerce_synthetic?: boolean
+  max_per_account?: number|null
+  max_per_household?: number|null
   is_demo?: boolean
   solo_price?: number | null
   product_name_bn?: string

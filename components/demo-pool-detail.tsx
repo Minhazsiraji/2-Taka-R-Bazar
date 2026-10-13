@@ -82,8 +82,8 @@ export function DemoPoolDetail({pool,communityName,initialLanguage='en',hasLangu
      <h1>{t(pool.title.en,pool.title.bn)}</h1>
      <p>{t(pool.description.en,pool.description.bn)}</p>
      <div className="market-pool-detail-stats">
-      <div><span>{t('Current example basket','বর্তমান নমুনা বাজার')}</span><b>{formatPrice(tier.currentPrice)}</b></div>
-      <div><span>{t('Next example basket tier','পরবর্তী নমুনা বাজার')}</span><b>{tier.nextPrice===null?'—':formatPrice(tier.nextPrice)}</b></div>
+      <div><span>{t('Current example basket','বর্তমান নমুনা বাজার')}</span><b>{itemCount===0?'৳0':formatPrice(currentTotal)}</b></div>
+      <div><span>{t('Next example basket tier','পরবর্তী নমুনা বাজার')}</span><b>{nextTotal===null?'—':itemCount===0?'৳0':formatPrice(nextTotal)}</b></div>
       <div><span>{t('Example households','নমুনা পরিবার')}</span><b>{pool.sampleHouseholds}/{progressTarget} · {t('Final','শেষ')} {pool.minHouseholds}</b></div>
      </div>
      <div className="market-tier-progress">
@@ -97,7 +97,7 @@ export function DemoPoolDetail({pool,communityName,initialLanguage='en',hasLangu
     </div>
    </div>
    <div className="market-shopper-essentials">
-    <div><b>{t('Service area','সেবার এলাকা')}</b><span>{t('Choose and verify your community before joining','যোগ দেওয়ার আগে কমিউনিটি নির্বাচন ও যাচাই করুন')}</span></div>
+    <div><b>{t('Service area','সেবার এলাকা')}</b><span>{communityName?t(`${communityName} selected for browsing · verify before joining`,`${communityName} নির্বাচিত · যোগ দেওয়ার আগে যাচাই করুন`):t('Choose and verify your community before joining','যোগ দেওয়ার আগে কমিউনিটি নির্বাচন ও যাচাই করুন')}</span></div>
     <div><b>{t('Order window','অর্ডারের সময়সীমা')}</b><span>{t('Not scheduled · demonstration','নির্ধারিত নয় · ডেমো')}</span></div>
     <div><b>{t('Collection / delivery','সংগ্রহ / ডেলিভারি')}</b><span>{t('Date and location confirmed only when a real Pool opens','বাস্তব পুল চালু হলে দিন ও স্থান নিশ্চিত হবে')}</span></div>
     <div><b>{t('If target is not reached','লক্ষ্য পূরণ না হলে')}</b><span>{t('No automatic payment; next steps must be confirmed','স্বয়ংক্রিয় টাকা কাটা নয়; পরবর্তী ধাপ নিশ্চিত করতে হবে')}</span></div>
