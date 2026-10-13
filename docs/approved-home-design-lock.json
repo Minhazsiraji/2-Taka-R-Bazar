@@ -1,0 +1,18 @@
+{
+  "approved_by": "User, 2026-10-12",
+  "baseline_commit": "452c8cc98542b86187a61150a22cb261569412ae",
+  "rule": "Preserve approved Home visual design; backend integration may change data, navigation and transaction states. CSS and branding changes require user approval.",
+  "sha256": {
+    "app/marketplace-exclusive-cards.css": "c5f3a2f25cd35a0a7bb924aa994a2ef342d2f8eec7ac69399fffc5c51558fb1a",
+    "app/marketplace-flat.css": "92231b9410c977cde387aa86605c2c410e032e2ea6f23d0d0d4ecfb615ed5d13",
+    "app/marketplace-hero-motion.css": "1c6b7ca2bf64134b43d06a6e701a5a3577ed4d1724f179433cf67798464f0faf",
+    "app/marketplace-lower-polish.css": "ec5886f1cc596aa6794f1b31837d64597ee248ca261d84792d683f63f1e24944",
+    "app/marketplace-shopper.css": "55f822b0456e0e5c0ed8fd360abdee0a555afc9d68bc5a4fa0c5dbe96341ee9f",
+    "app/marketplace-story.css": "c2a36662a999814ce542b718930c8b8c3996840f778871a69bf28b62e9c7be1b",
+    "app/marketplace-unified.css": "8654c2e5c47343e4a058ec97066aa139db068192bd84c166d4300b6d4fd60def",
+    "components/animated-hero-messages.tsx": "7787d408afa61296ea499bacff02f6e7c06212cc41ed49e7b9a1b5f9b378f2cc",
+    "components/public-header.tsx": "91c9bbcf49e1749bea2e81a53ff3573106b074901f6bc9fae193f86f278e694f",
+    "components/storefront-footer.tsx": "78be0214361406599d5b7aae5795a3598a74257ffea64676116c0f9e08469a5f",
+    "lib/hero-messages.ts": "1d9d0f793ce30114647b0ad66c3196ceedd3698ce71da273b2cf8a7b270ff89a"
+  }
+}

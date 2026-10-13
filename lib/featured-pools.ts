@@ -1,0 +1,86 @@
+import type {StorefrontOffer} from '@/lib/storefront'
+
+export type FeaturedPoolKind='weekly'|'monthly'|'special'
+export type DemoFeaturedPool={
+ slug:FeaturedPoolKind
+ title:{en:string;bn:string}
+ subtitle:{en:string;bn:string}
+ description:{en:string;bn:string}
+ image:string
+ /** In Preview this is the fixture editor's explicit ordering for up to 3 preview thumbnails.
+  * Production admin publishing will need a validated persisted ordering before going live. */
+ featuredProductIds:string[]
+ bundle: {offer:StorefrontOffer;qty:number}[]
+ minHouseholds:number
+ sampleHouseholds:number
+ collection:{en:string;bn:string}
+ isDemo:boolean
+ id?:string
+ community_id?:string
+ livePricing?:{currentPrice:number|null;nextPrice:number|null;upcoming:number|null;householdsNeeded:number;soloPrice:number|null}
+}
+export function getDemoFeaturedPools(offers:StorefrontOffer[]):DemoFeaturedPool[]{
+ const item=(id:string,qty:number)=>{
+  const offer=offers.find(x=>x.product_id.endsWith(id))
+  return offer?{offer,qty}:null
+ }
+ const pack=(items:(ReturnType<typeof item>)[])=>items.filter((x):x is NonNullable<typeof x>=>Boolean(x))
+ return [
+  {slug:'weekly',title:{en:'Weekly Essentials Pool',bn:'সাপ্তাহিক বাজার পুল'},
+   subtitle:{en:'Groceries for the coming week',bn:'সপ্তাহের নিত্যপ্রয়োজনীয় বাজার'},
+   description:{en:'Illustrative weekly grocery basket. Review item prices and quantities before any future real Pool opens.',bn:'সাপ্তাহিক বাজারের নমুনা পুল। বাস্তব পুল চালুর আগে এখানে পণ্য, দাম ও পরিমাণের ডিজাইন দেখুন।'},
+   image:'/demo-products/rice.svg',featuredProductIds:['00000000-0000-4000-8000-000000000101','00000000-0000-4000-8000-000000000102','00000000-0000-4000-8000-000000000103'],bundle:pack([item('0101',1),item('0102',1),item('0103',2)]),
+   minHouseholds:20,sampleHouseholds:8,collection:{en:'Community pickup (when enabled)',bn:'কমিউনিটি সংগ্রহ পয়েন্ট (চালু হলে)'},isDemo:true},
+  {slug:'monthly',title:{en:'Monthly Family Basket',bn:'মাসিক পরিবার বাজার পুল'},
+   subtitle:{en:'Plan household essentials together',bn:'পরিবারের মাসিক প্রয়োজন একসাথে'},
+   description:{en:'Illustrative monthly basket for community buying. All prices and participation counts are sample numbers.',bn:'কমিউনিটি কেনাকাটার মাসিক নমুনা বাজার। দাম ও অংশগ্রহণের সব সংখ্যা কাল্পনিক।'},
+   image:'/demo-products/oil.svg',featuredProductIds:['00000000-0000-4000-8000-000000000102','00000000-0000-4000-8000-000000000101','00000000-0000-4000-8000-000000000106'],bundle:pack([item('0101',2),item('0102',2),item('0103',2),item('0104',2),item('0105',2),item('0106',1)]),
+   minHouseholds:50,sampleHouseholds:18,collection:{en:'Community pickup (when enabled)',bn:'কমিউনিটি সংগ্রহ পয়েন্ট (চালু হলে)'},isDemo:true},
+  {slug:'special',title:{en:'Special Savings Pool',bn:'বিশেষ সাশ্রয় পুল'},
+   subtitle:{en:'Selected products for a future offer',bn:'ভবিষ্যৎ বিশেষ অফারের নির্বাচিত পণ্য'},
+   description:{en:'Demonstrates a special limited-offer Pool. No live promotion, discount, stock or deadline is implied.',bn:'বিশেষ পুলের ডিজাইন নমুনা। কোনো বাস্তব ছাড়, মজুত বা শেষ তারিখ ঘোষণা করা হয়নি।'},
+   image:'/demo-products/detergent.svg',featuredProductIds:['00000000-0000-4000-8000-000000000106','00000000-0000-4000-8000-000000000105','00000000-0000-4000-8000-000000000102'],bundle:pack([item('0102',1),item('0105',1),item('0106',2)]),
+   minHouseholds:30,sampleHouseholds:12,collection:{en:'Community pickup (when enabled)',bn:'কমিউনিটি সংগ্রহ পয়েন্ট (চালু হলে)'},isDemo:true},
+ ]
+}
+export function featuredPoolTotals(pool:DemoFeaturedPool){
+ return pool.bundle.reduce((sum,row)=>({
+  solo:sum.solo+(Number(row.offer.solo_price)||0)*row.qty,
+  group:sum.group+(Number(row.offer.confirmed_price)||0)*row.qty,
+  units:sum.units+row.qty
+ }),{solo:0,group:0,units:0})
+}
+
+/** Illustrative tier prices: a display-only preview, not procurement quotes or payable amounts.
+ * Every tier uses the same per-line unit pricing rule so the detail page and featured card agree.
+ */
+export function demoPoolTierThresholds(pool:DemoFeaturedPool):number[]{
+ return [...new Set([1,Math.max(2,Math.round(pool.minHouseholds*.25)),Math.max(3,Math.round(pool.minHouseholds*.5)),pool.minHouseholds])].sort((a,b)=>a-b)
+}
+export function demoPoolTierFactor(pool:DemoFeaturedPool,threshold:number):number{
+ const position=demoPoolTierThresholds(pool).indexOf(threshold)
+ return position<=0?0:position===1?.4:position===2?.7:1
+}
+export function demoPoolUnitPrice(offer:StorefrontOffer,factor:number):number{
+ const solo=Math.max(0,Number(offer.solo_price)||0)
+ const target=Math.min(solo,Math.max(0,Number(offer.confirmed_price)||0))
+ return Math.max(target,Math.round(solo-(solo-target)*factor))
+}
+export function demoPoolBasketTotal(pool:DemoFeaturedPool,threshold:number,quantities?:Record<string,number>):number{
+ const factor=demoPoolTierFactor(pool,threshold)
+ return pool.bundle.reduce((sum,{offer,qty})=>{
+  const quantity=quantities ? (quantities[offer.product_id]??0) : qty
+  return sum+Math.max(0,quantity)*demoPoolUnitPrice(offer,factor)
+ },0)
+}
+export function demoPoolTierState(pool:DemoFeaturedPool){
+ const tiers=demoPoolTierThresholds(pool)
+ const current=tiers.filter(threshold=>threshold<=pool.sampleHouseholds).at(-1)??tiers[0]
+ const upcoming=tiers.find(threshold=>threshold>pool.sampleHouseholds)??null
+ return {
+  tiers,current,upcoming,householdsNeeded:upcoming===null?0:upcoming-pool.sampleHouseholds,
+  currentPrice:demoPoolBasketTotal(pool,current),
+  nextPrice:upcoming===null?null:demoPoolBasketTotal(pool,upcoming),
+  soloPrice:pool.bundle.reduce((sum,{offer,qty})=>sum+qty*(Number(offer.solo_price)||0),0)
+ }
+}

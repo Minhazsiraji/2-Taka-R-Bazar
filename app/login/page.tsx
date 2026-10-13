@@ -4,9 +4,11 @@ import { BdPhoneInput } from '@/components/bd-phone-input'
 import { PublicHeader } from '@/components/public-header'
 import { PublicFooter } from '@/components/public-footer'
 import { SubmitButton } from '@/components/submit-button'
+import {safeAuthReturnPath} from '@/lib/auth-intent'
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; method?: string }> }) {
-  const { error, notice, method } = await searchParams
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; next?: string; method?: string }> }) {
+  const { error, notice, next, method } = await searchParams
+  const returnTo=safeAuthReturnPath(next)
   const useOtp = method === 'otp'
   const previewMode = process.env.VERCEL_ENV === 'preview'
 
@@ -31,6 +33,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </div>}
 
         <form action={useOtp ? requestLoginOtp : signInPhonePassword} className="grid gap-4">
+          {returnTo&&<input type="hidden" name="next" value={returnTo}/>}
           <BdPhoneInput />
           {!useOtp && <label>Password<input className="input mt-1 w-full" name="password" type="password" autoComplete="current-password" required maxLength={256} /></label>}
           <SubmitButton>{useOtp ? 'Send OTP' : 'Sign in with password'}</SubmitButton>

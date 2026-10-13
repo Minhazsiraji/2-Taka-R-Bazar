@@ -1,0 +1,356 @@
+/* Shopper-first presentation layer, using the selected "Products & local offers" card language.
+ * This is additive: retain marketplace-flat.css and marketplace-unified.css as the user's design.
+ * Transparent card fills, same edge radius, light/dark text contrast, concise information hierarchy.
+ */
+body.site-glass-root main.public-marketplace-flat{
+ --shop-border:var(--market-edge,rgba(73,80,105,.25));
+ --shop-muted:var(--market-muted,#55647c);
+ --shop-ink:var(--market-text,#17213b);
+ --shop-accent:var(--market-accent,#087f8d);
+}
+body.site-glass-root main.public-marketplace-flat .market-hero-grid.market-hero-editorial{
+ align-items:start!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-hero-pool-shell{
+ align-self:start!important;height:auto!important;min-height:0!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-featured-pool{
+ gap:10px!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-featured-pool-body{
+ gap:12px!important;align-items:start!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-featured-pool-image img{
+ height:170px!important;max-height:170px!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-featured-pool-copy h2{
+ font-size:clamp(1.01rem,1.35vw,1.25rem)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-current-next{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;
+ gap:7px!important;margin:7px 0 5px!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-current-next>div{
+ border:1px solid var(--shop-border)!important;border-radius:10px!important;
+ background:transparent!important;padding:8px!important;min-width:0;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-current-next span{
+ display:block;font-size:.67rem!important;line-height:1.4!important;
+ color:var(--shop-muted)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-current-next strong,
+body.site-glass-root main.public-marketplace-flat .market-pool-current-next b{
+ font-size:clamp(.94rem,1.4vw,1.14rem)!important;line-height:1.25!important;
+ font-weight:800!important;color:var(--shop-accent)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-current-next b{
+ font-weight:750!important;color:var(--shop-ink)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-progress{
+ width:100%;display:flex;flex-direction:column;gap:4px;margin:4px 0 3px;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-progress>div:first-child{
+ display:flex;justify-content:space-between;gap:8px;align-items:center;
+ font-size:.69rem;color:var(--shop-muted);
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-progress>div:first-child strong{
+ font-weight:750!important;color:var(--shop-muted)!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-progress .market-pool-track,
+body.site-glass-root main.public-marketplace-flat .market-tier-track{
+ position:relative;width:100%;height:7px!important;border-radius:99px;
+ border:1px solid var(--shop-border);
+ background:rgba(126,143,163,.20)!important;overflow:hidden;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-progress .market-pool-track>span,
+body.site-glass-root main.public-marketplace-flat .market-tier-track>span{
+ display:block;height:100%;border-radius:99px;background:#09a69e!important;
+ transition:width .25s ease;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-progress p{
+ margin:0!important;line-height:1.35!important;
+ font-size:.69rem!important;color:var(--shop-accent)!important;font-weight:750!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-featured-pool-actions{
+ align-items:center!important;gap:7px!important;margin-top:5px!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-featured-pool-actions>a{
+ min-height:42px!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-story .market-popular-card,
+body.site-glass-root main.public-marketplace-flat .market-story .market-demo-review,
+body.site-glass-root main.public-marketplace-flat .market-story .market-demo-supplier,
+body.site-glass-root main.public-marketplace-flat .market-story .market-step,
+body.site-glass-root main.public-marketplace-flat .market-story .market-benefit,
+body.site-glass-root main.public-marketplace-flat .market-story .market-area-card,
+body.site-glass-root main.public-marketplace-flat .market-story .market-faq,
+body.site-glass-root main.public-marketplace-flat .market-story .market-supply-grid article,
+body.site-glass-root main.public-marketplace-flat .market-product-card,
+body.site-glass-root main.public-marketplace-flat .market-hero-pool-shell,
+body.site-glass-root main.public-marketplace-flat .market-exclusive-carousel{
+ border:1px solid var(--shop-border)!important;border-radius:13px!important;
+ background:transparent!important;background-image:none!important;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-story .market-popular-card{
+ padding:12px!important;gap:10px!important;align-items:center!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-story .market-popular-image{
+ border-radius:10px!important;overflow:hidden;
+}
+body.site-glass-root main.public-marketplace-flat .market-story .market-popular-image img{
+ object-fit:contain!important;
+}
+body.site-glass-root main.public-marketplace-flat :is(.market-ui-card,.market-demo-detail-image,.market-demo-detail-copy,
+ .market-pool-detail-intro,.market-pool-detail-item,.market-pool-detail-terms,
+ .market-pool-detail-stats>div,.market-pool-detail-item-price,.market-demo-product-tier,
+ .market-basket-totals,.market-demo-cart-preview){
+ background:transparent!important;background-image:none!important;
+ border:1px solid var(--shop-border)!important;border-radius:12px!important;
+ box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-detail-intro{
+ align-items:center!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-shopper-essentials{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px;
+}
+body.site-glass-root main.public-marketplace-flat .market-shopper-essentials>div{
+ border:1px solid var(--shop-border);border-radius:11px;padding:10px 12px;
+ display:flex;flex-direction:column;gap:5px;
+}
+body.site-glass-root main.public-marketplace-flat .market-shopper-essentials b{
+ color:var(--shop-ink);font-size:.78rem;
+}
+body.site-glass-root main.public-marketplace-flat .market-shopper-essentials span{
+ color:var(--shop-muted);font-size:.74rem;line-height:1.4;
+}
+body.site-glass-root main.public-marketplace-flat .market-tier-progress{
+ margin-top:13px;display:flex;flex-direction:column;gap:5px;
+}
+body.site-glass-root main.public-marketplace-flat .market-tier-progress p{
+ font-size:.77rem;color:var(--shop-accent);font-weight:750;
+}
+body.site-glass-root main.public-marketplace-flat .market-tier-table-wrap{
+ overflow-x:auto;border:1px solid var(--shop-border);border-radius:12px;
+}
+body.site-glass-root main.public-marketplace-flat .market-tier-table{
+ width:100%;border-collapse:collapse;min-width:430px;
+}
+body.site-glass-root main.public-marketplace-flat .market-tier-table th,
+body.site-glass-root main.public-marketplace-flat .market-tier-table td{
+ text-align:left;padding:11px 14px;font-size:.81rem;
+ border-bottom:1px solid var(--shop-border);
+ color:var(--shop-ink);
+}
+body.site-glass-root main.public-marketplace-flat .market-tier-table thead th{
+ font-size:.75rem;color:var(--shop-muted);font-weight:750;
+}
+body.site-glass-root main.public-marketplace-flat .market-tier-table tbody tr:last-child td{border-bottom:0}
+body.site-glass-root main.public-marketplace-flat .market-tier-table tbody tr[data-current="true"]{
+ outline:1px solid #05aaa1;outline-offset:-1px;
+}
+body.site-glass-root main.public-marketplace-flat .market-tier-table tbody tr[data-current="true"] td{
+ color:var(--shop-accent);font-weight:800;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-disclaimer{
+ color:var(--shop-muted);font-size:.78rem;line-height:1.5;margin:8px 0 12px;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-detail-item{
+ grid-template-columns:68px minmax(0,1fr) minmax(174px,.45fr)!important;
+ align-items:center!important;padding:10px 12px!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-detail-item img{
+ width:64px;height:66px;object-fit:contain;border-radius:8px;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-detail-item-info h3{
+ font-size:.94rem;font-weight:800;color:var(--shop-ink);
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-detail-item-info p,
+body.site-glass-root main.public-marketplace-flat .market-pool-detail-item-info a{
+ color:var(--shop-muted);font-size:.76rem;line-height:1.4;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-detail-item-controls{
+ display:flex;flex-direction:column;gap:6px;align-items:flex-end;min-width:0;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-detail-item-controls strong{
+ color:var(--shop-accent);font-weight:800;font-size:1rem;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-quantity{
+ display:inline-flex;align-items:center;gap:0;border:1px solid var(--shop-border);
+ border-radius:11px;overflow:hidden;background:transparent!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-quantity button{
+ display:grid;place-items:center;min-width:42px;min-height:42px;
+ font-size:1.15rem;color:var(--shop-ink);cursor:pointer;
+ background:transparent!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-quantity button:disabled{opacity:.35;cursor:not-allowed}
+body.site-glass-root main.public-marketplace-flat .market-demo-quantity output{
+ min-width:31px;text-align:center;font-size:.91rem;font-weight:800;
+ color:var(--shop-ink);
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-add-line{
+ min-height:39px;cursor:pointer;color:var(--shop-accent);
+ background:transparent!important;border:1px solid var(--shop-border);
+ border-radius:9px;padding:6px 11px;font-size:.75rem;font-weight:800;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-add-line:disabled{opacity:.5;cursor:not-allowed}
+body.site-glass-root main.public-marketplace-flat .market-basket-totals{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
+ border:0!important;margin:12px 0;padding:0!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-basket-totals>div{
+ display:flex;justify-content:space-between;gap:12px;padding:10px 12px;
+ border:1px solid var(--shop-border);border-radius:10px;
+ font-size:.8rem;color:var(--shop-muted);
+}
+body.site-glass-root main.public-marketplace-flat .market-basket-totals b{
+ white-space:nowrap;font-weight:800;color:var(--shop-ink);
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-delivery{
+ display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-delivery label{
+ display:inline-flex;align-items:center;gap:7px;
+ font-size:.77rem;line-height:1.4;color:var(--shop-ink);cursor:pointer;
+ border:1px solid var(--shop-border);border-radius:10px;padding:10px;
+ background:transparent!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-delivery input{
+ accent-color:#0daaa6;width:17px;height:17px;
+}
+body.site-glass-root main.public-marketplace-flat .market-basket-grand{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;
+ border-top:1px solid var(--shop-border);padding:12px 2px 6px;margin-top:8px;
+ color:var(--shop-ink);font-size:.89rem;
+}
+body.site-glass-root main.public-marketplace-flat .market-basket-grand strong{
+ font-size:1.25rem;color:var(--shop-accent);
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-status{
+ min-height:20px;margin-top:8px;font-size:.78rem;color:var(--shop-accent);
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-cart-preview{
+ padding:13px;display:flex;flex-direction:column;gap:8px;
+ margin:12px 0;font-size:.79rem;color:var(--shop-ink);
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-cart-preview button{
+ align-self:flex-start;font-weight:800;font-size:.76rem;
+ color:var(--shop-accent);min-height:36px;
+}
+body.site-glass-root main.public-marketplace-flat .market-pool-detail-terms :is(.btn-primary,.btn-secondary){
+ display:inline-flex;align-items:center;justify-content:center;min-height:43px;
+ margin:5px 6px 5px 0;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-detail-grid .market-demo-detail-copy{
+ padding:18px!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-detail-copy h1{
+ font-size:clamp(1.5rem,2.4vw,2rem);line-height:1.28;color:var(--shop-ink);
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-prices{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:15px 0;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-prices button{
+ background:transparent!important;border:1px solid var(--shop-border);
+ border-radius:11px;text-align:left;padding:11px 12px;cursor:pointer;
+ color:var(--shop-ink);display:flex;flex-direction:column;gap:6px;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-prices button[aria-pressed="true"]{
+ border-color:var(--shop-accent);outline:1px solid var(--shop-accent);
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-prices button strong{
+ font-size:1.2rem;color:var(--shop-accent);
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-product-tier{
+ padding:12px;margin:10px 0;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-product-tier h2{
+ font-weight:800;font-size:1rem;margin-bottom:8px;color:var(--shop-ink);
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-product-tier>div{
+ display:flex;justify-content:space-between;gap:8px;padding:5px 0;
+ font-size:.79rem;border-bottom:1px solid var(--shop-border);
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-product-tier>div b{
+ color:var(--shop-accent);white-space:nowrap;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-product-tier p{
+ font-size:.75rem;line-height:1.5;margin-top:8px;color:var(--shop-muted);
+}
+body.site-glass-root main.public-marketplace-flat .market-product-mode-selection{
+ display:flex;align-items:center;gap:12px;margin:10px 0;
+}
+body.site-glass-root main.public-marketplace-flat .market-product-mode-selection label{
+ color:var(--shop-ink);font-weight:750;font-size:.8rem;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-buttons{
+ display:flex;gap:9px;flex-wrap:wrap;margin:12px 0;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-buttons button{
+ min-height:43px!important;padding:10px 13px!important;
+}
+body.site-glass-root main.public-marketplace-flat .market-demo-buttons button[disabled]{
+ opacity:.55!important;cursor:not-allowed;
+}
+@media(max-width:960px){
+ body.site-glass-root main.public-marketplace-flat .market-shopper-essentials{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+ }
+}
+@media(max-width:640px){
+ body.site-glass-root main.public-marketplace-flat .market-featured-pool-image img{
+  max-height:120px!important;height:120px!important;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-featured-pool-body{
+  grid-template-columns:105px minmax(0,1fr)!important;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-pool-current-next{
+  gap:5px!important;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-pool-current-next>div{
+  padding:6px!important;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-pool-detail-item{
+  display:grid;grid-template-columns:57px minmax(0,1fr)!important;
+  gap:9px!important;align-items:start!important;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-pool-detail-item img{
+  width:57px;height:57px;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-pool-detail-item-controls{
+  grid-column:1/-1;display:flex;flex-direction:row;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-shopper-essentials{
+  grid-template-columns:1fr 1fr;gap:7px;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-basket-totals{
+  grid-template-columns:1fr;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-demo-prices{
+  grid-template-columns:1fr 1fr;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-demo-detail-grid .market-demo-detail-copy{
+  padding:12px!important;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-tier-table th,
+ body.site-glass-root main.public-marketplace-flat .market-tier-table td{
+  padding:10px!important;font-size:.74rem;
+ }
+ body.site-glass-root main.public-marketplace-flat .market-demo-delivery label{
+  width:100%;
+ }
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-tier-table td,
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-shopper-essentials b,
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-demo-quantity output,
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-pool-detail-item-info h3,
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .market-demo-prices button{
+ color:var(--shop-ink)!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat :is(.market-ui-card,.market-demo-prices button,.market-tier-table-wrap,.market-shopper-essentials>div,.market-basket-totals>div){
+ background:transparent!important;
+ border-color:var(--shop-border)!important;
+}

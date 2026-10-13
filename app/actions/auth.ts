@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireUser } from '@/lib/auth'
 import { toBdE164Phone } from '@/lib/bd-phone.mjs'
 import { passwordCredentials } from '@/lib/password-login.mjs'
+import {safeAuthReturnPath} from '@/lib/auth-intent'
 import {
   COMMUNITY_QR_CODE_COOKIE,
   COMMUNITY_QR_SCAN_COOKIE,
@@ -42,6 +43,9 @@ async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
   const { error } = await supabase.auth.signInWithOtp({ phone, options: { shouldCreateUser: mode === 'signup' } })
   if (error) redirect(`${back}?error=${encodeURIComponent(phoneOtpErrorMessage(error, mode))}`)
   const cookieStore = await cookies()
+  const returnTo=safeAuthReturnPath(getText(formData,'next'))
+  if(returnTo)cookieStore.set('bp_post_auth_next',returnTo,{httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',maxAge:1800,path:'/'})
+  else cookieStore.delete('bp_post_auth_next')
   cookieStore.set('bp_otp_phone', phone, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 600, path: '/' })
   cookieStore.set('bp_otp_mode', mode, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 600, path: '/' })
   if (mode === 'signup') {
@@ -91,7 +95,9 @@ export async function verifyPhoneOtp(formData: FormData) {
     redirect('/onboarding?notice='+encodeURIComponent(notice))
   }
   if(qrCode) redirect('/community-invite/'+encodeURIComponent(qrCode)+'?notice='+encodeURIComponent('Mobile verified. Confirm your community to continue.'))
-  redirect('/home')
+  const returnTo=safeAuthReturnPath(cookieStore.get('bp_post_auth_next')?.value)
+  cookieStore.delete('bp_post_auth_next')
+  redirect(returnTo??'/home')
 }
 
 export async function restartSignupWithAnotherPhone() {
@@ -144,8 +150,10 @@ export async function completeOnboarding(formData: FormData) {
   }
 
   revalidatePath('/','layout')
+  const returnTo=safeAuthReturnPath(cookieStore.get('bp_post_auth_next')?.value)
+  cookieStore.delete('bp_post_auth_next')
   const notice=qrCommunityName?'Welcome to '+qrCommunityName+'. You can now browse active Pools and Group Deals.':'Household setup complete.'
-  redirect('/home?notice='+encodeURIComponent(notice))
+  redirect((returnTo??'/home')+'?notice='+encodeURIComponent(notice))
 }
 
 export async function updateProfile(formData: FormData) {

@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import {Flash} from '@/components/flash'
+import {PoolStorefrontPublication} from '@/components/pool-storefront-publication'
 import { notFound } from 'next/navigation'
 import { AdminShell } from '@/components/admin-shell'
 import { ProductImage } from '@/components/product-image'
@@ -8,8 +10,8 @@ import { dateTime, taka } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
-export default async function Page({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default async function Page({ params,searchParams }: { params: Promise<{ id: string }>;searchParams:Promise<{error?:string;notice?:string}> }) {
+  const [{id},messages]=await Promise.all([params,searchParams])
   const { supabase } = await requireAdmin()
 
   const { data: pool } = await supabase.from('pools').select('id,community_id,title,status,cadence,commitment_closes_at,confirmation_closes_at,supplier_delivery_at,pickup_at,receiving_pickup_point_id,notes,is_paused,pause_reason,cancellation_reason').eq('id', id).maybeSingle()
@@ -18,19 +20,20 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const [{ data: community }, { data: items }, { data: products }, { data: commitments }, { data: quotes }, { data: pickups }] = await Promise.all([
     supabase.from('communities').select('id,name').eq('id', pool.community_id).maybeSingle(),
     supabase.from('pool_items').select('id,product_id,benchmark_price_snapshot,final_customer_price').eq('pool_id', id),
-    supabase.from('products').select('id,name,package_size,source_type,image_url'),
+    supabase.from('products').select('id,name,package_size,source_type,image_url,active,is_demo'),
     supabase.from('commitments').select('pool_item_id,quantity,status'),
     supabase.from('supplier_quotes').select('pool_item_id,quote_phase,threshold_quantity,customer_ceiling_price').eq('quote_phase','planning_tier'),
     supabase.from('pickup_points').select('id,name,address').eq('community_id', pool.community_id).eq('active', true),
   ])
 
+  const {data:publication}=await supabase.from('pool_storefront_publication').select('published,featured_product_ids,sort_order').eq('pool_id',id).maybeSingle()
   const productById = new Map((products ?? []).map((p: any) => [p.id, p]))
   const selectedPickup = (pickups ?? []).find((p: any) => p.id === pool.receiving_pickup_point_id)
   const demandFor = (itemId: string) => (commitments ?? []).filter((c: any) => c.pool_item_id === itemId && ['active','confirmed'].includes(c.status)).reduce((sum: number, c: any) => sum + Number(c.quantity || 0), 0)
   const tiersFor = (itemId: string) => (quotes ?? []).filter((q: any) => q.pool_item_id === itemId).sort((a: any,b: any) => Number(a.threshold_quantity)-Number(b.threshold_quantity))
   const totalDemand = (items ?? []).reduce((sum: number, i: any) => sum + demandFor(i.id), 0)
 
-  return <AdminShell><div className="grid min-w-0 gap-5">
+  return <AdminShell><div className="grid min-w-0 gap-5"><Flash {...messages}/>
     <div className="flex flex-wrap items-center gap-2 text-sm"><Link className="font-bold text-cyan-800 underline" href="/admin/pools">← Pools</Link><span className="text-slate-400">/</span><span>{pool.title}</span></div>
 
     <section className="card p-4 sm:p-5">
@@ -72,5 +75,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         </div>
       })}
     </section>
+    <PoolStorefrontPublication poolId={id} publication={publication} products={(products??[]).filter((p:any)=>p.active&&!p.is_demo&&(items??[]).some((i:any)=>i.product_id===p.id))}/>
   </div></AdminShell>
 }

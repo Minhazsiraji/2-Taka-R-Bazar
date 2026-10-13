@@ -1,0 +1,72 @@
+'use client'
+
+import {useEffect,useState} from 'react'
+import Link from 'next/link'
+import type {ShowcaseProduct} from '@/lib/showcase-media'
+import type {MarketplaceLanguage} from '@/lib/storefront-language'
+import {chooseText} from '@/lib/storefront-language'
+import type {StorefrontOffer,StorefrontArea} from '@/lib/storefront'
+import {formatPrice} from '@/lib/storefront'
+import {featuredProductWindow} from '@/lib/featured-product-window'
+
+export function FeaturedProductsCarousel({products,language='bn',offers=[],areas=[],selectedArea=''}:{products:ShowcaseProduct[];language?:MarketplaceLanguage;offers?:StorefrontOffer[];areas?:StorefrontArea[];selectedArea?:string}){
+ const t=(en:string,bn:string)=>chooseText(language,en,bn)
+ const [active,setActive]=useState(0)
+ const [paused,setPaused]=useState(false)
+ useEffect(()=>{
+  if(products.length<=1||paused||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return
+  const timer=window.setInterval(()=>{if(!document.hidden)setActive(i=>(i+1)%products.length)},6500)
+  return()=>window.clearInterval(timer)
+ },[products.length,paused])
+ if(!products.length)return <div className="showcase-empty flex flex-col items-center gap-3 p-5 text-center">
+  <img src="/grocery-hero-glass.svg" alt="" className="h-32 w-full object-contain"/>
+  <h2 className="text-lg font-black">{t('Exclusive products coming soon','এক্সক্লুসিভ পণ্য শিগগিরই আসছে')}</h2>
+  <p className="text-sm">{t('Our own and partner products will appear when published.','অনুমোদিত নিজস্ব ও পার্টনার পণ্য এখানে দেখানো হবে।')}</p>
+ </div>
+ const start=active%products.length
+ const visible=featuredProductWindow(products,start)
+ function move(delta:number){setActive(i=>(i+delta+products.length)%products.length)}
+ return <div className="market-showcase-compact" role="region" aria-roledescription="carousel" aria-label={t('Exclusive product selection','এক্সক্লুসিভ পণ্যের সংগ্রহ')}
+  onMouseEnter={()=>setPaused(true)} onMouseLeave={()=>setPaused(false)}
+  onFocusCapture={()=>setPaused(true)} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget))setPaused(false)}}>
+  <div className="market-showcase-heading"><span>{t('Featured selection','নির্বাচিত পণ্য')}</span><span className="showcase-count">{start+1} / {products.length}</span></div>
+  <div className="market-showcase-cards" aria-live="off">
+   {visible.map(item=>{
+    const offer=offers.find(o=>o.product_id===item.product_id&&(!selectedArea||o.community_id===selectedArea))
+    const href=item.is_demo?`/demo-product/${item.product_id}`:`/products/${item.product_id}`
+    const title=t(item.name,item.name_bn??item.name)
+    const community=areas.find(a=>a.community_id===(offer?.community_id??selectedArea))
+    const image=item.image_url||item.gallery_urls?.[0]
+    const hasCurrentPrice=Number(offer?.confirmed_price)>0
+    const groupPrice=offer?.confirmed_price??offer?.upcoming_price
+    return <article className="market-product-card market-showcase-product flex min-w-0 flex-col p-3" key={item.product_id}>
+     <Link href={href} className="market-product-image relative flex items-center justify-center overflow-hidden rounded-xl" aria-label={t('View product: ','পণ্য দেখুন: ')+title}>
+      <ShowcaseImage src={image} title={title} fallback={t('Image coming soon','ছবি শিগগিরই আসছে')}/>
+     </Link>
+     <h3 className="market-product-title"><Link href={href}>{title}</Link></h3>
+     <p className="market-product-meta">{[item.brand,item.package_size].filter(Boolean).join(' · ')}</p>
+     <p className="market-product-community">{community?.community_name??t('Choose a community for local prices','স্থানীয় দাম দেখতে এলাকা বাছুন')}</p>
+     <div className="market-product-prices grid grid-cols-2 gap-2">
+      <div className="rounded-xl border p-2"><p>{t('Buy Alone','একা কিনুন')}</p><strong>{Number(offer?.solo_price)>0?formatPrice(offer?.solo_price):t('Not quoted yet','দাম দেওয়া হয়নি')}</strong><p>{item.is_demo?t('Sample price only · DEMO','শুধু নমুনা মূল্য · ডেমো'):t('Individual quote required','একা কেনার আলাদা দাম প্রয়োজন')}</p></div>
+      <div className="rounded-xl border p-2"><p>{t('Group Buy','গ্রুপে কিনুন')}</p><strong>{Number(groupPrice)>0?formatPrice(groupPrice):t('Price pending','দাম দেওয়া হয়নি')}</strong><p>{item.is_demo?t('Sample price · DEMO','নমুনা মূল্য · ডেমো'):hasCurrentPrice?t('Published / unlocked','প্রকাশিত / আনলক হয়েছে'):t('Conditional price or quote pending','শর্তসাপেক্ষ দাম বা মূল্য বাকি')}</p></div>
+     </div>
+     {offer&&<p className="market-product-count">{offer.buyer_count} {t('buyers','জন ক্রেতা')} · {offer.quantity_joined} {t('units','ইউনিট')}{item.is_demo?' (DEMO)':''}{offer.next_threshold?` · ${t('Next threshold','পরের লক্ষ্য')} ${offer.next_threshold}`:''}</p>}
+     {offer?.next_threshold&&offer.next_threshold>0&&<div className="market-product-progress" role="progressbar" aria-label={t('Buyers towards next tier','পরের স্তরের ক্রেতা')} aria-valuemin={0} aria-valuemax={offer.next_threshold} aria-valuenow={Math.min(offer.buyer_count,offer.next_threshold)}><div style={{width:`${Math.min(100,Math.round(100*offer.buyer_count/offer.next_threshold))}%`}}/></div>}
+     <div className="market-product-actions grid grid-cols-2 gap-2">
+      <button type="button" disabled aria-disabled="true" title={t('Individual checkout is not released yet','একা কেনার চেকআউট এখনও চালু হয়নি')} className="btn-secondary">{item.is_demo?t('Buy Alone · Demo','একা কিনুন · ডেমো'):t('Buy Alone · Soon','একা কেনা · শিগগিরই')}</button>
+      {item.is_demo?<button type="button" disabled aria-disabled="true" className="btn-primary">{t('Group Buy · Demo','গ্রুপে কিনুন · ডেমো')}</button>:<Link href={href} className="btn-primary">{t('View product →','পণ্য দেখুন →')}</Link>}
+     </div>
+    </article>
+   })}
+  </div>
+  {products.length>1&&<div className="market-showcase-navigation" aria-label="Product carousel controls">
+   <button type="button" className="showcase-arrow" onClick={()=>move(-1)} aria-label={t('Previous product','আগের পণ্য')}>←</button>
+   <div className="market-showcase-dots" role="group" aria-label={t('Select featured product','নির্বাচিত পণ্য বাছুন')}>{products.map((item,index)=><button key={item.product_id} type="button" aria-current={start===index?'true':undefined} aria-label={t('Show ','দেখুন: ')+t(item.name,item.name_bn??item.name)} className={`showcase-dot ${start===index?'is-active':''}`} onClick={()=>setActive(index)}/>)}</div>
+   <button type="button" className="showcase-arrow" onClick={()=>move(1)} aria-label={t('Next product','পরের পণ্য')}>→</button>
+  </div>}
+ </div>
+}
+function ShowcaseImage({src,title,fallback}:{src:string|undefined|null;title:string;fallback:string}){
+ const [failed,setFailed]=useState(false)
+ return src&&!failed?<img src={src} alt={title} className="h-full w-full object-contain" loading="lazy" onError={()=>setFailed(true)}/>:<span className="market-showcase-fallback">{fallback}</span>
+}

@@ -1,0 +1,86 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
+const header=read('components/public-header.tsx')
+const footer=read('components/site-footer.tsx')
+const home=read('app/page.tsx')
+const catalog=read('components/public-marketplace.tsx')
+const info=read('components/public-marketplace-lower.tsx')
+const css=read('app/marketplace-flat.css')
+test('public homepage uses full-width header and footer, with navigation in header',()=>{
+ assert.match(home,/public-marketplace-flat/)
+ assert.match(catalog,/actionLabel=\{authenticated\?t\('My dashboard'/)
+ assert.match(catalog,/<PublicFooter storefront language=\{language\}\/>/)
+ assert.match(header,/market-header-nav/)
+ assert.match(header,/href:'#deals'/)
+ assert.match(header,/href:'#exclusive-products'/)
+ assert.match(header,/href:'#how-it-works'/)
+ assert.match(footer,/fullWidth/)
+ assert.match(css,/max-width:none!important/)
+})
+test('full-bleed bands retain narrower readable inner content and product cards',()=>{
+ assert.match(catalog,/market-hero-band/)
+ assert.match(catalog,/market-deals-band/)
+ assert.match(catalog,/market-products-grid/)
+ assert.match(catalog,/market-product-card/)
+ assert.match(catalog,/market-exclusives-band/)
+ assert.ok(catalog.includes('<FeaturedProductsCarousel products={featured} language={language} offers={offers} areas={areas} selectedArea={area}/>'))
+ assert.doesNotMatch(catalog,/max-w-6xl/)
+ assert.match(info,/market-story-section market-band/)
+ assert.match(info,/market-content/)
+ assert.match(css,/grid-template-columns:repeat\(5/)
+ assert.match(css,/max-width:1400px/)
+})
+test('design affects only the public landing route; dark mode and mobile are styled',()=>{
+ assert.match(css,/main\.public-marketplace-flat/)
+ assert.match(css,/max-width:640px/)
+ assert.match(css,/data-theme="dark"/)
+ assert.doesNotMatch(css,/\.site-glass-root\s+main\{/)
+})
+
+test('header search and auto-location use guest-only browser matching with manual fallback',()=>{
+ assert.match(header,/market-header-product-search/)
+ assert.match(header,/onSearchChange\?\./)
+ assert.match(header,/onLocationClick/)
+ assert.match(catalog,/navigator\.geolocation\.getCurrentPosition/)
+ assert.match(catalog,/useEffect\(\(\)=>/)
+ assert.match(catalog,/initialLocationRequested\.current/)
+ assert.match(catalog,/chooseAreaByLocation\(areas/)
+ assert.match(catalog,/manualSelected\.current/)
+ assert.match(catalog,/nearestAreas\.map/)
+ assert.match(catalog,/onChange=\{selectArea\}/)
+ assert.match(catalog,/Joining requires verified eligibility|joining a Group Deal still needs secure location|Joining requires verified eligibility/i)
+ assert.doesNotMatch(catalog,/watchPosition\(/)
+ assert.doesNotMatch(catalog,/localStorage\.setItem\(/)
+});
+test('pearl glass styles retained and location controls adapt to mobile',()=>{
+ assert.match(css,/#eee9eb/)
+ assert.match(css,/market-header-search/)
+ assert.match(css,/market-location-panel/)
+ assert.match(css,/@media\(max-width:790px\)/)
+});
+
+test('flat editorial hero and Pool selector use a responsive balanced layout',()=>{
+ assert.match(catalog,/<AnimatedHeroMessages language=\{language\}\/\>/)
+ assert.match(read('components/animated-hero-messages.tsx'),/market-hero-main-title/)
+ assert.match(catalog,/market-hero-copy market-hero-flat/)
+ assert.match(catalog,/market-hero-product market-hero-pool-shell/)
+ assert.match(catalog,/<FeaturedPoolShowcase pools=\{heroPools\}/)
+ assert.match(css,/\.market-hero-grid\.market-hero-editorial\{/)
+ assert.match(css,/\.market-hero-copy\.market-hero-flat\{/)
+ assert.match(css,/\.market-featured-pool-body\{/)
+ assert.match(css,/grid-template-columns:1fr!important/)
+ assert.match(css,/market-location-panel/)
+})
+test('product cards adapt to compact one-row-per-product mobile view',()=>{
+ for(const cls of ['market-product-image','market-product-title','market-product-prices','market-product-actions']){
+  assert.match(catalog,new RegExp(cls))
+  assert.match(css,new RegExp(cls))
+ }
+ assert.match(css,/\.market-products-grid\{\s*grid-template-columns:1fr!important/)
+ assert.match(css,/grid-column:1\/-1;grid-row:4/)
+ assert.match(css,/grid-column:1\/-1;grid-row:7/)
+ assert.match(css,/min-height:42px!important/)
+ assert.match(css,/@media\(max-width:375px\)/)
+})
