@@ -97,7 +97,7 @@ export function DemoPoolDetail({pool,communityName,initialLanguage='en',hasLangu
     </div>
    </div>
    <div className="market-shopper-essentials">
-    <div><b>{t('Service area','সেবার এলাকা')}</b><span>{t('Choose and verify your community before joining','যোগ দেওয়ার আগে কমিউনিটি নির্বাচন ও যাচাই করুন')}</span></div>
+    <div><b>{t('Service area','সেবার এলাকা')}</b><span>{communityName?t(`${communityName} selected for browsing · verify before joining`,`${communityName} নির্বাচিত · যোগ দেওয়ার আগে যাচাই করুন`):t('Choose and verify your community before joining','যোগ দেওয়ার আগে কমিউনিটি নির্বাচন ও যাচাই করুন')}</span></div>
     <div><b>{t('Order window','অর্ডারের সময়সীমা')}</b><span>{t('Not scheduled · demonstration','নির্ধারিত নয় · ডেমো')}</span></div>
     <div><b>{t('Collection / delivery','সংগ্রহ / ডেলিভারি')}</b><span>{t('Date and location confirmed only when a real Pool opens','বাস্তব পুল চালু হলে দিন ও স্থান নিশ্চিত হবে')}</span></div>
     <div><b>{t('If target is not reached','লক্ষ্য পূরণ না হলে')}</b><span>{t('No automatic payment; next steps must be confirmed','স্বয়ংক্রিয় টাকা কাটা নয়; পরবর্তী ধাপ নিশ্চিত করতে হবে')}</span></div>
