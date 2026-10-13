@@ -33,6 +33,8 @@ select public.commerce_fulfill((select v::uuid from e2e_state where k='commerce_
 select public.commerce_record_cod((select v::uuid from e2e_state where k='commerce_order'),900,20,'QA-COMMERCE-COD','a0000000-0000-0000-0000-000000000001/commerce-handover.pdf',encode(extensions.digest('commerce-handover','sha256'),'hex'),'synthetic-disposable-commerce-proof-64');
 select pg_temp.assert_true((select payment_status='custody_recorded' from public.commerce_orders where id=(select v::uuid from e2e_state where k='commerce_order')),'COD custody incorrectly marked verified');
 select pg_temp.assert_true(not exists(select 1 from public.finance_customer_events where source_kind='commerce_order'),'Operational fulfillment must not post Finance');
+select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
+select pg_temp.assert_true(exists(select 1 from jsonb_array_elements_text(public.finance_integrated_report(date_trunc('month',current_date)::date)->'blockers') b where b like 'COMPLETED_UNIFIED_ORDERS_UNPOSTED:%'),'Unposted canonical fulfillment must block report certification and period close');
 select set_config('request.jwt.claim.sub','',true);
 insert into private.finance_uat_entities(entity_type,entity_id,reason) values('commerce_order',(select v::uuid from e2e_state where k='commerce_order'),'Disposable canonical commerce source allowlist');
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
@@ -41,6 +43,7 @@ select pg_temp.assert_true((select value->>'label'='Sale · '||(select order_cod
 select pg_temp.expect_error(format('select public.finance_review_customer_sale(%L::uuid,true,%L)',(select v from e2e_state where k='commerce_sale'),'Self approval must fail'),'Independent');
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
 select public.finance_review_customer_sale((select v::uuid from e2e_state where k='commerce_sale'),true,'Actual canonical fulfillment and cost lot independently reviewed');
+select pg_temp.assert_true(not exists(select 1 from jsonb_array_elements_text(public.finance_integrated_report(date_trunc('month',current_date)::date)->'blockers') b where b like 'COMPLETED_UNIFIED_ORDERS_UNPOSTED:%'),'Independent canonical sale posting must clear its source-completeness blocker');
 select pg_temp.assert_true(private.finance_customer_balance((select v::uuid from e2e_state where k='commerce_sale'),'1100')=920,'Canonical customer receivable incorrect');
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
 insert into e2e_state values('commerce_cash',public.finance_request_customer_cash((select v::uuid from e2e_state where k='commerce_sale'),'customer_receipt',(select v::uuid from e2e_state where k='bank_acct'),920,current_date,'QA-COMMERCE-COD-DEPOSIT','a0000000-0000-0000-0000-000000000001/commerce-receipt.pdf',encode(extensions.digest('commerce-receipt','sha256'),'hex'))::text);
