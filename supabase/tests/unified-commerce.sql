@@ -16,7 +16,7 @@ insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) valu
 ('00000000-0000-4000-8000-000000006404','00000000-0000-0000-0000-000000000000','authenticated','authenticated','commerce-reviewer@example.invalid',now(),now());
 insert into public.user_roles(user_id,role) values('00000000-0000-4000-8000-000000006403','admin'),('00000000-0000-4000-8000-000000006404','super_admin');
 insert into public.communities(id,name,slug) values('00000000-0000-4000-8000-000000006410','Synthetic commerce community','synthetic-commerce-6410');
-update public.profiles set full_name='Synthetic buyer',phone='017'||right(replace(id::text,'-',''),8),community_id='00000000-0000-4000-8000-000000006410' where id in ('00000000-0000-4000-8000-000000006401','00000000-0000-4000-8000-000000006402');
+update public.profiles set full_name='Synthetic buyer',household_name='Synthetic commerce household',onboarding_completed_at=now(),phone='017'||right(replace(id::text,'-',''),8),community_id='00000000-0000-4000-8000-000000006410' where id in ('00000000-0000-4000-8000-000000006401','00000000-0000-4000-8000-000000006402');
 insert into public.pickup_points(id,community_id,name,address) values('00000000-0000-4000-8000-000000006411','00000000-0000-4000-8000-000000006410','Synthetic point','Synthetic address only');
 insert into public.products(id,name,category,package_size,unit,sku,source_type,is_demo) values('00000000-0000-4000-8000-000000006420','Synthetic SOLO rice','Rice','1 kg','bag','commerce-6420','PRIVATE_LABEL',false);
 insert into public.own_product_costs(product_id,purchase_cost) values('00000000-0000-4000-8000-000000006420',80);
@@ -86,9 +86,10 @@ select is((select state from public.commerce_cart_items where offer_id=(select i
 select is((select count(*)::integer from public.commerce_orders where customer_id='00000000-0000-4000-8000-000000006401' and status<>'cancelled'),0,'Unlock does not automatically create order');
 select public.commerce_set_cart_item(null,(select id from commerce_test_ids where key='pool_offer'),0,'synthetic-disposable-commerce-proof-64');
 -- Real Group eligibility and five-person qualification (no fabricated commitments).
+select set_config('request.jwt.claim.sub','',true);
 update public.communities set center_latitude=23.8103,center_longitude=90.4125,location_matching_enabled=true where id='00000000-0000-4000-8000-000000006410';
 insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) select ('00000000-0000-4000-8000-00000000640'||n)::uuid,'00000000-0000-0000-0000-000000000000','authenticated','authenticated','commerce-group-'||n||'@example.invalid',now(),now() from generate_series(5,7) n;
-update public.profiles set full_name='Synthetic Group buyer',phone='017'||right(replace(id::text,'-',''),8),community_id='00000000-0000-4000-8000-000000006410',onboarding_completed_at=now() where id in ('00000000-0000-4000-8000-000000006401','00000000-0000-4000-8000-000000006402','00000000-0000-4000-8000-000000006405','00000000-0000-4000-8000-000000006406','00000000-0000-4000-8000-000000006407');
+update public.profiles set full_name='Synthetic Group buyer',household_name='Synthetic Group household',phone='017'||right(replace(id::text,'-',''),8),community_id='00000000-0000-4000-8000-000000006410',onboarding_completed_at=now() where id in ('00000000-0000-4000-8000-000000006401','00000000-0000-4000-8000-000000006402','00000000-0000-4000-8000-000000006405','00000000-0000-4000-8000-000000006406','00000000-0000-4000-8000-000000006407');
 insert into public.group_deals(id,product_id,title,status,market_price_snapshot,opens_at,closes_at,pickup_at,min_group_size,circle_capacity) values('00000000-0000-4000-8000-000000006470','00000000-0000-4000-8000-000000006420','Synthetic Group','open',120,now()-interval '1 day',now()+interval '1 day',now()+interval '2 days',5,5);
 insert into public.group_deal_communities(group_deal_id,community_id) values('00000000-0000-4000-8000-000000006470','00000000-0000-4000-8000-000000006410');
 insert into public.group_deal_tiers(group_deal_id,buyer_threshold,customer_unit_price) values('00000000-0000-4000-8000-000000006470',5,90);

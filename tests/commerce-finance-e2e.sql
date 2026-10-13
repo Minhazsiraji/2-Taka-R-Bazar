@@ -1,6 +1,6 @@
 -- Included only by commerce-finance-uat.mjs inside the rolled-back supply fixture.
 update private.commerce_configuration set preview_secret_hash=encode(extensions.digest('synthetic-disposable-commerce-proof-64','sha256'),'hex');
-update public.profiles set community_id='11111111-1111-1111-1111-111111111111',onboarding_completed_at=now() where id='f0000000-0000-0000-0000-000000000001';
+update public.profiles set household_name='Synthetic commerce household',community_id='11111111-1111-1111-1111-111111111111',onboarding_completed_at=now() where id='f0000000-0000-0000-0000-000000000001';
 insert into storage.objects(bucket_id,name) values
 ('commerce-evidence','a0000000-0000-0000-0000-000000000001/commerce-handover.pdf'),
 ('finance-evidence','a0000000-0000-0000-0000-000000000001/commerce-sale.pdf'),

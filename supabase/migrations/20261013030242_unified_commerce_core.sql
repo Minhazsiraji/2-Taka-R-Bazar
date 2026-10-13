@@ -240,7 +240,7 @@ begin
  if st->>'phase'='unavailable' then raise exception 'Offer expired or unavailable';end if;
  v_state='ready';
  if o.mode<>'SOLO' then
- if auth.uid() is null or not exists(select 1 from public.profiles where id=auth.uid() and community_id=o.community_id and phone is not null and full_name is not null) then raise exception 'Sign in and verify the matching community before joining';end if;
+ if auth.uid() is null or not exists(select 1 from public.profiles where id=auth.uid() and community_id=o.community_id and phone is not null and full_name is not null and household_name is not null and onboarding_completed_at is not null) then raise exception 'Sign in and verify the matching community before joining';end if;
  if o.mode='POOL' then
  if st->>'phase'='waiting' then perform public.commit_to_pool(o.pool_item_id,p_quantity);end if;
  select id into v_commit from public.commitments where pool_item_id=o.pool_item_id and customer_id=auth.uid() and status='active' and quantity=p_quantity;
@@ -267,7 +267,7 @@ declare c uuid;u uuid:=auth.uid();v_community uuid;v_lines jsonb:='[]';r record;
 begin
  perform private.commerce_assert_preview(p_proof);
  if u is null then raise exception 'Sign in to checkout';end if;
- select community_id into v_community from public.profiles where id=u and phone is not null and full_name is not null;
+ select community_id into v_community from public.profiles where id=u and phone is not null and full_name is not null and household_name is not null and onboarding_completed_at is not null;
  if v_community is null then raise exception 'Complete your household and community first';end if;
  perform public.commerce_get_cart(p_guest,p_proof); c=private.commerce_cart(p_guest);
  if p_method not in ('pickup','home_delivery') or p_method is null then raise exception 'Choose pickup or delivery';end if;
@@ -324,7 +324,7 @@ begin
  if found then return (select jsonb_agg(id order by id) from public.commerce_orders where checkout_id=c.id);end if;
  select revision into v_revision from public.commerce_carts where id=q.cart_id and customer_id=auth.uid() for update;
  if v_revision is null or q.expires_at<=now() or v_revision<>q.revision then raise exception 'Quote expired or cart changed; review a fresh quote';end if;
- if not exists(select 1 from public.profiles where id=auth.uid() and community_id=q.community_id and phone is not null and full_name is not null) then raise exception 'Verified community changed';end if;
+ if not exists(select 1 from public.profiles where id=auth.uid() and community_id=q.community_id and phone is not null and full_name is not null and household_name is not null and onboarding_completed_at is not null) then raise exception 'Verified community changed';end if;
  for line in select value from jsonb_array_elements(q.lines) order by value->>'sku_id',value->>'offer_id' loop
  select * into o from public.commerce_offers where id=(line->>'offer_id')::uuid for share;
  if o.mode='POOL' then perform pi.id from public.pool_items pi join public.pools po on po.id=pi.pool_id where pi.id=o.pool_item_id for share of pi,po;
