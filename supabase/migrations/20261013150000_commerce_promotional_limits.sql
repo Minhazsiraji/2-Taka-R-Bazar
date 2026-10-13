@@ -288,3 +288,26 @@ create trigger commerce_order_limit_before before insert on public.commerce_orde
 revoke all on function private.commerce_cart_limit_guard() from public,anon,authenticated,service_role;
 revoke all on function private.commerce_quote_limit_guard() from public,anon,authenticated,service_role;
 revoke all on function private.commerce_order_limit_guard() from public,anon,authenticated,service_role;
+
+-- Public read-only offer copy: show buyer the independently approved promotion cap.
+create or replace function public.commerce_catalog(p_include_synthetic boolean default false,p_community uuid default null,p_product uuid default null) returns jsonb
+language sql stable security definer set search_path='' as $$
+ select coalesce(jsonb_agg(x.row order by x.name,x.id),'[]') from (
+ select o.id,p.name,jsonb_build_object('offer_id',o.id,'product_id',p.id,'sku_id',s.id,'sku',s.sku,'product_name',p.name,'category',p.category,'brand',p.brand,'package_size',p.package_size,'unit',p.unit,'image_url',p.image_url,
+ 'community_id',o.community_id,'community_name',c.name,'mode',o.mode,'supplier_id',o.supplier_id,'phase',st->>'phase','unit_price',st->'price','version',o.version,'valid_until',o.valid_until,'is_synthetic',o.is_synthetic,
+ 'allows_pickup',o.allows_pickup,'allows_delivery',o.allows_delivery,'reference_price',b.benchmark_price,
+ 'max_per_account',caps.account_cap,'max_per_household',caps.household_cap,
+ 'available_quantity',case when o.supplier_id is null then greatest(0,coalesce(i.stock_on_hand-i.reserved_quantity,0)) else greatest(0,ss.available_quantity-ss.reserved_quantity) end) row
+ from public.commerce_offers o join public.commerce_skus s on s.id=o.sku_id join public.products p on p.id=s.product_id join public.communities c on c.id=o.community_id
+ cross join lateral (select private.commerce_offer_state(o.id) as st) states
+ left join public.own_product_inventory i on i.product_id=p.id left join public.commerce_supplier_stock ss on ss.id=o.supplier_stock_id
+ left join public.market_price_benchmarks b on b.product_id=p.id and b.community_id=o.community_id and b.approved and b.superseded_at is null and b.effective_from<=current_date
+ left join lateral (select min(m.max_per_account) account_cap,min(m.max_per_household) household_cap
+  from public.commerce_offer_purchase_limits l join public.commerce_offer_purchase_limits m
+  on m.campaign_key=l.campaign_key and m.status='approved'
+  join public.commerce_offers co on co.id=m.offer_id and co.sku_id=o.sku_id and co.community_id=o.community_id
+  where l.offer_id=o.id and l.status='approved') caps on true
+ where st->>'phase'<>'unavailable' and (not o.is_synthetic or p_include_synthetic) and (p_community is null or o.community_id=p_community) and (p_product is null or p.id=p_product)
+ order by p.name,o.id limit 200
+ ) x;
+$$;
