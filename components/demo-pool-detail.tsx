@@ -14,7 +14,7 @@ import {SITE_TAGLINE_EN,SITE_TAGLINE_BN} from '@/lib/site'
 
 type Delivery='pickup'|'home'
 const clamp=(n:number)=>Math.min(20,Math.max(0,Math.round(n)))
-export function DemoPoolDetail({pool,initialLanguage='en',hasLanguageCookie=false}:{pool:DemoFeaturedPool;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean}){
+export function DemoPoolDetail({pool,communityName,initialLanguage='en',hasLanguageCookie=false}:{pool:DemoFeaturedPool;communityName?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean}){
  const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
  const [quantities,setQuantities]=useState<Record<string,number>>(
   Object.fromEntries(pool.bundle.map(({offer,qty})=>[offer.product_id,qty]))
@@ -78,6 +78,7 @@ export function DemoPoolDetail({pool,initialLanguage='en',hasLanguageCookie=fals
     <img src={pool.image} alt={t(pool.title.en,pool.title.bn)}/>
     <div>
      <span className="market-featured-pool-eyebrow">DEMO / নমুনা · {pool.slug.toUpperCase()} POOL</span>
+     {communityName&&<p className="market-demo-area-pill">📍 {communityName} · {t('Sample products from this community only','শুধু এই কমিউনিটির নমুনা পণ্য')}</p>}
      <h1>{t(pool.title.en,pool.title.bn)}</h1>
      <p>{t(pool.description.en,pool.description.bn)}</p>
      <div className="market-pool-detail-stats">
