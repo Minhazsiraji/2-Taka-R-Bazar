@@ -81,7 +81,7 @@ create table public.commerce_orders (
  status text not null check(status in ('awaiting_supplier','confirmed','preparing','out_for_delivery','ready_for_pickup','completed','cancelled')),
  product_subtotal numeric(16,2) not null, delivery_fee numeric(16,2) not null, total_amount numeric(16,2) not null,
  payment_method text not null default 'COD' check(payment_method in ('COD','MANUAL_VERIFIED')),
- payment_status text not null default 'unpaid' check(payment_status in ('unpaid','custody_recorded','verified','refund_pending','refunded')),
+ payment_status text not null default 'unpaid' check(payment_status in ('unpaid','custody_recorded','verified','refund_pending','partially_refunded','refunded')),
  fulfillment_method text not null, pickup_point_id uuid references public.pickup_points(id), delivery_address text,
  supplier_deadline timestamptz, accepted_by uuid references auth.users(id),
  completed_at timestamptz, delivery_actual_cost numeric(16,2), cancellation_reason text,

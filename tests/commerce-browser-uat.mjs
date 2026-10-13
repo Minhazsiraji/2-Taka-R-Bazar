@@ -60,6 +60,7 @@ try{
  sql(`insert into public.community_qr_codes(code,community_id,campaign_name) values('QA-COMMERCE-64','${community}','Synthetic browser QR');`);
  await page.goto(base+'/community-invite/QA-COMMERCE-64',{waitUntil:'networkidle'});
  await page.getByRole('link',{name:'Browse community offers without signing in →'}).click();
+ await page.waitForURL(url=>url.searchParams.get('area')===community);
  assert.equal(new URL(page.url()).searchParams.get('area'),community);
  results.push('PASS QR community attribution preserved through browse-first landing');
  await page.goto(base+'/?area='+community,{waitUntil:'networkidle'});

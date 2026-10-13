@@ -61,12 +61,12 @@ create function private.commerce_credit_guard() returns trigger language plpgsql
  if not exists(select 1 from public.commerce_requests where order_id=s.source_id and ((kind='return' and status='received') or (kind='refund' and status='approved' and not new.restock))) then raise exception 'Independent approved commerce return or refund required';end if;
  if new.restock then
  for x in select value from jsonb_array_elements(new.allocations) loop
- select coalesce(sum((line->>'quantity')::integer),0) into v_received from public.commerce_requests r cross join lateral jsonb_array_elements(r.received_lines) line where r.order_id=s.source_id and r.kind='return' and r.status='received' and r.restock and line->>'line_id'=x->>'line_id';
+ select coalesce(sum((line->>'quantity')::integer),0) into v_received from public.commerce_requests r cross join lateral jsonb_array_elements(r.received_lines) line where r.order_id=s.source_id and r.kind='return' and r.status in ('received','completed') and r.restock and line->>'line_id'=x->>'line_id';
  select coalesce(sum((line->>'quantity')::integer),0) into v_used from public.finance_customer_events e cross join lateral jsonb_array_elements(e.allocations) line where e.kind='credit' and e.source_id=s.id and e.restock and e.status in ('pending','posted') and line->>'line_id'=x->>'line_id';
  if v_used+(x->>'quantity')::integer>v_received then raise exception 'Credit restock exceeds approved physically received returns';end if;
  end loop;end if;return new;end $$;
 create trigger commerce_credit_guard before insert on public.finance_customer_events for each row execute function private.commerce_credit_guard();
-create function private.commerce_finance_sync() returns trigger language plpgsql security definer set search_path='' as $$ declare s public.finance_customer_events%rowtype;o public.commerce_orders%rowtype;x jsonb;v_paid numeric;v_refund numeric;begin
+create function private.commerce_finance_sync() returns trigger language plpgsql security definer set search_path='' as $$ declare s public.finance_customer_events%rowtype;o public.commerce_orders%rowtype;x jsonb;v_paid numeric;v_refund numeric;v_credit numeric;begin
  if new.status<>'posted' or old.status='posted' then return new;end if;
  if tg_table_name='finance_customer_events' then
  if new.kind<>'credit' then return new;end if;select * into s from public.finance_customer_events where id=new.source_id;
@@ -84,7 +84,15 @@ create function private.commerce_finance_sync() returns trigger language plpgsql
  else update public.commerce_supplier_stock set available_quantity=available_quantity+(x->>'quantity')::integer where id=(select supplier_stock_id from public.commerce_offers where id=(select offer_id from public.commerce_order_items where id=(x->>'line_id')::uuid));end if;
  end loop;end if;
  select coalesce(sum(amount) filter(where kind='customer_receipt'),0),coalesce(sum(amount) filter(where kind='customer_refund'),0) into v_paid,v_refund from public.treasury_transactions where customer_event_id=s.id and status='posted';
- update public.commerce_orders set payment_status=case when v_refund>=o.total_amount then 'refunded' when v_refund>0 or exists(select 1 from public.finance_customer_events where kind='credit' and source_id=s.id and status='posted') then 'refund_pending' when v_paid>=o.total_amount then 'verified' else payment_status end where id=o.id;
+ select coalesce(sum(product_amount+delivery_amount),0) into v_credit from public.finance_customer_events where kind='credit' and source_id=s.id and status='posted';
+ update public.commerce_orders set payment_status=case when v_refund>=o.total_amount then 'refunded' when v_credit>v_refund and v_paid>0 then 'refund_pending' when v_refund>0 then 'partially_refunded' when v_paid+v_credit>=o.total_amount and v_paid>0 then 'verified' else payment_status end where id=o.id;
+ -- Close a received exception only after all cumulative physically received lines
+ -- have posted credits. Preserve its evidence for subsequent partial returns.
+ update public.commerce_requests req set status='completed' where req.order_id=o.id and req.kind='return' and req.status='received' and not exists(
+ select 1 from jsonb_array_elements(req.received_lines) rl where
+ (select coalesce(sum((received_line->>'quantity')::integer),0) from public.commerce_requests rr cross join lateral jsonb_array_elements(rr.received_lines) received_line where rr.order_id=o.id and rr.kind='return' and rr.status in ('received','completed') and received_line->>'line_id'=rl->>'line_id')>
+ (select coalesce(sum((credited_line->>'quantity')::integer),0) from public.finance_customer_events ce cross join lateral jsonb_array_elements(ce.allocations) credited_line where ce.kind='credit' and ce.source_id=s.id and ce.status='posted' and credited_line->>'line_id'=rl->>'line_id'));
+ if tg_table_name='finance_customer_events' and not coalesce((to_jsonb(new)->>'restock')::boolean,false) then update public.commerce_requests set status='completed' where order_id=o.id and kind='refund' and status='approved';end if;
  if v_paid>=o.total_amount then update public.commerce_cod_receipts set status='verified' where order_id=o.id;end if;
  perform private.commerce_event(o.id,'finance_verified','Independent Finance/Treasury event posted. Payment state reflects verified source amounts.');return new;end $$;
 create trigger commerce_finance_sync after update on public.finance_customer_events for each row execute function private.commerce_finance_sync();
