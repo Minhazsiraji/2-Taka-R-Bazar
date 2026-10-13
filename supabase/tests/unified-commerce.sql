@@ -145,4 +145,6 @@ select is((select status from public.commerce_orders where id=(select id from co
 select is((select reserved_quantity from public.commerce_supplier_stock where supplier_id='00000000-0000-4000-8000-000000006480'),0,'Expiry releases supplier reservation');
 select lives_ok($$select private.commerce_expiry_worker()$$,'Repeated expiry is idempotent');
 select ok(not has_function_privilege('service_role','private.commerce_expiry_worker()','EXECUTE'),'API service cannot impersonate scheduler');
+select ok(not has_function_privilege('anon','public.commerce_savings_summary()','EXECUTE'),'Savings require authentication');
+select is(jsonb_array_length(public.commerce_savings_summary()),0,'Unfulfilled commitments and cancelled orders create no savings');
 select * from finish();rollback;

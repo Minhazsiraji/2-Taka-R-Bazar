@@ -6,7 +6,7 @@ import {requireOnboardedUser} from '@/lib/auth'
 import {getCart,commerceEnabled,commerceProof} from '@/lib/commerce/server'
 import {createCommerceQuote,confirmCommerceCheckout} from '@/app/actions/commerce'
 import {CURRENT_POLICY_VERSION} from '@/lib/legal'
-import {formatPrice} from '@/lib/storefront'
+import {taka as formatPrice} from '@/lib/format'
 export const dynamic='force-dynamic'
 type Quote={id:string;expires_at:string;lines:Array<{item_id:string;name:string;quantity:number;unit_price:number}>;product_subtotal:number;delivery_fee:number;total_amount:number;fulfillment_method:string;delivery_address:string|null}
 export default async function CheckoutPage({searchParams}:{searchParams:Promise<{error?:string;step?:string;quote?:string}>}){const query=await searchParams;const {supabase,profile}=await requireOnboardedUser();if(!commerceEnabled())return <CommerceFrame title="চেকআউট / Checkout"/>;const cart=await getCart();const ready=cart.items.filter(i=>i.state==='ready'&&i.phase==='ready');let quote:Quote|null=null,error=query.error;if(query.quote){const result=await supabase.rpc('commerce_get_quote',{p_quote:query.quote,p_proof:commerceProof()});if(result.error)error='এই মূল্য তালিকা পাওয়া যায়নি। Please review a fresh quote.';else quote=result.data}const [{data:points},{data:addresses}]=await Promise.all([supabase.from('pickup_points').select('id,name,address').eq('community_id',profile.community_id).eq('active',true),supabase.from('customer_delivery_addresses').select('id,address_text,verification_status,is_default').eq('community_id',profile.community_id).neq('verification_status','rejected')]);const expired=quote?new Date(quote.expires_at).getTime()<=Date.now():false;return <CommerceFrame title="চেকআউট / Checkout" error={error}>
