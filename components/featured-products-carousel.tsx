@@ -9,7 +9,7 @@ import type {StorefrontOffer,StorefrontArea} from '@/lib/storefront'
 import {formatPrice} from '@/lib/storefront'
 import {featuredProductWindow} from '@/lib/featured-product-window'
 
-export function FeaturedProductsCarousel({products,language='bn',offers=[],areas=[],selectedArea=''}:{products:ShowcaseProduct[];language?:MarketplaceLanguage;offers?:StorefrontOffer[];areas?:StorefrontArea[];selectedArea?:string}){
+export function FeaturedProductsCarousel({products,language='en',offers=[],areas=[],selectedArea=''}:{products:ShowcaseProduct[];language?:MarketplaceLanguage;offers?:StorefrontOffer[];areas?:StorefrontArea[];selectedArea?:string}){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const [active,setActive]=useState(0)
  const [paused,setPaused]=useState(false)

@@ -32,6 +32,20 @@ try{
   page.on('pageerror',e=>errors.push(e.message))
   await page.goto('http://127.0.0.1:3000/',{waitUntil:'networkidle'})
   await page.getByRole('heading',{name:'Synthetic browser Pool',exact:true}).waitFor()
+  if(width===393){
+   const toggle=page.locator('.market-flat-header .market-single-language')
+   // Brand-new browser context is English, and the button offers BAN.
+   assert.equal((await toggle.innerText()).trim(),'BAN')
+   await toggle.click()
+   assert.equal((await toggle.innerText()).trim(),'EN')
+   await page.reload({waitUntil:'networkidle'})
+   assert.equal((await toggle.innerText()).trim(),'EN','BAN choice must survive full reload')
+   assert.equal((await page.context().cookies()).some(c=>c.name==='2tbr_storefront_language'&&c.value==='bn'),true)
+   await toggle.click()
+   assert.equal((await toggle.innerText()).trim(),'BAN')
+   await page.reload({waitUntil:'networkidle'})
+   assert.equal((await toggle.innerText()).trim(),'BAN','EN choice must survive full reload')
+  }
   assert.equal(await page.locator('.market-pool-demo-pill').count(),0)
   assert.equal(await page.locator('.market-pool-thumbnails a').first().getAttribute('href'),`/shop/${ids.product}?area=${ids.community}`)
   const poolText=await page.locator('.market-featured-pool').innerText()

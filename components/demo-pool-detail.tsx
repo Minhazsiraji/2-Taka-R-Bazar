@@ -6,11 +6,12 @@ import {demoPoolBasketTotal,demoPoolTierState,demoPoolTierThresholds,demoPoolTie
 import {formatPrice} from '@/lib/storefront'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
+import {useStorefrontLanguage} from '@/lib/use-storefront-language'
 
 type Delivery='pickup'|'home'
 const clamp=(n:number)=>Math.min(20,Math.max(0,Math.round(n)))
-export function DemoPoolDetail({pool}:{pool:DemoFeaturedPool}){
- const [language,setLanguage]=useState<MarketplaceLanguage>('bn')
+export function DemoPoolDetail({pool,initialLanguage='en',hasLanguageCookie=false}:{pool:DemoFeaturedPool;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean}){
+ const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
  const [quantities,setQuantities]=useState<Record<string,number>>(
   Object.fromEntries(pool.bundle.map(({offer,qty})=>[offer.product_id,qty]))
  )

@@ -13,14 +13,15 @@ import {PublicHeader} from '@/components/public-header'
 import {PublicFooter} from '@/components/public-footer'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
+import {useStorefrontLanguage} from '@/lib/use-storefront-language'
 import {FeaturedProductsCarousel} from '@/components/featured-products-carousel'
 import {FeaturedPoolShowcase} from '@/components/featured-pool-showcase'
 import {AnimatedHeroMessages} from '@/components/animated-hero-messages'
 import {getDemoFeaturedPools,type DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
-export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],demoMode=false,pools=[],initialArea=''}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];demoMode?:boolean;pools?:DemoFeaturedPool[];initialArea?:string}){
- const [language,setLanguage]=useState<MarketplaceLanguage>('bn')
+export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],demoMode=false,pools=[],initialArea='',initialLanguage='en',hasLanguageCookie=false}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];demoMode?:boolean;pools?:DemoFeaturedPool[];initialArea?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean}){
+ const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const [area,setArea]=useState(()=>areas.some(a=>a.community_id===initialArea)?initialArea:'')
  const [search,setSearch]=useState('')
