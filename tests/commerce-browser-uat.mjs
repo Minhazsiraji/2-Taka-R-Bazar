@@ -63,8 +63,8 @@ try{
  await page.waitForURL(url=>url.searchParams.get('area')===community);
  assert.equal(new URL(page.url()).searchParams.get('area'),community);
  results.push('PASS QR community attribution preserved through browse-first landing');
- await page.goto(base+'/?area='+community,{waitUntil:'networkidle'});
- await page.locator(`form:has(input[name="offer_id"][value="${poolOffer}"])`).getByRole('button').click();
+ await page.goto(base+'/pool',{waitUntil:'networkidle'});
+ await page.locator(`form:has(input[name="pool_item_id"][value="${poolItem}"])`).filter({has:page.locator('input[name="quantity"]')}).getByRole('button').click();
  await page.waitForURL('**/cart');
  assert.equal(sql(`select state from public.commerce_cart_items where offer_id='${poolOffer}' and cart_id=(select id from public.commerce_carts where customer_id='${a.id}')`),'waiting');
  await denied(a,'commerce_create_quote',quoteArgs,/No payable items/);
@@ -94,8 +94,8 @@ try{
  sql(`update public.communities set center_latitude=23.8103,center_longitude=90.4125,location_matching_enabled=true where id='${community}';insert into public.group_deals(id,product_id,title,status,market_price_snapshot,opens_at,closes_at,pickup_at,min_group_size,circle_capacity) values('${group}','${product}','Synthetic browser Group','open',120,now()-interval '1 day',now()+interval '1 day',now()+interval '2 days',5,5);insert into public.group_deal_communities(group_deal_id,community_id) values('${group}','${community}');insert into public.group_deal_tiers(group_deal_id,buyer_threshold,customer_unit_price) values('${group}',5,90);`);
  const groupOffer=await offer(product,'GROUP_DEAL',null,group);
  for(const buyer of groupBuyers)await rpc(buyer,'verify_my_community_location',{p_latitude:23.8103,p_longitude:90.4125,p_accuracy_m:10});
- await page.goto(base+'/?area='+community,{waitUntil:'networkidle'});
- await page.locator(`form:has(input[name="offer_id"][value="${groupOffer}"])`).getByRole('button').click();await page.waitForURL('**/cart');
+ await page.goto(base+'/group-deals',{waitUntil:'networkidle'});
+ await page.locator(`form:has(input[name="group_deal_id"][value="${group}"])`).filter({has:page.locator('input[name="quantity"]')}).getByRole('button',{name:'Join group',exact:true}).click();await page.waitForURL('**/cart');
  await denied(a,'commerce_create_quote',quoteArgs,/No payable items/);
  for(const buyer of groupBuyers.slice(1))await rpc(buyer,'commerce_set_cart_item',cartArgs(groupOffer));
  assert.equal(sql(`select count(*) from public.group_deal_commitments where group_deal_id='${group}' and status='qualified'`),'5');

@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireOnboardedUser } from '@/lib/auth'
+import {commerceEnabled} from '@/lib/commerce/server'
+import {routeCommitmentToCommerce} from '@/lib/commerce/legacy-actions'
 import { CURRENT_POLICY_VERSION } from '@/lib/legal'
 
 function text(fd: FormData, key: string) { return String(fd.get(key) ?? '').trim() }
@@ -14,6 +16,7 @@ export async function commitToPool(formData: FormData) {
   const poolItemId = text(formData, 'pool_item_id')
   const quantity = Number(text(formData, 'quantity'))
   if (!poolItemId || !Number.isInteger(quantity) || quantity < 1) redirect('/pool?error=Choose+a+valid+quantity')
+  await routeCommitmentToCommerce('POOL',poolItemId,quantity)
   const { error } = await supabase.rpc('commit_to_pool', { p_pool_item_id: poolItemId, p_quantity: quantity })
   if (error) redirect(`/pool?error=${encodeURIComponent(error.message)}`)
   revalidatePath('/pool'); revalidatePath('/home'); revalidatePath('/orders')
@@ -51,6 +54,10 @@ export async function submitPoolItemReview(formData:FormData){
 export async function confirmCommitment(formData: FormData) {
   const { supabase, user, profile } = await requireOnboardedUser()
   const commitmentId = text(formData, 'commitment_id')
+  if(!commerceEnabled())redirect('/cart?error=Purchases+are+awaiting+release+qualification')
+  const {data:canonicalCommitment}=await supabase.from('commitments').select('pool_item_id,quantity').eq('id',commitmentId).eq('customer_id',user.id).maybeSingle()
+  if(!canonicalCommitment)redirect('/cart?error=Pool+commitment+is+no+longer+eligible')
+  await routeCommitmentToCommerce('POOL',canonicalCommitment.pool_item_id,canonicalCommitment.quantity)
   const fulfillmentMethod = text(formData, 'fulfillment_method')
   const pickupPointId = text(formData, 'pickup_point_id') || null
   const policyAccepted = formData.get('policy_accepted') === 'on'

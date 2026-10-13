@@ -172,7 +172,7 @@ create function public.commerce_catalog(p_include_synthetic boolean default fals
 language sql stable security definer set search_path='' as $$
  select coalesce(jsonb_agg(x.row order by x.name,x.id),'[]') from (
  select o.id,p.name,jsonb_build_object('offer_id',o.id,'product_id',p.id,'sku_id',s.id,'sku',s.sku,'product_name',p.name,'category',p.category,'brand',p.brand,'package_size',p.package_size,'unit',p.unit,'image_url',p.image_url,
- 'community_id',o.community_id,'community_name',c.name,'mode',o.mode,'supplier_id',o.supplier_id,'phase',st->>'phase','unit_price',st->'price','version',o.version,'valid_until',o.valid_until,'is_synthetic',o.is_synthetic,
+ 'pool_item_id',o.pool_item_id,'group_deal_id',o.group_deal_id,'community_id',o.community_id,'community_name',c.name,'mode',o.mode,'supplier_id',o.supplier_id,'phase',st->>'phase','unit_price',st->'price','version',o.version,'valid_until',o.valid_until,'is_synthetic',o.is_synthetic,
  'allows_pickup',o.allows_pickup,'allows_delivery',o.allows_delivery,'reference_price',b.benchmark_price,
  'available_quantity',case when o.supplier_id is null then greatest(0,coalesce(i.stock_on_hand-i.reserved_quantity,0)) else greatest(0,ss.available_quantity-ss.reserved_quantity) end) row
  from public.commerce_offers o join public.commerce_skus s on s.id=o.sku_id join public.products p on p.id=s.product_id join public.communities c on c.id=o.community_id
