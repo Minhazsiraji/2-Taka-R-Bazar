@@ -18,7 +18,7 @@ if(!/^http:\/\/(127\.0\.0\.1|localhost):54321\/?$/.test(db??'')||
 const supa=createClient(db,secret,{auth:{persistSession:false,autoRefreshToken:false}})
 function psql(sql){
  return execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-tAX',
- '-v','ON_ERROR_STOP=1','-c',sql],{env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8'}).trim()
+ '-v','ON_ERROR_STOP=1','-c',sql],{env:{...process.env,PGPASSWORD:'postgres',PGTZ:'Asia/Dhaka'},encoding:'utf8'}).trim()
 }
 const identities=new Map()
 async function viewer(role,identityKey=role){
@@ -127,7 +127,7 @@ async function main(){
  // No hosted target is accepted by the guard above; CI destroys the entire stack.
  const fixture=readFileSync('tests/supply-handover-e2e.sql','utf8').replace('\\ir finance-customer-lifecycle-e2e.sql','\\i tests/finance-customer-lifecycle-e2e.sql').replace(/rollback;\s*$/,'set constraints all immediate; commit;')
  execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],{
-  input:fixture,env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8',stdio:['pipe','pipe','pipe']})
+  input:fixture,env:{...process.env,PGPASSWORD:'postgres',PGTZ:'Asia/Dhaka'},encoding:'utf8',stdio:['pipe','pipe','pipe']})
  await viewer('super_admin')
  await viewer('admin')
  const browser=await chromium.launch({headless:true})
@@ -435,7 +435,7 @@ async function main(){
   await visit(maker,'/admin/finance-attribution','Expense attribution & campaign budgets')
   const budgetForm=maker.getByRole('button',{name:'Request campaign budget'}).locator('xpath=ancestor::form')
   await budgetForm.locator('input[name="code"]').fill('BROWSER-MARKETING-BUDGET')
-  await budgetForm.locator('input[name="month"]').fill(new Date().toISOString().slice(0,7))
+  await budgetForm.locator('input[name="month"]').fill(new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}).slice(0,7))
   await budgetForm.locator('input[name="amount"]').fill('100')
   await budgetForm.locator('input[name="reason"]').fill('Synthetic browser offline campaign approval')
   await budgetForm.getByRole('button',{name:'Request campaign budget'}).click()
@@ -451,7 +451,7 @@ async function main(){
   await visit(owner,'/super-admin/finance-report','Integrated accounting report & period close')
   await snapshot(owner,'integrated-report')
   await owner.getByText('BDT 93.00',{exact:true}).waitFor({timeout:30000})
-  const auditExport=await owner.request.get(base+'/api/finance/export?month='+new Date().toISOString().slice(0,7))
+  const auditExport=await owner.request.get(base+'/api/finance/export?month='+new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}).slice(0,7))
   assert.equal(auditExport.status(),200);const exported=await auditExport.json()
   assert.equal(Number(exported.report.profit_before_tax),93);assert.ok(exported.audit.rows.length>0)
   assert.match(exported.report.ledger_sha256,/^[a-f0-9]{64}$/)
@@ -500,7 +500,7 @@ async function main(){
   }
   for(const key of ['community_operator','supplier_owner']){
    const client=identities.get(key).client
-   const denied=await client.rpc('finance_integrated_report',{p_month:new Date().toISOString().slice(0,7)+'-01'})
+   const denied=await client.rpc('finance_integrated_report',{p_month:new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}).slice(0,7)+'-01'})
    assert.ok(denied.error,'Operational identity accessed Super Admin financial report')
   }
   console.log('PASS supplier and pickup operator identities cannot read finance ledger, originals or company report');stages++
@@ -521,7 +521,7 @@ async function main(){
   psql("delete from private.finance_uat_leases where actor_id='"+ownerIdentity.id+"'")
   const locked=await ownerIdentity.client.rpc('treasury_create_account',{
    p_name:'Blocked direct API bank',p_kind:'bank',p_institution:'Synthetic',p_last_four:'0057',
-   p_open_date:new Date().toISOString().slice(0,10),p_opening_balance:1,p_opening_reference:'REVOKED-LEASE',p_restricted:0,p_credit_limit:null})
+   p_open_date:new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}),p_opening_balance:1,p_opening_reference:'REVOKED-LEASE',p_restricted:0,p_credit_limit:null})
   assert.ok(locked.error);assert.match(locked.error.message,/Financial writes locked/)
   console.log('PASS real authenticated/customer/anonymous RPC and storage security, overwrite attack, revoked owner lease');stages++
   const journalsBeforeCleanup=psql('select count(*) from public.finance_journals')
@@ -529,7 +529,7 @@ async function main(){
    p_user_id:ownerIdentity.id,p_role:'super_admin',p_enabled:false})
   assert.ok(!withdrawRole.error,'Independent operator could not withdraw temporary reviewer role')
   const staleReviewerReport=await ownerIdentity.client.rpc('finance_integrated_report',{
-   p_month:new Date().toISOString().slice(0,7)+'-01'})
+   p_month:new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}).slice(0,7)+'-01'})
   assert.ok(staleReviewerReport.error,'Withdrawn reviewer retained report access through existing token')
   const staleReviewerInventory=await ownerIdentity.client.rpc('finance_inventory_source')
   assert.ok(staleReviewerInventory.error,'Withdrawn reviewer retained inventory access through existing token')

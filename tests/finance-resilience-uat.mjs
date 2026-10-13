@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {execFileSync,spawn} from 'node:child_process'
 import {readFileSync,mkdirSync,writeFileSync} from 'node:fs'
 const args=['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-tAX']
-const env={...process.env,PGPASSWORD:'postgres'}
+const env={...process.env,PGPASSWORD:'postgres',PGTZ:'Asia/Dhaka'}
 if(process.env.ISSUE57_DISPOSABLE_DB!=='true')throw new Error('Disposable DB qualification opt-in required')
 const sql=s=>execFileSync('psql',[...args,'-c',s],{env,encoding:'utf8'}).trim()
 // Seed a fully asserted chain, retaining synthetic data only in the disposable DB.

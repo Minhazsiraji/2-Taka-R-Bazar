@@ -1,5 +1,7 @@
 \set ON_ERROR_STOP on
 begin;
+-- Match the application business date, including UTC/Bangladesh midnight boundaries.
+set local time zone 'Asia/Dhaka';
 
 create temp table e2e_state(k text primary key,v text) on commit drop;
 

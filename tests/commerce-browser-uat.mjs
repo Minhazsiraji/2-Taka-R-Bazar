@@ -96,7 +96,7 @@ try{
  const receiptForm=receivingPage.locator('input[name="request_id"][value="'+request+'"]').locator('xpath=ancestor::form');
  await receiptForm.locator('input[name="return_quantity_0"]').fill('1');await receiptForm.locator('input[name="restock"]').check();
  await receiptForm.locator('input[name="evidence"]').setInputFiles({name:'synthetic-return.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\nSynthetic browser received return original\n%%EOF')});
- await receiptForm.getByRole('button',{name:'Record returned goods receipt'}).click();await receivingPage.waitForURL('**/commerce');
+ await receiptForm.getByRole('button',{name:'Record returned goods receipt'}).click();await receiptForm.waitFor({state:'hidden',timeout:45000});assert.equal(new URL(receivingPage.url()).searchParams.get('error'),null);
  assert.equal(sql(`select status from public.commerce_requests where id='${request}'`),'received');
  assert.equal(sql(`select stock_on_hand from public.own_product_inventory where product_id='${product}'`),'9');
  await receivingContext.close();sql(`delete from public.user_roles where user_id='${a.id}' and role='admin'`);

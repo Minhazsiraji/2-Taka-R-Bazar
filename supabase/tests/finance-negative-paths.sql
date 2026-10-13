@@ -1,5 +1,7 @@
 -- Finance QA negative paths & exceptional states (synthetic only, fully rolled back).
 begin;
+-- Match the application business date, including UTC/Bangladesh midnight boundaries.
+set local time zone 'Asia/Dhaka';
 create extension if not exists pgtap with schema extensions;
 
 create or replace function pg_temp.fails_with(p_statement text,p_state text default null,p_fragment text default null)
