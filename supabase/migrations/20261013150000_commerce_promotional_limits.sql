@@ -262,7 +262,7 @@ begin
   join public.commerce_offer_purchase_limits l on l.offer_id=o.id and l.status='approved'
   where m.household_id=v_household and ci.cart_id<>new.cart_id and ci.state in ('ready','waiting')
    and o.mode<>'SOLO' and o.sku_id=r.sku_id and o.community_id=r.community_id and l.campaign_key=r.campaign_key;
-  if v_committed+new.quantity>r.max_per_household then
+  if v_committed>0 then
    raise exception 'Promotion limit: verified household already committed to this campaign';end if;
  end if;
  perform private.commerce_assert_purchase_limit(

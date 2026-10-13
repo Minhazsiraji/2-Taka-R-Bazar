@@ -130,5 +130,27 @@ select lives_ok($$select public.commerce_confirm_checkout((select id from promo_
 'First verified household account purchases one promotional bottle');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006804',true);
 select throws_like($$select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='offer3'),1,'synthetic-disposable-commerce-proof-64')$$,'%Promotion limit reached for this verified household%','Second account of same verified family denied');
+
+-- A two-unit household allowance still represents one household for Pool unlocks.
+insert into public.pools(id,community_id,title,status,cadence,opens_at,commitment_closes_at,confirmation_closes_at,pickup_at)
+values('00000000-0000-4000-8000-000000006860','00000000-0000-4000-8000-000000006810','Synthetic household-count Pool','open','weekly',now()-interval '1 day',now()+interval '1 day',now()+interval '2 days',now()+interval '3 days');
+insert into public.pool_items(id,pool_id,product_id,benchmark_price_snapshot,expected_pool_price)
+values('00000000-0000-4000-8000-000000006861','00000000-0000-4000-8000-000000006860','00000000-0000-4000-8000-000000006820',120,100);
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006805',true);
+insert into promo_test_ids values ('pool_offer',public.commerce_request_offer(
+(select id from public.commerce_skus where product_id='00000000-0000-4000-8000-000000006820'),
+'00000000-0000-4000-8000-000000006810','POOL',null,'00000000-0000-4000-8000-000000006861',null,100,now()+interval '2 days',true,true,60,'synthetic-disposable-commerce-proof-64'));
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006806',true);
+select public.commerce_review_offer((select id from promo_test_ids where key='pool_offer'),true,'Independent household-count Pool approval','synthetic-disposable-commerce-proof-64');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006805',true);
+insert into promo_test_ids values('pool_limit',public.commerce_request_purchase_limit((select id from promo_test_ids where key='pool_offer'),'SOY5L_POOL_FAMILY',2,2,'Two units but one independently verified household','synthetic-disposable-commerce-proof-64'));
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006806',true);
+select public.commerce_review_purchase_limit((select id from promo_test_ids where key='pool_limit'),true,'Independent household-count policy approval','synthetic-disposable-commerce-proof-64');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006803',true);
+select lives_ok($$select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='pool_offer'),1,'synthetic-disposable-commerce-proof-64')$$,'Verified family may make one Pool commitment');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006804',true);
+select throws_like($$select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='pool_offer'),1,'synthetic-disposable-commerce-proof-64')$$,'%verified household already committed%','Second account cannot inflate household Pool unlock count even with a two-unit cap');
+select is((select count(*)::integer from public.commitments where pool_item_id='00000000-0000-4000-8000-000000006861' and status='active'),1,'Rejected duplicate household join rolls back its source commitment');
+
 select * from finish();
 rollback;
