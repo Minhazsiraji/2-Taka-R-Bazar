@@ -131,11 +131,31 @@ select public.commerce_review_offer((select id from commerce_test_ids where key=
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006401',true);
 select public.commerce_set_cart_item(null,(select id from commerce_test_ids where key='group_offer'),0,'synthetic-disposable-commerce-proof-64');
 select public.commerce_set_cart_item(null,(select id from commerce_test_ids where key='supplier_offer'),1,'synthetic-disposable-commerce-proof-64');
-insert into commerce_test_ids select 'supplier_quote',(public.commerce_create_quote(null,'pickup','00000000-0000-4000-8000-000000006411',null,'synthetic-disposable-commerce-proof-64')->>'id')::uuid;
+insert into commerce_test_ids select 'supplier_quote',(public.commerce_create_quote(null,'home_delivery',null,'Synthetic supplier delivery address','synthetic-disposable-commerce-proof-64')->>'id')::uuid;
 insert into commerce_test_ids select 'supplier_order',(public.commerce_confirm_checkout((select id from commerce_test_ids where key='supplier_quote'),'00000000-0000-4000-8000-000000006490','2026-10-05','synthetic-disposable-commerce-proof-64')->>0)::uuid;
 select is((select status from public.commerce_orders where id=(select id from commerce_test_ids where key='supplier_order')),'awaiting_supplier','Supplier purchase requires actual acceptance');
 select is((select reserved_quantity from public.commerce_supplier_stock where supplier_id='00000000-0000-4000-8000-000000006480'),1,'Supplier availability is reserved atomically');
 select throws_like($$select public.commerce_fulfill((select id from commerce_test_ids where key='supplier_order'),'accept','Customer cannot accept supplier order',null,null,null,null,'synthetic-disposable-commerce-proof-64')$$,'%Order not accessible%','Customer cannot impersonate supplier');
+-- New commerce API boundaries: wrong supplier/community, scoped staff projection,
+-- supplier PII minimization and an expired quote cannot bypass server validation.
+select set_config('request.jwt.claim.sub','',true);
+insert into public.communities(id,name,slug) values('00000000-0000-4000-8000-000000006412','Other synthetic staff community','other-commerce-staff-6412');
+insert into public.suppliers(id,business_name,reliability_status) values('00000000-0000-4000-8000-000000006481','Other synthetic commerce supplier','reliable');
+insert into public.supplier_memberships(supplier_id,user_id,role) values('00000000-0000-4000-8000-000000006481','00000000-0000-4000-8000-000000006402','owner');
+insert into public.community_ops_assignments(user_id,community_id) values('00000000-0000-4000-8000-000000006402','00000000-0000-4000-8000-000000006412');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006402',true);
+select throws_like($$select public.commerce_get_order((select id from commerce_test_ids where key='supplier_order'))$$,'%Order not accessible%','Other supplier/operator cannot read a different seller/community order');
+select throws_like($$select public.commerce_fulfill((select id from commerce_test_ids where key='supplier_order'),'accept','Wrong seller cannot accept order',null,null,null,null,'synthetic-disposable-commerce-proof-64')$$,'%Order not accessible%','Other supplier cannot accept an order');
+select is(jsonb_array_length(public.commerce_workbench()->'orders'),0,'Staff workbench excludes other community/seller orders');
+select throws_like($$select public.commerce_set_cart_item(null,(select id from commerce_test_ids where key='offer'),101,'synthetic-disposable-commerce-proof-64')$$,'%Quantity must%','Malformed quantity rejected before cart mutation');
+update public.commerce_quotes set expires_at=now()-interval '1 minute' where id=(select id from commerce_test_ids where key='quote2');
+select throws_like($$select public.commerce_confirm_checkout((select id from commerce_test_ids where key='quote2'),'00000000-0000-4000-8000-000000006491','2026-10-05','synthetic-disposable-commerce-proof-64')$$,'%Quote expired%','Expired server quote cannot reserve stock');
+select set_config('request.jwt.claim.sub','',true);
+insert into public.supplier_memberships(supplier_id,user_id,role) values('00000000-0000-4000-8000-000000006480','00000000-0000-4000-8000-000000006402','owner');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006402',true);
+select ok((select delivery_address is not null from public.commerce_orders where id=(select id from commerce_test_ids where key='supplier_order')),'Source contains an address before supplier redaction');
+select ok(not(public.commerce_get_order((select id from commerce_test_ids where key='supplier_order'))->'order' ? 'customer_id'),'Assigned supplier projection omits customer identity');
+select is(public.commerce_get_order((select id from commerce_test_ids where key='supplier_order'))->'order'->>'delivery_address',null,'Supplier projection does not expose a customer address');
 -- Operator-only simulated clock boundary; the real immutable-order trigger remains enabled afterwards.
 alter table public.commerce_orders disable trigger commerce_order_terms;
 update public.commerce_orders set supplier_deadline=now()-interval '1 minute' where id=(select id from commerce_test_ids where key='supplier_order');
