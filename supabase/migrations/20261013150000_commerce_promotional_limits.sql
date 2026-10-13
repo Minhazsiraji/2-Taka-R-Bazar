@@ -175,7 +175,7 @@ create function private.commerce_assert_purchase_limit(
 ) returns void language plpgsql security definer set search_path='' as $$
 declare r record;v_used integer;v_cart_used integer;v_household uuid;
 begin
- select o.sku_id,o.community_id,l.campaign_key,
+ select o.sku_id,o.community_id,o.mode,l.campaign_key,
   (select min(z.max_per_account) from public.commerce_offer_purchase_limits z
    join public.commerce_offers zo on zo.id=z.offer_id
    where z.status='approved' and z.campaign_key=l.campaign_key
@@ -207,7 +207,12 @@ begin
  if r.household_cap is not null and p_customer is not null then
   select household_id into v_household from public.commerce_verified_household_members
   where customer_id=p_customer;
-  if v_household is null then raise exception 'Verified household required for this limited offer';end if;
+  if v_household is null then
+   -- SOLO cart browse is non-binding; staff verification remains mandatory before quote.
+   -- Pool/Group commitments must never count unverified households toward unlocks.
+   if p_include_cart and r.mode='SOLO' then return;end if;
+   raise exception 'Verified household required for this limited offer';
+  end if;
   select coalesce(sum(i.quantity),0) into v_used
   from public.commerce_order_items i join public.commerce_orders ord on ord.id=i.order_id
   join public.commerce_verified_household_members m on m.customer_id=ord.customer_id
