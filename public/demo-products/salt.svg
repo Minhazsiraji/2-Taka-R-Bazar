@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="460" viewBox="0 0 600 460" role="img" aria-label="Illustrated demo SALT product package">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#e8f4fa"/></linearGradient></defs>
+<rect width="600" height="460" rx="24" fill="url(#bg)"/><circle cx="492" cy="109" r="100" fill="#2775a8" opacity=".065"/><circle cx="102" cy="385" r="92" fill="#2775a8" opacity=".045"/>
+<ellipse cx="300" cy="392" rx="146" ry="19" fill="#233a46" opacity=".12"/>
+<path d="M229 104h142l24 241q2 26-28 26H231q-30 0-28-26z" fill="#ffffff" stroke="#2775a8" stroke-width="7"/><path d="M229 104h142l-6 36H235z" fill="#2775a8"/><rect x="231" y="171" width="138" height="125" rx="12" fill="#e8f4fa" stroke="#2775a8" stroke-width="3"/>
+<text x="300" y="234" font-family="Arial,sans-serif" font-size="25" font-weight="800" fill="#2775a8" text-anchor="middle">SALT</text>
+<rect x="18" y="18" width="106" height="30" rx="15" fill="#23334c" opacity=".9"/><text x="71" y="38" font-family="Arial,sans-serif" font-size="13" font-weight="800" text-anchor="middle" fill="#fff">DEMO ONLY</text>
+<text x="300" y="426" font-family="Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#53657c">Illustration · no actual product or stock</text>
+</svg>
