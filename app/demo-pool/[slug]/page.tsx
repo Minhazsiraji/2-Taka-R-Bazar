@@ -1,3 +1,4 @@
+import '@/app/pool-detail-refinement.css'
 import type {Metadata} from 'next'
 import {cookies} from 'next/headers'
 import {languageFromPreference,isValidLanguagePreference,STOREFRONT_LANGUAGE_COOKIE} from '@/lib/storefront-language'
