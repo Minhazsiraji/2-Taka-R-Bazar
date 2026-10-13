@@ -331,7 +331,7 @@ async function main(){
   assert.equal(await saleForm.getByRole('button',{name:'Add inventory allocation'}).isDisabled(),true,'One fulfilled unit must not allow extra allocation rows')
   // A separate disposable three-unit source exercises removal of a middle row.
   // Surviving rows must retain their invoice and quantity after field names shift.
-  const allocationSource='f5000000-0000-4000-8000-000000000004',allocationItem='f6000000-0000-4000-8000-000000000004'
+  const allocationSource='f5000000-0000-4000-8000-000000000099',allocationItem='f6000000-0000-4000-8000-000000000099'
   psql(`insert into private.finance_uat_entities(entity_type,entity_id,reason) values('order','${allocationSource}','Disposable allocation row browser regression');
   insert into public.orders(id,customer_id,pool_id,status,payment_status,product_subtotal,delivery_fee,total_amount,fulfillment_method,pickup_point_id,completed_at)
   values('${allocationSource}','${identities.get('admin').id}','f1000000-0000-4000-8000-000000000001','completed','paid_manually',2940,0,2940,'pickup',(select id from public.pickup_points where community_id='11111111-1111-1111-1111-111111111111' limit 1),now());
