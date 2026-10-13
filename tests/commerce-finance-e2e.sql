@@ -14,7 +14,9 @@ insert into storage.objects(bucket_id,name) values
 ('finance-evidence','a0000000-0000-0000-0000-000000000001/commerce-sale.pdf'),
 ('finance-evidence','a0000000-0000-0000-0000-000000000001/commerce-receipt.pdf'),
 ('finance-evidence','a0000000-0000-0000-0000-000000000001/commerce-credit.pdf'),
-('finance-evidence','a0000000-0000-0000-0000-000000000001/commerce-refund.pdf');
+('finance-evidence','a0000000-0000-0000-0000-000000000001/commerce-refund.pdf'),
+('finance-evidence','a0000000-0000-0000-0000-000000000001/commerce-delivery-credit.pdf'),
+('finance-evidence','a0000000-0000-0000-0000-000000000001/commerce-delivery-refund.pdf');
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
 insert into e2e_state values('commerce_offer',public.commerce_request_offer((select id from public.commerce_skus where product_id='22222222-2222-2222-2222-222222222222'),'11111111-1111-1111-1111-111111111111','SOLO',null,null,null,900,now()+interval '1 day',true,true,60,'synthetic-disposable-commerce-proof-64')::text);
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
@@ -68,12 +70,12 @@ insert into e2e_state values('commerce_delivery_refund_request',public.commerce_
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
 select public.commerce_review_request((select v::uuid from e2e_state where k='commerce_delivery_refund_request'),true,'Independent delivery refund entitlement checked','synthetic-disposable-commerce-proof-64');
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
-insert into e2e_state values('commerce_delivery_credit',public.finance_request_customer_credit((select v::uuid from e2e_state where k='commerce_sale'),'[]',20,false,current_date,'Approved delivery-only credit original checked','a0000000-0000-0000-0000-000000000001/commerce-credit.pdf',encode(extensions.digest('commerce-credit','sha256'),'hex'))::text);
+insert into e2e_state values('commerce_delivery_credit',public.finance_request_customer_credit((select v::uuid from e2e_state where k='commerce_sale'),'[]',20,false,current_date,'Approved delivery-only credit original checked','a0000000-0000-0000-0000-000000000001/commerce-delivery-credit.pdf',encode(extensions.digest('commerce-delivery-credit','sha256'),'hex'))::text);
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
 select public.finance_review_customer_credit((select v::uuid from e2e_state where k='commerce_delivery_credit'),true,'Independent delivery-only credit verified');
 select pg_temp.assert_true((select payment_status='refund_pending' from public.commerce_orders where id=(select v::uuid from e2e_state where k='commerce_order')),'New unpaid delivery credit must be pending');
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
-insert into e2e_state values('commerce_delivery_refund',public.finance_request_customer_cash((select v::uuid from e2e_state where k='commerce_sale'),'customer_refund',(select v::uuid from e2e_state where k='bank_acct'),20,current_date,'QA-COMMERCE-DELIVERY-REFUND','a0000000-0000-0000-0000-000000000001/commerce-refund.pdf',encode(extensions.digest('commerce-refund','sha256'),'hex'))::text);
+insert into e2e_state values('commerce_delivery_refund',public.finance_request_customer_cash((select v::uuid from e2e_state where k='commerce_sale'),'customer_refund',(select v::uuid from e2e_state where k='bank_acct'),20,current_date,'QA-COMMERCE-DELIVERY-REFUND','a0000000-0000-0000-0000-000000000001/commerce-delivery-refund.pdf',encode(extensions.digest('commerce-delivery-refund','sha256'),'hex'))::text);
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000002',true);
 select public.treasury_review_transaction((select v::uuid from e2e_state where k='commerce_delivery_refund'),true,'Independent final delivery refund original verified');
 select pg_temp.assert_true((select payment_status='refunded' from public.commerce_orders where id=(select v::uuid from e2e_state where k='commerce_order')),'Canonical refund state must follow actual Treasury payment');
