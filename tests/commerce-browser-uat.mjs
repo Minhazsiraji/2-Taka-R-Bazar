@@ -88,7 +88,6 @@ try{
   await orderCard.getByText('POOL · '+expectedStatus+' · unpaid',{exact:true}).waitFor();
   assert.equal(sql(`select status from public.commerce_orders where id='${poolOrder}'`),operation==='prepare'?'preparing':operation==='dispatch'?'ready_for_pickup':'completed');
  }
- await staffContext.close();
  results.push('PASS staff browser preparation -> dispatch -> original evidence upload -> Pool pickup handover');
  // Five genuine synthetic actors qualify through the actual location/join functions.
  const group=id(),groupBuyers=[a,b,await actor('customer'),await actor('customer'),await actor('customer')];
@@ -138,5 +137,6 @@ try{
  await staffPage.goto(base+'/commerce/purchase-limits',{waitUntil:'networkidle'});
  await staffPage.getByRole('heading',{name:'Campaign rules / ক্যাম্পেইন সীমা',exact:true}).waitFor();
  results.push('PASS permanent promotion UI and two verified household accounts racing ample stock: one order, retry idempotency and no cancellation allowance reset');
+ await staffContext.close();
  assert.deepEqual(browserErrors,[]);await context.close();
 }finally{await browser.close();await writeFile('artifacts/commerce-test-report.txt',results.join('\n')+'\n');console.log(results.join('\n'))}
