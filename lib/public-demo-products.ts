@@ -19,6 +19,9 @@ const products=[
  {id:'00000000-0000-4000-8000-000000000104',image:'/demo-products/sugar.svg',en:'Refined White Sugar',bn:'সাদা চিনি',category:'Sugar',categoryBn:'চিনি',size:'1 kg',solo:132,group:125,qty:8,buyers:4,threshold:7},
  {id:'00000000-0000-4000-8000-000000000105',image:'/demo-products/flour.svg',en:'Fine Wheat Flour',bn:'ময়দা',category:'Flour',categoryBn:'ময়দা',size:'2 kg',solo:145,group:133,qty:12,buyers:6,threshold:9},
  {id:'00000000-0000-4000-8000-000000000106',image:'/demo-products/detergent.svg',en:'Fresh Clean Detergent',bn:'কাপড় ধোয়ার ডিটারজেন্ট',category:'Household',categoryBn:'গৃহস্থালি',size:'1 kg',solo:168,group:154,qty:9,buyers:5,threshold:8},
+ {id:'00000000-0000-4000-8000-000000000107',image:'/demo-products/salt.svg',en:'Iodized Table Salt',bn:'আয়োডিনযুক্ত লবণ',category:'Salt',categoryBn:'লবণ',size:'1 kg',solo:50,group:46,qty:22,buyers:11,threshold:15},
+ {id:'00000000-0000-4000-8000-000000000108',image:'/demo-products/tea.svg',en:'Classic Black Tea',bn:'কালো চা',category:'Tea',categoryBn:'চা',size:'200 g',solo:180,group:165,qty:10,buyers:6,threshold:10},
+ {id:'00000000-0000-4000-8000-000000000109',image:'/demo-products/milk.svg',en:'Full Cream Milk Powder',bn:'ফুল ক্রিম গুঁড়া দুধ',category:'Dairy',categoryBn:'দুগ্ধজাত',size:'400 g',solo:320,group:296,qty:9,buyers:5,threshold:8},
 ] as const
 
 export const DEMO_OFFERS:StorefrontOffer[]=products.map((p,i)=>({
