@@ -90,10 +90,17 @@ export async function confirmCommitment(formData: FormData) {
   if (error) redirect(`/orders?error=${encodeURIComponent(error.message)}`)
   // Saving the address is an optional convenience, not a second purchase or payment.
   // Its failure never changes an already-confirmed order.
+  let linkAddressId=savedId
   if(fulfillmentMethod==='home_delivery'&&!savedId&&formData.get('save_address')==='on'){
-    await supabase.rpc('save_my_delivery_address',{
+    const saved=await supabase.rpc('save_my_delivery_address',{
       p_building_label:building,p_unit_label:unit,p_street_line:street,
       p_landmark:landmark||null,p_default:true,
+    })
+    if(!saved.error && typeof saved.data==='string')linkAddressId=saved.data
+  }
+  if(fulfillmentMethod==='home_delivery'&&linkAddressId){
+    await supabase.rpc('attach_my_delivery_address_to_order',{
+      p_commitment_id:commitmentId,p_address_id:linkAddressId,
     })
   }
   revalidatePath('/orders'); revalidatePath('/home'); revalidatePath('/pool')
