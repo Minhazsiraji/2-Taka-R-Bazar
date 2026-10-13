@@ -8,8 +8,8 @@ export type SavedDeliveryAddress={
  id:string;address_text:string;verification_status:'customer_confirmed'|'operator_verified'|'rejected';is_default:boolean
 }
 
-export function FulfillmentChoice({pickupOptions,defaultAddress,estimatedProductSubtotal,savedAddresses=[]}:{
- pickupOptions:PickupOption[];defaultAddress:string;estimatedProductSubtotal:number;savedAddresses?:SavedDeliveryAddress[]
+export function FulfillmentChoice({pickupOptions,defaultAddress,estimatedProductSubtotal,savedAddresses=[],allowSaveAddress=true}:{
+ pickupOptions:PickupOption[];defaultAddress:string;estimatedProductSubtotal:number;savedAddresses?:SavedDeliveryAddress[];allowSaveAddress?:boolean
 }){
  const [method,setMethod]=useState<'pickup'|'home_delivery'>('pickup')
  const eligible=savedAddresses.filter(a=>a.verification_status!=='rejected')
@@ -44,7 +44,7 @@ export function FulfillmentChoice({pickupOptions,defaultAddress,estimatedProduct
       <label className="sm:col-span-2"><span className="label">Road / block / address</span><input className="input" name="street_line" value={street} onChange={e=>setStreet(e.target.value)} maxLength={240} minLength={3} required placeholder={defaultAddress||'Road, block or neighborhood'}/></label>
       <label className="sm:col-span-2"><span className="label">Landmark (optional)</span><input className="input" name="landmark" value={landmark} onChange={e=>setLandmark(e.target.value)} maxLength={240}/></label>
       <input type="hidden" name="delivery_address" value={newAddress}/>
-      <label className="sm:col-span-2 flex items-center gap-2 text-xs"><input type="checkbox" name="save_address" defaultChecked/> Save this address for faster checkout next time</label>
+      {allowSaveAddress&&<label className="sm:col-span-2 flex items-center gap-2 text-xs"><input type="checkbox" name="save_address" defaultChecked/> Save this address for faster checkout next time</label>}
      </div>}
     <p className="text-xs text-slate-600">Estimated delivery: <b>{taka(deliveryFee)}</b>. The database recalculates the final fee from the entire basket.</p>
    </section>}
