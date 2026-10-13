@@ -1,4 +1,7 @@
 -- Included only by commerce-finance-uat.mjs inside the rolled-back supply fixture.
+-- The preceding legacy fixture finishes with ALL IMMEDIATE. Restore the normal
+-- transaction-deferred journal checks while each multi-line journal is assembled.
+set constraints all deferred;
 -- The legacy Finance fixture uses demo-only products. Publish this one only inside
 -- the disposable transaction; the real offer validation remains unchanged.
 select set_config('request.jwt.claim.sub','',true);
@@ -63,4 +66,5 @@ select set_config('request.jwt.claim.sub','',true);
 delete from private.finance_uat_leases where actor_id='a0000000-0000-0000-0000-000000000001';
 select set_config('request.jwt.claim.sub','a0000000-0000-0000-0000-000000000001',true);
 select pg_temp.expect_error(format('select public.finance_request_customer_cash(%L::uuid,%L,%L::uuid,1,current_date,%L,%L,%L)',(select v from e2e_state where k='commerce_sale'),'customer_refund',(select v from e2e_state where k='bank_acct'),'QA-NO-LEASE','a0000000-0000-0000-0000-000000000001/commerce-refund.pdf',repeat('e',64)),'operator-issued UAT lease');
+set constraints all immediate;
 \echo 'UNIFIED_COMMERCE_FINANCE_COD_RETURN_REFUND_E2E_PASS'
