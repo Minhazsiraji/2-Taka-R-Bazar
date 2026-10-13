@@ -106,7 +106,8 @@ select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006806'
 select public.commerce_review_purchase_limit((select id from promo_test_ids where key='limit3'),
 true,'Approve independent household cap','synthetic-disposable-commerce-proof-64');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006803',true);
-select throws_like($$select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='offer3'),1,'synthetic-disposable-commerce-proof-64')$$,'%Verified household required%','No account can self-claim a verified household');
+select lives_ok($select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='offer3'),1,'synthetic-disposable-commerce-proof-64')$,'SOLO basket remains available pending staff household verification');
+select throws_like($select public.commerce_create_quote(null,'pickup','00000000-0000-4000-8000-000000006811',null,'synthetic-disposable-commerce-proof-64')$,'%Verified household required%','No unverified family can finalize a limited promotional quote');
 
 insert into public.delivery_buildings(id,community_id,zone_code,building_code,display_name,verified_at)
 values('00000000-0000-4000-8000-000000006831','00000000-0000-4000-8000-000000006810','ZONE1','BUILDING1','Synthetic checked building',now());
@@ -122,7 +123,6 @@ select lives_ok($$select public.commerce_verify_household_address('00000000-0000
 select is((select count(distinct household_id)::integer from public.commerce_verified_household_members where customer_id in
 ('00000000-0000-4000-8000-000000006803','00000000-0000-4000-8000-000000006804')),1,'Both independently verified accounts share one trusted household');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006803',true);
-select public.commerce_set_cart_item(null,(select id from promo_test_ids where key='offer3'),1,'synthetic-disposable-commerce-proof-64');
 insert into promo_test_ids select 'quote3',(public.commerce_create_quote(null,'pickup',
 '00000000-0000-4000-8000-000000006811',null,'synthetic-disposable-commerce-proof-64')->>'id')::uuid;
 select lives_ok($$select public.commerce_confirm_checkout((select id from promo_test_ids where key='quote3'),
