@@ -18,7 +18,7 @@ async function denied(a,name,args,pattern){const {error}=await a.client.rpc(name
 const p={p_proof:proof};
 sql(`update private.commerce_configuration set preview_secret_hash='${createHash('sha256').update(proof).digest('hex')}';insert into public.communities(id,name,slug) values('${community}','Synthetic commerce browser','commerce-browser-${community}');insert into public.pickup_points(id,community_id,name,address) values('${point}','${community}','Synthetic collection point','Synthetic street');insert into public.products(id,name,category,package_size,unit,sku,source_type,is_demo) values('${product}','Synthetic checkout rice','Rice','1 kg','bag','browser-${product}','PRIVATE_LABEL',false),('${lastProduct}','Synthetic last unit','Rice','1 kg','bag','browser-${lastProduct}','PRIVATE_LABEL',false);insert into public.own_product_costs(product_id,purchase_cost) values('${product}',80),('${lastProduct}',80);insert into public.own_product_inventory(product_id,stock_on_hand) values('${product}',10),('${lastProduct}',1) on conflict(product_id) do update set stock_on_hand=excluded.stock_on_hand;`);
 const maker=await actor('admin'),reviewer=await actor('super_admin'),a=await actor('customer'),b=await actor('customer');
-async function offer(pid){const sku=sql(`select id from public.commerce_skus where product_id='${pid}'`);const oid=await rpc(maker,'commerce_request_offer',{...p,p_sku:sku,p_community:community,p_mode:'SOLO',p_supplier:null,p_pool_item:null,p_group:null,p_price:100,p_until:new Date(Date.now()+86400000).toISOString(),p_pickup:true,p_delivery:true,p_sla:60});await denied(maker,'commerce_review_offer',{...p,p_id:oid,p_approve:true,p_note:'Maker may not approve its offer'});await rpc(reviewer,'commerce_review_offer',{...p,p_id:oid,p_approve:true,p_note:'Independent synthetic catalog approval'});return oid}
+async function offer(pid,mode='SOLO',poolItem=null,group=null){const sku=sql(`select id from public.commerce_skus where product_id='${pid}'`);const oid=await rpc(maker,'commerce_request_offer',{...p,p_sku:sku,p_community:community,p_mode:mode,p_supplier:null,p_pool_item:poolItem,p_group:group,p_price:100,p_until:new Date(Date.now()+86400000).toISOString(),p_pickup:true,p_delivery:true,p_sla:60});await denied(maker,'commerce_review_offer',{...p,p_id:oid,p_approve:true,p_note:'Maker may not approve its offer'});await rpc(reviewer,'commerce_review_offer',{...p,p_id:oid,p_approve:true,p_note:'Independent synthetic catalog approval'});return oid}
 const solo=await offer(product),last=await offer(lastProduct);
 const cartArgs=(oid,qty=1)=>({...p,p_guest:null,p_offer:oid,p_quantity:qty});
 const quoteArgs={...p,p_guest:null,p_method:'pickup',p_pickup:point,p_address:null};
@@ -38,5 +38,73 @@ try{
  await rpc(maker,'commerce_fulfill',{...p,p_order:purchased,p_action:'prepare',p_note:'Synthetic order preparation checked',p_reference:null,p_path:null,p_sha:null,p_delivery_cost:null});await rpc(maker,'commerce_fulfill',{...p,p_order:purchased,p_action:'dispatch',p_note:'Synthetic pickup custody dispatch',p_reference:null,p_path:null,p_sha:null,p_delivery_cost:null});await denied(maker,'commerce_fulfill',{...p,p_order:purchased,p_action:'complete',p_note:'Missing handover evidence denied',p_reference:'QA-MISSING',p_path:null,p_sha:null,p_delivery_cost:0},/evidence required/);
  const original=Buffer.from('%PDF-1.4\nSynthetic commerce handover\n%%EOF'),path=maker.id+'/'+id()+'.pdf',sha=createHash('sha256').update(original).digest('hex');const uploaded=await maker.client.storage.from('commerce-evidence').upload(path,original,{contentType:'application/pdf'});assert.ifError(uploaded.error);await rpc(maker,'commerce_fulfill',{...p,p_order:purchased,p_action:'complete',p_note:'Synthetic physical handover evidence checked',p_reference:'QA-HANDOVER-'+purchased,p_path:path,p_sha:sha,p_delivery_cost:0});await rpc(maker,'commerce_record_cod',{...p,p_order:purchased,p_product:110,p_delivery:0,p_reference:'QA-COD-'+purchased,p_path:path,p_sha:sha});assert.equal(sql(`select payment_status from public.commerce_orders where id='${purchased}'`),'custody_recorded');assert.equal(sql(`select count(*) from public.finance_customer_events where source_id='${purchased}'`),'0');results.push('PASS physical stock consumption, evidence requirement and COD custody do not auto-post Finance');
  await page.reload();assert.equal(await page.getByText('Status: completed',{exact:false}).count(),1);await page.locator('select[name="kind"]').selectOption('return');await page.locator('textarea[name="reason"]').fill('Synthetic received product return request');await page.getByRole('button',{name:'Submit request'}).click();await page.waitForURL('**/account/orders/*');const request=sql(`select id from public.commerce_requests where order_id='${purchased}' and kind='return'`);await rpc(reviewer,'commerce_review_request',{...p,p_request:request,p_approve:true,p_note:'Independent synthetic return approval'});const line=sql(`select id from public.commerce_order_items where order_id='${purchased}'`);await rpc(maker,'commerce_receive_return',{...p,p_request:request,p_lines:[{line_id:line,quantity:1}],p_restock:true,p_path:path,p_sha:sha});assert.equal(sql(`select stock_on_hand from public.own_product_inventory where product_id='${product}'`),'9');results.push('PASS browser return request -> independent approval -> physical receipt; no premature restock or refund');
+
+ // Actual Pool and Group commitments must await final terms and explicit checkout.
+ async function browserCheckout(expectedMode){
+  await page.goto(base+'/cart',{waitUntil:'networkidle'});
+  await page.getByRole('link',{name:'Checkout',exact:true}).click();
+  await page.getByRole('link',{name:'Choose delivery',exact:true}).click();
+  await page.locator('select[name="pickup_point_id"]').selectOption(point);
+  await page.getByRole('button',{name:'Review final quote',exact:true}).click();
+  await page.waitForURL('**/checkout?quote=*');
+  await page.locator('input[name="policy_accepted"]').check();
+  await page.getByRole('button',{name:'Confirm order',exact:true}).click();
+  await page.waitForURL('**/account/orders/*');
+  const oid=page.url().split('/').at(-1);
+  assert.equal(sql(`select mode from public.commerce_orders where id='${oid}'`),expectedMode);
+  return oid;
+ }
+ const pool=id(),poolItem=id();
+ sql(`insert into public.pools(id,community_id,title,status,cadence,opens_at,commitment_closes_at,confirmation_closes_at,pickup_at) values('${pool}','${community}','Synthetic browser Pool','open','weekly',now()-interval '1 day',now()+interval '1 day',now()+interval '2 days',now()+interval '3 days');insert into public.pool_items(id,pool_id,product_id,benchmark_price_snapshot,expected_pool_price) values('${poolItem}','${pool}','${product}',120,100);`);
+ const poolOffer=await offer(product,'POOL',poolItem);
+ sql(`insert into public.community_qr_codes(code,community_id,campaign_name) values('QA-COMMERCE-64','${community}','Synthetic browser QR');`);
+ await page.goto(base+'/community-invite/QA-COMMERCE-64',{waitUntil:'networkidle'});
+ await page.getByRole('link',{name:'Browse community offers without signing in →'}).click();
+ assert.equal(new URL(page.url()).searchParams.get('area'),community);
+ results.push('PASS QR community attribution preserved through browse-first landing');
+ await page.goto(base+'/?area='+community,{waitUntil:'networkidle'});
+ await page.locator(`form:has(input[name="offer_id"][value="${poolOffer}"])`).getByRole('button').click();
+ await page.waitForURL('**/cart');
+ assert.equal(sql(`select state from public.commerce_cart_items where offer_id='${poolOffer}' and cart_id=(select id from public.commerce_carts where customer_id='${a.id}')`),'waiting');
+ await denied(a,'commerce_create_quote',quoteArgs,/No payable items/);
+ sql(`update public.pool_items set final_customer_price=95 where id='${poolItem}';update public.pools set status='confirmation',commitment_closes_at=now()-interval '1 minute' where id='${pool}';`);
+ const poolOrder=await browserCheckout('POOL');
+ assert.equal(sql(`select product_subtotal from public.commerce_orders where id='${poolOrder}'`),'95.00');
+ assert.equal(sql(`select count(*) from public.notifications where user_id='${a.id}' and title='Price unlocked'`),'1');
+ results.push('PASS browser Pool join -> waiting with no charge -> price lock notification -> explicit pickup checkout');
+ // Full staff forms exercise Server Actions, evidence uploads and scoped RPCs.
+ const staffContext=await browser.newContext();await staffContext.addCookies(maker.cookies());const staffPage=await staffContext.newPage();
+ for(const operation of ['prepare','dispatch','complete']){
+  await staffPage.goto(base+'/commerce',{waitUntil:'networkidle'});
+  const orderCard=staffPage.locator('article').filter({has:staffPage.locator(`a[href="/account/orders/${poolOrder}"]`)});
+  const form=orderCard.locator('form').first();await form.locator('textarea[name="reason"]').fill('Synthetic browser staff '+operation+' checked');
+  if(operation==='complete'){
+   await form.locator('input[name="reference"]').fill('QA-BROWSER-POOL');
+   await form.locator('input[name="evidence"]').setInputFiles({name:'handover.pdf',mimeType:'application/pdf',buffer:original});
+  }
+  await form.getByRole('button',{name:'Record operation',exact:true}).click();
+  await staffPage.waitForURL('**/commerce');
+  assert.equal(sql(`select status from public.commerce_orders where id='${poolOrder}'`),operation==='prepare'?'preparing':operation==='dispatch'?'ready_for_pickup':'completed');
+ }
+ await staffContext.close();
+ results.push('PASS staff browser preparation -> dispatch -> original evidence upload -> Pool pickup handover');
+ // Five genuine synthetic actors qualify through the actual location/join functions.
+ const group=id(),groupBuyers=[a,b,await actor('customer'),await actor('customer'),await actor('customer')];
+ sql(`update public.communities set center_latitude=23.8103,center_longitude=90.4125,location_matching_enabled=true where id='${community}';insert into public.group_deals(id,product_id,title,status,market_price_snapshot,opens_at,closes_at,pickup_at,min_group_size,circle_capacity) values('${group}','${product}','Synthetic browser Group','open',120,now()-interval '1 day',now()+interval '1 day',now()+interval '2 days',5,5);insert into public.group_deal_communities(group_deal_id,community_id) values('${group}','${community}');insert into public.group_deal_tiers(group_deal_id,buyer_threshold,customer_unit_price) values('${group}',5,90);`);
+ const groupOffer=await offer(product,'GROUP_DEAL',null,group);
+ for(const buyer of groupBuyers)await rpc(buyer,'verify_my_community_location',{p_latitude:23.8103,p_longitude:90.4125,p_accuracy_m:10});
+ await page.goto(base+'/?area='+community,{waitUntil:'networkidle'});
+ await page.locator(`form:has(input[name="offer_id"][value="${groupOffer}"])`).getByRole('button').click();await page.waitForURL('**/cart');
+ await denied(a,'commerce_create_quote',quoteArgs,/No payable items/);
+ for(const buyer of groupBuyers.slice(1))await rpc(buyer,'commerce_set_cart_item',cartArgs(groupOffer));
+ assert.equal(sql(`select count(*) from public.group_deal_commitments where group_deal_id='${group}' and status='qualified'`),'5');
+ sql(`update public.group_deals set closes_at=now()-interval '1 minute' where id='${group}'`);
+ await rpc(maker,'admin_set_group_deal_status',{p_group_deal_id:group,p_status:'locked',p_reason:'Synthetic browser advertised close and real qualification checked'});
+ const groupOrder=await browserCheckout('GROUP_DEAL');
+ assert.equal(sql(`select product_subtotal from public.commerce_orders where id='${groupOrder}'`),'90.00');
+ for(const action of ['prepare','dispatch','complete'])await rpc(maker,'commerce_fulfill',{...p,p_order:groupOrder,p_action:action,p_note:'Synthetic qualified Group '+action+' checked',p_reference:'QA-GROUP-HANDOVER',p_path:path,p_sha:sha,p_delivery_cost:0});
+ assert.equal(sql(`select status from public.group_deal_commitments where group_deal_id='${group}' and customer_id='${a.id}'`),'fulfilled');
+ await page.reload();assert.equal(await page.getByText('Status: completed',{exact:false}).count(),1);
+ results.push('PASS browser Group join -> five independently located buyers -> actual locked tier -> explicit checkout -> Group fulfillment');
  assert.deepEqual(browserErrors,[]);await context.close();
 }finally{await browser.close();await writeFile('artifacts/commerce-test-report.txt',results.join('\n')+'\n');console.log(results.join('\n'))}
