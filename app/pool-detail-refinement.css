@@ -1,0 +1,152 @@
+/* Issue #64: Pool preview follows the approved home storefront visual language.
+   Scoped to Pool detail route; do not alter locked home/header/footer styles. */
+body.site-glass-root .market-pool-detail-page{
+ background:linear-gradient(122deg,#f4f0f3 0%,#efeaef 58%,#e7f2f0 100%)!important;
+ color:#17213b;
+ min-height:100vh;
+}
+body.site-glass-root .market-pool-detail-page .market-pool-universal-header{
+ position:sticky!important;top:0;z-index:55;
+ background:rgba(250,248,251,.95)!important;
+ border-bottom:1px solid rgba(255,255,255,.95)!important;
+ backdrop-filter:blur(14px) saturate(120%);
+ width:100%;
+}
+body.site-glass-root .market-pool-detail-page .market-pool-header-inner{
+ display:flex;justify-content:space-between;align-items:center;gap:16px;
+ width:min(100% - 48px,1400px);margin:0 auto;padding:12px 0;
+ min-height:78px;
+}
+.market-pool-detail-page .market-pool-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.market-pool-detail-page .market-pool-header-actions .btn-secondary{min-height:40px;display:inline-flex;align-items:center;text-align:center}
+.market-pool-detail-page .market-pool-header-actions .market-language-toggle{
+ display:flex;align-items:center;padding:0;border:0;background:transparent;box-shadow:none;
+}
+.market-pool-detail-page .market-pool-header-actions .market-single-language{
+ min-width:44px;min-height:44px;border-radius:999px!important;
+ border:1px solid rgba(255,255,255,.95)!important;
+ box-shadow:0 2px 12px rgba(41,62,71,.07)!important;
+}
+body.site-glass-root .market-pool-detail-page .market-pool-detail-content{
+ width:min(100% - 48px,1400px)!important;max-width:1400px!important;
+ margin:0 auto!important;padding:18px 0 52px!important;
+}
+.market-pool-detail-page .market-pool-breadcrumb{
+ display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+ font-size:.82rem;font-weight:650;color:#54677e;margin:5px 0 16px;
+}
+.market-pool-detail-page .market-pool-breadcrumb a{color:#058990;text-decoration:underline;text-underline-offset:3px}
+.market-pool-detail-page .market-demo-detail-banner{
+ margin:0 0 18px;border-radius:15px;font-size:.88rem;
+}
+body.site-glass-root .market-pool-detail-page :is(.market-pool-detail-intro,.market-shopper-essentials>div,.market-pool-detail-item,.market-pool-detail-terms,.market-tier-table-wrap){
+ border:1px solid rgba(255,255,255,.96)!important;
+ background:rgba(255,255,255,.23)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 3px 18px rgba(33,47,69,.045)!important;
+ border-radius:18px!important;
+}
+body.site-glass-root .market-pool-detail-page .market-pool-detail-intro{
+ grid-template-columns:minmax(220px,300px) minmax(0,1fr);
+ gap:clamp(18px,3vw,32px);padding:clamp(16px,2vw,28px);margin-top:0;
+}
+.market-pool-detail-page .market-pool-detail-intro>img{
+ background:rgba(255,255,255,.67);border:1px solid #fff!important;
+ border-radius:16px!important;max-height:270px;
+}
+.market-pool-detail-page .market-pool-detail-intro h1{
+ font-size:clamp(1.7rem,3.3vw,2.7rem);line-height:1.2;color:#17213b;margin:8px 0 12px;
+}
+.market-pool-detail-page .market-pool-detail-intro p{font-size:.91rem}
+.market-pool-detail-page .market-pool-detail-stats>div{flex:1 1 155px;min-width:0;background:rgba(255,255,255,.28);border-color:rgba(44,152,150,.22)}
+.market-pool-detail-page .market-pool-detail-stats b{font-size:1.16rem}
+.market-pool-detail-page .market-pool-quick-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.market-pool-detail-page .market-pool-quick-actions :is(a,button){min-height:42px;display:inline-flex;align-items:center;justify-content:center}
+.market-pool-detail-page .market-shopper-essentials{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0 24px;
+}
+.market-pool-detail-page .market-shopper-essentials>div{display:flex;flex-direction:column;gap:6px;padding:16px;min-width:0}
+.market-pool-detail-page .market-shopper-essentials b{font-size:.9rem}
+.market-pool-detail-page .market-shopper-essentials span{font-size:.77rem;line-height:1.55;color:#586b82}
+.market-pool-detail-page .market-pool-detail-shop-grid{
+ display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.9fr);
+ align-items:start;gap:20px;margin-top:20px;
+}
+.market-pool-detail-page .market-pool-detail-shop-grid .market-pool-detail-section{margin-top:0;min-width:0}
+.market-pool-detail-page .market-pool-detail-section h2{font-size:clamp(1.16rem,1.8vw,1.45rem);margin:0 0 8px}
+.market-pool-detail-page .market-pool-detail-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+body.site-glass-root .market-pool-detail-page .market-pool-detail-item{
+ display:grid;grid-template-columns:90px minmax(0,1fr);
+ grid-template-areas:"image info" "controls controls";gap:10px 13px;
+ min-width:0;min-height:170px;padding:14px!important;
+}
+.market-pool-detail-page .market-pool-detail-item>a:first-child{grid-area:image;align-self:start;border-radius:12px;background:rgba(255,255,255,.55)}
+.market-pool-detail-page .market-pool-detail-item>a:first-child img{width:100%;height:82px;object-fit:contain}
+.market-pool-detail-page .market-pool-detail-item-info{grid-area:info;min-width:0}
+.market-pool-detail-page .market-pool-detail-item-info h3{font-size:.93rem;line-height:1.35}
+.market-pool-detail-page .market-pool-detail-item-info p{margin-top:4px;font-size:.74rem}
+.market-pool-detail-page .market-pool-detail-item-controls{
+ grid-area:controls;display:flex;align-items:center;justify-content:space-between;
+ gap:12px;padding-top:10px;border-top:1px solid rgba(94,127,145,.13);
+}
+.market-pool-detail-page .market-pool-detail-item-controls strong{color:#078b92;white-space:nowrap;font-size:1rem}
+.market-pool-detail-page .market-demo-quantity{
+ display:inline-flex;align-items:center;justify-content:center;gap:8px;
+ min-height:42px;border-radius:999px;border:1px solid rgba(30,157,162,.19);
+ background:rgba(255,255,255,.25);padding:3px 6px;
+}
+.market-pool-detail-page .market-demo-quantity button{
+ width:36px;min-width:36px;height:36px;min-height:36px;
+ padding:0!important;border-radius:999px;
+ border:1px solid #a9dcdd!important;display:inline-grid;place-items:center;
+ font-size:1.2rem;background:rgba(255,255,255,.55);
+}
+.market-pool-detail-page .market-demo-quantity output{min-width:20px;text-align:center;font-weight:800}
+body.site-glass-root .market-pool-detail-page .market-pool-detail-terms{
+ position:sticky;top:99px;min-width:0;padding:20px!important;
+}
+.market-pool-detail-page .market-basket-totals{display:grid;grid-template-columns:1fr;gap:8px;margin:14px 0}
+.market-pool-detail-page .market-basket-totals>div{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;
+ padding:9px 12px;border-radius:11px;border:1px solid rgba(82,123,137,.17);
+ background:rgba(255,255,255,.2);font-size:.8rem;
+}
+.market-pool-detail-page .market-basket-totals b{white-space:nowrap;font-size:.91rem}
+.market-pool-detail-page .market-demo-delivery{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+.market-pool-detail-page .market-demo-delivery label{display:flex;align-items:center;gap:6px;font-size:.79rem}
+.market-pool-detail-page .market-basket-grand{
+ display:flex;justify-content:space-between;align-items:center;gap:8px;
+ border-top:1px solid rgba(68,110,123,.2);padding:15px 0 7px;font-weight:800;
+}
+.market-pool-detail-page .market-basket-grand strong{color:#018b91;font-size:1.55rem}
+.market-pool-detail-page .market-pool-detail-terms .market-demo-status{font-size:.78rem}
+.market-pool-detail-page .market-pool-detail-terms .btn-primary{display:inline-flex;align-items:center;justify-content:center}
+.market-pool-detail-page .market-pool-detail-terms .market-demo-cart-preview{display:grid;gap:5px;border:1px solid rgba(23,151,143,.25);border-radius:12px;padding:10px}
+.market-pool-detail-page .market-pool-detail-terms :is(button,a):disabled{opacity:.55;cursor:not-allowed}
+.market-pool-detail-page .market-pool-detail-tier-section{margin-top:30px;scroll-margin-top:110px}
+.market-pool-detail-page #pool-products{scroll-margin-top:110px}
+.market-pool-detail-page .market-tier-table-wrap{overflow-x:auto}
+.market-pool-detail-page .market-tier-table{width:100%}
+body.site-glass-root[data-theme="dark"] .market-pool-detail-page,
+body.site-glass-root:has([data-theme="dark"]) .market-pool-detail-page{
+ color:#eef4f5!important;background:linear-gradient(130deg,#14262d,#203036)!important;
+}
+body.site-glass-root[data-theme="dark"] .market-pool-detail-page :is(h1,h2,h3,b,strong),
+body.site-glass-root:has([data-theme="dark"]) .market-pool-detail-page :is(h1,h2,h3,b,strong){color:inherit}
+@media(max-width:1080px){
+ .market-pool-detail-page .market-shopper-essentials{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .market-pool-detail-page .market-pool-detail-shop-grid{grid-template-columns:1fr}
+ body.site-glass-root .market-pool-detail-page .market-pool-detail-terms{position:static}
+}
+@media(max-width:700px){
+ body.site-glass-root .market-pool-detail-page .market-pool-header-inner,
+ body.site-glass-root .market-pool-detail-page .market-pool-detail-content{width:calc(100% - 24px)!important}
+ .market-pool-detail-page .market-pool-header-actions{gap:6px}
+ .market-pool-detail-page .market-pool-header-actions .btn-secondary{font-size:.73rem;padding:8px}
+ .market-pool-detail-page .market-brand-copy small{font-size:.58rem}
+ body.site-glass-root .market-pool-detail-page .market-pool-detail-intro{grid-template-columns:1fr!important;padding:14px!important}
+ .market-pool-detail-page .market-pool-detail-intro>img{max-height:195px}
+ .market-pool-detail-page .market-pool-detail-items{grid-template-columns:1fr}
+ .market-pool-detail-page .market-shopper-essentials{grid-template-columns:1fr}
+ .market-pool-detail-page .market-pool-detail-shop-grid{gap:16px}
+ .market-pool-detail-page .market-pool-detail-header .market-brand-copy{display:none}
+}
