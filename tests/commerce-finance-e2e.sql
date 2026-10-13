@@ -1,4 +1,9 @@
 -- Included only by commerce-finance-uat.mjs inside the rolled-back supply fixture.
+-- The legacy Finance fixture uses demo-only products. Publish this one only inside
+-- the disposable transaction; the real offer validation remains unchanged.
+select set_config('request.jwt.claim.sub','',true);
+update public.products set is_demo=false where id='22222222-2222-2222-2222-222222222222';
+insert into public.commerce_skus(product_id,sku,active) select id,sku,active from public.products where id='22222222-2222-2222-2222-222222222222' on conflict(product_id) do update set active=excluded.active;
 update private.commerce_configuration set preview_secret_hash=encode(extensions.digest('synthetic-disposable-commerce-proof-64','sha256'),'hex');
 update public.profiles set household_name='Synthetic commerce household',community_id='11111111-1111-1111-1111-111111111111',onboarding_completed_at=now() where id='f0000000-0000-0000-0000-000000000001';
 insert into storage.objects(bucket_id,name) values
