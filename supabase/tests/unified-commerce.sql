@@ -113,4 +113,34 @@ select lives_ok($$select public.commerce_get_cart(null,'synthetic-disposable-com
 insert into commerce_test_ids select 'group_quote',(public.commerce_create_quote(null,'pickup','00000000-0000-4000-8000-000000006411',null,'synthetic-disposable-commerce-proof-64')->>'id')::uuid;
 select is((public.commerce_get_quote((select id from commerce_test_ids where key='group_quote'),'synthetic-disposable-commerce-proof-64')->>'product_subtotal')::numeric,90::numeric,'Group quote uses locked actual price');
 select is((select reserved_quantity from public.own_product_inventory where product_id='00000000-0000-4000-8000-000000006420'),0,'Group unlock never reserves or charges automatically');
+
+-- Supplier stock is independently verified; acceptance deadlines release reserved stock.
+insert into public.suppliers(id,business_name,reliability_status) values('00000000-0000-4000-8000-000000006480','Synthetic commerce supplier','reliable');
+insert into public.supplier_products(supplier_id,product_id) values('00000000-0000-4000-8000-000000006480','00000000-0000-4000-8000-000000006420');
+insert into public.supplier_memberships(supplier_id,user_id,role) values('00000000-0000-4000-8000-000000006480','00000000-0000-4000-8000-000000006403','owner');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006403',true);
+insert into commerce_test_ids values('stock_report',public.commerce_request_stock((select id from public.commerce_skus where product_id='00000000-0000-4000-8000-000000006420'),'00000000-0000-4000-8000-000000006480',3,'Synthetic original stock verification','synthetic-disposable-commerce-proof-64'));
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006404',true);
+select lives_ok($$select public.commerce_review_stock((select id from commerce_test_ids where key='stock_report'),true,'Independent supplier availability review','synthetic-disposable-commerce-proof-64')$$,'Verified supplier stock approved independently');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006403',true);
+insert into commerce_test_ids values('supplier_offer',public.commerce_request_offer((select id from public.commerce_skus where product_id='00000000-0000-4000-8000-000000006420'),'00000000-0000-4000-8000-000000006410','SOLO','00000000-0000-4000-8000-000000006480',null,null,100,now()+interval '1 day',true,true,5,'synthetic-disposable-commerce-proof-64'));
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006404',true);
+select public.commerce_review_offer((select id from commerce_test_ids where key='supplier_offer'),true,'Independent supplier offer review','synthetic-disposable-commerce-proof-64');
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000006401',true);
+select public.commerce_set_cart_item(null,(select id from commerce_test_ids where key='group_offer'),0,'synthetic-disposable-commerce-proof-64');
+select public.commerce_set_cart_item(null,(select id from commerce_test_ids where key='supplier_offer'),1,'synthetic-disposable-commerce-proof-64');
+insert into commerce_test_ids select 'supplier_quote',(public.commerce_create_quote(null,'pickup','00000000-0000-4000-8000-000000006411',null,'synthetic-disposable-commerce-proof-64')->>'id')::uuid;
+insert into commerce_test_ids select 'supplier_order',(public.commerce_confirm_checkout((select id from commerce_test_ids where key='supplier_quote'),'00000000-0000-4000-8000-000000006490','2026-10-05','synthetic-disposable-commerce-proof-64')->>0)::uuid;
+select is((select status from public.commerce_orders where id=(select id from commerce_test_ids where key='supplier_order')),'awaiting_supplier','Supplier purchase requires actual acceptance');
+select is((select reserved_quantity from public.commerce_supplier_stock where supplier_id='00000000-0000-4000-8000-000000006480'),1,'Supplier availability is reserved atomically');
+select throws_like($$select public.commerce_fulfill((select id from commerce_test_ids where key='supplier_order'),'accept','Customer cannot accept supplier order',null,null,null,null,'synthetic-disposable-commerce-proof-64')$$,'%Order not accessible%','Customer cannot impersonate supplier');
+-- Operator-only simulated clock boundary; the real immutable-order trigger remains enabled afterwards.
+alter table public.commerce_orders disable trigger commerce_order_terms;
+update public.commerce_orders set supplier_deadline=now()-interval '1 minute' where id=(select id from commerce_test_ids where key='supplier_order');
+alter table public.commerce_orders enable trigger commerce_order_terms;
+select lives_ok($$select private.commerce_expiry_worker()$$,'Private scheduler expires overdue supplier acceptance');
+select is((select status from public.commerce_orders where id=(select id from commerce_test_ids where key='supplier_order')),'cancelled','Expired supplier order is cancelled');
+select is((select reserved_quantity from public.commerce_supplier_stock where supplier_id='00000000-0000-4000-8000-000000006480'),0,'Expiry releases supplier reservation');
+select lives_ok($$select private.commerce_expiry_worker()$$,'Repeated expiry is idempotent');
+select ok(not has_function_privilege('service_role','private.commerce_expiry_worker()','EXECUTE'),'API service cannot impersonate scheduler');
 select * from finish();rollback;
