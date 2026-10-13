@@ -12,7 +12,7 @@ export async function signInCommerceUat(form:FormData) {
  const {error}=await db.auth.signInWithPassword(credentials)
  const authorization=error?null:await db.rpc('commerce_uat_session_active')
  if(error || authorization?.error || authorization?.data!==true){
-  await db.auth.signOut()
+  await db.auth.signOut({scope:'local'})
   redirect('/commerce-uat/login?error=Test+email+or+password+was+not+accepted,+or+test+access+has+expired')
  }
  redirect('/account')
