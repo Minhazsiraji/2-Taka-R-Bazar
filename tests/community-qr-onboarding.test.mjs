@@ -32,9 +32,9 @@ test('scan route records attribution but does not create membership or order',()
   assert.doesNotMatch(route,/commitments.*insert/i)
 })
 
-test('community invite requires mobile auth before onboarding or confirmation',()=>{
+test('community invite requires account auth before onboarding or confirmation',()=>{
   const page=read('app/community-invite/[code]/page.tsx')
-  assert.match(page,/Register with mobile/)
+  assert.match(page,/Create an account/)
   assert.match(page,/I already have an account/)
   assert.match(page,/Complete profile & join/)
   assert.match(page,/Confirm & open/)
@@ -43,10 +43,10 @@ test('community invite requires mobile auth before onboarding or confirmation',(
   assert.match(page,/Neighbour Deals/)
 })
 
-test('OTP flow preserves QR intent through signup and login',()=>{
+test('Password and Google flows preserve QR intent through signup and login',()=>{
   const auth=read('app/actions/auth.ts')
   assert.match(auth,/COMMUNITY_QR_CODE_COOKIE/)
-  assert.match(auth,/if\(qrCode\) redirect\('\/community-invite\/'/)
+  assert.match(auth,/if \(qrCode\) redirect\('\/community-invite\/'/)
   assert.match(auth,/forcedCommunityId/)
   assert.match(auth,/complete_community_qr_conversion/)
   assert.match(auth,/COMMUNITY_QR_SCAN_COOKIE/)

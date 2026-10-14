@@ -28,10 +28,10 @@ const sections = [
     bodyBn: <p>Community assignment এবং nearby-deal feature-এ প্রয়োজন হলে location-related information ব্যবহার হতে পারে। Exact household GPS অন্য household বা সাধারণ supplier-facing view-এ দেখানো উচিত নয়। Supplier-facing demand individual household-এর exact location বা basket দেখানোর বদলে aggregate বা privacy-qualified আকারে দেখানোর জন্য ডিজাইন করা হয়েছে।</p>,
   },
   {
-    titleEn: 'OTP and account security',
-    titleBn: 'OTP ও অ্যাকাউন্ট নিরাপত্তা',
-    bodyEn: <p>Mobile OTP is used for account verification and access. Never share your OTP with another person. We may keep security logs and technical records needed to detect misuse, investigate incidents and protect accounts.</p>,
-    bodyBn: <p>Account verification ও access-এর জন্য mobile OTP ব্যবহার করা হয়। আপনার OTP অন্য কারও সাথে শেয়ার করবেন না। Misuse শনাক্ত করা, incident তদন্ত করা এবং account সুরক্ষিত রাখার জন্য প্রয়োজনীয় security log ও technical record রাখা হতে পারে।</p>,
+    titleEn: 'Login and account security',
+    titleBn: 'লগইন ও অ্যাকাউন্ট নিরাপত্তা',
+    bodyEn: <p>Accounts use Google sign-in or a mobile number and password. Google supplies identity information such as your email; mobile contact numbers are not proof of phone ownership. Never share your password with another person. We may keep security logs and technical records needed to detect misuse, investigate incidents and protect accounts.</p>,
+    bodyBn: <p>Google অথবা মোবাইল নম্বর ও পাসওয়ার্ড দিয়ে সাইন ইন করা হয়। Google পরিচয়ের তথ্য দেয়, যেমন ইমেইল; মোবাইল যোগাযোগ নম্বর ফোনের মালিকানার প্রমাণ নয়। আপনার পাসওয়ার্ড অন্য কারও সাথে শেয়ার করবেন না। Misuse শনাক্ত করা, incident তদন্ত করা এবং account সুরক্ষিত রাখার জন্য প্রয়োজনীয় security log ও technical record রাখা হতে পারে।</p>,
   },
   {
     titleEn: 'Sharing and service providers',

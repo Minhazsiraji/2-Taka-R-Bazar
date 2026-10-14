@@ -14,17 +14,17 @@ type Props={areas:StorefrontArea[];offers:StorefrontOffer[];selectedArea:string;
 const steps=[
  {number:'01',en:'Find your neighbourhood',bn:'আপনার এলাকা বাছুন',d:'Browse available products in your community. No account is needed to look.',db:'আপনার এলাকার পণ্য দেখুন। শুধু দেখার জন্য অ্যাকাউন্ট দরকার নেই।'},
  {number:'02',en:'Compare two prices',bn:'দুইভাবে দাম দেখুন',d:'See Buy Alone and Group Buy. Unconfirmed group prices are clearly labelled.',db:'একা কেনা ও গ্রুপে কেনার দাম দেখুন। অনিশ্চিত গ্রুপ মূল্য আলাদা করে দেখানো হবে।'},
- {number:'03',en:'Verify when buying',bn:'কেনার সময় যাচাই করুন',d:'Use mobile OTP only when buying or joining. Group eligibility needs a verified area.',db:'কেনা বা যোগ দেওয়ার সময় মোবাইল OTP দিন। গ্রুপে যোগ দিতে এলাকা যাচাই প্রয়োজন।'},
+ {number:'03',en:'Sign in when buying',bn:'কেনার সময় সাইন ইন করুন',d:'Sign in with Google or mobile and password when buying or joining. Group eligibility needs a verified area.',db:'কেনা বা যোগ দেওয়ার সময় Google অথবা মোবাইল ও পাসওয়ার্ড দিয়ে সাইন ইন করুন। গ্রুপে যোগ দিতে এলাকা যাচাই প্রয়োজন।'},
  {number:'04',en:'Collect or get delivery',bn:'সংগ্রহ বা হোম ডেলিভারি',d:'Collect free at the community point, or pay the separate home-delivery charge.',db:'কমিউনিটি পয়েন্ট থেকে বিনা ফিতে নিন, অথবা আলাদা ফি দিয়ে বাসায় নিন।'},
 ] as const
 const benefits=[
  {icon:'◉',en:'No fake savings',bn:'ভুয়া সাশ্রয় নয়',d:'Prices and verified savings remain separate. There are no invented discounts.',db:'মূল্য ও যাচাইকৃত সাশ্রয় আলাদা থাকবে। কাল্পনিক ছাড় দেখানো হবে না।'},
  {icon:'⇄',en:'Two buying modes',bn:'দুইভাবে কেনাকাটা',d:'Buy Alone will cover stocked and approved supplier products. Groups combine buying power.',db:'একা কেনায় নিজস্ব স্টক ও অনুমোদিত সরবরাহকারীর পণ্য থাকবে। গ্রুপ কেনায় একসঙ্গে দাম কমানোর সুযোগ।'},
  {icon:'⌂',en:'Free community pickup',bn:'ফ্রি কমিউনিটি সংগ্রহ',d:'Pickup at an active community point has no charge. Home delivery is optional.',db:'সক্রিয় কমিউনিটি পয়েন্ট থেকে সংগ্রহ ফ্রি। বাসায় ডেলিভারি চাইলে আলাদা ফি।'},
- {icon:'✓',en:'Verified participation',bn:'যাচাইকৃত অংশগ্রহণ',d:'Secure OTP and eligibility checks protect local group buying.',db:'মোবাইল OTP ও এলাকা যাচাইয়ের মাধ্যমে স্থানীয় গ্রুপ কেনাকাটা সুরক্ষিত থাকে।'},
+ {icon:'✓',en:'Verified participation',bn:'যাচাইকৃত অংশগ্রহণ',d:'Account security and independent eligibility checks protect local group buying.',db:'অ্যাকাউন্টের নিরাপত্তা ও স্বতন্ত্র এলাকা যাচাইয়ের মাধ্যমে স্থানীয় গ্রুপ কেনাকাটা সুরক্ষিত থাকে।'},
 ] as const
 const faqs=[
- {q:'Can I browse without signing in?',qb:'লগইন ছাড়াই পণ্য দেখতে পারব?',a:'Yes. Browse free. OTP is only needed when you join or buy.',ab:'হ্যাঁ। লগইন ছাড়াই পণ্য ও দাম দেখতে পারবেন। কেনা বা যোগ দেওয়ার সময় OTP লাগবে।'},
+ {q:'Can I browse without signing in?',qb:'লগইন ছাড়াই পণ্য দেখতে পারব?',a:'Yes. Browse free. Sign in with Google or mobile and password when you join or buy.',ab:'হ্যাঁ। লগইন ছাড়াই পণ্য ও দাম দেখতে পারবেন। কেনা বা যোগ দেওয়ার সময় Google অথবা মোবাইল ও পাসওয়ার্ড দিয়ে সাইন ইন করুন।'},
  {q:'What is Buy Alone vs Group Buy?',qb:'একা কেনা ও গ্রুপে কেনার পার্থক্য কী?',a:'Buy Alone has a separately approved price. Community Pools aggregate household quantities, while Group Deals unlock thresholds with verified participants.',ab:'একা কেনার দাম আলাদাভাবে অনুমোদিত হয়। কমিউনিটি পুলে চাহিদা একত্র হয়, আর গ্রুপ ডিলে যাচাইকৃত ক্রেতার সংখ্যা অনুযায়ী মূল্য পরিবর্তিত হয়।'},
  {q:'Will suppliers sell through Buy Alone?',qb:'সরবরাহকারীর পণ্য কি একা কেনা যাবে?',a:'Both 2TBR stock and verified supplier-listed products are planned. Actual solo checkout still requires inventory and finance controls.',ab:'নিজস্ব স্টক ও অনুমোদিত সরবরাহকারীর পণ্য—দুই ধরনেরই পরিকল্পনা আছে। একা কেনার চেকআউট এখনও পরীক্ষাধীন।'},
  {q:'What are the delivery fees?',qb:'ডেলিভারি খরচ কত?',a:'Community-point pickup is free. Within-community delivery is ৳20 up to ৳1,000 product subtotal and ৳30 above ৳1,000.',ab:'কমিউনিটি পয়েন্টে সংগ্রহ ফ্রি। কমিউনিটির মধ্যে ৳১,০০০ পর্যন্ত অর্ডারে ৳২০, তার বেশি হলে ৳৩০ হোম ডেলিভারি।'},

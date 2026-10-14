@@ -24,7 +24,7 @@ ${SITE_NAME} is a community grocery-buying platform with two customer buying mod
 - Product savings are verified only after successful fulfilment.
 - Community Pool access has no subscription fee; the business model is based primarily on procurement margin.
 - Community QR links are acquisition/onboarding links only: scanning a QR does not create an account, commitment, order, or saving.
-- QR onboarding can preserve the intended community through mobile OTP registration/sign-in, but it cannot silently move an already-onboarded household to another community.
+- QR onboarding can preserve the intended community through Google or mobile/password registration/sign-in, but it cannot silently move an already-onboarded household to another community.
 - Exact household GPS coordinates and individual baskets are private; supplier-facing demand is aggregate and privacy-qualified.
 
 ## Public reference pages

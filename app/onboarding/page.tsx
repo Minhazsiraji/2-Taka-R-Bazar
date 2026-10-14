@@ -1,4 +1,5 @@
-import { completeOnboarding, restartSignupWithAnotherPhone } from '@/app/actions/auth'
+import { completeOnboarding, restartSignup } from '@/app/actions/auth'
+import { BdPhoneInput } from '@/components/bd-phone-input'
 import { cookies } from 'next/headers'
 import { PublicHeader } from '@/components/public-header'
 import { PublicFooter } from '@/components/public-footer'
@@ -28,10 +29,10 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         {notice && <div className="success mt-4">{notice}</div>}{error && <div className="error mt-4">{error}</div>}
         <form action={completeOnboarding} className="mt-6 grid gap-4">
           <label><span className="label">Full name</span><input className="input" name="full_name" required /></label>
-          <div>
-            <label><span className="label">Verified mobile</span><input className="input bg-slate-100" value={user.phone ?? ''} readOnly aria-readonly="true" /></label>
-            <p className="mt-1.5 text-xs leading-5 text-slate-500">This number is locked because it has already been OTP verified.</p>
-          </div>
+          {user.phone ? <div>
+            <label><span className="label">Mobile login number</span><input className="input bg-slate-100" value={user.phone ?? ''} readOnly aria-readonly="true" /></label>
+            <p className="mt-1.5 text-xs leading-5 text-slate-500">This is your account’s mobile login identifier. Community and household eligibility are checked separately.</p>
+          </div> : <div><BdPhoneInput/><p className="mt-2 text-xs text-slate-500">A contact number for your orders. Google authenticates your account; this contact number does not verify phone ownership.</p></div>}
           <label><span className="label">Household label</span><input className="input" name="household_name" placeholder="e.g. Siraji Family" required /></label>
           {qrCommunity
             ? <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 p-4">
@@ -45,8 +46,8 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           <label><span className="label">Google Maps share URL (optional)</span><input className="input" name="google_maps_url" type="url" placeholder="https://maps.app.goo.gl/..." /></label>
           <SubmitButton>Finish setup</SubmitButton>
         </form>
-        <form action={restartSignupWithAnotherPhone} className="mt-3">
-          <SubmitButton className="btn-secondary w-full">Use a different mobile number</SubmitButton>
+        <form action={restartSignup} className="mt-3">
+          <SubmitButton className="btn-secondary w-full">Use a different account</SubmitButton>
         </form>
       </section>
     </div>

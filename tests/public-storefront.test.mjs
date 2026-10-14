@@ -24,7 +24,8 @@ test('visitors can browse without login and cannot place anonymous orders',()=>{
  assert.match(component,/chooseAreaByLocation/)
  assert.match(component,/Sign in to join/)
 })
-test('existing OTP flow remains the only authenticated entry point',()=>{
- assert.match(auth,/requestLoginOtp/)
- assert.match(auth,/verifyPhoneOtp/)
+test('authenticated entry uses Google and password without requesting SMS',()=>{
+ assert.match(auth,/signInWithPassword/)
+ assert.match(auth,/signInWithOAuth/)
+ assert.doesNotMatch(auth,/signInWithOtp|verifyOtp|requestPhoneOtp/)
 })
