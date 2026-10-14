@@ -23,6 +23,8 @@ try{
   page.on('pageerror',e=>errors.push(e.message))
   await page.goto('http://127.0.0.1:3000/login',{waitUntil:'networkidle'})
   await page.getByRole('link',{name:'Verify mobile and set a password'}).click()
+  await page.waitForURL(url=>url.searchParams.get('method')==='otp')
+  await page.getByRole('button',{name:'Send OTP',exact:true}).waitFor()
   assert.ok(page.url().includes('method=otp'))
   await page.locator('[name="phone"]').fill('01700000091')
   await page.getByRole('button',{name:'Send OTP',exact:true}).click()
