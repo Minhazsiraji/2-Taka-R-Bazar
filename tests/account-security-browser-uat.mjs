@@ -133,7 +133,8 @@ try {
   await page.locator('[name="household_name"]').fill('Synthetic contact family')
   await page.locator('[name="community_id"]').selectOption('00000000-0000-4000-8000-000000000821')
   await page.getByRole('button', {name: 'Finish setup', exact: true}).click()
-  await page.waitForURL(url => url.pathname === '/home')
+  await page.waitForURL(url => url.pathname === '/')
+  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
   assert.equal((await rows('profiles', emailFixture.user.id))[0].phone, '8801700000093')
   const tamperedContact = await native.from('profiles').update({phone: '8801700000099'}).eq('id', emailFixture.user.id)
   assert.match(tamperedContact.error?.message || '', /Mobile contact is fixed/)
@@ -152,6 +153,16 @@ try {
   assert.equal(mobileAdded.user.id, emailFixture.user.id)
   assert.equal((await rows('profiles', emailFixture.user.id))[0].phone, '8801700000094')
   assert.deepEqual((await rows('user_roles', emailFixture.user.id)).map(r => r.role), ['customer'])
+  // Ordinary login without a return intent opens the approved shopping storefront.
+  await page.context().clearCookies()
+  await page.goto('http://127.0.0.1:3000/login', {waitUntil: 'networkidle'})
+  await login('01700000094', password)
+  await page.waitForURL(url => url.pathname === '/')
+  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
+  // The personal dashboard remains reachable; its Home link returns to shopping.
+  await page.goto('http://127.0.0.1:3000/home', {waitUntil: 'networkidle'})
+  await page.getByRole('link', {name: '2-TAKA-R-BAZAR home', exact: true}).click()
+  await page.waitForURL(url => url.pathname === '/')
   assert.deepEqual(errors, [])
   console.log('No-SMS Auth UAT passed: password change and login preserve owner identity/roles; old password rejected; native customer signup/referral/onboarding; email-only contact onboarding and mobile linking; phone collision/guest access/invalid OAuth callbacks rejected.')
 } finally {await browser.close()}

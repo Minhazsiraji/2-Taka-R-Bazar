@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: '2-TAKA-R-BAZAR',
     short_name: '2TAKA BAZAR',
     description: 'Smart community shopping with real verified savings',
-    start_url: '/home',
+    start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#111111',

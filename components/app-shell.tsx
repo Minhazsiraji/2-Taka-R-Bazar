@@ -8,7 +8,7 @@ import { MobileCustomerNav } from '@/components/mobile-customer-nav'
 import { SITE_TAGLINE_BN, SITE_TAGLINE_EN } from '@/lib/site'
 import { SiteFooter } from '@/components/site-footer'
 
-const primaryNav = [['/home', 'Home'], ['/pool', 'Pools'], ['/group-deals', 'Group Deals'], ['/cart', 'Cart'], ['/account', 'Account']]
+const primaryNav = [['/', 'Home'], ['/pool', 'Pools'], ['/group-deals', 'Group Deals'], ['/cart', 'Cart'], ['/account', 'Account']]
 
 function NotificationBellFallback(){
   return <Link href="/notifications" className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm" aria-label="Notifications"><span aria-hidden="true" className="text-base">🔔</span></Link>
@@ -23,7 +23,7 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
     <header className="app-shell-header sticky top-0 z-40 w-full px-3 pt-2 sm:px-5">
       <div className="app-shell-header-bar mx-auto w-full max-w-6xl rounded-[20px] border border-sky-200/80 bg-white/70 px-3 py-2 shadow-[inset_0_1px_0_white,0_10px_30px_rgba(14,165,233,.08)] backdrop-blur-xl sm:px-5">
         <div className="flex items-center justify-between gap-2.5">
-          <Link href="/home" className="flex shrink-0 items-center gap-2.5" aria-label="2-TAKA-R-BAZAR home">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="2-TAKA-R-BAZAR home">
             <BrandLogo size={46}/>
             <div className="hidden sm:block">
               <div className="text-sm font-black tracking-tight">2-TAKA-R-BAZAR</div>

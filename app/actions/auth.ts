@@ -104,7 +104,7 @@ export async function signInPhonePassword(formData: FormData) {
   const qrCode = normalizeCommunityQrCode(cookieStore.get(COMMUNITY_QR_CODE_COOKIE)?.value)
   if(returnTo==='/account/security')redirect(returnTo)
   if (qrCode) redirect('/community-invite/' + encodeURIComponent(qrCode))
-  redirect(returnTo??'/home')
+  redirect(returnTo??'/')
 }
 
 export async function setMyPassword(formData: FormData) {
@@ -157,7 +157,7 @@ export async function completeOnboarding(formData: FormData) {
   const { supabase, user } = await requireUser(); const phone = user.phone || toBdE164Phone(getText(formData, 'phone'))?.replace(/^\+/, '')
   if (!phone) redirect('/onboarding?error=A+valid+mobile+contact+number+is+required')
   const {data:existingProfile}=await supabase.from('profiles').select('onboarding_completed_at').eq('id',user.id).maybeSingle()
-  if(existingProfile?.onboarding_completed_at)redirect('/home?notice=Your+household+is+already+set+up.+Contact+Operations+to+change+community.')
+  if(existingProfile?.onboarding_completed_at)redirect('/?notice=Your+household+is+already+set+up.+Contact+Operations+to+change+community.')
 
   const cookieStore=await cookies()
   const qrCode=normalizeCommunityQrCode(cookieStore.get(COMMUNITY_QR_CODE_COOKIE)?.value)
@@ -198,7 +198,7 @@ export async function completeOnboarding(formData: FormData) {
   const returnTo=safeAuthReturnPath(cookieStore.get('bp_post_auth_next')?.value)
   cookieStore.delete('bp_post_auth_next')
   const notice=qrCommunityName?'Welcome to '+qrCommunityName+'. You can now browse active Pools and Group Deals.':'Household setup complete.'
-  redirect((returnTo??'/home')+'?notice='+encodeURIComponent(notice))
+  redirect((returnTo??'/')+'?notice='+encodeURIComponent(notice))
 }
 
 export async function updateProfile(formData: FormData) {
