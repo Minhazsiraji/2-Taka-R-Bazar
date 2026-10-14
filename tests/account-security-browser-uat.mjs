@@ -74,7 +74,7 @@ try {
     await page.goto('http://127.0.0.1:3000/auth/callback' + suffix, {waitUntil: 'networkidle'})
     await page.waitForURL(url => url.pathname === '/login')
     assert.equal(new URL(page.url()).origin, 'http://127.0.0.1:3000')
-    await page.getByRole('alert').waitFor()
+    await page.locator('.error[role="alert"]').waitFor()
   }
   await page.goto('http://127.0.0.1:3000/verify-otp', {waitUntil: 'networkidle'})
   await page.waitForURL(url => url.pathname === '/login')
@@ -125,7 +125,7 @@ try {
   await page.goto('http://127.0.0.1:3000/account/security', {waitUntil: 'networkidle'})
   await page.locator('[name="phone"]').fill('01700000091')
   await save(password)
-  await page.getByRole('alert').waitFor()
+  await page.locator('.error[role="alert"]').waitFor()
   const {data: collisionCheck} = await admin.auth.admin.getUserById(emailFixture.user.id)
   assert.equal(collisionCheck.user.id, emailFixture.user.id)
   assert.ok(!collisionCheck.user.phone)
