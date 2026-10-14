@@ -34,4 +34,8 @@ html[data-theme="dark"] .site-glass-root .account-dashboard .account-money-card,
 }
 @media(max-width:640px){
  .site-glass-root .account-dashboard .market-header-location{display:none!important}
+ .site-glass-root .account-dashboard .market-flat-header>.market-header-inner{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto!important}
+ .site-glass-root .account-dashboard .market-brand-lockup{grid-column:1!important;grid-row:1!important}
+ .site-glass-root .account-dashboard .market-flat-header .market-header-actions{grid-column:1!important;grid-row:2!important;justify-content:flex-end!important}
+ .site-glass-root .account-dashboard .market-flat-header .market-header-search{grid-column:1!important;grid-row:3!important}
 }

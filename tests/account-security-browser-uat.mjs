@@ -180,13 +180,15 @@ try {
   assert.equal(await page.locator('.market-storefront-dock a[aria-current="page"]').getAttribute('href'), '/account')
   for (const width of [360, 393, 768, 1440]) {
     await page.setViewportSize({width, height: 900})
+    await page.screenshot({path: '/tmp/2tbr-account-width-' + width + '.png', fullPage: true})
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
     assert.equal(await page.evaluate(() => {
       const brand = document.querySelector('.account-dashboard .market-brand-copy strong')
       const actions = document.querySelector('.account-dashboard .market-header-actions')
       const range = document.createRange(); range.selectNodeContents(brand)
-      return range.getBoundingClientRect().right <= actions.getBoundingClientRect().left
-    }), true, 'Dashboard brand must not overlap header controls')
+      const brandBox=range.getBoundingClientRect(),actionsBox=actions.getBoundingClientRect()
+      return brandBox.right<=actionsBox.left||brandBox.bottom<=actionsBox.top||actionsBox.bottom<=brandBox.top
+    }), true, 'Dashboard brand must not overlap header controls at width ' + width)
     assert.equal(await page.locator('.market-storefront-dock').isVisible(), width < 768)
   }
   await page.screenshot({path: '/tmp/2tbr-account-desktop.png', fullPage: true})
