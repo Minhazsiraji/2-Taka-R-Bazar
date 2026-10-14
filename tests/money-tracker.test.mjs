@@ -60,7 +60,7 @@ test('money actions derive ownership from authenticated user',()=>{
 test('My Money is a single header action and Home stays focused on BazarPool',()=>{
   const shell=readFileSync(new URL('../components/app-shell.tsx',import.meta.url),'utf8')
   const home=readFileSync(new URL('../app/home/page.tsx',import.meta.url),'utf8')
-  assert.match(shell,/href="\/money"/);assert.match(shell,/Open My Money dashboard/);assert.match(shell,/💰/)
+  assert.match(shell,/href="\/money"/);assert.match(shell,/Open My Money dashboard/);assert.match(shell,/HeaderActionIcon kind="wallet"/);assert.match(shell,/cx-header-money-label/)
   assert.doesNotMatch(home,/MoneyEntryForm/);assert.doesNotMatch(home,/My Money · FREE/);assert.doesNotMatch(home,/Track today&apos;s cost in seconds/)
 })
 

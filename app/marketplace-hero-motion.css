@@ -357,3 +357,36 @@ body.site-glass-root main.public-marketplace-flat .market-product-actions>button
  }
  body.site-glass-root main.public-marketplace-flat .market-pool-thumbnails>a{height:78px}
 }
+
+/* Owner mobile UAT: give the full brand and controls their own rows. */
+@media(max-width:790px){
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header>.market-header-inner{
+  grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:auto auto auto!important;row-gap:10px!important;padding-top:12px!important;
+ }
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-lockup{
+  grid-column:1!important;grid-row:1!important;justify-self:start;max-width:100%;
+ }
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy strong{
+  font-size:.85rem!important;white-space:normal;overflow-wrap:anywhere;
+ }
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-lockup .brand-logo{
+  width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important;
+  min-height:40px!important;max-height:40px!important;
+ }
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-actions{
+  grid-column:1!important;grid-row:2!important;justify-content:flex-end!important;flex-wrap:wrap;gap:6px!important;
+ }
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-search{
+  grid-column:1!important;grid-row:3!important;width:100%;min-width:0;
+ }
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header :is(.market-single-language,.theme-toggle,.market-mobile-menu-button){
+  display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;
+  width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;padding:0!important;
+ }
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-location{min-width:44px!important;min-height:44px!important}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .theme-toggle-label{display:none!important}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .public-header-action{
+  display:inline-flex;align-items:center;justify-content:center;min-height:44px!important;padding:8px 12px!important;
+ }
+}

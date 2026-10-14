@@ -251,3 +251,43 @@ html[data-theme="dark"] .site-glass-root :is(.cx-glass-subcard,.price-target-pro
   background:linear-gradient(135deg,rgba(10,29,40,.70),rgba(9,19,31,.54))!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 8px 18px rgba(0,0,0,.16)!important;
 }
+
+/* Owner mobile UAT: labelled My Money and matching, bounded header controls. */
+.site-glass-root .app-shell-header .header-action-icon{display:block;width:20px;height:20px;flex:0 0 20px}
+.site-glass-root .app-shell-header .app-role-actions>.cx-header-action{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:8px;
+ width:auto!important;height:44px!important;min-height:44px!important;padding:0 12px!important;
+ font-size:.8rem!important;line-height:1!important;color:var(--cx-accent)!important;
+}
+.site-glass-root .app-shell-header .app-role-actions>:is(.cx-header-theme,.app-profile-link,a:has(.header-action-icon):not(.cx-header-action)){
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;
+ padding:0!important;flex:0 0 44px!important;color:var(--cx-ink)!important;
+}
+.site-glass-root .app-shell-header .cx-header-theme .theme-toggle-label{display:none!important}
+.site-glass-root .app-shell-header .app-role-actions>:is(.cx-header-action,.cx-header-theme,.app-profile-link,a:has(.header-action-icon)){
+ border:1px solid var(--cx-brand-rim-soft)!important;border-radius:999px!important;
+ background:var(--cx-clear-glass)!important;
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.25)!important;
+}
+.site-glass-root .app-shell-header .app-role-actions>:is(a,button):focus-visible{outline:2px solid var(--cx-accent);outline-offset:2px}
+.site-glass-root .money-navigation .money-navigation-items{gap:6px;scroll-padding-inline:4px}
+.site-glass-root .money-navigation .money-navigation-link{
+ display:flex!important;align-items:center!important;min-height:44px!important;padding:8px 12px!important;
+ border:1px solid transparent!important;border-radius:12px!important;box-shadow:none!important;
+ font-size:.8rem!important;line-height:1.2!important;white-space:nowrap;background:transparent!important;
+ color:var(--cx-muted)!important;
+}
+.site-glass-root .money-navigation .money-navigation-link[aria-current="page"]{
+ border-color:var(--cx-brand-rim-soft)!important;background:var(--cx-nav-active)!important;color:var(--cx-accent)!important;
+}
+.site-glass-root .money-navigation .money-navigation-link:focus-visible{outline:2px solid var(--cx-accent);outline-offset:-2px}
+@media(max-width:790px){
+ .site-glass-root .app-shell-header .app-header-main{flex-direction:column;align-items:stretch;gap:10px}
+ .site-glass-root .app-shell-header .app-header-brand-copy{display:block;min-width:0}
+ .site-glass-root .app-shell-header .app-header-brand-copy>div:first-child{font-size:.85rem;overflow-wrap:anywhere}
+ .site-glass-root .app-shell-header .app-header-brand-copy>div:not(:first-child){display:none}
+ .site-glass-root .app-shell-header .app-role-actions{flex-wrap:wrap;gap:6px!important}
+ .site-glass-root .app-shell-header .app-role-link{display:none!important}
+ .site-glass-root .app-shell-header .app-shell-header-bar{padding:12px!important}
+}

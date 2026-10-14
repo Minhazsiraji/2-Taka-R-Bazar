@@ -4,6 +4,7 @@ import {randomUUID} from 'node:crypto'
 import {createClient} from '@supabase/supabase-js'
 import {createServerClient} from '@supabase/ssr'
 import {chromium} from 'playwright'
+import {assertHeaderGeometry} from './header-layout-assertions.mjs'
 
 const endpoint = process.env.NEXT_PUBLIC_SUPABASE_URL
 if (!endpoint || new URL(endpoint).hostname !== '127.0.0.1') throw new Error('Disposable local Auth required')
@@ -169,6 +170,22 @@ try {
   assert.equal(await page.getByRole('heading', {name: 'Your community is buying smarter.', exact: true}).count(), 0)
   const dashboards = page.getByRole('link', {name: 'My dashboard', exact: true})
   assert.deepEqual(await dashboards.evaluateAll(links => links.map(link => link.getAttribute('href'))), ['/account', '/account'])
+  for (const width of [320, 360, 393, 640, 768, 1440]) {
+    await page.setViewportSize({width, height: 900})
+    await assertHeaderGeometry(page, '.market-brand-copy strong', '.market-header-actions', width)
+  }
+  await page.setViewportSize({width: 393, height: 900})
+  await page.screenshot({path: '/tmp/2tbr-header-storefront-signed-in.png', fullPage: true})
+  await page.locator('.market-single-language').click()
+  await assertHeaderGeometry(page, '.market-brand-copy strong', '.market-header-actions', 393)
+  await page.getByRole('button', {name: 'Switch to dark mode', exact: true}).click()
+  await page.screenshot({path: '/tmp/2tbr-header-storefront-bn-dark.png', fullPage: true})
+  await page.getByRole('button', {name: 'Switch to light mode', exact: true}).click()
+  await page.locator('.market-single-language').click()
+  await page.getByRole('button', {name: 'Open menu', exact: true}).click()
+  await page.locator('#market-mobile-navigation').waitFor()
+  await page.getByRole('button', {name: 'Close menu', exact: true}).click()
+  assert.equal(await page.locator('#market-mobile-navigation').count(), 0)
   await dashboards.first().click()
   await page.waitForURL(url => url.pathname === '/account')
   await page.getByRole('heading', {name: 'My dashboard', exact: true}).waitFor()
@@ -178,17 +195,11 @@ try {
   assert.equal(await page.getByText('Purchases are awaiting release qualification.', {exact: true}).count(), 0)
   assert.equal(await page.locator('.market-flat-header').count(), 1)
   assert.equal(await page.locator('.market-storefront-dock a[aria-current="page"]').getAttribute('href'), '/account')
-  for (const width of [360, 393, 768, 1440]) {
+  for (const width of [320, 360, 393, 640, 768, 1440]) {
     await page.setViewportSize({width, height: 900})
     await page.screenshot({path: '/tmp/2tbr-account-width-' + width + '.png', fullPage: true})
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
-    assert.equal(await page.evaluate(() => {
-      const brand = document.querySelector('.account-dashboard .market-brand-copy strong')
-      const actions = document.querySelector('.account-dashboard .market-header-actions')
-      const range = document.createRange(); range.selectNodeContents(brand)
-      const brandBox=range.getBoundingClientRect(),actionsBox=actions.getBoundingClientRect()
-      return brandBox.right<=actionsBox.left||brandBox.bottom<=actionsBox.top||actionsBox.bottom<=brandBox.top
-    }), true, 'Dashboard brand must not overlap header controls at width ' + width)
+    await assertHeaderGeometry(page, '.account-dashboard .market-brand-copy strong', '.account-dashboard .market-header-actions', width)
     assert.equal(await page.locator('.market-storefront-dock').isVisible(), width < 768)
   }
   await page.screenshot({path: '/tmp/2tbr-account-desktop.png', fullPage: true})
@@ -207,6 +218,29 @@ try {
   await page.getByRole('link', {name: 'Open My Money', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/money')
   await page.getByRole('heading', {name: 'My Money Dashboard', exact: true}).waitFor()
+  for (const width of [320, 360, 393, 640, 768, 1440]) {
+    await page.setViewportSize({width, height: 900})
+    await assertHeaderGeometry(page, '.app-header-brand-copy>div:first-child', '.app-role-actions', width)
+    assert.equal(await page.locator('.cx-header-money-label').isVisible(), true)
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+    const heights = await page.locator('.money-navigation-link').evaluateAll(links => links.map(link => link.getBoundingClientRect().height))
+    assert.ok(heights.every(height => height >= 44 && height <= 48), 'Compact My Money tabs at width ' + width)
+    if (width === 393 || width === 1440) await page.screenshot({path: '/tmp/2tbr-header-money-' + width + '.png', fullPage: true})
+  }
+  await page.setViewportSize({width: 393, height: 900})
+  await page.getByRole('button', {name: 'Switch to dark mode', exact: true}).click()
+  await assertHeaderGeometry(page, '.app-header-brand-copy>div:first-child', '.app-role-actions', 393)
+  await page.screenshot({path: '/tmp/2tbr-header-money-dark.png', fullPage: true})
+  const moneyNav = page.getByRole('navigation', {name: 'My Money navigation', exact: true})
+  assert.equal(await moneyNav.locator('[aria-current="page"]').getAttribute('href'), '/money')
+  await moneyNav.getByRole('link', {name: 'Transactions', exact: true}).click()
+  await page.waitForURL(url => url.pathname === '/money/transactions')
+  assert.equal(await moneyNav.locator('[aria-current="page"]').getAttribute('href'), '/money/transactions')
+  await page.getByRole('link', {name: 'Open My Money dashboard', exact: true}).click()
+  await page.waitForURL(url => url.pathname === '/money')
+  await page.getByRole('heading', {name: 'My Money Dashboard', exact: true}).waitFor()
+  await page.getByRole('button', {name: 'Switch to light mode', exact: true}).click()
+  console.log('Mobile header UAT passed: signed-in and guest brand/control separation, EN/BAN, menu/theme, labelled My Money, compact tabs and native transaction navigation.')
   console.log('Account dashboard UAT passed: storefront design, responsive language/theme controls, role visibility and native My Money navigation.')
   // An old saved login return URL is canonicalized before redirecting.
   await page.context().clearCookies()
