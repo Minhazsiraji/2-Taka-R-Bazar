@@ -7,7 +7,8 @@ test('authentication returns allowlisted paths and rejects external or privilege
   assert.equal(safeAuthReturnPath('/checkout'), '/checkout')
   assert.equal(safeAuthReturnPath('/'), '/')
   assert.equal(safeAuthReturnPath('/?ignored=true'), '/')
-  assert.equal(safeAuthReturnPath('/home'), '/home')
+  assert.equal(safeAuthReturnPath('/home'), '/')
+  assert.equal(safeAuthReturnPath('/home?notice=legacy'), '/')
   for (const value of ['https://evil.example', '//evil.example', '/\\evil.example', '/super-admin', '/account#fragment', '/%2F%2Fevil.example', '/login', null]) assert.equal(safeAuthReturnPath(value), null)
 })
 

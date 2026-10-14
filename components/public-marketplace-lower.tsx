@@ -162,7 +162,7 @@ export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,
    <div><span className="market-story-eyebrow">{t('Start shopping together','একসাথে কেনাকাটা শুরু করুন')}</span>
     <h2>{t(SITE_TAGLINE_EN,SITE_TAGLINE_BN)}</h2><p>{t('Find your local offer or join the next opportunity.','আপনার এলাকার অফার দেখুন অথবা পরবর্তী কেনাকাটার সুযোগের জন্য যোগ দিন।')}</p></div>
    <div className="market-closing-actions"><a href="#deals" className="btn-primary">{t('Explore products','পণ্য দেখুন')}</a>
-    <Link href={authenticated?'/home':'/signup'} className="btn-secondary">{authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Join the community','কমিউনিটিতে যোগ দিন')}</Link></div>
+    <Link href={authenticated?'/account':'/signup'} className="btn-secondary">{authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Join the community','কমিউনিটিতে যোগ দিন')}</Link></div>
   </div></section>
  </div>
 }

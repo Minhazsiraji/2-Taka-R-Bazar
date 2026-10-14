@@ -23,7 +23,7 @@ export function SuperAdminShell({children}:{children:React.ReactNode}) {
         <div className="app-role-actions flex min-w-0 flex-1 items-center justify-end gap-1 text-[10px] sm:gap-2 sm:text-xs">
           <ThemeToggle className="shrink-0 px-2 [&_.theme-toggle-label]:hidden min-[430px]:[&_.theme-toggle-label]:inline"/>
           <Link href="/admin" aria-label="Operations" title="Operations" className="app-role-link shrink-0 rounded-full border border-white bg-white/60 px-2.5 py-2 font-bold text-blue-700 shadow-sm sm:px-3"><span className="sm:hidden">Ops</span><span className="hidden sm:inline">Operations</span></Link>
-          <Link href="/home" aria-label="Customer app" title="Customer app" className="btn-primary min-h-9 shrink-0 rounded-full px-2.5 py-2 sm:min-h-11 sm:px-3"><span className="sm:hidden">App</span><span className="hidden sm:inline">Customer app</span></Link>
+          <Link href="/" aria-label="Customer app" title="Customer app" className="btn-primary min-h-9 shrink-0 rounded-full px-2.5 py-2 sm:min-h-11 sm:px-3"><span className="sm:hidden">App</span><span className="hidden sm:inline">Customer app</span></Link>
         </div>
       </div>
     </header>

@@ -27,6 +27,11 @@ if(!published.ok)throw new Error(`Authorized publication failed: ${published.sta
 const browser=await chromium.launch({headless:true})
 const errors=[]
 try{
+ const legacy = await fetch('http://127.0.0.1:3000/home?notice=legacy-bookmark', {redirect: 'manual'})
+ assert.equal(legacy.status, 308)
+ const location = new URL(legacy.headers.get('location'), 'http://127.0.0.1:3000')
+ assert.equal(location.pathname, '/')
+ assert.equal(location.searchParams.get('notice'), 'legacy-bookmark')
  for(const width of [360,393,768,1440,1920]){
   const page=await browser.newPage({viewport:{width,height:900}})
   page.on('pageerror',e=>errors.push(e.message))

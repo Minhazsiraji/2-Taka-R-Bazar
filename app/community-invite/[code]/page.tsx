@@ -48,7 +48,7 @@ export default async function CommunityInvitePage({
   const differentCommunity=Boolean(onboarded&&profile.community_id!==qr.community_id)
 
   return <main className="min-h-screen bg-slate-50 text-slate-950">
-    <PublicHeader actionHref={user?'/home':'/login'} actionLabel={user?'Open app':'Sign in'}/>
+    <PublicHeader actionHref={user?'/':'/login'} actionLabel={user?'Open app':'Sign in'}/>
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
       <section className="overflow-hidden rounded-[28px] border border-cyan-200/80 bg-[radial-gradient(circle_at_88%_10%,rgba(103,232,249,.28),transparent_30%),linear-gradient(135deg,rgba(255,255,255,.98),rgba(236,254,255,.90))] p-5 shadow-[0_18px_50px_rgba(14,165,233,.10)] sm:p-8">
         <div className="flex flex-wrap items-center gap-2">
@@ -95,7 +95,7 @@ export default async function CommunityInvitePage({
             <SubmitButton className="min-h-12 px-5">Confirm & open {qr.community_name}</SubmitButton>
           </form>}
 
-          {user&&differentCommunity&&<div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950"><b>Your account already belongs to another community.</b><p className="mt-1">For safety, a QR code cannot silently move your household. Contact Operations if your community needs to be changed.</p><Link href="/home" className="mt-3 inline-flex font-black underline">Return to your current community →</Link></div>}
+          {user&&differentCommunity&&<div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950"><b>Your account already belongs to another community.</b><p className="mt-1">For safety, a QR code cannot silently move your household. Contact Operations if your community needs to be changed.</p><Link href="/" className="mt-3 inline-flex font-black underline">Return to your current community →</Link></div>}
         </div>
       </section>
 
