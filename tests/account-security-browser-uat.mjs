@@ -163,6 +163,21 @@ try {
   await page.goto('http://127.0.0.1:3000/home', {waitUntil: 'networkidle'})
   await page.getByRole('link', {name: '2-TAKA-R-BAZAR home', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/')
+  // A returning password member who has not completed setup must still finish it.
+  const unfinishedPassword = randomUUID() + 'aA1!'
+  const unfinished = createClient(endpoint, publicKey, {auth: {persistSession: false, autoRefreshToken: false}})
+  const {error: unfinishedSignupError} = await unfinished.auth.signUp({phone: '8801700000095', password: unfinishedPassword})
+  assert.equal(unfinishedSignupError, null)
+  await page.context().clearCookies()
+  await page.goto('http://127.0.0.1:3000/login', {waitUntil: 'networkidle'})
+  await login('01700000095', unfinishedPassword)
+  await page.waitForURL(url => url.pathname === '/onboarding')
+  await page.locator('[name="full_name"]').fill('Synthetic returning customer')
+  await page.locator('[name="household_name"]').fill('Synthetic returning family')
+  await page.locator('[name="community_id"]').selectOption('00000000-0000-4000-8000-000000000821')
+  await page.getByRole('button', {name: 'Finish setup', exact: true}).click()
+  await page.waitForURL(url => url.pathname === '/')
+  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
   assert.deepEqual(errors, [])
   console.log('No-SMS Auth UAT passed: password change and login preserve owner identity/roles; old password rejected; native customer signup/referral/onboarding; email-only contact onboarding and mobile linking; phone collision/guest access/invalid OAuth callbacks rejected.')
 } finally {await browser.close()}

@@ -103,6 +103,10 @@ export async function signInPhonePassword(formData: FormData) {
   cookieStore.delete('bp_oauth_link_user')
   const qrCode = normalizeCommunityQrCode(cookieStore.get(COMMUNITY_QR_CODE_COOKIE)?.value)
   if(returnTo==='/account/security')redirect(returnTo)
+  // The public storefront cannot supply the old dashboard's household setup gate.
+  const {data:profile,error:profileError}=await supabase.from('profiles').select('full_name,phone,community_id,onboarding_completed_at').eq('id',data.user.id).maybeSingle()
+  if(profileError)redirect(back+'error=Your+account+profile+could+not+be+loaded.+Please+try+again.')
+  if(!profile?.full_name||!profile.phone||!profile.community_id||!profile.onboarding_completed_at)redirect('/onboarding')
   if (qrCode) redirect('/community-invite/' + encodeURIComponent(qrCode))
   redirect(returnTo??'/')
 }
