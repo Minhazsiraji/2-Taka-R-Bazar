@@ -26,7 +26,7 @@ export function AdminProductSeoEditor({product,seo,faqs,media,canReview,currentU
   </div>
   {seo?.status==='published'&&<a className="mt-2 inline-block underline" href={SITE_URL+'/p/'+seo.slug} target="_blank" rel="noreferrer">View published SEO page ↗</a>}
   <form action={saveProductSeo} className="mt-4 grid min-w-0 gap-4 md:grid-cols-2">
-   <input type="hidden" name="product_id" value={product.id}/>
+   <input type="hidden" name="product_id" value={product.id}/><input type="hidden" name="expected_version" value={seo?.version??0}/>
    <div className="md:col-span-2 font-bold">1 · Identity & brand classification</div>
    <label><span className="label">Brand type</span>
     <select className="input" name="brand_type" defaultValue={product.brand_type??(product.brand?'SUPPLIER_BRAND':'UNBRANDED_LOOSE')}>
