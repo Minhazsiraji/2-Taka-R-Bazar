@@ -31,7 +31,7 @@ select lives_ok($call$select public.admin_save_product_seo(
   "meta_description_en":"Explore loose brown rice by weight and discover community buying opportunities in Bangladesh.",
   "meta_description_bn":"ব্রাউন রাইস খোলা চালের পণ্যের তথ্য ও কমিউনিটি কেনাকাটার সুযোগ দেখুন।",
   "alt_en":"Actual loose brown rice grains","alt_bn":"আসল খোলা ব্রাউন রাইসের দানা",
-  "verification_notes":"Supplier's exact rice type and photography reviewed.",
+  "verification_notes":"Supplier-reported rice type and product photography reviewed.",
   "brand_type":"UNBRANDED_LOOSE","specs":{"package_kind":"loose"},"expected_version":0
  }'::jsonb,
  '[{"question_en":"Is it factory packed?","answer_en":"No, it is loose by weight.",
