@@ -97,6 +97,7 @@ jobs:
             sleep 1
           done
           node tests/storefront-browser-uat.mjs
+          node tests/account-security-browser-uat.mjs
       - name: Stop disposable Supabase
         if: always()
         run: supabase stop --no-backup

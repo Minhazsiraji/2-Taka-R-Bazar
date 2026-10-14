@@ -10,6 +10,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { error, notice, next, method } = await searchParams
   const returnTo=safeAuthReturnPath(next)
   const useOtp = method === 'otp'
+  const suffix=returnTo?'&next='+encodeURIComponent(returnTo):''
   const previewMode = process.env.VERCEL_ENV === 'preview'
 
   return <main className="min-h-screen bg-slate-50 text-black">
@@ -38,7 +39,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           {!useOtp && <label>Password<input className="input mt-1 w-full" name="password" type="password" autoComplete="current-password" required maxLength={256} /></label>}
           <SubmitButton>{useOtp ? 'Send OTP' : 'Sign in with password'}</SubmitButton>
         </form>
-        {useOtp && <Link href="/login" className="mt-4 block text-center underline">Use password instead</Link>}
+        <Link href={useOtp?'/login'+(returnTo?'?next='+encodeURIComponent(returnTo):''):'/login?method=otp'+suffix} className="mt-4 block text-center underline">{useOtp?'Use password instead':'Use mobile OTP instead'}</Link>
+        {!useOtp&&<p className="mt-3 text-center text-sm">Previously used OTP or forgot your password? <Link className="underline" href="/login?method=otp&next=%2Faccount%2Fsecurity">Verify mobile and set a password</Link></p>}
 
         <p className="mt-5 text-center text-sm text-slate-600">New here? <Link className="font-bold text-black underline underline-offset-4" href="/signup">Join the community pool</Link><span className="mt-1 block text-[12px] text-slate-500" lang="bn">নতুন? <Link className="font-bold text-black underline underline-offset-4" href="/signup">কমিউনিটি পুলে যোগ দিন</Link></span></p>
       </section>
