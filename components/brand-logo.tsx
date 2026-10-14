@@ -5,7 +5,7 @@ export function BrandLogo({ size = 56, alt = `${SITE_NAME} - ${SITE_TAGLINE_EN}`
   return (
     <Image
       className="brand-logo"
-      src="/brand-mark-transparent.png"
+      src="/brand-mark-teal.svg"
       alt={alt}
       width={size}
       height={size}

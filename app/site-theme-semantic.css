@@ -38,7 +38,9 @@ html[data-theme="dark"] .site-glass-root button.bg-black {
 
 html[data-theme="dark"] .site-glass-root .text-white { color: #ffffff !important; }
 
-html[data-theme="dark"] .site-glass-root .brand-logo { filter: invert(1) brightness(1.08) contrast(.92); }
+/* Keep the original black mark in light mode and the brand teal in dark mode. */
+.site-glass-root .brand-logo { filter: brightness(0); }
+html[data-theme="dark"] .site-glass-root .brand-logo { filter: none; }
 
 .site-glass-root .public-glass-header > .public-header-actions,
 html[data-theme="dark"] .site-glass-root .public-glass-header > .public-header-actions {
