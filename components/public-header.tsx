@@ -13,6 +13,7 @@ type HeaderProps={
  searchValue?:string;onSearchChange?:(value:string)=>void
  onLocationClick?:()=>void;locating?:boolean;locationLabel?:string
  language?:MarketplaceLanguage;onLanguageChange?:(language:MarketplaceLanguage)=>void
+ shopBaseHref?:string;browseHref?:string;locationAriaLabel?:string
 }
 const storefrontNav=[
  {href:'#deals',label:'Group Deals',bn:'গ্রুপ ডিল'},
@@ -25,8 +26,10 @@ const storefrontNav=[
 ] as const
 
 export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefront=false,
- searchValue='',onSearchChange,onLocationClick,locating=false,locationLabel='Find my community',language='bn',onLanguageChange}:HeaderProps){
+ searchValue='',onSearchChange,onLocationClick,locating=false,locationLabel='Find my community',language='bn',onLanguageChange,
+ shopBaseHref='',browseHref,locationAriaLabel}:HeaderProps){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
+ const shopHref=(href:string)=>href.startsWith('#')?shopBaseHref+href:href
  const [menuOpen,setMenuOpen]=useState(false)
  if(storefront)return <header className="public-glass-header market-flat-header" aria-label="2-TAKA-R-BAZAR public shop header">
   <div className="market-header-inner">
@@ -39,15 +42,15 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
     </span>
    </Link>
    <div className="market-header-search">
-    <label htmlFor="market-header-product-search" className="sr-only">{t('Search groceries and products','পণ্য ও বাজার খুঁজুন')}</label>
+    {!browseHref&&<label htmlFor="market-header-product-search" className="sr-only">{t('Search groceries and products','পণ্য ও বাজার খুঁজুন')}</label>}
     <span aria-hidden="true" className="market-search-icon">⌕</span>
-    <input id="market-header-product-search" type="search" value={searchValue}
+    {browseHref?<Link href={browseHref} className="market-header-browse">{t('Browse groceries and products','পণ্য ও বাজার দেখুন')}</Link>:<input id="market-header-product-search" type="search" value={searchValue}
      onChange={e=>onSearchChange?.(e.target.value)}
      onKeyDown={e=>{if(e.key==='Enter')document.getElementById('deals')?.scrollIntoView({behavior:'smooth',block:'start'})}}
-     placeholder={t('Search rice, oil, groceries…','চাল, ডাল, তেল, বাজার খুঁজুন…')} autoComplete="off" enterKeyHint="search"/>
+     placeholder={t('Search rice, oil, groceries…','চাল, ডাল, তেল, বাজার খুঁজুন…')} autoComplete="off" enterKeyHint="search"/>}
    </div>
    <div className="market-header-actions">
-    <button type="button" onClick={onLocationClick} disabled={locating} className="market-header-location" aria-label={t('Find communities near my location','আমার কাছের কমিউনিটি খুঁজুন')}>
+    <button type="button" onClick={onLocationClick} disabled={locating} className="market-header-location" aria-label={locationAriaLabel??t('Find communities near my location','আমার কাছের কমিউনিটি খুঁজুন')}>
      <span aria-hidden="true">📍</span><span className="market-header-location-text">{locating?t('Finding area…','এলাকা খোঁজা হচ্ছে…'):locationLabel}</span>
     </button>
     <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
@@ -64,13 +67,13 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
   </div>
   <nav className="market-header-nav market-desktop-nav" aria-label={t('Shop and information','দোকান ও তথ্য')}>
    <div className="market-header-nav-inner">
-    {storefrontNav.map(item=><a key={item.href} href={item.href}>{t(item.label,item.bn)}</a>)}
+    {storefrontNav.map(item=><a key={item.href} href={shopHref(item.href)}>{t(item.label,item.bn)}</a>)}
     <Link href="/signup" className="market-header-join">{t('Join Community','কমিউনিটিতে যোগ দিন')}</Link>
    </div>
   </nav>
   {menuOpen&&<nav id="market-mobile-navigation" className="market-mobile-nav-panel"
     aria-label={t('Mobile navigation','মোবাইল মেনু')} onKeyDown={e=>{if(e.key==='Escape')setMenuOpen(false)}}>
-   {storefrontNav.map(item=><a key={item.href} href={item.href} onClick={()=>setMenuOpen(false)}>{t(item.label,item.bn)} <span aria-hidden="true">↗</span></a>)}
+   {storefrontNav.map(item=><a key={item.href} href={shopHref(item.href)} onClick={()=>setMenuOpen(false)}>{t(item.label,item.bn)} <span aria-hidden="true">↗</span></a>)}
    <Link href="/signup" onClick={()=>setMenuOpen(false)}>{t('Join Community','কমিউনিটিতে যোগ দিন')} <span aria-hidden="true">↗</span></Link>
   </nav>}
  </header>
