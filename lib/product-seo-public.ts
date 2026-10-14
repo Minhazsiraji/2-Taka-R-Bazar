@@ -53,3 +53,11 @@ export function productJsonLd(p:ProductSeoPublic,locale:'en'|'bn'){
  return {'@context':'https://schema.org','@graph':[product,breadcrumbs]}
 }
 export function safeJsonLd(data:unknown){return JSON.stringify(data).replace(/</g,'\\u003c')}
+
+/** Legacy live-offer and exclusive-showcase URLs keep their UX but point crawlers to one published canonical. */
+export async function getSeoCanonicalForProductId(id:string):Promise<string|null>{
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i.test(id))return null
+ const supabase=await createClient()
+ const {data,error}=await supabase.rpc('get_public_product_seo_slug_for_id',{p_product_id:id})
+ return !error&&typeof data==='string'&&validSlug(data)?productUrls(data).en:null
+}
