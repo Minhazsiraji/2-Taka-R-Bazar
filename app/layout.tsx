@@ -45,8 +45,8 @@ export const metadata: Metadata = {
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   icons: {
-    icon: [{ url: '/brand-mark-transparent.png', type: 'image/png' }],
-    shortcut: '/brand-mark-transparent.png',
+    icon: [{ url: '/brand-favicon.svg?v=20261014', type: 'image/svg+xml', sizes: 'any' }],
+    shortcut: '/brand-favicon.svg?v=20261014',
     apple: '/brand-mark-transparent.png',
   },
   keywords: ['community grocery pooling','group buying Bangladesh','grocery savings Savar','Amin Model Town grocery','Pollibiddut grocery','কমিউনিটি বাজার','সাশ্রয়ী বাজার','Savar grocery pool'],
