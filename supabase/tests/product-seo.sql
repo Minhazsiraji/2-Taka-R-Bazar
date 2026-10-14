@@ -1,7 +1,7 @@
 -- Issue #80 disposable pgTAP: NEVER run against the shared Production database.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(19);
+select plan(20);
 select ok((select relrowsecurity from pg_class where oid='public.product_seo_content'::regclass),'SEO content protected by RLS');
 select ok((select relrowsecurity from pg_class where oid='public.product_seo_faqs'::regclass),'FAQs protected by RLS');
 select ok((select relrowsecurity from pg_class where oid='public.product_seo_media'::regclass),'SEO media protected by RLS');
