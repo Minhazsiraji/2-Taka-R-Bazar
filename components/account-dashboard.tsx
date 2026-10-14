@@ -25,8 +25,7 @@ export function AccountDashboard({name,communityName,needsSetup,operations,super
  const t=(en:string,bn:string)=>language==='bn'?bn:en
  return <main className="public-marketplace-flat account-dashboard min-h-screen" lang={language}>
   <PublicHeader storefront shopBaseHref="/" browseHref="/#deals" language={language} onLanguageChange={next=>{setLanguage(next);router.refresh()}}
-   locationLabel={communityName||t('Your community','আপনার কমিউনিটি')} locationAriaLabel={t('View your community profile','আপনার কমিউনিটির প্রোফাইল দেখুন')}
-   onLocationClick={()=>router.push('/profile')} actionHref="/" actionLabel={t('Shop','বাজার')} mobileActionLabel={t('Shop','বাজার')}/>
+   actionHref="/" actionLabel={t('Shop','বাজার')} mobileActionLabel={t('Shop','বাজার')}/>
   <section className="market-band account-dashboard-band"><div className="market-content">
    <div className="account-dashboard-intro">
     <div><span className="account-dashboard-kicker">{t('Your 2TBR account','আপনার 2TBR অ্যাকাউন্ট')}</span>
@@ -45,12 +44,13 @@ export function AccountDashboard({name,communityName,needsSetup,operations,super
    <section aria-labelledby="account-tools-title" className="account-tools-section">
     <h2 id="account-tools-title">{t('Shopping & account','কেনাকাটা ও অ্যাকাউন্ট')}</h2>
     <div className="account-tools-grid">{tools.map(tool=><Link key={tool.href} href={tool.href} className="account-tool-card">
-     <span className="account-tool-icon" aria-hidden="true">{tool.icon}</span><div><h3>{t(tool.en,tool.bn)}</h3><p>{t(tool.detail,tool.detailBn)}</p></div><span className="account-tool-arrow" aria-hidden="true">↗</span>
+     <span className="account-tool-icon" aria-hidden="true">{tool.icon}</span><div><h3>{t(tool.en,tool.bn)}</h3><p>{tool.href==='/profile'&&communityName?communityName:t(tool.detail,tool.detailBn)}</p></div><span className="account-tool-arrow" aria-hidden="true">↗</span>
     </Link>)}</div>
     <p className="account-savings-note">{t('Shopping savings are a report, not a wallet balance.','কেনাকাটার সাশ্রয় একটি রিপোর্ট, ওয়ালেটের ব্যালেন্স নয়।')}</p>
    </section>
    {(operations||superAdmin||pickup)&&<section className="account-tools-section" aria-labelledby="staff-tools-title">
     <h2 id="staff-tools-title">{t('Staff tools','কর্মীদের টুল')}</h2><div className="account-staff-links">
+     {operations&&<Link href="/admin/notifications" className="btn-secondary">{t('Send user update','ব্যবহারকারীদের আপডেট পাঠান')}</Link>}
      {operations&&<Link href="/admin" className="btn-secondary">{t('Operations','অপারেশনস')}</Link>}
      {pickup&&<Link href="/community-ops" className="btn-secondary">{t('Community operations','কমিউনিটি অপারেশনস')}</Link>}
      {superAdmin&&<Link href="/super-admin" className="btn-secondary">{t('Super Admin','সুপার অ্যাডমিন')}</Link>}

@@ -1,3 +1,11 @@
+.market-header-account-icon{display:none}
+body.site-glass-root .public-glass-header .customer-notification-bell{
+ display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 44px;
+ width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;padding:0!important;
+ border:1px solid var(--gloss-rim,rgba(255,255,255,.8))!important;border-radius:999px!important;
+ background:transparent!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)!important;color:var(--theme-text,#17213b)!important;
+}
+body.site-glass-root .public-glass-header .customer-notification-bell .header-action-icon{width:20px;height:20px;flex-shrink:0}
 /* One compact header row across customer surfaces; optional search sits below. */
 .public-header-action-mobile{display:none}
 .public-header-action-desktop{display:inline}
@@ -18,7 +26,6 @@
   grid-column:2!important;grid-row:1!important;justify-content:flex-end!important;
   flex-wrap:nowrap!important;gap:4px!important;min-width:0;
  }
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-location{display:none!important}
  body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-search{
   grid-column:1/-1!important;grid-row:2!important;width:100%;min-width:0;margin:0!important;
  }
@@ -30,6 +37,9 @@
   display:inline-flex;align-items:center;justify-content:center;min-width:44px!important;min-height:44px!important;
   padding:8px!important;white-space:nowrap;font-size:.75rem!important;
  }
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-account{width:44px!important;flex:0 0 44px;padding:0!important}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-account-icon{display:flex}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-account-copy{display:none!important}
  body.site-glass-root .public-glass-header .public-header-action-desktop{display:none!important}
  body.site-glass-root .public-glass-header .public-header-action-mobile{display:inline!important}
  body.site-glass-root .public-glass-header .theme-toggle-label{display:none!important}

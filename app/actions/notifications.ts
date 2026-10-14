@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import {safeNotificationHref} from '@/lib/notification-links.mjs'
 import { requireOnboardedUser } from '@/lib/auth'
 
 export async function openNotification(formData: FormData) {
@@ -10,17 +11,19 @@ export async function openNotification(formData: FormData) {
   if (!id) redirect('/notifications')
   const { data } = await supabase.from('notifications').select('id,href').eq('id', id).eq('user_id', user.id).maybeSingle()
   if (!data) redirect('/notifications')
-  await supabase.rpc('mark_notification_read', { p_notification_id: id })
+  const {error}=await supabase.rpc('mark_notification_read', { p_notification_id: id })
+  if(error)redirect('/notifications?error=Could+not+mark+notification+read.+Please+try+again.')
   revalidatePath('/notifications')
-  const href = typeof data.href === 'string' && data.href.startsWith('/') ? data.href : '/notifications'
+  const href = safeNotificationHref(data.href)
   redirect(href)
 }
 
 export async function markAllNotificationsRead() {
   const { supabase } = await requireOnboardedUser()
-  await supabase.rpc('mark_all_notifications_read')
+  const {error}=await supabase.rpc('mark_all_notifications_read')
+  if(error)redirect('/notifications?error=Could+not+mark+notifications+read.+Please+try+again.')
   revalidatePath('/notifications')
-  revalidatePath('/home')
+  revalidatePath('/')
   redirect('/notifications')
 }
 

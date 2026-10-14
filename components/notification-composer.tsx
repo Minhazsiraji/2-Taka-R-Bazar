@@ -1,5 +1,6 @@
 'use client'
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useRef, useState, useTransition } from 'react'
+import {useRouter} from 'next/navigation'
 import { sendAdminBroadcast } from '@/app/actions/admin-notifications'
 
 type Community={id:string;name:string}; type Pool={id:string;title:string}
@@ -8,14 +9,23 @@ export function NotificationComposer({communities,pools,customerCount}:{communit
  const [priority,setPriority]=useState('normal'),[action,setAction]=useState('none'),[target,setTarget]=useState('')
  const [preview,setPreview]=useState(false),[review,setReview]=useState(false),[result,setResult]=useState('')
  const [pending,startTransition]=useTransition()
- const href=useMemo(()=>action==='pool'&&target?`/pool#pool-${target}`:action==='orders'||action==='payment'?'/orders':action==='pickup'?'/pickup':action==='notifications'?'/notifications':'',[action,target])
+ const router=useRouter()
+ const requestId=useRef<string|null>(null)
+ const href=useMemo(()=>action==='pool'&&target?`/pool#pool-${target}`:action==='orders'||action==='payment'?'/account/orders':action==='pickup'?'/pickup':action==='notifications'?'/notifications':'',[action,target])
  const valid=Boolean(title.trim()&&message.trim()&&(action!=='pool'||target))
  const actionLabel=action==='pool'?'Tap to view the pool':action==='payment'?'Make payment':action==='pickup'?'View pickup details':action==='orders'?'View order':action==='notifications'?'Open notifications':''
  const audienceLabel=community?(communities.find(c=>c.id===community)?.name??'Selected community'):'All users'
- function send(){startTransition(async()=>{setResult('');const r=await sendAdminBroadcast({title,message,communityId:community||null,priority,href:href||'/notifications',poolId:action==='pool'?target:null});if(r.ok){setResult(`Sent to ${r.count} customer${r.count===1?'':'s'}.`);setReview(false);setTitle('');setMessage('');setAction('none');setTarget('')}else setResult(r.error||'Unable to send.')})}
+ function send(){startTransition(async()=>{
+  setResult('')
+  try{
+   const r=await sendAdminBroadcast({title,message,communityId:community||null,priority,href:href||'/notifications',poolId:action==='pool'?target:null,requestId:requestId.current||''})
+   if(r.ok){setResult(`Sent to ${r.count} customer${r.count===1?'':'s'}.`);setReview(false);setTitle('');setMessage('');setAction('none');setTarget('');requestId.current=null;router.refresh()}
+   else setResult(r.error||'Unable to send.')
+  }catch{setResult('Delivery could not be confirmed. Retry this same reviewed announcement; recipients will not receive duplicates.')}
+ })}
  return <section className="card grid gap-5">
   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div><div className="card-title">New announcement</div><h2 className="section-title">Compose notification</h2></div><span className="chip">{customerCount} registered profiles</span></div>
-  {result&&<div className="notice">{result}</div>}
+  {result&&<div role="status" className="notice">{result}</div>}
   <div className="grid gap-4 md:grid-cols-2">
    <label className="md:col-span-2"><span className="label">Title</span><input className="input" maxLength={80} value={title} onChange={e=>setTitle(e.target.value)} placeholder="October grocery pool is open"/></label>
    <label className="md:col-span-2"><span className="label">Message</span><textarea className="input min-h-24" maxLength={500} value={message} onChange={e=>setMessage(e.target.value)} placeholder="Save up to ৳200. Commit before the deadline."/></label>
@@ -26,8 +36,8 @@ export function NotificationComposer({communities,pools,customerCount}:{communit
    <div className="md:col-span-2 rounded-xl border border-slate-200 p-3 text-sm"><b>Destination:</b> {href||'No link — informational notification only'}</div>
   </div>
   <div className="grid gap-3 sm:grid-cols-2"><div className="rounded-xl border border-slate-200 p-4"><b>In-app notification</b><div className="text-xs text-slate-500">Customer notification timeline.</div></div><div className="rounded-xl border border-slate-200 p-4"><b>Browser / PWA push</b><div className="text-xs text-slate-500">Subscribed customer devices.</div></div></div>
-  <div className="notice"><b>Safety gate:</b> review the exact audience, message and destination before customer delivery.</div>
-  <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button className="btn-secondary sm:min-w-36" type="button" onClick={()=>setPreview(true)} disabled={!valid}>Preview message</button><button className="btn-primary sm:min-w-36" type="button" onClick={()=>setReview(true)} disabled={!valid}>Review &amp; send</button></div>
+  <p className="muted">In-app updates appear automatically while customers browse. Device alerts reach customers who enable browser notifications.</p>
+  <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button className="btn-secondary sm:min-w-36" type="button" onClick={()=>setPreview(true)} disabled={!valid}>Preview message</button><button className="btn-primary sm:min-w-36" type="button" onClick={()=>{requestId.current=crypto.randomUUID();setReview(true)}} disabled={!valid}>Review &amp; send</button></div>
   {preview&&<div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4" onClick={()=>setPreview(false)}><div className="card w-full max-w-lg" onClick={e=>e.stopPropagation()}><div className="card-title">Customer preview</div><h3 className="section-title mt-1">{title}</h3><p className="mt-3 whitespace-pre-wrap">{message}</p>{actionLabel&&<div className="mt-4 font-bold text-cyan-700">{actionLabel}</div>}<div className="mt-5 flex justify-end"><button className="btn-secondary" onClick={()=>setPreview(false)}>Close preview</button></div></div></div>}
   {review&&<div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"><div className="card w-full max-w-lg">
    <div className="card-title">Final review</div><h3 className="section-title mt-1">Ready to send?</h3>

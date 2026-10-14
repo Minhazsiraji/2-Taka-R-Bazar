@@ -52,6 +52,8 @@ try{
    await page.reload({waitUntil:'networkidle'})
    assert.equal((await toggle.innerText()).trim(),'BAN','EN choice must survive full reload')
   }
+  assert.equal(await page.locator('header .market-header-location').count(),0)
+  assert.equal(await page.locator('.customer-notification-bell').count(),1)
   await assertHeaderGeometry(page,'.market-brand-lockup','.market-header-actions',width)
   if(width===393)await page.screenshot({path:'/tmp/2tbr-header-storefront-guest.png',fullPage:true})
   assert.equal(await page.locator('.market-pool-demo-pill').count(),0)
@@ -87,6 +89,9 @@ try{
    await assertCustomerPageHeader(infoPage,width)
   }
  }
+ const guestStatus=await infoPage.request.get('http://127.0.0.1:3000/api/notifications/status')
+ assert.deepEqual(await guestStatus.json(),{authenticated:false,unread:0,latest:null})
+ assert.match(guestStatus.headers()['cache-control'],/no-store/)
  await infoPage.close()
  console.log('Compact public header UAT passed: login, signup and six information/policy pages at four widths.')
  assert.deepEqual(errors,[])

@@ -11,10 +11,10 @@
     "app/marketplace-story.css": "c2a36662a999814ce542b718930c8b8c3996840f778871a69bf28b62e9c7be1b",
     "app/marketplace-unified.css": "8654c2e5c47343e4a058ec97066aa139db068192bd84c166d4300b6d4fd60def",
     "components/animated-hero-messages.tsx": "7787d408afa61296ea499bacff02f6e7c06212cc41ed49e7b9a1b5f9b378f2cc",
-    "components/public-header.tsx": "b11590b492c90f996203ed309d60b547f07cfc9d295ff0792a4b4f838cdf447a",
+    "components/public-header.tsx": "6979c7ebdfc8b985a18497c8aaa6cdeff89d8793d072b54191fd3d8cfe324f47",
     "components/storefront-footer.tsx": "a012b89177e2f068585502628417284ec19e17db92f096e35f1360734588fc05",
     "lib/hero-messages.ts": "1d9d0f793ce30114647b0ad66c3196ceedd3698ce71da273b2cf8a7b270ff89a",
-    "app/site-header-mobile.css": "7ecbd8ba8d20e105b543b71b2be333963a68e6c1859ed2a3f5f8d69f0e2a95f3"
+    "app/site-header-mobile.css": "2168a38efb5087fb5931f5db1873c85c194c3eaa7250b4ebdf5bfb6d0d75064d"
   },
   "navigation_change": {
     "source": "Issue #64, approved functional navigation",
@@ -22,6 +22,6 @@
   },
   "mobile_header_repair": {
     "approved_by": "User, 2026-10-14 follow-up mobile screenshots",
-    "changes": "One compact mobile logo/control row, short visible action labels with full accessible names, optional search in second row; shared fit across customer header variants. Approved desktop branding and storefront content preserved."
+    "changes": "One compact mobile logo/control row, short visible action labels with full accessible names, optional search in second row; shared fit across customer header variants. Approved desktop branding and storefront content preserved. Owner also requested removal of the duplicate header location and working notification access on all customer header variants."
   }
 }
