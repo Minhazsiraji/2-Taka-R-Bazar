@@ -23,7 +23,7 @@ export default async function AccountSecurityPage({searchParams}: {searchParams:
       <p className="mt-3 text-sm">Your identity, community and staff permissions stay attached to this account. Enter and save the password privately.</p>
       {user.phone && <p className="mt-2 text-sm">Mobile login number: <b>{user.phone}</b></p>}
       <form action={setMyPassword} className="mt-5 grid gap-4">
-        {!user.phone && <><BdPhoneInput/><p className="text-sm">Add a mobile login number to this Google account. This does not establish phone ownership or community eligibility.</p></>}
+        {!user.phone && <><BdPhoneInput/><p className="text-sm">Add a mobile login number to this Google account. It also becomes your order contact. This does not establish phone ownership or community eligibility.</p></>}
         <label>New password<input className="input mt-1 w-full" type="password" name="password" autoComplete="new-password" minLength={12} maxLength={128} required/></label>
         <label>Confirm new password<input className="input mt-1 w-full" type="password" name="confirm_password" autoComplete="new-password" minLength={12} maxLength={128} required/></label>
         <details><summary className="cursor-pointer text-sm">Current password, if required by your account</summary><label className="mt-2 block">Current password<input className="input mt-1 w-full" name="current_password" type="password" autoComplete="current-password" maxLength={256}/></label></details>

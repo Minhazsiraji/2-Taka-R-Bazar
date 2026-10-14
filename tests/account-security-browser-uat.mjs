@@ -102,6 +102,12 @@ try {
   assert.equal(customerError, null)
   assert.deepEqual((await rows('user_roles', customer.user.id)).map(r => r.role), ['customer'])
   assert.equal((await rows('profiles', customer.user.id))[0].community_id, '00000000-0000-4000-8000-000000000821')
+  const tamperedPhone = await customerClient.from('profiles').update({phone: '8801700000099'}).eq('id', customer.user.id)
+  assert.match(tamperedPhone.error?.message || '', /authenticated login number/)
+  for (const payload of [{community_id: randomUUID()}, {referral_code: 'TAMPER123'}, {onboarding_completed_at: '2000-01-01T00:00:00Z'}]) {
+    const tampered = await customerClient.from('profiles').update(payload).eq('id', customer.user.id)
+    assert.ok(tampered.error, 'Household/system fields must remain protected')
+  }
   await page.context().clearCookies()
 
   // Exercise contact onboarding for an email-only identity using ordinary SDK auth.
@@ -122,6 +128,8 @@ try {
   await page.getByRole('button', {name: 'Finish setup', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/home')
   assert.equal((await rows('profiles', emailFixture.user.id))[0].phone, '8801700000093')
+  const tamperedContact = await native.from('profiles').update({phone: '8801700000099'}).eq('id', emailFixture.user.id)
+  assert.match(tamperedContact.error?.message || '', /Mobile contact is fixed/)
   await page.goto('http://127.0.0.1:3000/account/security', {waitUntil: 'networkidle'})
   await page.locator('[name="phone"]').fill('01700000091')
   await save(password)
@@ -135,6 +143,7 @@ try {
   const {data: mobileAdded, error: mobileAddedError} = await customerClient.auth.signInWithPassword({phone: '8801700000094', password})
   assert.equal(mobileAddedError, null)
   assert.equal(mobileAdded.user.id, emailFixture.user.id)
+  assert.equal((await rows('profiles', emailFixture.user.id))[0].phone, '8801700000094')
   assert.deepEqual((await rows('user_roles', emailFixture.user.id)).map(r => r.role), ['customer'])
   assert.deepEqual(errors, [])
   console.log('No-SMS Auth UAT passed: password change and login preserve owner identity/roles; old password rejected; native customer signup/referral/onboarding; email-only contact onboarding and mobile linking; phone collision/guest access/invalid OAuth callbacks rejected.')

@@ -131,6 +131,10 @@ export async function setMyPassword(formData: FormData) {
   }
   if(updated.user?.id!==user.id)throw new Error('Password update identity mismatch')
   if (phone && updated.user.phone !== phone.replace(/^\+/, '')) redirect('/account/security?error=Mobile+login+was+not+activated.+Contact+support.')
+  if (phone) {
+    const {error:profileError}=await supabase.from('profiles').update({phone:updated.user.phone}).eq('id',user.id)
+    if(profileError)redirect('/account/security?error=Your+login+was+saved,+but+the+order+contact+could+not+be+updated.+Contact+support.')
+  }
   revalidatePath('/account/security')
   redirect('/account/security?notice=Password+saved.+You+can+now+sign+in+with+your+mobile+number+and+this+password')
 }
@@ -202,6 +206,6 @@ export async function updateProfile(formData: FormData) {
   const { supabase,user }=await requireUser(); const pickupPointId=getText(formData,'pickup_point_id')||null
   const { data:current }=await supabase.from('profiles').select('community_id').eq('id',user.id).single(); if(!current?.community_id) redirect('/onboarding')
   if(pickupPointId){ const {data:pickup}=await supabase.from('pickup_points').select('id').eq('id',pickupPointId).eq('community_id',current.community_id).eq('active',true).maybeSingle(); if(!pickup) redirect('/profile?error=Choose+an+active+pickup+point+inside+your+community') }
-  const {error}=await supabase.from('profiles').update({full_name:getText(formData,'full_name'),household_name:getText(formData,'household_name'),address_hint:getText(formData,'address_hint')||null,google_maps_url:getText(formData,'google_maps_url')||null,pickup_point_id:pickupPointId}).eq('id',user.id)
+  const {error}=await supabase.from('profiles').update({...(user.phone?{phone:user.phone}:{}),full_name:getText(formData,'full_name'),household_name:getText(formData,'household_name'),address_hint:getText(formData,'address_hint')||null,google_maps_url:getText(formData,'google_maps_url')||null,pickup_point_id:pickupPointId}).eq('id',user.id)
   if(error) redirect(`/profile?error=${encodeURIComponent(error.message)}`); revalidatePath('/profile'); redirect('/profile?notice=Profile+updated')
 }
