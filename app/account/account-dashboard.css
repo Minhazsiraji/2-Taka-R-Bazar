@@ -1,0 +1,34 @@
+.site-glass-root .account-dashboard .account-dashboard-band{padding:38px 0 56px}
+.site-glass-root .account-dashboard .account-dashboard-intro{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:28px}
+.site-glass-root .account-dashboard .account-dashboard-kicker{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--theme-accent,#087f8d)}
+.site-glass-root .account-dashboard h1{font-size:clamp(2rem,3.5vw,3rem);line-height:1.15;font-weight:800;margin:8px 0 12px;color:var(--theme-text,#17213b)}
+.site-glass-root .account-dashboard p{color:var(--theme-muted,#576785);line-height:1.6}
+.site-glass-root .account-dashboard .market-header-browse{display:flex;align-items:center;min-height:43px;padding:.5rem 1rem .5rem .55rem;flex:1;color:var(--theme-muted,#576785);font-size:.9rem}
+.site-glass-root .account-dashboard .account-money-card,.site-glass-root .account-dashboard .account-tool-card,.site-glass-root .account-dashboard .account-setup-notice{border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 5px 18px rgba(31,46,72,.07);border-radius:24px}
+.site-glass-root .account-dashboard .account-money-card{display:flex;align-items:center;gap:24px;padding:30px 32px;text-decoration:none;border-color:rgba(36,191,192,.55);margin-bottom:36px}
+.site-glass-root .account-dashboard .account-money-card h2{font-size:clamp(1.65rem,2.6vw,2.2rem);font-weight:800;margin:5px 0;color:var(--theme-text,#17213b)}
+.site-glass-root .account-dashboard .account-money-action{display:inline-block;color:var(--theme-accent,#087f8d);font-weight:800;margin-top:14px}
+.site-glass-root .account-dashboard .account-tool-icon{display:flex;flex-shrink:0;align-items:center;justify-content:center;width:44px;height:44px;border-radius:16px;border:1px solid rgba(255,255,255,.8);background:rgba(255,255,255,.18);color:var(--theme-accent,#087f8d);font-size:1.4rem;font-weight:700}
+.site-glass-root .account-dashboard .account-money-card>.account-tool-icon{width:74px;height:74px;font-size:2.6rem;border-radius:24px}
+.site-glass-root .account-dashboard .account-tools-section{margin-top:30px}
+.site-glass-root .account-dashboard .account-tools-section>h2{font-size:1.3rem;font-weight:800;color:var(--theme-text,#17213b);margin-bottom:18px}
+.site-glass-root .account-dashboard .account-tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.site-glass-root .account-dashboard .account-tool-card{display:flex;align-items:center;gap:16px;padding:22px;min-width:0;text-decoration:none;color:var(--theme-text,#17213b)}
+.site-glass-root .account-dashboard .account-tool-card h3{font-size:1rem;font-weight:800;margin-bottom:5px}
+.site-glass-root .account-dashboard .account-tool-card p{font-size:.86rem}
+.site-glass-root .account-dashboard .account-tool-arrow{margin-left:auto;color:var(--theme-accent,#087f8d);font-size:1.2rem}
+.site-glass-root .account-dashboard .account-money-card:hover,.site-glass-root .account-dashboard .account-tool-card:hover{border-color:var(--theme-accent,#087f8d)}
+.site-glass-root .account-dashboard .account-money-card:focus-visible,.site-glass-root .account-dashboard .account-tool-card:focus-visible{outline:2px solid var(--theme-accent,#087f8d);outline-offset:4px}
+.site-glass-root .account-dashboard .account-savings-note{font-size:.85rem;margin-top:18px}
+.site-glass-root .account-dashboard .account-staff-links{display:flex;flex-wrap:wrap;gap:12px}
+.site-glass-root .account-dashboard .account-setup-notice{padding:20px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+html[data-theme="dark"] .site-glass-root .account-dashboard .account-money-card,html[data-theme="dark"] .site-glass-root .account-dashboard .account-tool-card,html[data-theme="dark"] .site-glass-root .account-dashboard .account-setup-notice{border-color:rgba(156,216,217,.32);background:rgba(25,47,57,.15);box-shadow:inset 0 1px 0 rgba(161,225,222,.25),0 5px 18px rgba(0,0,0,.15)}
+@media(max-width:767px){
+ .site-glass-root .account-dashboard .account-dashboard-band{padding:24px 0 90px}
+ .site-glass-root .account-dashboard .account-dashboard-intro{align-items:flex-start;flex-direction:column;gap:16px}
+ .site-glass-root .account-dashboard .account-tools-grid{grid-template-columns:minmax(0,1fr);gap:12px}
+ .site-glass-root .account-dashboard .account-tool-card{padding:18px;gap:12px}
+ .site-glass-root .account-dashboard .account-money-card{padding:22px 18px;gap:16px}
+ .site-glass-root .account-dashboard .account-money-card>.account-tool-icon{width:48px;height:58px;font-size:2rem;border-radius:18px}
+ .site-glass-root .account-dashboard .account-setup-notice{align-items:flex-start;flex-direction:column}
+}
