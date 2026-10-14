@@ -1,6 +1,7 @@
 'use client'
 import {useState} from 'react'
 import Link from 'next/link'
+import {PublicFooter} from '@/components/public-footer'
 import {PublicHeader} from '@/components/public-header'
 import type {StorefrontOffer} from '@/lib/storefront'
 import {chooseText} from '@/lib/storefront-language'
@@ -27,7 +28,7 @@ export function DemoProductDetails({offer,initialLanguage='en',hasLanguageCookie
  const nextThreshold=Number(offer.next_threshold)||0
  const remaining=Math.max(0,nextThreshold-households)
  return <main className="public-marketplace-flat market-pool-detail-page min-h-screen">
-  <PublicHeader actionHref="/#deals" actionLabel={t('Back to shopping','বাজারে ফিরুন')} mobileActionLabel={t('Shop','বাজার')} language={lang} onLanguageChange={setLang}/>
+  <PublicHeader storefront shopBaseHref="/" browseHref="/#deals" actionHref="/#deals" actionLabel={t('Back to shopping','বাজারে ফিরুন')} mobileActionLabel={t('Shop','বাজার')} language={lang} onLanguageChange={setLang}/>
 
   <div className="market-pool-detail-content">
    <div className="market-demo-detail-banner" role="status">{t('DEMO PRODUCT — all prices, group participation and product availability are fictional. No real ordering.','ডেমো পণ্য — দাম, গ্রুপে অংশগ্রহণ ও মজুত কাল্পনিক। বাস্তবে অর্ডার করা যাবে না।')}</div>
@@ -86,5 +87,6 @@ export function DemoProductDetails({offer,initialLanguage='en',hasLanguageCookie
     </section>
    </div>
   </div>
+ <PublicFooter language={lang}/>
  </main>
 }

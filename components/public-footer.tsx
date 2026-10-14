@@ -1,7 +1,9 @@
-import { SiteFooter } from '@/components/site-footer'
+'use client'
 import {StorefrontFooter} from '@/components/storefront-footer'
-import {MobileCustomerNav} from '@/components/mobile-customer-nav'
+import {useStorefrontLanguage} from '@/lib/use-storefront-language'
+import type {MarketplaceLanguage} from '@/lib/storefront-language'
 
-export function PublicFooter({storefront=false,language,shopBaseHref}:{storefront?:boolean;language?:import('@/lib/storefront-language').MarketplaceLanguage;shopBaseHref?:string}){
-  return storefront?<StorefrontFooter language={language} shopBaseHref={shopBaseHref}/>:<><SiteFooter language={language} withMobileNavOffset/><MobileCustomerNav language={language}/></>
+export function PublicFooter({language,initialLanguage='en',hasLanguageCookie=false,shopBaseHref='/'}:{storefront?:boolean;language?:MarketplaceLanguage;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean;shopBaseHref?:string}){
+  const [preferredLanguage]=useStorefrontLanguage(language??initialLanguage,hasLanguageCookie)
+  return <StorefrontFooter language={language??preferredLanguage} shopBaseHref={shopBaseHref}/>
 }

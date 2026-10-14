@@ -26,7 +26,7 @@ test('selected demo Pool opens with only its chosen community package',()=>{
  assert.match(pool,/communityName&&<p className="market-demo-area-pill"/)
 })
 test('Pool page matches storefront branding but demo checkout stays disabled',()=>{
- assert.match(pool,/<PublicHeader actionHref="\/#deals"/)
+ assert.match(pool,/<PublicHeader storefront shopBaseHref="\/" browseHref="\/#deals" actionHref="\/#deals"/)
  assert.match(pool,/onLanguageChange=\{setLanguage\}/)
  const sharedHeader=read('components/public-header.tsx')
  assert.match(sharedHeader,/<BrandLogo size=\{46\}/)

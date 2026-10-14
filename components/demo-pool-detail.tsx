@@ -49,7 +49,7 @@ export function DemoPoolDetail({pool,communityName,initialLanguage='en',hasLangu
   setStatus(t('Selected items added to the demo basket. No checkout or payment is available.','পণ্য ডেমো বাস্কেটে যোগ হয়েছে। চেকআউট বা পেমেন্ট চালু নেই।'))
  }
  return <main className="public-marketplace-flat market-pool-detail-page min-h-screen">
-  <PublicHeader actionHref="/#deals" actionLabel={t('Back to shopping','বাজারে ফিরুন')} mobileActionLabel={t('Shop','বাজার')} language={language} onLanguageChange={setLanguage}/>
+  <PublicHeader storefront shopBaseHref="/" browseHref="/#deals" actionHref="/#deals" actionLabel={t('Back to shopping','বাজারে ফিরুন')} mobileActionLabel={t('Shop','বাজার')} language={language} onLanguageChange={setLanguage}/>
 
   <div className="market-pool-detail-content" lang={language}>
    <nav className="market-pool-breadcrumb" aria-label={t('Breadcrumb','পথ নির্দেশনা')}>

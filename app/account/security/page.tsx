@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import {redirect} from 'next/navigation'
 import {createClient} from '@/lib/supabase/server'
-import {PublicHeader} from '@/components/public-header'
-import {PublicFooter} from '@/components/public-footer'
+import {CustomerHeader as PublicHeader} from '@/components/customer-header'
+import {CustomerFooter as PublicFooter} from '@/components/customer-footer'
 import {SubmitButton} from '@/components/submit-button'
 import {BdPhoneInput} from '@/components/bd-phone-input'
 import {setMyPassword, linkMyGoogle} from '@/app/actions/auth'
@@ -14,7 +14,7 @@ export default async function AccountSecurityPage({searchParams}: {searchParams:
   const {data: {user}} = await supabase.auth.getUser()
   if (!user) redirect('/login?next=%2Faccount%2Fsecurity')
   const linkedGoogle = user.identities?.some(identity => identity.provider === 'google')
-  return <main className="min-h-screen bg-white text-black"><PublicHeader actionHref="/account" actionLabel="Account"/>
+  return <main className="public-marketplace-flat customer-page-shell min-h-screen bg-white text-black"><PublicHeader actionHref="/account" actionLabel="Account"/>
     <section className="card mx-auto my-8 max-w-lg p-5">
       <h1 className="mb-5 text-2xl font-black">Account security / অ্যাকাউন্টের নিরাপত্তা</h1>
       {query.error && <p className="error mb-4" role="alert">{query.error}</p>}

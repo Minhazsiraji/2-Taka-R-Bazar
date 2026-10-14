@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { PublicHeader } from '@/components/public-header'
-import { PublicFooter } from '@/components/public-footer'
+import { CustomerHeader as PublicHeader } from '@/components/customer-header'
+import { CustomerFooter as PublicFooter } from '@/components/customer-footer'
 import { PILOT_AREA, PUBLIC_CONTACT_EMAIL, SEO_UPDATED_AT, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
@@ -46,7 +46,7 @@ export default function AboutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-950">
+    <main className="public-marketplace-flat customer-page-shell min-h-screen bg-slate-50 text-slate-950">
       <PublicHeader actionHref="/" actionLabel="Home" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />

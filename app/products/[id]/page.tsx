@@ -2,8 +2,8 @@ import type {Metadata} from 'next'
 import Link from 'next/link'
 import {notFound} from 'next/navigation'
 import {createClient} from '@/lib/supabase/server'
-import {PublicHeader} from '@/components/public-header'
-import {PublicFooter} from '@/components/public-footer'
+import {CustomerHeader as PublicHeader} from '@/components/customer-header'
+import {CustomerFooter as PublicFooter} from '@/components/customer-footer'
 import {ShowcaseProductGallery} from '@/components/showcase-product-gallery'
 import {SITE_NAME,SITE_URL} from '@/lib/site'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
@@ -33,7 +33,7 @@ export default async function ProductDetailsPage({params}:{params:Promise<{id:st
   const images=[...new Set([product.image_url,...(product.gallery_urls??[])].filter((x):x is string=>Boolean(x)))]
   const schema={'@context':'https://schema.org','@type':'Product',name:product.name,description:product.description||undefined,brand:product.brand?{'@type':'Brand',name:product.brand}:undefined,
     image:images,category:product.category,sku:undefined,url:`${SITE_URL}/products/${product.product_id}`}
-  return <main className="min-h-screen bg-white text-black">
+  return <main className="public-marketplace-flat customer-page-shell min-h-screen bg-white text-black">
     <PublicHeader actionHref="/login" actionLabel="Sign in"/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}}/>
     <div className="mx-auto max-w-6xl px-5 py-8 md:px-8 md:py-12">
