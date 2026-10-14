@@ -11,6 +11,7 @@ import {formatPrice} from '@/lib/storefront'
 import type {StorefrontOffer} from '@/lib/storefront'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 import {SITE_NAME,SITE_URL} from '@/lib/site'
+import {getSeoCanonicalForProductId} from '@/lib/product-seo-public'
 
 export const dynamic='force-dynamic'
 type Params={params:Promise<{id:string}>;searchParams:Promise<{area?:string}>}
@@ -31,10 +32,11 @@ export async function generateMetadata({params}:Params):Promise<Metadata>{
  const {id}=await params
  const product=await loadProductOffers(id)
  if(!product)return {title:'Product unavailable',robots:{index:false,follow:false}}
+ const canonical=await getSeoCanonicalForProductId(id)
  const offer=product.matches[0]
  return {title:`${offer.product_name} | Local Offers`,
   description:`Explore ${offer.product_name} and verified community buying opportunities on ${SITE_NAME}. Login is only required to buy or join.`,
-  alternates:{canonical:`${SITE_URL}/shop/${id}`},
+  alternates:{canonical:canonical??`${SITE_URL}/shop/${id}`},
   openGraph:{title:offer.product_name,images:offer.image_url?[offer.image_url]:undefined}}
 }
 export default async function PublicProductPage({params,searchParams}:Params){
