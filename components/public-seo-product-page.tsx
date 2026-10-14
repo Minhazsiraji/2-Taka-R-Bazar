@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import {PublicHeader} from '@/components/public-header'
-import {PublicFooter} from '@/components/public-footer'
+import {CustomerHeader as PublicHeader} from '@/components/customer-header'
+import {CustomerFooter as PublicFooter} from '@/components/customer-footer'
 import {publicShowcaseImageUrl} from '@/lib/showcase-media'
 import {productUrls,productJsonLd,safeJsonLd,type ProductSeoPublic} from '@/lib/product-seo-public'
 import {SITE_NAME} from '@/lib/site'
@@ -14,7 +14,7 @@ export function PublicSeoProductPage({product:p,locale}:{product:ProductSeoPubli
  const faqs=(p.faqs??[]).map(f=>({question:bn?f.question_bn:f.question_en,answer:bn?f.answer_bn:f.answer_en}))
  const gallery=[p.image_url,...(p.media??[]).filter(m=>m.kind==='gallery').map(m=>m.url)].filter((s):s is string=>Boolean(s)&&publicShowcaseImageUrl(s!))
  const imageAlt=[alt,...(p.media??[]).filter(m=>m.kind==='gallery').map(m=>bn?m.alt_bn:m.alt_en)]
- return <main lang={locale==='bn'?'bn':'en'} className="min-h-screen bg-white text-slate-900">
+ return <main lang={locale==='bn'?'bn':'en'} className="public-marketplace-flat customer-page-shell min-h-screen bg-white text-slate-900">
   <PublicHeader actionHref="/login" actionLabel="Sign in"/>
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:safeJsonLd(productJsonLd(p,locale))}}/>
   <article className="mx-auto max-w-6xl px-4 py-8 sm:px-6 md:py-12">
