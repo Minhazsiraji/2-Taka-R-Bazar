@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 
 const read=(path)=>readFileSync(new URL('../'+path,import.meta.url),'utf8')
-const sql=read('supabase/migrations/20261015000100_product_seo_content.sql')
+const sql=read('supabase/migrations/20261014164248_product_seo_content_issue80.sql')
 const actions=read('app/actions/product-seo.ts')
 const editor=read('components/admin-product-seo-editor.tsx')
 const lib=read('lib/product-seo-public.ts')
