@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {chromium} from 'playwright'
 import {assertHeaderGeometry, assertCustomerPageHeader} from './header-layout-assertions.mjs'
+import {assertMobileDock} from './mobile-dock-assertions.mjs'
 const api=process.env.NEXT_PUBLIC_SUPABASE_URL
 if(!api||new URL(api).hostname!=='127.0.0.1')throw new Error('Disposable local Supabase required')
 const key=process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY
@@ -33,7 +34,7 @@ try{
  const location = new URL(legacy.headers.get('location'), 'http://127.0.0.1:3000')
  assert.equal(location.pathname, '/')
  assert.equal(location.searchParams.get('notice'), 'legacy-bookmark')
- for(const width of [320,360,393,640,768,1440,1920]){
+ for(const width of [320,360,393,640,767,768,1440,1920]){
   const page=await browser.newPage({viewport:{width,height:900}})
   page.on('pageerror',e=>errors.push(e.message))
   await page.goto('http://127.0.0.1:3000/',{waitUntil:'networkidle'})
@@ -64,12 +65,19 @@ try{
   const dock=page.locator('.market-storefront-dock')
   assert.equal(await dock.isVisible(),width<768)
   if(width<768)assert.equal(await dock.evaluate(e=>getComputedStyle(e).position),'fixed')
+  await assertMobileDock(page,width)
   const links=await page.locator('footer a[href^="mailto:"]').evaluateAll(es=>es.map(e=>e.getAttribute('href')))
   assert.deepEqual(links,['mailto:business@2takarbazar.com','mailto:support@2takarbazar.com','mailto:business@agentsiraji.com'])
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true)
   await page.getByRole('button',{name:'Switch to dark mode'}).click()
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark')
   assert.equal(await dock.isVisible(),width<768)
+  await assertMobileDock(page,width)
+  if(width===393){
+   await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}))
+   await page.screenshot({path:'/tmp/2tbr-header-dock-storefront-footer.png'})
+   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}))
+  }
   await page.locator('.market-pool-thumbnail').first().click()
   await page.getByRole('heading',{name:'Synthetic browser rice',exact:true}).first().waitFor()
   assert.ok(!page.url().includes('/login'))
