@@ -76,3 +76,12 @@ test('new canonical product pages are indexed only via published catalog read mo
  assert.match(robots,/OAI-SearchBot/)
  assert.match(robots,/\/admin\//)
 })
+
+test('existing offer and showcase URLs retain function but canonicalize when product SEO is published',()=>{
+ assert.match(sql,/create function public.get_public_product_seo_slug_for_id/)
+ assert.match(sql,/c.status='published'/)
+ assert.match(read('app/shop/[id]/page.tsx'),/getSeoCanonicalForProductId/)
+ assert.match(read('app/products/[id]/page.tsx'),/getSeoCanonicalForProductId/)
+ assert.match(read('app/shop/[id]/page.tsx'),/setCommerceCartItem/)
+ assert.match(read('app/products/[id]/page.tsx'),/get_public_own_product_showcase/)
+})
