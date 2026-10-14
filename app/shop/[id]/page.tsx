@@ -49,7 +49,7 @@ export default async function PublicProductPage({params,searchParams}:Params){
   brand:item.brand?{'@type':'Brand',name:item.brand}:undefined,
   image:gallery,category:item.category,url:`${SITE_URL}/shop/${id}`}
  return <main className="min-h-screen bg-white text-black">
-  <PublicHeader actionHref={product.authenticated?'/home':'/login'} actionLabel={product.authenticated?'My dashboard':'Sign in'}/>
+  <PublicHeader actionHref={product.authenticated?'/account':'/login'} actionLabel={product.authenticated?'My dashboard':'Sign in'}/>
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}}/>
   <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
    <nav aria-label="Breadcrumb" className="mb-6 text-sm font-semibold"><Link href="/" className="underline">Shop</Link> → {item.category} → {item.product_name}</nav>

@@ -23,6 +23,8 @@ const contentSecurityPolicy = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Retire every legacy Home entry, including bookmarks and stale installed apps.
+  redirects: async () => [{ source: '/home', destination: '/', permanent: true }],
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',

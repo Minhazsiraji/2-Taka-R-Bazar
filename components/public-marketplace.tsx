@@ -115,7 +115,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
  t('Browse freely. Detect your area only when you want.','লোকেশন ছাড়াই বাজার দেখুন। চাইলে এলাকা খুঁজুন।')
 
  return <>
-  <PublicHeader storefront actionHref={authenticated?'/home':'/login'} actionLabel={authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Sign in','লগইন')}
+  <PublicHeader storefront actionHref={authenticated?'/account':'/login'} actionLabel={authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Sign in','লগইন')}
    searchValue={search} onSearchChange={setSearch} onLocationClick={useLocation} locating={gpsBusy} locationLabel={activeLocationLabel}
    language={language} onLanguageChange={setLanguage}/>
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">

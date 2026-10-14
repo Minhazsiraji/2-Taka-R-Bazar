@@ -159,9 +159,20 @@ try {
   await login('01700000094', password)
   await page.waitForURL(url => url.pathname === '/')
   await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
-  // The personal dashboard remains reachable; its Home link returns to shopping.
+  // Stale signed-in bookmarks must never render the retired Home dashboard.
   await page.goto('http://127.0.0.1:3000/home', {waitUntil: 'networkidle'})
-  await page.getByRole('link', {name: '2-TAKA-R-BAZAR home', exact: true}).click()
+  await page.waitForURL(url => url.pathname === '/')
+  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
+  assert.equal(await page.getByRole('heading', {name: 'Your community is buying smarter.', exact: true}).count(), 0)
+  const dashboard = page.getByRole('link', {name: 'My dashboard', exact: true})
+  assert.equal(await dashboard.getAttribute('href'), '/account')
+  await dashboard.click()
+  await page.waitForURL(url => url.pathname === '/account')
+  await page.getByRole('heading', {name: /Account/}).waitFor()
+  // An old saved login return URL is canonicalized before redirecting.
+  await page.context().clearCookies()
+  await page.goto('http://127.0.0.1:3000/login?next=%2Fhome', {waitUntil: 'networkidle'})
+  await login('01700000094', password)
   await page.waitForURL(url => url.pathname === '/')
   // A returning password member who has not completed setup must still finish it.
   const unfinishedPassword = randomUUID() + 'aA1!'

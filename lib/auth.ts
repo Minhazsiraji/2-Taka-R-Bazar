@@ -39,18 +39,18 @@ export async function requireOnboardedUser() {
 
 export async function requireAdmin() {
   const viewer = await getViewer()
-  if (!viewer.roles.has('admin') && !viewer.roles.has('super_admin')) redirect('/home')
+  if (!viewer.roles.has('admin') && !viewer.roles.has('super_admin')) redirect('/')
   return viewer
 }
 
 export async function requireSuperAdmin() {
   const viewer = await getViewer()
-  if (!viewer.roles.has('super_admin')) redirect('/home')
+  if (!viewer.roles.has('super_admin')) redirect('/')
   return viewer
 }
 
 export async function requirePickupOperator() {
   const viewer = await getViewer()
-  if (!viewer.roles.has('pickup_operator') && !viewer.roles.has('admin') && !viewer.roles.has('super_admin')) redirect('/home')
+  if (!viewer.roles.has('pickup_operator') && !viewer.roles.has('admin') && !viewer.roles.has('super_admin')) redirect('/')
   return viewer
 }
