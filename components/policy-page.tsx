@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { PublicHeader } from '@/components/public-header'
-import { PublicFooter } from '@/components/public-footer'
+import { CustomerHeader as PublicHeader } from '@/components/customer-header'
+import { CustomerFooter as PublicFooter } from '@/components/customer-footer'
 import { POLICY_EFFECTIVE_DATE_BN, POLICY_EFFECTIVE_DATE_EN } from '@/lib/legal'
 
 type PolicySection = { titleEn: string; titleBn: string; bodyEn: ReactNode; bodyBn: ReactNode }
@@ -8,7 +8,7 @@ type PolicySection = { titleEn: string; titleBn: string; bodyEn: ReactNode; body
 export function PolicyPage({titleEn,titleBn,summaryEn,summaryBn,sections}:{
   titleEn:string; titleBn:string; summaryEn:string; summaryBn:string; sections:PolicySection[]
 }) {
-  return <main className="min-h-screen bg-slate-50 text-slate-950">
+  return <main className="public-marketplace-flat customer-page-shell min-h-screen bg-slate-50 text-slate-950">
     <PublicHeader actionHref="/" actionLabel="Home" />
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">

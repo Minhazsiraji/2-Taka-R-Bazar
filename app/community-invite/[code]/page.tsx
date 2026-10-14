@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { confirmCommunityQrJoin } from '@/app/actions/community-qr'
-import { PublicHeader } from '@/components/public-header'
-import { PublicFooter } from '@/components/public-footer'
+import { CustomerHeader as PublicHeader } from '@/components/customer-header'
+import { CustomerFooter as PublicFooter } from '@/components/customer-footer'
 import { SubmitButton } from '@/components/submit-button'
 import { createClient } from '@/lib/supabase/server'
 import { normalizeCommunityQrCode } from '@/lib/community-qr'
@@ -47,7 +47,7 @@ export default async function CommunityInvitePage({
   const onboarded=Boolean(profile?.community_id&&profile?.onboarding_completed_at&&profile?.full_name&&profile?.phone)
   const differentCommunity=Boolean(onboarded&&profile.community_id!==qr.community_id)
 
-  return <main className="min-h-screen bg-slate-50 text-slate-950">
+  return <main className="public-marketplace-flat customer-page-shell min-h-screen bg-slate-50 text-slate-950">
     <PublicHeader actionHref={user?'/':'/login'} actionLabel={user?'Open app':'Sign in'}/>
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
       <section className="overflow-hidden rounded-[28px] border border-cyan-200/80 bg-[radial-gradient(circle_at_88%_10%,rgba(103,232,249,.28),transparent_30%),linear-gradient(135deg,rgba(255,255,255,.98),rgba(236,254,255,.90))] p-5 shadow-[0_18px_50px_rgba(14,165,233,.10)] sm:p-8">

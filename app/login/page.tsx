@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import {signInGoogle, signInPhonePassword} from '@/app/actions/auth'
 import {BdPhoneInput} from '@/components/bd-phone-input'
-import {PublicHeader} from '@/components/public-header'
-import {PublicFooter} from '@/components/public-footer'
+import {CustomerHeader as PublicHeader} from '@/components/customer-header'
+import {CustomerFooter as PublicFooter} from '@/components/customer-footer'
 import {SubmitButton} from '@/components/submit-button'
 import {safeAuthReturnPath} from '@/lib/auth-intent'
 import {getAuthProviders} from '@/lib/auth-providers'
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 export default async function LoginPage({searchParams}: {searchParams: Promise<{error?: string; notice?: string; next?: string}>}) {
   const [{error, notice, next}, providers] = await Promise.all([searchParams, getAuthProviders()])
   const returnTo = safeAuthReturnPath(next)
-  return <main className="min-h-screen bg-slate-50 text-black">
+  return <main className="public-marketplace-flat customer-page-shell min-h-screen bg-slate-50 text-black">
     <PublicHeader actionHref="/signup" actionLabel="Join the community pool"/>
     <div className="mx-auto flex min-h-[calc(100vh-81px)] max-w-6xl items-center justify-center px-4 py-10">
       <section className="card w-full max-w-md p-6 sm:p-8">

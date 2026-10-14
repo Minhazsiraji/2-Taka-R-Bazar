@@ -140,18 +140,15 @@ test('footer legal labels use hard stacked containers and action links stay Engl
 })
 
 
-test('all public and signed-in pages share one footer implementation with forced EN-BN stacking',()=>{
+test('all customer pages share the storefront footer and both permanent brand slogans',()=>{
   const publicFooter=read('components/public-footer.tsx')
-  const siteFooter=read('components/site-footer.tsx')
+  const siteFooter=read('components/storefront-footer.tsx')
   const appShell=read('components/app-shell.tsx')
-  const css=read('app/globals.css')
-  assert.match(publicFooter,/SiteFooter/)
-  assert.match(appShell,/SiteFooter withMobileNavOffset/)
-  assert.match(siteFooter,/site-footer-link-en/)
-  assert.match(siteFooter,/site-footer-link-bn/)
-  assert.match(css,/\.site-footer-link\s*\{[\s\S]*display:\s*flex\s*!important/)
-  assert.match(css,/flex-direction:\s*column\s*!important/)
-  assert.match(css,/\.site-footer-link-en,[\s\S]*\.site-footer-link-bn[\s\S]*display:\s*block\s*!important/)
+  const customerShell=read('components/customer-shell-client.tsx')
+  assert.match(publicFooter,/StorefrontFooter/)
+  assert.match(appShell,/if\(!staff\)return <CustomerShell/)
+  assert.match(customerShell,/<PublicFooter language=\{language\}\/>/)
+  assert.match(siteFooter,/<p>\{SITE_TAGLINE_EN\}<\/p><p lang="bn">\{SITE_TAGLINE_BN\}<\/p>/)
   assert.doesNotMatch(appShell,/app-desktop-footer/)
   assert.doesNotMatch(appShell,/app-mobile-legal/)
 })

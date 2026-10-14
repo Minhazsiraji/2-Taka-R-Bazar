@@ -21,6 +21,7 @@ import './marketplace-exclusive-cards.css'
 import './marketplace-lower-polish.css'
 import './site-header-mobile.css'
 import './site-mobile-dock.css'
+import './site-customer-shell.css'
 import { PwaRegister } from '@/components/pwa-register'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE_EN, SITE_URL } from '@/lib/site'
 

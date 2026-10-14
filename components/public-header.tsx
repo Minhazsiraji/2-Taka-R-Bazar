@@ -24,6 +24,7 @@ const storefrontNav=[
  {href:'#our-communities',label:'Our Areas',bn:'এলাকা'},
  {href:'#customer-experiences',label:'Reviews',bn:'মতামত'},
  {href:'/cart',label:'Cart',bn:'কার্ট'},
+ {href:'/money',label:'My Money',bn:'আমার অর্থ'},
 ] as const
 
 export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefront=false,
@@ -34,7 +35,7 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
  const actionCopy=<><span className="public-header-action-desktop" aria-hidden="true">{actionLabel}</span><span className="public-header-action-mobile" aria-hidden="true">{compactActionLabel}</span></>
  const shopHref=(href:string)=>href.startsWith('#')?shopBaseHref+href:href
  const [menuOpen,setMenuOpen]=useState(false)
- if(storefront)return <header className="public-glass-header market-flat-header" aria-label="2-TAKA-R-BAZAR public shop header">
+ if(storefront)return <header className="public-glass-header market-flat-header" lang={language} aria-label="2-TAKA-R-BAZAR public shop header">
   <div className="market-header-inner">
    <Link href="/" className="market-brand-lockup" aria-label="2-TAKA-R-BAZAR home">
     <BrandLogo size={46}/>

@@ -36,7 +36,7 @@ export default async function CommunityOpsPage({searchParams}:{searchParams:Prom
   }
   const d=detail?.day,summary=detail?.summary??{},products=detail?.products??[],orders=detail?.orders??[],inbound=detail?.inbound??[],stockAdjustments=detail?.stock_adjustments??[],handover=detail?.cash_handover
 
-  return <AppShell roles={roles}><div className="grid gap-5">
+  return <AppShell staff roles={roles}><div className="grid gap-5">
     <section><div className="card-title">Community Operations Officer</div><h1 className="text-3xl font-black">Community fulfilment & reconciliation</h1><p className="muted mt-1">Receive goods, verify customer orders, hand over or deliver, keep Product COD and Home Delivery cash separate, record exceptions, and close only after Admin/Accounts accepts the cash.</p></section>
     <Flash error={sp.error} notice={sp.notice}/>
 

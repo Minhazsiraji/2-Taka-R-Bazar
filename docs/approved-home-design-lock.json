@@ -11,13 +11,18 @@
     "app/marketplace-story.css": "c2a36662a999814ce542b718930c8b8c3996840f778871a69bf28b62e9c7be1b",
     "app/marketplace-unified.css": "8654c2e5c47343e4a058ec97066aa139db068192bd84c166d4300b6d4fd60def",
     "components/animated-hero-messages.tsx": "7787d408afa61296ea499bacff02f6e7c06212cc41ed49e7b9a1b5f9b378f2cc",
-    "components/public-header.tsx": "6979c7ebdfc8b985a18497c8aaa6cdeff89d8793d072b54191fd3d8cfe324f47",
-    "components/storefront-footer.tsx": "5a2d4eb4d4332bfcda0ea6a0c0435395063d55efac2c1b35a2d66fa8c4e19d13",
+    "components/public-header.tsx": "1113cfadefbd4c5026d97e67393f760d4257a9d85870fed9199c931314248721",
+    "components/storefront-footer.tsx": "0d71227fc9629396028a860332acbf47257067c1d9904b5ef62a59226902f0c5",
     "lib/hero-messages.ts": "1d9d0f793ce30114647b0ad66c3196ceedd3698ce71da273b2cf8a7b270ff89a",
-    "app/site-header-mobile.css": "2168a38efb5087fb5931f5db1873c85c194c3eaa7250b4ebdf5bfb6d0d75064d",
-    "components/public-footer.tsx": "9861ac884fa6081000f9e25f803a2f0922ea6d9611c3497e307f9b1a405f8dbe",
+    "app/site-header-mobile.css": "49c50d83fe0647bb63c173c579c932cc93d069f78b6d094d9aa74314c735c8b6",
+    "components/public-footer.tsx": "cf79680dad5efac51a11c7976de6a2793fa3b70022d04575a297eed70bfb5029",
     "components/mobile-customer-nav.tsx": "fed39bfe21cb0ce077212ef70be493191cfb8bd025d6eb2d1573c6075f3e89f1",
-    "app/site-mobile-dock.css": "16af382e2e5acb7de9426fb45fb9738de315503d73a440db1fb05ce06c1190db"
+    "app/site-mobile-dock.css": "16af382e2e5acb7de9426fb45fb9738de315503d73a440db1fb05ce06c1190db",
+    "components/customer-header-client.tsx": "9516d928e269d43cf1d03084b8917404b9efddc83dc88d0e4b9cc4cb320f03d5",
+    "components/customer-shell-client.tsx": "af5c0aedb4906e6f8c1acf3a73a003b4bbd1372160bb8c06d144239eb4a640cc",
+    "app/site-customer-shell.css": "9797fceb995adf79cac0a0ea05355ac63393039cb60e083c63d2cccb534aefa9",
+    "components/customer-footer.tsx": "6897dc663122b6bca66fb0e211b4c529b7427099c2dd67439a098d28e69ead79",
+    "components/theme-toggle.tsx": "ad784cdfdeca0c299a3317b99acb95e9966bd399f1772568f3d8182062c7229a"
   },
   "navigation_change": {
     "source": "Issue #64, approved functional navigation",
@@ -29,9 +34,11 @@
   },
   "required_code": {
     "app/layout.tsx": [
-      "import './site-mobile-dock.css'"
+      "import './site-mobile-dock.css'",
+      "import './site-customer-shell.css'"
     ],
     "components/app-shell.tsx": [
+      "if(!staff)return <CustomerShell roles={roles}>{children}</CustomerShell>",
       "<MobileCustomerNav/>"
     ],
     "components/commerce-content.tsx": [
@@ -41,5 +48,13 @@
   "mobile_dock_repair": {
     "approved_by": "User, 2026-10-14 missing bottom menu follow-up",
     "changes": "One shared Home/Pools/Deals/Cart/Account component in storefront, generic customer footer and AppShell; single locked geometry/contrast stylesheet; visible below 768px, fixed above the device safe area; scroll and native link UAT required. Footer contacts, brand and header design preserved."
+  },
+  "tablet_branding": {
+    "approved_by": "User, 2026-10-14 tablet follow-up screenshots",
+    "changes": "Display full brand name and both official slogans from 768px upward across customer header families. Tablet storefront search moves below the brand/control row to retain space. Phone header and protected mobile dock unchanged."
+  },
+  "customer_ui_unification": {
+    "approved_by": "User, 2026-10-14 all customer pages consistency request",
+    "changes": "Storefront header/footer are canonical for customer, My Money, auth, policy, product, community invite and unavailable-page states. Both permanent slogans appear in footer. My Money is available through the shared shopping menu and Account. Language preference is reused across chrome. Staff operations retain their existing frame and permissions. Phone/tablet branding and mobile dock guards remain required."
   }
 }
