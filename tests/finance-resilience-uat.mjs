@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import {execFileSync,spawn} from 'node:child_process'
 import {readFileSync,mkdirSync,writeFileSync} from 'node:fs'
 const args=['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-tAX']
-const env={...process.env,PGPASSWORD:'postgres'}
+const env={...process.env,PGPASSWORD:'postgres',PGTZ:'Asia/Dhaka'}
 if(process.env.ISSUE57_DISPOSABLE_DB!=='true')throw new Error('Disposable DB qualification opt-in required')
 const sql=s=>execFileSync('psql',[...args,'-c',s],{env,encoding:'utf8'}).trim()
 // Seed a fully asserted chain, retaining synthetic data only in the disposable DB.
@@ -85,7 +85,8 @@ writeFileSync('/tmp/issue57-restore/roles.sql',roles)
 const fingerprintTables=sql("select n.nspname||'.'||c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace where c.relkind='r' and ((n.nspname='public' and (c.relname like 'finance\\_%' escape '\\' or c.relname like 'treasury\\_%' escape '\\' or c.relname in ('audit_events','procurement_purchase_orders','procurement_dispatch_links','procurement_supplier_bills','own_product_inventory','own_product_inventory_movements','user_roles'))) or (n.nspname='private' and c.relname in ('finance_uat_leases','finance_uat_entities')) or (n.nspname='auth' and c.relname='users') or (n.nspname='storage' and c.relname='objects')) order by 1").split('\n')
 assert.ok(fingerprintTables.length>=25)
 const fingerprint="select md5(string_agg(row_hash,'' order by row_hash)) from ("+fingerprintTables.map(table=>"select md5('"+table+"'||row_to_json(t)::text) row_hash from "+table+" t").join(' union all ')+") x"
-const before=sql(fingerprint)
+// Hash timestamps in the same canonical timezone on source and restored connections.
+const before=sql("set time zone 'UTC';"+fingerprint).split('\n').at(-1)
 const restoreName='issue57-isolated-restore'
 try{
  execFileSync('docker',['run','-d','--network','none','--name',restoreName,'-e','POSTGRES_PASSWORD=postgres','-v','/tmp/issue57-restore:/restore:ro',image],{encoding:'utf8',stdio:'pipe'})
@@ -113,7 +114,7 @@ try{
  // CREATE statement. Keep that empty namespace for the restored public objects.
  execFileSync('docker',['exec',restoreName,'pg_restore','-U','supabase_admin','-d','issue57_restore','--no-owner','--exit-on-error','/restore/database.dump'],{stdio:'pipe'})
  const restored=s=>execFileSync('docker',['exec',restoreName,'psql','-U','supabase_admin','-d','issue57_restore','-tAX','-v','ON_ERROR_STOP=1','-c',s],{encoding:'utf8'}).trim()
- assert.equal(restored(fingerprint),before,'Restore changed financial rows, identities, original document metadata or audit history')
+ assert.equal(restored("set time zone 'UTC';"+fingerprint).split('\n').at(-1),before,'Restore changed financial rows, identities, original document metadata or audit history')
  assert.equal(restored("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname like 'finance\\_%' escape '\\' and c.relkind='r' and not c.relrowsecurity"),'0')
  assert.equal(restored("select has_table_privilege('authenticated','public.finance_journals','INSERT')::text"),'false')
  console.log('ISOLATED_BACKUP_RESTORE_PASS exact financial/audit/document/auth fingerprint; RLS and financial privilege checks retained')

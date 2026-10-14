@@ -1,7 +1,7 @@
 name: Finance concurrency and isolated restore UAT
 on:
   push:
-    branches: [feat/finance-complete-release-uat-20261011]
+    branches: [feat/unified-commerce-issue64-20261013, feat/finance-complete-release-uat-20261011]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 jobs:
   resilience:
-    if: github.event_name != 'pull_request' || github.head_ref == 'feat/finance-complete-release-uat-20261011'
+    if: github.event_name != 'pull_request' || github.head_ref == 'feat/unified-commerce-issue64-20261013' || github.head_ref == 'feat/finance-complete-release-uat-20261011'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

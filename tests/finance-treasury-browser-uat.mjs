@@ -18,7 +18,7 @@ if(!/^http:\/\/(127\.0\.0\.1|localhost):54321\/?$/.test(db??'')||
 const supa=createClient(db,secret,{auth:{persistSession:false,autoRefreshToken:false}})
 function psql(sql){
  return execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-tAX',
- '-v','ON_ERROR_STOP=1','-c',sql],{env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8'}).trim()
+ '-v','ON_ERROR_STOP=1','-c',sql],{env:{...process.env,PGPASSWORD:'postgres',PGTZ:'Asia/Dhaka'},encoding:'utf8'}).trim()
 }
 const identities=new Map()
 async function viewer(role,identityKey=role){
@@ -127,7 +127,7 @@ async function main(){
  // No hosted target is accepted by the guard above; CI destroys the entire stack.
  const fixture=readFileSync('tests/supply-handover-e2e.sql','utf8').replace('\\ir finance-customer-lifecycle-e2e.sql','\\i tests/finance-customer-lifecycle-e2e.sql').replace(/rollback;\s*$/,'set constraints all immediate; commit;')
  execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1'],{
-  input:fixture,env:{...process.env,PGPASSWORD:'postgres'},encoding:'utf8',stdio:['pipe','pipe','pipe']})
+  input:fixture,env:{...process.env,PGPASSWORD:'postgres',PGTZ:'Asia/Dhaka'},encoding:'utf8',stdio:['pipe','pipe','pipe']})
  await viewer('super_admin')
  await viewer('admin')
  const browser=await chromium.launch({headless:true})
@@ -328,6 +328,33 @@ async function main(){
   await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
   let saleForm=maker.getByRole('button',{name:'Request customer sale posting'}).locator('xpath=ancestor::form')
   await saleForm.getByLabel('Completed customer source').selectOption('order:'+source)
+  assert.equal(await saleForm.getByRole('button',{name:'Add inventory allocation'}).isDisabled(),true,'One fulfilled unit must not allow extra allocation rows')
+  // A separate disposable three-unit source exercises removal of a middle row.
+  // Surviving rows must retain their invoice and quantity after field names shift.
+  const allocationSource='f5000000-0000-4000-8000-000000000099',allocationItem='f6000000-0000-4000-8000-000000000099'
+  psql(`insert into private.finance_uat_entities(entity_type,entity_id,reason) values('order','${allocationSource}','Disposable allocation row browser regression');
+  insert into public.orders(id,customer_id,pool_id,status,payment_status,product_subtotal,delivery_fee,total_amount,fulfillment_method,pickup_point_id,completed_at)
+  values('${allocationSource}','${identities.get('super_admin').id}','f1000000-0000-4000-8000-000000000001','completed','paid_manually',2940,0,2940,'pickup',(select id from public.pickup_points where community_id='11111111-1111-1111-1111-111111111111' limit 1),now());
+  insert into public.order_items(id,order_id,pool_item_id,product_id,quantity,benchmark_price_snapshot,unit_price)
+  values('${allocationItem}','${allocationSource}','f2000000-0000-4000-8000-000000000001','22222222-2222-2222-2222-222222222221',3,1000,980)`)
+  await visit(maker,'/admin/finance-customers','Customer revenue, inventory & refunds')
+  saleForm=maker.getByRole('button',{name:'Request customer sale posting'}).locator('xpath=ancestor::form')
+  await saleForm.getByLabel('Completed customer source').selectOption('order:'+allocationSource)
+  await saleForm.locator('select[name="bill_id_0"]').selectOption(bill)
+  await saleForm.locator('input[name="quantity_0"]').fill('1')
+  await saleForm.getByRole('button',{name:'Add inventory allocation'}).click()
+  await saleForm.getByRole('button',{name:'Add inventory allocation'}).click()
+  await saleForm.locator('select[name="bill_id_2"]').selectOption(bill)
+  await saleForm.locator('input[name="quantity_2"]').fill('2')
+  await saleForm.getByRole('button',{name:'Remove inventory allocation 2',exact:true}).click()
+  assert.equal(await saleForm.locator('fieldset').count(),2)
+  assert.equal(await saleForm.locator('select[name="bill_id_1"]').inputValue(),bill)
+  assert.equal(await saleForm.locator('input[name="quantity_1"]').inputValue(),'2')
+  assert.equal(await saleForm.locator('select[name="bill_id_0"]').inputValue(),bill)
+  assert.equal(await saleForm.locator('input[name="quantity_0"]').inputValue(),'1')
+  await saleForm.getByLabel('Completed customer source').selectOption('order:'+source)
+  psql(`delete from public.order_items where id='${allocationItem}';delete from public.orders where id='${allocationSource}';delete from private.finance_uat_entities where entity_type='order' and entity_id='${allocationSource}'`)
+  console.log('PASS one-unit allocation cap and middle-row removal preserve surviving lot and quantity inputs');stages++
   await saleForm.locator('select[name="bill_id_0"]').selectOption(bill)
   await saleForm.locator('input[name="quantity_0"]').fill('1')
   await saleForm.locator('input[name="reason"]').fill('Browser actual completed customer and cost lot review')
@@ -350,6 +377,9 @@ async function main(){
   assert.match(sale,/^[0-9a-f-]{36}$/)
   const self=await identities.get('admin').client.rpc('finance_review_customer_sale',{p_id:sale,p_approve:true,p_note:'Maker self approval must fail'})
   assert.ok(self.error)
+  const makerReview=maker.locator('input[name="event_id"][value="'+sale+'"]')
+  assert.equal(await makerReview.count(),0,'Maker must not see a form requiring Super Admin approval')
+  await maker.getByText('A different Super Admin must review this customer accounting request.').first().waitFor()
   await visit(owner,'/admin/finance-customers','Customer revenue, inventory & refunds')
   async function approveEvent(id){
    const f=owner.locator('input[name="event_id"][value="'+id+'"]').locator('xpath=ancestor::form')
@@ -405,7 +435,7 @@ async function main(){
   await visit(maker,'/admin/finance-attribution','Expense attribution & campaign budgets')
   const budgetForm=maker.getByRole('button',{name:'Request campaign budget'}).locator('xpath=ancestor::form')
   await budgetForm.locator('input[name="code"]').fill('BROWSER-MARKETING-BUDGET')
-  await budgetForm.locator('input[name="month"]').fill(new Date().toISOString().slice(0,7))
+  await budgetForm.locator('input[name="month"]').fill(new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}).slice(0,7))
   await budgetForm.locator('input[name="amount"]').fill('100')
   await budgetForm.locator('input[name="reason"]').fill('Synthetic browser offline campaign approval')
   await budgetForm.getByRole('button',{name:'Request campaign budget'}).click()
@@ -421,7 +451,7 @@ async function main(){
   await visit(owner,'/super-admin/finance-report','Integrated accounting report & period close')
   await snapshot(owner,'integrated-report')
   await owner.getByText('BDT 93.00',{exact:true}).waitFor({timeout:30000})
-  const auditExport=await owner.request.get(base+'/api/finance/export?month='+new Date().toISOString().slice(0,7))
+  const auditExport=await owner.request.get(base+'/api/finance/export?month='+new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}).slice(0,7))
   assert.equal(auditExport.status(),200);const exported=await auditExport.json()
   assert.equal(Number(exported.report.profit_before_tax),93);assert.ok(exported.audit.rows.length>0)
   assert.match(exported.report.ledger_sha256,/^[a-f0-9]{64}$/)
@@ -470,7 +500,7 @@ async function main(){
   }
   for(const key of ['community_operator','supplier_owner']){
    const client=identities.get(key).client
-   const denied=await client.rpc('finance_integrated_report',{p_month:new Date().toISOString().slice(0,7)+'-01'})
+   const denied=await client.rpc('finance_integrated_report',{p_month:new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}).slice(0,7)+'-01'})
    assert.ok(denied.error,'Operational identity accessed Super Admin financial report')
   }
   console.log('PASS supplier and pickup operator identities cannot read finance ledger, originals or company report');stages++
@@ -491,7 +521,7 @@ async function main(){
   psql("delete from private.finance_uat_leases where actor_id='"+ownerIdentity.id+"'")
   const locked=await ownerIdentity.client.rpc('treasury_create_account',{
    p_name:'Blocked direct API bank',p_kind:'bank',p_institution:'Synthetic',p_last_four:'0057',
-   p_open_date:new Date().toISOString().slice(0,10),p_opening_balance:1,p_opening_reference:'REVOKED-LEASE',p_restricted:0,p_credit_limit:null})
+   p_open_date:new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}),p_opening_balance:1,p_opening_reference:'REVOKED-LEASE',p_restricted:0,p_credit_limit:null})
   assert.ok(locked.error);assert.match(locked.error.message,/Financial writes locked/)
   console.log('PASS real authenticated/customer/anonymous RPC and storage security, overwrite attack, revoked owner lease');stages++
   const journalsBeforeCleanup=psql('select count(*) from public.finance_journals')
@@ -499,7 +529,7 @@ async function main(){
    p_user_id:ownerIdentity.id,p_role:'super_admin',p_enabled:false})
   assert.ok(!withdrawRole.error,'Independent operator could not withdraw temporary reviewer role')
   const staleReviewerReport=await ownerIdentity.client.rpc('finance_integrated_report',{
-   p_month:new Date().toISOString().slice(0,7)+'-01'})
+   p_month:new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Dhaka'}).slice(0,7)+'-01'})
   assert.ok(staleReviewerReport.error,'Withdrawn reviewer retained report access through existing token')
   const staleReviewerInventory=await ownerIdentity.client.rpc('finance_inventory_source')
   assert.ok(staleReviewerInventory.error,'Withdrawn reviewer retained inventory access through existing token')

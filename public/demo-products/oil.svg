@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="460" viewBox="0 0 600 460" role="img" aria-label="Illustrated demo SOY OIL product package">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#fff3cf"/></linearGradient></defs>
+<rect width="600" height="460" rx="24" fill="url(#bg)"/><circle cx="490" cy="110" r="100" fill="#edae16" opacity=".065"/><circle cx="100" cy="385" r="92" fill="#edae16" opacity=".045"/>
+<ellipse cx="300" cy="390" rx="146" ry="19" fill="#233a46" opacity=".12"/>
+<path d="M255 91h90v38l20 19v190q0 19-19 19h-92q-19 0-19-19V148l20-19z" fill="#ffd04e" stroke="#db9500" stroke-width="6"/><rect x="267" y="72" width="66" height="29" rx="7" fill="#2f7771"/><path d="M257 179h86v88h-86z" rx="10" fill="#fffdf3"/><ellipse cx="300" cy="225" rx="32" ry="30" fill="#f4c035"/><path d="M300 203q-23 17 0 46 24-27 0-46" fill="#168b65"/>
+<text x="300" y="210" font-family="Arial,sans-serif" font-size="19" font-weight="800" fill="#edae16" text-anchor="middle">SOY OIL</text>
+<rect x="18" y="18" width="106" height="30" rx="15" fill="#23334c" opacity=".9"/><text x="71" y="38" font-family="Arial,sans-serif" font-size="13" font-weight="800" text-anchor="middle" fill="#fff">DEMO ONLY</text>
+<text x="300" y="426" font-family="Arial,sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#53657c">Illustration · no actual product or stock</text>
+</svg>

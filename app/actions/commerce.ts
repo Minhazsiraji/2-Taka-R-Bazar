@@ -1,0 +1,57 @@
+'use server'
+import {redirect} from 'next/navigation'
+import {revalidatePath} from 'next/cache'
+import {randomUUID,createHash} from 'node:crypto'
+import {createClient} from '@/lib/supabase/server'
+import {requireOnboardedUser,requireUser} from '@/lib/auth'
+import {requireCommerceCustomer} from '@/lib/commerce/customer'
+import {commerceProof,guestToken,commerceError} from '@/lib/commerce/server'
+import {CURRENT_POLICY_VERSION} from '@/lib/legal'
+const value=(fd:FormData,k:string)=>String(fd.get(k)??'').trim()
+function fail(route:string,message:string):never{redirect(route+'?error='+encodeURIComponent(commerceError(message)))}
+async function call(name:string,args:Record<string,unknown>,route:string){const db=await createClient();let proof:string;try{proof=commerceProof()}catch{redirect('/cart?error=Purchases+are+awaiting+release+qualification')};const {data,error}=await db.rpc(name,{...args,p_proof:proof});if(error)fail(route,error.message);if(data?.error)fail(route,String(data.error));revalidatePath('/cart');revalidatePath('/account/orders');return data}
+export async function setCommerceCartItem(fd:FormData){const offer=value(fd,'offer_id'),quantity=Number(value(fd,'quantity'));if(!/^[a-f0-9-]{36}$/i.test(offer)||!Number.isInteger(quantity)||quantity<0||quantity>100)fail('/cart','Quantity must be between zero and 100');await call('commerce_set_cart_item',{p_guest:await guestToken(true),p_offer:offer,p_quantity:quantity},'/cart');redirect('/cart')}
+export async function createCommerceQuote(fd:FormData){const {supabase,user,profile,isTestFixture}=await requireCommerceCustomer();const method=value(fd,'fulfillment_method');let address=value(fd,'delivery_address')||null,addressId=value(fd,'delivery_address_id')||null;if(method==='home_delivery'){if(addressId){const {data}=await supabase.from('customer_delivery_addresses').select('id,address_text').eq('id',addressId).eq('customer_id',user.id).eq('community_id',profile.community_id).neq('verification_status','rejected').maybeSingle();if(!data)fail('/checkout','Complete delivery address in your verified community required');address=data.address_text}else if(value(fd,'building_label')&&value(fd,'unit_label')&&value(fd,'street_line')){address=[value(fd,'unit_label'),value(fd,'building_label'),value(fd,'street_line'),value(fd,'landmark')].filter(Boolean).join(', ');if(fd.get('save_address')==='on'&&!isTestFixture){const {data,error}=await supabase.rpc('save_my_delivery_address',{p_building_label:value(fd,'building_label'),p_unit_label:value(fd,'unit_label'),p_street_line:value(fd,'street_line'),p_landmark:value(fd,'landmark')||null,p_default:true});if(error)fail('/checkout','Complete delivery address could not be saved');addressId=data}}}const result=await call('commerce_create_quote',{p_guest:await guestToken(),p_method:method,p_pickup:value(fd,'pickup_point_id')||null,p_address:address,p_address_id:method==='home_delivery'?addressId:null},'/checkout');redirect('/checkout?quote='+result.id)}
+export async function confirmCommerceCheckout(fd:FormData){await requireCommerceCustomer();if(value(fd,'policy_accepted')!=='on'||value(fd,'policy_version')!==CURRENT_POLICY_VERSION)redirect('/checkout?error=Please+accept+the+current+Terms+and+return+and+refund+policies');const result=await call('commerce_confirm_checkout',{p_quote:value(fd,'quote_id'),p_key:value(fd,'idempotency_key'),p_policy:CURRENT_POLICY_VERSION},'/checkout');redirect('/account/orders/'+result[0])}
+export async function requestCommerceChange(fd:FormData){await requireUser();const id=value(fd,'order_id');await call('commerce_request',{p_order:id,p_kind:value(fd,'kind'),p_reason:value(fd,'reason')},'/account/orders/'+id);revalidatePath('/account/orders/'+id);redirect('/account/orders/'+id)}
+async function uploadEvidence(fd:FormData){const {supabase,user}=await requireUser();const file=fd.get('evidence');if(!(file instanceof File)||file.size<=0||file.size>1_500_000)throw new Error('Original PDF, PNG or JPEG up to 1.5 MB required');const suffix=({'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png'} as Record<string,string>)[file.type];const bytes=Buffer.from(await file.arrayBuffer());const magic=bytes.subarray(0,8).toString('hex');if(!suffix||!(suffix==='pdf'&&bytes.subarray(0,5).toString()==='%PDF-'||suffix==='jpg'&&magic.startsWith('ffd8ff')||suffix==='png'&&magic==='89504e470d0a1a0a'))throw new Error('Original file format invalid');const path=user.id+'/'+randomUUID()+'.'+suffix;const {error}=await supabase.storage.from('commerce-evidence').upload(path,bytes,{contentType:file.type,upsert:false});if(error)throw new Error('Evidence upload failed');return {path,sha:createHash('sha256').update(bytes).digest('hex')}}
+export async function fulfillCommerceOrder(fd:FormData){await requireUser();const action=value(fd,'operation');let evidence={path:null as string|null,sha:null as string|null};if(action==='complete'){try{evidence=await uploadEvidence(fd)}catch{redirect('/commerce?error=Valid+original+handover+evidence+required')}}await call('commerce_fulfill',{p_order:value(fd,'order_id'),p_action:action,p_note:value(fd,'reason'),p_reference:value(fd,'reference'),p_path:evidence.path,p_sha:evidence.sha,p_delivery_cost:value(fd,'actual_delivery_cost')?Number(value(fd,'actual_delivery_cost')):null},'/commerce');revalidatePath('/commerce');redirect('/commerce')}
+export async function reviewCommerceRequest(fd:FormData){await requireUser();await call('commerce_review_request',{p_request:value(fd,'request_id'),p_approve:value(fd,'decision')==='approve',p_note:value(fd,'reason')},'/commerce');revalidatePath('/commerce');redirect('/commerce')}
+export async function reviewCommerceOffer(fd:FormData){await requireUser();await call('commerce_review_offer',{p_id:value(fd,'offer_id'),p_approve:value(fd,'decision')==='approve',p_note:value(fd,'reason')},'/commerce');revalidatePath('/');revalidatePath('/commerce');redirect('/commerce')}
+export async function recordCommerceCod(fd:FormData){await requireUser();let proof;try{proof=await uploadEvidence(fd)}catch{redirect('/commerce?error=Valid+original+COD+evidence+required')};await call('commerce_record_cod',{p_order:value(fd,'order_id'),p_product:Number(value(fd,'product_amount')),p_delivery:Number(value(fd,'delivery_amount')),p_reference:value(fd,'reference'),p_path:proof.path,p_sha:proof.sha},'/commerce');revalidatePath('/commerce');redirect('/commerce')}
+export async function requestCommerceOffer(fd:FormData){await requireUser();await call('commerce_request_offer',{p_sku:value(fd,'sku_id'),p_community:value(fd,'community_id'),p_mode:value(fd,'mode'),p_supplier:value(fd,'supplier_id')||null,p_pool_item:value(fd,'pool_item_id')||null,p_group:value(fd,'group_deal_id')||null,p_price:Number(value(fd,'price')),p_until:value(fd,'valid_until'),p_pickup:fd.get('allows_pickup')==='on',p_delivery:fd.get('allows_delivery')==='on',p_sla:Number(value(fd,'supplier_sla')||60)},'/commerce');revalidatePath('/commerce');redirect('/commerce')}
+export async function requestCommerceStock(fd:FormData){await requireUser();await call('commerce_request_stock',{p_sku:value(fd,'sku_id'),p_supplier:value(fd,'supplier_id'),p_quantity:Number(value(fd,'quantity')),p_reason:value(fd,'reason')},'/commerce');revalidatePath('/commerce');redirect('/commerce')}
+export async function reviewCommerceStock(fd:FormData){await requireUser();await call('commerce_review_stock',{p_id:value(fd,'stock_report_id'),p_approve:value(fd,'decision')==='approve',p_note:value(fd,'reason')},'/commerce');revalidatePath('/commerce');redirect('/commerce')}
+export async function receiveCommerceReturn(fd:FormData){await requireUser();let proof;try{proof=await uploadEvidence(fd)}catch{redirect('/commerce?error=Valid+original+return+evidence+required')};const lines=[];for(let i=0;i<50;i++){const quantity=Number(value(fd,'return_quantity_'+i));if(quantity>0)lines.push({line_id:value(fd,'line_id_'+i),quantity})};await call('commerce_receive_return',{p_request:value(fd,'request_id'),p_lines:lines,p_restock:fd.get('restock')==='on',p_path:proof.path,p_sha:proof.sha},'/commerce');revalidatePath('/commerce');redirect('/commerce')}
+export async function saveCommerceAddress(fd:FormData){const {supabase}=await requireOnboardedUser();try{commerceProof()}catch{redirect('/account/addresses?error=Address+updates+are+awaiting+Preview+qualification')};const {error}=await supabase.rpc('save_my_delivery_address',{p_building_label:value(fd,'building_label'),p_unit_label:value(fd,'unit_label'),p_street_line:value(fd,'street_line'),p_landmark:value(fd,'landmark')||null,p_default:true});if(error)fail('/account/addresses','Complete delivery address could not be saved');revalidatePath('/account/addresses');redirect('/account/addresses')}
+
+export async function requestCommercePurchaseLimit(fd:FormData){
+ await requireUser()
+ const qty=(key:string)=>{const raw=value(fd,key);return raw===''?null:Number(raw)}
+ const perAccount=qty('max_per_account'),perHousehold=qty('max_per_household')
+ if((perAccount===null&&perHousehold===null)||[perAccount,perHousehold].some(v=>v!==null&&(!Number.isInteger(v)||v<1||v>100)))
+  fail('/commerce/purchase-limits','Set an integer maximum of 1 to 100 for account or verified household')
+ await call('commerce_request_purchase_limit',{
+  p_offer:value(fd,'offer_id'),p_campaign:value(fd,'campaign_key'),
+  p_account:perAccount,p_household:perHousehold,p_reason:value(fd,'reason'),
+ },'/commerce/purchase-limits')
+ revalidatePath('/commerce/purchase-limits')
+ redirect('/commerce/purchase-limits?notice=Submitted+for+independent+promotion+limit+approval')
+}
+export async function reviewCommercePurchaseLimit(fd:FormData){
+ await requireUser()
+ await call('commerce_review_purchase_limit',{
+  p_id:value(fd,'limit_id'),p_approve:value(fd,'decision')==='approve',
+  p_note:value(fd,'reason'),
+ },'/commerce/purchase-limits')
+ revalidatePath('/commerce/purchase-limits')
+ redirect('/commerce/purchase-limits?notice=Independent+review+recorded')
+}
+export async function verifyCommerceHouseholdAddress(fd:FormData){
+ await requireUser()
+ await call('commerce_verify_household_address',{
+  p_address:value(fd,'address_id'),p_evidence:value(fd,'reason'),
+ },'/commerce/purchase-limits')
+ revalidatePath('/commerce/purchase-limits')
+ redirect('/commerce/purchase-limits?notice=Trusted+household+assignment+recorded')
+}

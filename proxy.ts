@@ -2,6 +2,10 @@ import type { NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/proxy'
 
 const NOINDEX_PREFIXES = [
+  '/cart',
+  '/checkout',
+  '/account',
+  '/commerce',
   '/login',
   '/signup',
   '/auth',
@@ -27,6 +31,7 @@ const NOINDEX_PREFIXES = [
   '/supplier',
   '/preview-demo',
   '/finance-uat',
+  '/commerce-uat',
   '/qr',
 ]
 

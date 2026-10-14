@@ -1,0 +1,90 @@
+name: Unified commerce isolated qualification
+on:
+  push:
+    branches: [feat/unified-commerce-issue64-20261013, feat/issue64-per-customer-promo-limits-20261013]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-and-concurrency:
+    if: github.event_name != 'pull_request' || github.head_ref == 'feat/unified-commerce-issue64-20261013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+      - name: Start disposable Supabase and apply all migrations
+        run: |
+          supabase start
+          supabase db reset
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select cron.alter_job(job_id := jobid, active := false) from cron.job;"
+      - name: Database security and lifecycle UAT
+        id: database_uat
+        continue-on-error: true
+        run: supabase test db
+      - name: Install pinned browser tooling
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --package-lock=false playwright@1.56.0
+          npx playwright install --with-deps chromium
+      - name: Real commerce browser and concurrency qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -a
+          source <(supabase status -o env)
+          set +a
+          echo "::add-mask::${SERVICE_ROLE_KEY}"
+          echo "::add-mask::${ANON_KEY}"
+          export NEXT_PUBLIC_SUPABASE_URL="$API_URL"
+          export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$ANON_KEY"
+          export LOCAL_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          export NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000
+          export VERCEL_ENV=preview
+          export COMMERCE_UAT_LOGIN_ENABLED=true
+          export COMMERCE_PREVIEW_SECRET=$(openssl rand -hex 32)
+          echo "::add-mask::${COMMERCE_PREVIEW_SECRET}"
+          export FINANCE_PREVIEW_SUPABASE_URL="$API_URL"
+          export FINANCE_WRITES_ENABLED=true
+          npm run build >/tmp/commerce-build.log 2>&1 || { cat /tmp/commerce-build.log; exit 1; }
+          npm start -- --hostname 127.0.0.1 >/tmp/commerce-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          ONLINE=false
+          for i in $(seq 1 90); do
+            if curl -fsS --max-time 3 http://127.0.0.1:3000/cart -o /dev/null; then ONLINE=true; break; fi
+            sleep 2
+          done
+          if [ "$ONLINE" != true ]; then tail -n 80 /tmp/commerce-server.log; exit 1; fi
+          FINANCE_RESULT=0
+          BROWSER_RESULT=0
+          node tests/customer-demo-browser-uat.mjs
+          node tests/commerce-finance-uat.mjs || FINANCE_RESULT=$?
+          node tests/commerce-browser-uat.mjs || BROWSER_RESULT=$?
+          if [ "$FINANCE_RESULT" != 0 ] || [ "$BROWSER_RESULT" != 0 ]; then
+            tail -n 80 /tmp/commerce-server.log
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-commerce-synthetic-UAT
+          path: artifacts/commerce-*
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Enforce mandatory database gate
+        if: always() && steps.database_uat.outcome != 'success'
+        run: |
+          echo "Database qualification failed; release remains blocked."
+          exit 1
+      - name: Destroy disposable database
+        if: always()
+        run: supabase stop --no-backup

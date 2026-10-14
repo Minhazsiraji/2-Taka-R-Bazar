@@ -2,11 +2,12 @@ import Link from 'next/link'
 import { BrandLogo } from '@/components/brand-logo'
 import { LEGAL_LINKS } from '@/lib/legal'
 import { SITE_TAGLINE_BN, SITE_TAGLINE_EN } from '@/lib/site'
+import type {MarketplaceLanguage} from '@/lib/storefront-language'
 
-export function SiteFooter({ withMobileNavOffset = false }: { withMobileNavOffset?: boolean }) {
+export function SiteFooter({ withMobileNavOffset = false, fullWidth = false, language }: { withMobileNavOffset?: boolean; fullWidth?: boolean; language?:MarketplaceLanguage }) {
   return (
-    <footer className={`site-unified-footer mx-auto mt-6 w-[calc(100%-24px)] max-w-6xl rounded-[24px] text-slate-900 ${withMobileNavOffset ? 'mb-[calc(5.75rem+env(safe-area-inset-bottom))] md:mb-4' : 'mb-3'}`}>
-      <div className="grid w-full gap-7 px-5 py-6 md:grid-cols-[minmax(230px,0.9fr)_minmax(0,1.6fr)] md:items-center md:px-7">
+    <footer className={`site-unified-footer ${fullWidth?'market-full-footer':'mx-auto mt-6 w-[calc(100%-24px)] max-w-6xl rounded-[24px]'} text-slate-900 ${withMobileNavOffset ? 'mb-[calc(5.75rem+env(safe-area-inset-bottom))] md:mb-4' : fullWidth?'':'mb-3'}`}>
+      <div className={`grid w-full gap-7 px-5 py-6 md:grid-cols-[minmax(230px,0.9fr)_minmax(0,1.6fr)] md:items-center md:px-7 ${fullWidth?'market-footer-content':''}`}>
         <div className="flex items-center gap-3">
           <BrandLogo size={44} />
           <div>
@@ -19,14 +20,13 @@ export function SiteFooter({ withMobileNavOffset = false }: { withMobileNavOffse
         <nav className="site-footer-links grid grid-cols-2 gap-x-8 gap-y-5 sm:grid-cols-3" aria-label="Legal and help">
           {LEGAL_LINKS.map(([href,labelEn,labelBn])=>(
             <Link key={href} href={href} className="site-footer-link">
-              <span className="site-footer-link-en">{labelEn}</span>
-              <span className="site-footer-link-bn" lang="bn">{labelBn}</span>
+              {fullWidth&&language?<span className="site-footer-single-language" lang={language}>{language==='bn'?labelBn:labelEn}</span>:<><span className="site-footer-link-en">{labelEn}</span><span className="site-footer-link-bn" lang="bn">{labelBn}</span></>}
             </Link>
           ))}
         </nav>
       </div>
 
-      <div className="border-t border-white/40 px-5 py-3 text-center text-xs leading-5 text-slate-500 md:px-7">
+      <div className={`border-t border-white/40 px-5 py-3 text-center text-xs leading-5 text-slate-500 md:px-7 ${fullWidth?'market-footer-bottom':''}`}>
         <span>© 2026 2-TAKA-R-BAZAR · Developed by: </span>
         <a href="https://agentsiraji.com" target="_blank" rel="noreferrer" className="hover:text-teal-700">agentsiraji.com</a>
         <span> · Contact: </span>

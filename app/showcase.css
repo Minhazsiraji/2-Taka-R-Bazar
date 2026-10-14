@@ -1,0 +1,16 @@
+/* Marketing showcase deliberately inherits the site's brand glass and theme tokens. */
+.site-glass-root .featured-showcase { background:radial-gradient(ellipse at 60% 26%,rgba(45,204,205,.15),transparent 68%); }
+.site-glass-root .showcase-eyebrow { color:var(--theme-accent,#0b8995);font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase; }
+.site-glass-root .showcase-count,.site-glass-root .showcase-kicker { font-size:11px;font-weight:800;color:var(--theme-muted,#60708d); }
+.site-glass-root .showcase-hero-photo,.site-glass-root .showcase-detail-media {
+  background:linear-gradient(135deg,rgba(255,255,255,.35),rgba(133,211,212,.10)) !important;
+  border:1px solid rgba(255,255,255,.5);
+}
+.site-glass-root .showcase-arrow {width:37px;height:37px;border:1px solid var(--theme-line,#ddd);border-radius:50%;font-size:20px;font-weight:700;background:var(--theme-card-strong,#fff);color:var(--theme-text,#17213b);cursor:pointer;}
+.site-glass-root .showcase-arrow:focus-visible,.site-glass-root .showcase-dot:focus-visible,.site-glass-root .showcase-thumbnail:focus-visible {outline:3px solid var(--theme-accent,#0b8995);outline-offset:3px;}
+.site-glass-root .showcase-dot {height:10px;width:10px;border-radius:999px;background:#a8b8c4;cursor:pointer;transition:width .2s ease;}
+.site-glass-root .showcase-dot.is-active {width:28px;background:#16b8b9;}
+.site-glass-root .showcase-thumbnail {width:80px;height:70px;border:2px solid var(--theme-line,#ddd);border-radius:14px;padding:4px;overflow:hidden;background:var(--theme-card-strong,#fff);color:var(--theme-text,#17213b);cursor:pointer;}
+.site-glass-root .showcase-thumbnail.is-active {border-color:#16b8b9;}
+.site-glass-root .showcase-detail-copy { background:var(--theme-card,rgba(255,255,255,.5)); }
+@media(prefers-reduced-motion:reduce){.site-glass-root .showcase-dot{transition:none}}

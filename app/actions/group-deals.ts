@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import {routeCommitmentToCommerce} from '@/lib/commerce/legacy-actions'
 import { requireOnboardedUser } from '@/lib/auth'
 
 function text(fd:FormData,key:string){return String(fd.get(key)??'').trim()}
@@ -54,6 +55,7 @@ export async function joinGroupDeal(fd:FormData){
   const dealId=text(fd,'group_deal_id')
   const quantity=Number(text(fd,'quantity'))
   if(!dealId||!Number.isInteger(quantity)||quantity<1)redirect('/group-deals?error=Choose+a+valid+quantity')
+  await routeCommitmentToCommerce('GROUP_DEAL',dealId,quantity)
   const {data,error}=await supabase.rpc('join_group_deal',{p_group_deal_id:dealId,p_quantity:quantity})
   if(error)redirect('/group-deals?error=Group+Deal+service+is+temporarily+unavailable')
   const result=data?.[0] as any
@@ -66,6 +68,7 @@ export async function leaveGroupDeal(fd:FormData){
   const {supabase}=await requireOnboardedUser()
   const dealId=text(fd,'group_deal_id')
   if(!dealId)redirect('/group-deals?error=Group+Deal+not+found')
+  await routeCommitmentToCommerce('GROUP_DEAL',dealId,0)
   const {data,error}=await supabase.rpc('leave_group_deal',{p_group_deal_id:dealId})
   if(error)redirect('/group-deals?error=Group+Deal+service+is+temporarily+unavailable')
   revalidatePath('/group-deals');revalidatePath('/home')
