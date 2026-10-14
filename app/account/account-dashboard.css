@@ -32,10 +32,6 @@ html[data-theme="dark"] .site-glass-root .account-dashboard .account-money-card,
  .site-glass-root .account-dashboard .account-money-card>.account-tool-icon{width:48px;height:58px;font-size:2rem;border-radius:18px}
  .site-glass-root .account-dashboard .account-setup-notice{align-items:flex-start;flex-direction:column}
 }
-@media(max-width:640px){
+@media(max-width:790px){
  .site-glass-root .account-dashboard .market-header-location{display:none!important}
- .site-glass-root .account-dashboard .market-flat-header>.market-header-inner{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto!important}
- .site-glass-root .account-dashboard .market-brand-lockup{grid-column:1!important;grid-row:1!important}
- .site-glass-root .account-dashboard .market-flat-header .market-header-actions{grid-column:1!important;grid-row:2!important;justify-content:flex-end!important}
- .site-glass-root .account-dashboard .market-flat-header .market-header-search{grid-column:1!important;grid-row:3!important}
 }

@@ -6,12 +6,13 @@ import { NotificationBell } from '@/components/notification-bell'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { MobileCustomerNav } from '@/components/mobile-customer-nav'
 import { SITE_TAGLINE_BN, SITE_TAGLINE_EN } from '@/lib/site'
+import { HeaderActionIcon } from '@/components/header-action-icon'
 import { SiteFooter } from '@/components/site-footer'
 
 const primaryNav = [['/', 'Home'], ['/pool', 'Pools'], ['/group-deals', 'Group Deals'], ['/cart', 'Cart'], ['/account', 'Account']]
 
 function NotificationBellFallback(){
-  return <Link href="/notifications" className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm" aria-label="Notifications"><span aria-hidden="true" className="text-base">🔔</span></Link>
+  return <Link href="/notifications" className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm" aria-label="Notifications"><HeaderActionIcon kind="bell"/></Link>
 }
 
 export function AppShell({children,roles=new Set<AppRole>()}:{children:React.ReactNode;roles?:Set<AppRole>}){
@@ -22,10 +23,10 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
   return <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-[linear-gradient(135deg,#f8fdff,#eaf8ff_50%,#f8fdff)] text-slate-950">
     <header className="app-shell-header sticky top-0 z-40 w-full px-3 pt-2 sm:px-5">
       <div className="app-shell-header-bar mx-auto w-full max-w-6xl rounded-[20px] border border-sky-200/80 bg-white/70 px-3 py-2 shadow-[inset_0_1px_0_white,0_10px_30px_rgba(14,165,233,.08)] backdrop-blur-xl sm:px-5">
-        <div className="flex items-center justify-between gap-2.5">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="2-TAKA-R-BAZAR home">
+        <div className="app-header-main flex items-center justify-between gap-2.5">
+          <Link href="/" className="app-header-brand flex shrink-0 items-center gap-2.5" aria-label="2-TAKA-R-BAZAR home">
             <BrandLogo size={46}/>
-            <div className="hidden sm:block">
+            <div className="app-header-brand-copy hidden sm:block">
               <div className="text-sm font-black tracking-tight">2-TAKA-R-BAZAR</div>
               <div className="text-[10px] font-semibold tracking-wide text-slate-500">{SITE_TAGLINE_EN}</div>
               <div className="text-[9px] font-medium text-slate-400" lang="bn">{SITE_TAGLINE_BN}</div>
@@ -33,7 +34,7 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
           </Link>
 
           <div className="app-role-actions flex min-w-0 flex-1 items-center justify-end gap-1 text-[10px] sm:gap-2 sm:text-xs">
-            <Link href="/money" className="cx-header-action shrink-0 rounded-full border border-violet-300 bg-violet-50 px-3 py-2 font-black text-violet-800 shadow-sm hover:bg-violet-100" aria-label="Open My Money dashboard">💰 <span className="hidden sm:inline">My Money</span></Link>
+            <Link href="/money" className="cx-header-action shrink-0 rounded-full border border-violet-300 bg-violet-50 px-3 py-2 font-black text-violet-800 shadow-sm hover:bg-violet-100" aria-label="Open My Money dashboard"><HeaderActionIcon kind="wallet"/><span className="cx-header-money-label">My Money</span></Link>
             <ThemeToggle className="cx-header-theme"/>
             <Suspense fallback={<NotificationBellFallback/>}><NotificationBell/></Suspense>
 
@@ -41,7 +42,7 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
             {isAdmin&&<Link className="app-role-link hidden shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm md:inline-flex" href="/admin"><span aria-hidden="true">⚙</span><span className="role-label">Operations</span></Link>}
             {isSuperAdmin&&<Link className="app-role-link hidden shrink-0 rounded-full border border-white bg-white/60 px-3 py-2 font-bold text-blue-700 shadow-sm md:inline-flex" href="/super-admin"><span aria-hidden="true">♛</span><span className="role-label">Super Admin</span></Link>}
 
-            <Link href="/profile" aria-label="Profile" className="app-profile-link flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white bg-white/70 text-lg shadow-sm">👤</Link>
+            <Link href="/profile" aria-label="Profile" title="Profile" className="app-profile-link flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white bg-white/70 text-lg shadow-sm"><HeaderActionIcon kind="profile"/></Link>
           </div>
         </div>
 

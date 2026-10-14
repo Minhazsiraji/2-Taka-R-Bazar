@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {chromium} from 'playwright'
+import {assertHeaderGeometry} from './header-layout-assertions.mjs'
 const api=process.env.NEXT_PUBLIC_SUPABASE_URL
 if(!api||new URL(api).hostname!=='127.0.0.1')throw new Error('Disposable local Supabase required')
 const key=process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY
@@ -32,7 +33,7 @@ try{
  const location = new URL(legacy.headers.get('location'), 'http://127.0.0.1:3000')
  assert.equal(location.pathname, '/')
  assert.equal(location.searchParams.get('notice'), 'legacy-bookmark')
- for(const width of [360,393,768,1440,1920]){
+ for(const width of [320,360,393,640,768,1440,1920]){
   const page=await browser.newPage({viewport:{width,height:900}})
   page.on('pageerror',e=>errors.push(e.message))
   await page.goto('http://127.0.0.1:3000/',{waitUntil:'networkidle'})
@@ -51,6 +52,8 @@ try{
    await page.reload({waitUntil:'networkidle'})
    assert.equal((await toggle.innerText()).trim(),'BAN','EN choice must survive full reload')
   }
+  await assertHeaderGeometry(page,'.market-brand-copy strong','.market-header-actions',width)
+  if(width===393)await page.screenshot({path:'/tmp/2tbr-header-storefront-guest.png',fullPage:true})
   assert.equal(await page.locator('.market-pool-demo-pill').count(),0)
   assert.equal(await page.locator('.market-pool-thumbnails a').first().getAttribute('href'),`/shop/${ids.product}?area=${ids.community}`)
   const poolText=await page.locator('.market-featured-pool').innerText()
@@ -75,5 +78,5 @@ try{
   await page.close()
  }
  assert.deepEqual(errors,[])
- console.log('Storefront real-RPC → responsive UI → public product → gated login UAT passed at five widths')
+ console.log('Storefront real-RPC → responsive UI → public product → gated login UAT passed at seven widths, with header geometry checks')
 }finally{await browser.close()}
