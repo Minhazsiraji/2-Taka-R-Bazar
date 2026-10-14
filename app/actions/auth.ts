@@ -94,10 +94,9 @@ export async function signInPhonePassword(formData: FormData) {
   if (!credentials) redirect(back+'error=Enter+a+valid+mobile+number+and+password')
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithPassword(credentials)
-  if (error || !data.user || !data.session) {
-    await supabase.auth.signOut()
+  // A rejected attempt must not revoke a legitimate session already on this device.
+  if (error || !data.user || !data.session)
     redirect(back+'error=Mobile+number+or+password+was+not+accepted')
-  }
   revalidatePath('/', 'layout')
   await saveAuthIntent(formData)
   const cookieStore = await cookies()

@@ -45,6 +45,13 @@ try {
   assert.equal(await page.getByRole('button', {name: /OTP/}).count(), 0)
   await login('01700000091', previousPassword)
   await page.waitForURL(url => url.pathname === '/account/security')
+  // Rejected credentials must not destroy the owner's existing ordinary session.
+  await page.goto('http://127.0.0.1:3000/login', {waitUntil: 'networkidle'})
+  await login('01700000091', previousPassword + 'wrong')
+  await page.getByRole('alert').filter({hasText: 'Mobile number or password was not accepted'}).waitFor()
+  await page.goto('http://127.0.0.1:3000/account/security', {waitUntil: 'networkidle'})
+  await page.getByRole('button', {name: 'Save my password', exact: true}).waitFor()
+  assert.equal(new URL(page.url()).pathname, '/account/security')
   await save(password, password + 'different')
   await page.getByRole('alert').filter({hasText: 'The two passwords do not match.'}).waitFor()
   await save(password)
