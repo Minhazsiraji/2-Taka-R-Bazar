@@ -81,3 +81,33 @@ body.site-glass-root .public-glass-header .customer-notification-bell .header-ac
 @media(max-width:1100px){
  body.site-glass-root .app-shell-header .app-header-main .app-role-link{display:none!important}
 }
+
+/* Tablets retain the complete desktop brand; only phones use the logo alone. */
+@media(min-width:768px) and (max-width:1100px){
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header>.market-header-inner{
+  grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;
+  column-gap:12px!important;row-gap:10px!important;
+ }
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-lockup{
+  grid-column:1!important;grid-row:1!important;max-width:none!important;
+ }
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy{display:flex!important}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy strong{font-size:1.01rem!important}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy small{display:block!important;font-size:.7rem!important;white-space:nowrap}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy small:last-child{font-size:.68rem!important}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-actions{grid-column:2!important;grid-row:1!important}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-search{
+  grid-column:1/-1!important;grid-row:2!important;max-width:none!important;margin:0!important;
+ }
+ body.site-glass-root .public-compact-header .public-header-brand,
+ body.site-glass-root .app-shell-header .app-header-brand{flex:0 0 auto!important;max-width:none!important}
+ body.site-glass-root .public-compact-header .public-header-brand-copy,
+ body.site-glass-root .app-shell-header .app-header-brand-copy{display:block!important}
+ body.site-glass-root .public-compact-header .public-header-brand-copy>div{overflow:visible;text-overflow:clip;white-space:nowrap}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-lockup .brand-logo,
+ body.site-glass-root .public-compact-header .brand-logo,
+ body.site-glass-root .app-shell-header .app-header-brand .brand-logo{
+  width:46px!important;height:46px!important;min-width:46px!important;max-width:46px!important;
+  min-height:46px!important;max-height:46px!important;
+ }
+}

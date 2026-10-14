@@ -34,7 +34,7 @@ try{
  const location = new URL(legacy.headers.get('location'), 'http://127.0.0.1:3000')
  assert.equal(location.pathname, '/')
  assert.equal(location.searchParams.get('notice'), 'legacy-bookmark')
- for(const width of [320,360,393,640,767,768,1440,1920]){
+ for(const width of [320,360,393,640,767,768,790,820,1024,1100,1440,1920]){
   const page=await browser.newPage({viewport:{width,height:900}})
   page.on('pageerror',e=>errors.push(e.message))
   await page.goto('http://127.0.0.1:3000/',{waitUntil:'networkidle'})
@@ -56,6 +56,7 @@ try{
   assert.equal(await page.locator('header .market-header-location').count(),0)
   assert.equal(await page.locator('.customer-notification-bell').count(),1)
   await assertHeaderGeometry(page,'.market-brand-lockup','.market-header-actions',width)
+  if([768,820,1024].includes(width))await page.screenshot({path:'/tmp/2tbr-header-tablet-brand-'+width+'.png'})
   if(width===393)await page.screenshot({path:'/tmp/2tbr-header-storefront-guest.png',fullPage:true})
   assert.equal(await page.locator('.market-pool-demo-pill').count(),0)
   assert.equal(await page.locator('.market-pool-thumbnails a').first().getAttribute('href'),`/shop/${ids.product}?area=${ids.community}`)
@@ -71,6 +72,7 @@ try{
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true)
   await page.getByRole('button',{name:'Switch to dark mode'}).click()
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark')
+  await assertHeaderGeometry(page,'.market-brand-lockup','.market-header-actions',width)
   assert.equal(await dock.isVisible(),width<768)
   await assertMobileDock(page,width)
   if(width===393){
@@ -93,7 +95,7 @@ try{
  for(const path of ['/login','/signup','/about','/faq','/privacy','/terms','/refund-policy','/return-policy']){
   await infoPage.goto('http://127.0.0.1:3000'+path,{waitUntil:'domcontentloaded'})
   await infoPage.locator('.public-compact-header').waitFor()
-  for(const width of [320,393,768,1440]){
+  for(const width of [320,393,768,820,1024,1440]){
    await infoPage.setViewportSize({width,height:900})
    await assertCustomerPageHeader(infoPage,width)
    await assertMobileDock(infoPage,width)

@@ -14,7 +14,7 @@
     "components/public-header.tsx": "6979c7ebdfc8b985a18497c8aaa6cdeff89d8793d072b54191fd3d8cfe324f47",
     "components/storefront-footer.tsx": "5a2d4eb4d4332bfcda0ea6a0c0435395063d55efac2c1b35a2d66fa8c4e19d13",
     "lib/hero-messages.ts": "1d9d0f793ce30114647b0ad66c3196ceedd3698ce71da273b2cf8a7b270ff89a",
-    "app/site-header-mobile.css": "2168a38efb5087fb5931f5db1873c85c194c3eaa7250b4ebdf5bfb6d0d75064d",
+    "app/site-header-mobile.css": "e3beaf396d91faa74d5e19e26d285d45f43f154a7c72bb4cbcb3daf26a84e255",
     "components/public-footer.tsx": "9861ac884fa6081000f9e25f803a2f0922ea6d9611c3497e307f9b1a405f8dbe",
     "components/mobile-customer-nav.tsx": "fed39bfe21cb0ce077212ef70be493191cfb8bd025d6eb2d1573c6075f3e89f1",
     "app/site-mobile-dock.css": "16af382e2e5acb7de9426fb45fb9738de315503d73a440db1fb05ce06c1190db"
@@ -41,5 +41,9 @@
   "mobile_dock_repair": {
     "approved_by": "User, 2026-10-14 missing bottom menu follow-up",
     "changes": "One shared Home/Pools/Deals/Cart/Account component in storefront, generic customer footer and AppShell; single locked geometry/contrast stylesheet; visible below 768px, fixed above the device safe area; scroll and native link UAT required. Footer contacts, brand and header design preserved."
+  },
+  "tablet_branding": {
+    "approved_by": "User, 2026-10-14 tablet follow-up screenshots",
+    "changes": "Display full brand name and both official slogans from 768px upward across customer header families. Tablet storefront search moves below the brand/control row to retain space. Phone header and protected mobile dock unchanged."
   }
 }
