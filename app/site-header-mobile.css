@@ -92,8 +92,8 @@ body.site-glass-root .public-glass-header .customer-notification-bell .header-ac
   grid-column:1!important;grid-row:1!important;max-width:none!important;
  }
  body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy{display:flex!important}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy strong{font-size:1.01rem!important}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy small{display:block!important;font-size:.7rem!important;white-space:nowrap}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy strong{font-size:1.01rem!important;line-height:1.2!important}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy small{display:block!important;font-size:.7rem!important;line-height:1.25!important;white-space:nowrap}
  body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy small:last-child{font-size:.68rem!important}
  body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-actions{grid-column:2!important;grid-row:1!important}
  body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-search{
