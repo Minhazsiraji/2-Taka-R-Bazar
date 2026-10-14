@@ -69,7 +69,6 @@ html[data-theme="dark"]{--cx-surface:#122334;--cx-ink:#f1f5f9;--cx-muted:#bccbdc
 .cx-price-label{white-space:nowrap}
 .cx-price-value{overflow-wrap:normal;font-variant-numeric:tabular-nums}
 .cx-quantity-form button{white-space:nowrap}
-.app-mobile-nav{display:none}
 @media (max-width:767px){
  .cx-header-theme{display:inline-flex;min-width:44px;min-height:44px;justify-content:center;padding:8px}
  .cx-header-theme .theme-toggle-label{display:none}
@@ -77,11 +76,7 @@ html[data-theme="dark"]{--cx-surface:#122334;--cx-ink:#f1f5f9;--cx-muted:#bccbdc
  .cx-product-heading{grid-template-columns:minmax(0,1fr);gap:14px}
  .site-glass-root .cx-product-photo{justify-self:center;width:180px;height:180px}
  .cx-opportunity-grid{gap:10px}.cx-opportunity-card{padding:12px}
- .app-mobile-nav{display:block;position:fixed;inset-inline:0;bottom:0;z-index:100;padding-bottom:env(safe-area-inset-bottom);border-top:1px solid var(--cx-soft);border-radius:12px 12px 0 0;background:var(--cx-surface);box-shadow:0 -3px 12px #0000000d}
- .app-mobile-nav-inner{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));max-width:600px;margin:auto}
- .app-mobile-nav-link{position:relative;display:flex;min-width:0;min-height:58px;align-items:center;justify-content:center;padding:10px 2px;color:var(--cx-muted);font-size:11px;font-weight:700;line-height:1.2;text-align:center;text-decoration:none}
- .app-mobile-nav-link.is-active{color:var(--cx-accent);background:var(--cx-nav-active)}
- .app-mobile-nav-link.is-active::before{content:'';position:absolute;top:0;left:25%;right:25%;height:3px;background:#22c7d2;border-radius:0 0 3px 3px}
+
 }
 
 /* Human UAT correction — final customer glass/rim and mobile navigation contrast. */
@@ -186,53 +181,6 @@ html[data-theme="dark"] .site-glass-root .cx-count-badge{
   }
   .site-glass-root .cx-header-theme .theme-toggle-label{display:none!important}
 
-  /* Attached customer dock: stronger readable labels in both themes. */
-  .site-glass-root .app-mobile-nav{
-    display:block!important;
-    border-top:1px solid var(--cx-brand-rim)!important;
-    background:rgba(248,252,255,.94)!important;
-    box-shadow:0 -8px 22px rgba(15,23,42,.10),0 0 16px rgba(34,211,238,.06)!important;
-    backdrop-filter:blur(18px) saturate(150%)!important;
-    -webkit-backdrop-filter:blur(18px) saturate(150%)!important;
-  }
-  .site-glass-root .app-mobile-nav-link{
-    min-height:60px!important;
-    color:#334155!important;
-    opacity:1!important;
-    font-size:11px!important;
-    font-weight:800!important;
-    letter-spacing:0!important;
-    text-shadow:none!important;
-  }
-  .site-glass-root .app-mobile-nav-link>span{
-    color:inherit!important;
-    opacity:1!important;
-  }
-  .site-glass-root .app-mobile-nav-link.is-active{
-    color:#075985!important;
-    background:linear-gradient(180deg,rgba(207,250,254,.78),rgba(236,254,255,.68))!important;
-  }
-  .site-glass-root .app-mobile-nav-link.is-active::before{
-    left:20%!important;
-    right:20%!important;
-    height:3px!important;
-    background:linear-gradient(90deg,#22d3ee,#14b8a6)!important;
-    box-shadow:0 0 10px rgba(34,211,238,.45);
-  }
-
-  html[data-theme="dark"] .site-glass-root .app-mobile-nav{
-    background:rgba(7,16,26,.95)!important;
-    border-top-color:rgba(74,222,228,.44)!important;
-    box-shadow:0 -8px 24px rgba(0,0,0,.28),0 0 16px rgba(45,212,191,.05)!important;
-  }
-  html[data-theme="dark"] .site-glass-root .app-mobile-nav-link{
-    color:#d7e3f2!important;
-    opacity:1!important;
-  }
-  html[data-theme="dark"] .site-glass-root .app-mobile-nav-link.is-active{
-    color:#ecfeff!important;
-    background:linear-gradient(180deg,rgba(15,79,88,.78),rgba(8,35,44,.78))!important;
-  }
 
   .site-glass-root .cx-saving-stat{min-height:104px}
   .site-glass-root .cx-opportunity-grid{gap:10px}

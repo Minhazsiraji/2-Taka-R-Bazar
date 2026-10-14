@@ -277,6 +277,17 @@ try {
       await page.screenshot({path: '/tmp/2tbr-header-route-' + path.replaceAll('/','-') + '.png', fullPage: true})
     }
   }
+  // Use the real dock links through client navigation, including their active state.
+  await page.setViewportSize({width:393,height:640})
+  for (const path of ['/','/group-deals','/pool','/cart','/account']) {
+    await page.locator('.app-mobile-nav a[href="'+path+'"]').click()
+    await page.waitForURL(url => url.pathname === path)
+    await page.locator('header').first().waitFor()
+    await assertMobileDock(page,393)
+    assert.equal(await page.locator('.app-mobile-nav a[aria-current="page"]').getAttribute('href'),path)
+  }
+  await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}))
+  await page.screenshot({path:'/tmp/2tbr-header-dock-account-footer.png'})
   // Complete delivery path using only disposable native identities and real DB/RPCs.
   const outsiderCommunity='00000000-0000-4000-8000-000000000897'
   const outsiderCommunityResponse=await fetch(endpoint+'/rest/v1/communities',{method:'POST',headers,body:JSON.stringify({id:outsiderCommunity,name:'Synthetic notification outsider area',slug:'synthetic-notification-outsider'})})

@@ -80,6 +80,7 @@ try{
   }
   await page.locator('.market-pool-thumbnail').first().click()
   await page.getByRole('heading',{name:'Synthetic browser rice',exact:true}).first().waitFor()
+  await assertMobileDock(page,width)
   assert.ok(!page.url().includes('/login'))
   await page.getByRole('link',{name:'Sign in to join',exact:true}).click()
   await page.waitForURL(url=>url.pathname==='/login')
@@ -95,6 +96,7 @@ try{
   for(const width of [320,393,768,1440]){
    await infoPage.setViewportSize({width,height:900})
    await assertCustomerPageHeader(infoPage,width)
+   await assertMobileDock(infoPage,width)
   }
  }
  const guestStatus=await infoPage.request.get('http://127.0.0.1:3000/api/notifications/status')
