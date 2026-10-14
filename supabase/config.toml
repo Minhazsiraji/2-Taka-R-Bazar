@@ -268,8 +268,9 @@ template = "Your code is {{ .Code }}"
 max_frequency = "5s"
 
 # Use pre-defined map of phone number to OTP for testing.
-# [auth.sms.test_otp]
-# 4152127777 = "123456"
+# Disposable local Auth fixture only; never apply this to hosted Auth.
+[auth.sms.test_otp]
+8801700000091 = "876543"
 
 # Configure logged in session timeouts.
 # [auth.sessions]

@@ -9,6 +9,7 @@ import { requireUser } from '@/lib/auth'
 import { toBdE164Phone } from '@/lib/bd-phone.mjs'
 import { passwordCredentials } from '@/lib/password-login.mjs'
 import {safeAuthReturnPath} from '@/lib/auth-intent'
+import {hasRecentAuthentication,passwordSetupError} from '@/lib/password-setup.mjs'
 import {
   COMMUNITY_QR_CODE_COOKIE,
   COMMUNITY_QR_SCAN_COOKIE,
@@ -37,13 +38,13 @@ function phoneOtpErrorMessage(error: { message: string; code?: string }, mode: '
 async function requestPhoneOtp(formData: FormData, mode: 'signup' | 'login') {
   const phone = toBdE164Phone(getText(formData, 'phone'))
   const referralCode = mode === 'signup' ? getText(formData, 'referral_code').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12) : ''
-  const back = mode === 'signup' ? '/signup' : '/login'
-  if (!phone) redirect(`${back}?error=Enter+a+valid+Bangladesh+mobile+number`)
+  const returnTo=safeAuthReturnPath(getText(formData,'next'))
+  const back = mode === 'signup' ? '/signup?' : '/login?method=otp&'+(returnTo?'next='+encodeURIComponent(returnTo)+'&':'')
+  if (!phone) redirect(`${back}error=Enter+a+valid+Bangladesh+mobile+number`)
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithOtp({ phone, options: { shouldCreateUser: mode === 'signup' } })
-  if (error) redirect(`${back}?error=${encodeURIComponent(phoneOtpErrorMessage(error, mode))}`)
+  if (error) redirect(`${back}error=${encodeURIComponent(phoneOtpErrorMessage(error, mode))}`)
   const cookieStore = await cookies()
-  const returnTo=safeAuthReturnPath(getText(formData,'next'))
   if(returnTo)cookieStore.set('bp_post_auth_next',returnTo,{httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',maxAge:1800,path:'/'})
   else cookieStore.delete('bp_post_auth_next')
   cookieStore.set('bp_otp_phone', phone, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 600, path: '/' })
@@ -59,20 +60,22 @@ export async function requestSignupOtp(formData: FormData) { return requestPhone
 export async function requestLoginOtp(formData: FormData) { return requestPhoneOtp(formData, 'login') }
 
 export async function signInPhonePassword(formData: FormData) {
+  const returnTo=safeAuthReturnPath(getText(formData,'next'))
+  const back='/login?'+(returnTo?'next='+encodeURIComponent(returnTo)+'&':'')
   const credentials = passwordCredentials(formData)
-  if (!credentials) redirect('/login?error=Enter+a+valid+mobile+number+and+password')
+  if (!credentials) redirect(back+'error=Enter+a+valid+mobile+number+and+password')
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signInWithPassword(credentials)
   if (error || !data.user?.phone_confirmed_at) {
     await supabase.auth.signOut()
-    redirect('/login?error=Mobile+number+or+password+was+not+accepted')
+    redirect(back+'error=Mobile+number+or+password+was+not+accepted')
   }
   revalidatePath('/', 'layout')
   const cookieStore = await cookies()
   const qrCode = normalizeCommunityQrCode(cookieStore.get(COMMUNITY_QR_CODE_COOKIE)?.value)
-  const returnTo=safeAuthReturnPath(getText(formData,'next'))
   if(returnTo)cookieStore.set('bp_post_auth_next',returnTo,{httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',maxAge:1800,path:'/'})
   else cookieStore.delete('bp_post_auth_next')
+  if(returnTo==='/account/security')redirect(returnTo)
   if (qrCode) redirect('/community-invite/' + encodeURIComponent(qrCode))
   redirect(returnTo??'/home')
 }
@@ -97,10 +100,35 @@ export async function verifyPhoneOtp(formData: FormData) {
     const notice=qrCode?'Mobile verified. Complete your household profile to join your scanned community.':'Mobile verified. Complete your household profile.'
     redirect('/onboarding?notice='+encodeURIComponent(notice))
   }
-  if(qrCode) redirect('/community-invite/'+encodeURIComponent(qrCode)+'?notice='+encodeURIComponent('Mobile verified. Confirm your community to continue.'))
   const returnTo=safeAuthReturnPath(cookieStore.get('bp_post_auth_next')?.value)
   cookieStore.delete('bp_post_auth_next')
+  if(returnTo==='/account/security')redirect(returnTo)
+  if(qrCode) redirect('/community-invite/'+encodeURIComponent(qrCode)+'?notice='+encodeURIComponent('Mobile verified. Confirm your community to continue.'))
   redirect(returnTo??'/home')
+}
+
+export async function setMyPassword(formData: FormData) {
+  const {supabase,user}=await requireUser()
+  const {data,error:claimsError}=await supabase.auth.getClaims()
+  if(claimsError||!hasRecentAuthentication(data?.claims))
+    redirect('/login?method=otp&next=%2Faccount%2Fsecurity&notice=Verify+your+mobile+again+to+set+your+password')
+  const password=formData.get('password')
+  const validation=passwordSetupError(password,formData.get('confirm_password'))
+  if(validation)redirect('/account/security?error='+encodeURIComponent(validation))
+  const current=String(formData.get('current_password')??'')
+  const {data:updated,error}=await supabase.auth.updateUser({password:password as string,...(current?{current_password:current}:{})})
+  if(error){
+    const message=error.code==='same_password'?'Choose a different password.':
+      error.code==='weak_password'?'Use a stronger password with letters, numbers and symbols.':
+      error.code==='reauthentication_needed'?'Sign in again with mobile OTP before setting your password.':
+      error.code==='reauthentication_not_valid'?'Verification expired. Sign in again with mobile OTP.':
+      error.code==='invalid_credentials'?'Your current password was not accepted.':
+      'The password could not be saved. Verify your mobile again and retry; if a current password is required, enter it.'
+    redirect('/account/security?error='+encodeURIComponent(message))
+  }
+  if(updated.user?.id!==user.id)throw new Error('Password update identity mismatch')
+  revalidatePath('/account/security')
+  redirect('/account/security?notice=Password+saved.+You+can+now+sign+in+with+your+mobile+number+and+this+password')
 }
 
 export async function restartSignupWithAnotherPhone() {
