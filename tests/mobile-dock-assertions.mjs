@@ -5,6 +5,9 @@ import assert from 'node:assert/strict'
 export async function assertMobileDock(page, width) {
   const dock = page.locator('.app-mobile-nav')
   assert.equal(await dock.count(), 1, 'Exactly one customer dock on ' + page.url())
+  // A client route can reveal its heading before its stylesheet is applied.
+  // Wait for the expected painted state, then test geometry and all hit targets.
+  await dock.waitFor({state: width < 768 ? 'visible' : 'hidden'})
   if (width >= 768) {
     assert.equal(await dock.isVisible(), false, 'No mobile dock on tablet/desktop')
     return

@@ -14,6 +14,22 @@ export async function assertHeaderGeometry(page, brandSelector, actionsSelector,
     const errors = []
     if (text.width < 1 || text.height < 1) errors.push('Brand is not visible')
     if (text.left < 0 || text.right > innerWidth) errors.push('Brand paints outside viewport')
+    if (innerWidth >= 768) {
+      const copy = brand.querySelector('.market-brand-copy,.public-header-brand-copy,.app-header-brand-copy')
+      if (!copy || !copy.getClientRects().length || getComputedStyle(copy).display === 'none') errors.push('Tablet/desktop brand copy is hidden')
+      else {
+        const expected = ['2-TAKA-R-BAZAR','Smart shopping. Real savings!','একসাথে কিনি, কম দামে পাই!']
+        const lines = [...copy.children]
+        for (const value of expected) {
+          const line = lines.find(el => el.textContent.trim() === value)
+          if (!line || !line.getClientRects().length || getComputedStyle(line).display === 'none') {errors.push('Missing visible brand line: ' + value);continue}
+          const range = document.createRange()
+          range.selectNodeContents(line)
+          const painted = range.getBoundingClientRect()
+          if (painted.width < 1 || painted.left < text.left - 1 || painted.right > text.right + 1 || line.scrollWidth > line.clientWidth + 1) errors.push('Brand line is clipped: ' + value)
+        }
+      }
+    }
     for (let i = 0; i < boxes.length; i++) {
       const {label, box} = boxes[i]
       if (innerWidth <= 790 && Math.abs((text.top + text.bottom) / 2 - (box.top + box.bottom) / 2) > 3) errors.push('Header controls must share the logo row: ' + label)

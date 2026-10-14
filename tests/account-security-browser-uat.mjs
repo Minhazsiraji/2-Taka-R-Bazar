@@ -267,7 +267,7 @@ try {
     await page.locator('header').first().waitFor()
     assert.equal(await page.locator('.customer-notification-bell').count(),1,'Notification access on '+path)
     assert.equal(await page.locator('header .market-header-location').count(),0,'No duplicate header location')
-    for (const width of [320,393,768,1440]) {
+    for (const width of [320,393,768,820,1024,1440]) {
       await page.setViewportSize({width, height: 900})
       await assertCustomerPageHeader(page, width)
       await assertMobileDock(page, width)
