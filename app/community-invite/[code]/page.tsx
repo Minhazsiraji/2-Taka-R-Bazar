@@ -59,7 +59,7 @@ export default async function CommunityInvitePage({
         <p className="mt-6 text-xs font-black uppercase tracking-[.18em] text-cyan-700">{SITE_TAGLINE_EN}</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl">Join {qr.community_name}</h1>
         <p className="mt-2 text-lg font-bold text-emerald-700">{SITE_TAGLINE_BN}</p>
-        <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">This QR remembers that you came from the {qr.community_name} launch. Scanning does not create an account or an order. Verify your mobile, confirm your community, then choose what you want to buy.</p>
+        <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">This QR remembers that you came from the {qr.community_name} launch. Scanning does not create an account or an order. Sign in, confirm your community, then choose what you want to buy.</p>
 
         {notice&&<div className="success mt-5">{notice}</div>}
         {error&&<div className="error mt-5">{error}</div>}
@@ -74,7 +74,7 @@ export default async function CommunityInvitePage({
           <div className="grid gap-4 sm:grid-cols-4">
             {[
               ['1','Scan QR','Community source remembered'],
-              ['2','Verify mobile','New users register by OTP'],
+              ['2','Sign in','Google or mobile and password'],
               ['3','Join community','Confirm '+qr.community_name],
               ['4','Start saving','Browse Pools & Group Deals'],
             ].map(([n,title,desc])=><div key={n} className="min-w-0"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-100 text-sm font-black text-cyan-800">{n}</div><b className="mt-2 block text-sm">{title}</b><p className="mt-1 text-xs leading-5 text-slate-500">{desc}</p></div>)}
@@ -84,7 +84,7 @@ export default async function CommunityInvitePage({
         <div className="mt-6">
           <Link className="btn-secondary mb-3 inline-flex min-h-12 items-center justify-center px-5" href={'/?area='+encodeURIComponent(String(qr.community_id))+'#deals'}>Browse community offers without signing in →</Link>
           {!user&&<div className="grid gap-3 sm:grid-cols-2">
-            <Link className="btn-primary min-h-12 text-center" href="/signup">Register with mobile</Link>
+            <Link className="btn-primary min-h-12 text-center" href="/signup">Create an account</Link>
             <Link className="btn-secondary min-h-12 text-center" href="/login">I already have an account</Link>
           </div>}
 

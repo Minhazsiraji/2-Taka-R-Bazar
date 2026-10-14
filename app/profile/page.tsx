@@ -26,8 +26,8 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
 
     <form action={updateProfile} className="card cx-glass-card grid gap-4">
       <label><span className="label">Full name</span><input className="input" name="full_name" defaultValue={profile.full_name ?? ''} required /></label>
-      <label><span className="label">Verified mobile</span><input className="input bg-slate-100" value={user.phone ?? profile.phone ?? ''} readOnly aria-readonly="true" /></label>
-      <p className="-mt-2 text-xs text-slate-500">Mobile changes require a new OTP verification flow.</p>
+      <label><span className="label">Mobile contact</span><input className="input bg-slate-100" value={profile.phone ?? user.phone ?? ''} readOnly aria-readonly="true" /></label>
+      <p className="-mt-2 text-xs text-slate-500">This number is your account contact or mobile login identifier. Manage login methods in Account security.</p>
       <label><span className="label">Household label</span><input className="input" name="household_name" defaultValue={profile.household_name ?? ''} required /></label>
       <label><span className="label">Default pickup point (optional)</span><select className="input" name="pickup_point_id" defaultValue={profile.pickup_point_id ?? ''}><option value="">No default — choose when confirming an order</option>{points?.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
       <p className="-mt-2 text-xs text-slate-500">You can choose a different active pickup point each time you confirm a purchase.</p>

@@ -58,9 +58,9 @@ test('migration contains database-owned pilot guards and idempotency',()=>{
   assert.match(sql,/You earned 10 Coins/)
 })
 
-test('referral attribution is carried through the OTP/onboarding flow',()=>{
+test('referral attribution is carried through the authentication/onboarding flow',()=>{
   const auth=readFileSync(new URL('../app/actions/auth.ts',import.meta.url),'utf8')
-  assert.match(auth,/cookieStore\.set\('bp_ref_code'/)
+  assert.match(auth,/store\.set\('bp_ref_code'/)
   assert.match(auth,/supabase\.rpc\('apply_referral_code'/)
   assert.match(auth,/cookieStore\.delete\('bp_ref_code'\)/)
 })

@@ -15,6 +15,5 @@ test('Preview review mode is synthetic, no-SMS, and hard-gated to Vercel Preview
   assert.doesNotMatch(page,/signInAnonymously/)
   assert.doesNotMatch(page,/requestLoginOtp/)
   assert.match(login,/process\.env\.VERCEL_ENV === 'preview'/)
-  assert.match(login,/Open Preview without OTP/)
-  assert.match(login,/No SMS or OTP credit is used/)
+  assert.match(login,/Open synthetic Preview/)
 })

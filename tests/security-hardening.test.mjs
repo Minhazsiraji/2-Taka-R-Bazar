@@ -18,8 +18,9 @@ test('security hardening revokes anonymous SECURITY DEFINER execution', () => {
   assert.doesNotMatch(sql, /money_summary_sharing\s+boolean\s+not\s+null\s+default\s+false/i)
 })
 
-test('OTP verification does not expose raw upstream error text', () => {
+test('authentication errors do not expose upstream provider errors', () => {
   const auth = fs.readFileSync('app/actions/auth.ts', 'utf8')
-  assert.doesNotMatch(auth, /verify-otp\?error=\$\{encodeURIComponent\(error\.message\)\}/)
-  assert.match(auth, /OTP\+is\+invalid\+or\+expired/)
+  const callback = fs.readFileSync('app/auth/callback/route.ts', 'utf8')
+  assert.doesNotMatch(auth.split('const onboardingSchema')[0] + callback, /encodeURIComponent\(error\.message\)/)
+  assert.doesNotMatch(auth, /signInWithOtp|verifyOtp/)
 })

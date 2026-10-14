@@ -1,71 +1,141 @@
-// Ordinary phone OTP and password Auth against disposable localhost only.
+// Native Auth and disposable localhost only. No hosted identities or provider credentials.
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {createClient} from '@supabase/supabase-js'
+import {createServerClient} from '@supabase/ssr'
 import {chromium} from 'playwright'
 
-const endpoint=process.env.NEXT_PUBLIC_SUPABASE_URL
-if(!endpoint||new URL(endpoint).hostname!=='127.0.0.1')throw new Error('Disposable local Auth required')
-const key=process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY
-if(!key)throw new Error('Local fixture credential required')
-const admin=createClient(endpoint,key,{auth:{persistSession:false,autoRefreshToken:false}})
-const phone='8801700000091'
-const password=randomUUID()+'aA1!'
-const {data:created,error:createError}=await admin.auth.admin.createUser({phone,phone_confirm:true})
-assert.equal(createError,null)
-const id=created.user.id
-const roleResponse=await fetch(endpoint+'/rest/v1/user_roles',{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({user_id:id,role:'super_admin'})})
+const endpoint = process.env.NEXT_PUBLIC_SUPABASE_URL
+if (!endpoint || new URL(endpoint).hostname !== '127.0.0.1') throw new Error('Disposable local Auth required')
+const key = process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY
+const publicKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+if (!key || !publicKey) throw new Error('Local fixture credentials required')
+const admin = createClient(endpoint, key, {auth: {persistSession: false, autoRefreshToken: false}})
+const headers = {apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json'}
+async function rows(table, id) {
+  const result = await fetch(endpoint + '/rest/v1/' + table + '?select=*&' + (table === 'user_roles' ? 'user_id' : 'id') + '=eq.' + id, {headers})
+  assert.ok(result.ok)
+  return result.json()
+}
+const phone = '8801700000091'
+const previousPassword = randomUUID() + 'aA1!'
+const password = randomUUID() + 'aA1!'
+const {data: created, error: createError} = await admin.auth.admin.createUser({phone, password: previousPassword, phone_confirm: true})
+assert.equal(createError, null)
+const id = created.user.id
+const roleResponse = await fetch(endpoint + '/rest/v1/user_roles', {method: 'POST', headers, body: JSON.stringify({user_id: id, role: 'super_admin'})})
 assert.ok(roleResponse.ok)
-const browser=await chromium.launch({headless:true})
-try{
-  const page=await browser.newPage({viewport:{width:393,height:900}})
-  const errors=[]
-  page.on('pageerror',e=>errors.push(e.message))
-  await page.goto('http://127.0.0.1:3000/login',{waitUntil:'networkidle'})
-  await page.getByRole('link',{name:'Verify mobile and set a password'}).click()
-  await page.waitForURL(url=>url.searchParams.get('method')==='otp')
-  await page.getByRole('button',{name:'Send OTP',exact:true}).waitFor()
-  assert.ok(page.url().includes('method=otp'))
-  await page.locator('[name="phone"]').fill('01700000091')
-  await page.getByRole('button',{name:'Send OTP',exact:true}).click()
-  await page.waitForURL(url=>url.pathname==='/verify-otp')
-  await page.locator('[name="token"]').fill('876543')
-  await page.getByRole('button',{name:/Verify|Confirm/i}).click()
-  await page.waitForURL(url=>url.pathname==='/account/security')
-  await page.locator('[name="password"]').fill(password)
-  await page.locator('[name="confirm_password"]').fill(password+'different')
-  await page.getByRole('button',{name:'Save my password'}).click()
-  await page.getByRole('alert').filter({hasText:'The two passwords do not match.'}).waitFor()
-  await page.locator('[name="password"]').fill(password)
-  await page.locator('[name="confirm_password"]').fill(password)
-  await page.getByRole('button',{name:'Save my password'}).click()
-  await page.getByRole('status').filter({hasText:'Password saved.'}).waitFor()
-  const {data:after}=await admin.auth.admin.getUserById(id)
-  assert.equal(after.user.id,id)
-  assert.equal(after.user.phone,phone)
-  const roles=await fetch(endpoint+'/rest/v1/user_roles?select=role&user_id=eq.'+id,{headers:{apikey:key,Authorization:'Bearer '+key}})
-  assert.ok((await roles.json()).some(r=>r.role==='super_admin'))
+const browser = await chromium.launch({headless: true})
+try {
+  const page = await browser.newPage({viewport: {width: 393, height: 900}})
+  const errors = []
+  page.on('pageerror', e => errors.push(e.message))
+  async function login(number, pass) {
+    await page.locator('[name="phone"]').fill(number)
+    await page.locator('[name="password"]').fill(pass)
+    await page.getByRole('button', {name: 'Sign in with password', exact: true}).click()
+  }
+  async function save(pass, confirmation = pass) {
+    await page.locator('[name="password"]').fill(pass)
+    await page.locator('[name="confirm_password"]').fill(confirmation)
+    await page.getByRole('button', {name: 'Save my password', exact: true}).click()
+  }
+  await page.goto('http://127.0.0.1:3000/login?next=%2Faccount%2Fsecurity', {waitUntil: 'networkidle'})
+  assert.equal(await page.getByRole('button', {name: 'Continue with Google', exact: true}).isDisabled(), true)
+  assert.equal(await page.getByRole('button', {name: /OTP/}).count(), 0)
+  await login('01700000091', previousPassword)
+  await page.waitForURL(url => url.pathname === '/account/security')
+  await save(password, password + 'different')
+  await page.getByRole('alert').filter({hasText: 'The two passwords do not match.'}).waitFor()
+  await save(password)
+  await page.getByRole('status').filter({hasText: 'Password saved.'}).waitFor()
+  const {data: after} = await admin.auth.admin.getUserById(id)
+  assert.equal(after.user.id, id)
+  assert.equal(after.user.phone, phone)
+  assert.ok((await rows('user_roles', id)).some(r => r.role === 'super_admin'))
+  await page.goto('http://127.0.0.1:3000/super-admin/payment-setup', {waitUntil: 'networkidle'})
+  for (const value of ['01636-057401', '2183503557001', 'Md. Minhaz Siraji']) await page.getByText(value, {exact: true}).waitFor()
+  await page.goto('http://127.0.0.1:3000/super-admin/auth-setup', {waitUntil: 'networkidle'})
+  await page.getByRole('heading', {name: 'Login setup', exact: true}).waitFor()
+  await page.getByText('Ready', {exact: true}).waitFor()
   await page.context().clearCookies()
-  await page.goto('http://127.0.0.1:3000/login?next=%2Faccount%2Fsecurity',{waitUntil:'networkidle'})
-  await page.locator('[name="phone"]').fill('01700000091')
-  await page.locator('[name="password"]').fill(password+'wrong')
-  await page.getByRole('button',{name:'Sign in with password'}).click()
-  await page.getByText('Mobile number or password was not accepted',{exact:true}).waitFor()
-  await page.locator('[name="phone"]').fill('01700000091')
-  await page.locator('[name="password"]').fill(password)
-  await page.getByRole('button',{name:'Sign in with password'}).click()
-  await page.waitForURL(url=>url.pathname==='/account/security')
-  await page.goto('http://127.0.0.1:3000/super-admin/payment-setup',{waitUntil:'networkidle'})
-  await page.getByText('01636-057401',{exact:true}).waitFor()
-  await page.getByText('2183503557001',{exact:true}).waitFor()
-  await page.getByText('Md. Minhaz Siraji',{exact:true}).waitFor()
+  await page.goto('http://127.0.0.1:3000/login?next=%2Faccount%2Fsecurity', {waitUntil: 'networkidle'})
+  await login('01700000091', previousPassword)
+  await page.getByRole('alert').filter({hasText: 'Mobile number or password was not accepted'}).waitFor()
+  assert.equal(new URL(page.url()).searchParams.get('next'), '/account/security')
+  await login('01700000091', password)
+  await page.waitForURL(url => url.pathname === '/account/security')
   await page.context().clearCookies()
-  await page.goto('http://127.0.0.1:3000/super-admin/payment-setup',{waitUntil:'networkidle'})
-  await page.waitForURL(url=>url.pathname==='/login')
-  // Compare identity using ordinary Auth, never forged claims or Auth SQL.
-  const {data:signed,error:signError}=await admin.auth.signInWithPassword({phone,password})
-  assert.equal(signError,null)
-  assert.equal(signed.user.id,id)
-  assert.deepEqual(errors,[])
-  console.log('Account security UAT passed: existing OTP identity → password setup → phone/password login; original identity and Super Admin role preserved; wrong password rejected.')
-}finally{await browser.close()}
+  for (const path of ['/super-admin/auth-setup', '/super-admin/payment-setup', '/account/security']) {
+    await page.goto('http://127.0.0.1:3000' + path, {waitUntil: 'networkidle'})
+    await page.waitForURL(url => url.pathname === '/login')
+  }
+  for (const suffix of ['?next=//evil.example', '?code=invalid&next=/super-admin', '?error=access_denied']) {
+    await page.goto('http://127.0.0.1:3000/auth/callback' + suffix, {waitUntil: 'networkidle'})
+    await page.waitForURL(url => url.pathname === '/login')
+    assert.equal(new URL(page.url()).origin, 'http://127.0.0.1:3000')
+    await page.getByRole('alert').waitFor()
+  }
+  await page.goto('http://127.0.0.1:3000/verify-otp', {waitUntil: 'networkidle'})
+  await page.waitForURL(url => url.pathname === '/login')
+  assert.equal(await page.locator('[name="token"]').count(), 0)
+
+  // New mobile signup uses native Supabase password Auth, not SMS or a fixture bypass.
+  const customerPassword = randomUUID() + 'aA1!'
+  await page.goto('http://127.0.0.1:3000/signup?next=%2Faccount%2Fsecurity&ref=SAFE123', {waitUntil: 'networkidle'})
+  await page.locator('[name="phone"]').fill('01700000092')
+  await page.locator('[name="password"]').fill(customerPassword)
+  await page.locator('[name="confirm_password"]').fill(customerPassword)
+  await page.getByRole('button', {name: 'Create account with password', exact: true}).click()
+  await page.waitForURL(url => url.pathname === '/onboarding')
+  const signupCookies = await page.context().cookies()
+  assert.ok(signupCookies.some(c => c.name === 'bp_ref_code' && c.value === 'SAFE123'))
+  assert.ok(signupCookies.some(c => c.name === 'bp_post_auth_next' && c.value === '/account/security'))
+  assert.ok(!signupCookies.some(c => c.name.startsWith('bp_otp_')))
+  await page.locator('[name="full_name"]').fill('Synthetic password customer')
+  await page.locator('[name="household_name"]').fill('Synthetic Auth family')
+  await page.locator('[name="community_id"]').selectOption('00000000-0000-4000-8000-000000000821')
+  await page.getByRole('button', {name: 'Finish setup', exact: true}).click()
+  await page.waitForURL(url => url.pathname === '/account/security')
+  const customerClient = createClient(endpoint, publicKey, {auth: {persistSession: false, autoRefreshToken: false}})
+  const {data: customer, error: customerError} = await customerClient.auth.signInWithPassword({phone: '8801700000092', password: customerPassword})
+  assert.equal(customerError, null)
+  assert.deepEqual((await rows('user_roles', customer.user.id)).map(r => r.role), ['customer'])
+  assert.equal((await rows('profiles', customer.user.id))[0].community_id, '00000000-0000-4000-8000-000000000821')
+  await page.context().clearCookies()
+
+  // Exercise contact onboarding for an email-only identity using ordinary SDK auth.
+  // This is not an end-to-end Google provider test, which needs a configured OAuth client.
+  const emailPassword = randomUUID() + 'aA1!'
+  const {data: emailFixture, error: emailError} = await admin.auth.admin.createUser({email: 'contact-auth@example.invalid', password: emailPassword, email_confirm: true})
+  assert.equal(emailError, null)
+  const cookieJar = new Map()
+  const native = createServerClient(endpoint, publicKey, {cookies: {getAll: () => [...cookieJar].map(([name, value]) => ({name, value})), setAll: values => {for (const c of values) cookieJar.set(c.name, c.value)}}})
+  const {error: nativeError} = await native.auth.signInWithPassword({email: 'contact-auth@example.invalid', password: emailPassword})
+  assert.equal(nativeError, null)
+  await page.context().addCookies([...cookieJar].map(([name, value]) => ({name, value, domain: '127.0.0.1', path: '/', sameSite: 'Lax'})))
+  await page.goto('http://127.0.0.1:3000/onboarding', {waitUntil: 'networkidle'})
+  await page.locator('[name="phone"]').fill('01700000093')
+  await page.locator('[name="full_name"]').fill('Synthetic email customer')
+  await page.locator('[name="household_name"]').fill('Synthetic contact family')
+  await page.locator('[name="community_id"]').selectOption('00000000-0000-4000-8000-000000000821')
+  await page.getByRole('button', {name: 'Finish setup', exact: true}).click()
+  await page.waitForURL(url => url.pathname === '/home')
+  assert.equal((await rows('profiles', emailFixture.user.id))[0].phone, '8801700000093')
+  await page.goto('http://127.0.0.1:3000/account/security', {waitUntil: 'networkidle'})
+  await page.locator('[name="phone"]').fill('01700000091')
+  await save(password)
+  await page.getByRole('alert').waitFor()
+  const {data: collisionCheck} = await admin.auth.admin.getUserById(emailFixture.user.id)
+  assert.equal(collisionCheck.user.id, emailFixture.user.id)
+  assert.ok(!collisionCheck.user.phone)
+  await page.locator('[name="phone"]').fill('01700000094')
+  await save(password)
+  await page.getByRole('status').filter({hasText: 'Password saved.'}).waitFor()
+  const {data: mobileAdded, error: mobileAddedError} = await customerClient.auth.signInWithPassword({phone: '8801700000094', password})
+  assert.equal(mobileAddedError, null)
+  assert.equal(mobileAdded.user.id, emailFixture.user.id)
+  assert.deepEqual((await rows('user_roles', emailFixture.user.id)).map(r => r.role), ['customer'])
+  assert.deepEqual(errors, [])
+  console.log('No-SMS Auth UAT passed: password change and login preserve owner identity/roles; old password rejected; native customer signup/referral/onboarding; email-only contact onboarding and mobile linking; phone collision/guest access/invalid OAuth callbacks rejected.')
+} finally {await browser.close()}
