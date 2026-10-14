@@ -90,7 +90,7 @@ try {
   await page.waitForURL(url => url.pathname === '/onboarding')
   const signupCookies = await page.context().cookies()
   assert.ok(signupCookies.some(c => c.name === 'bp_ref_code' && c.value === 'SAFE123'))
-  assert.ok(signupCookies.some(c => c.name === 'bp_post_auth_next' && c.value === '/account/security'))
+  assert.ok(signupCookies.some(c => c.name === 'bp_post_auth_next' && decodeURIComponent(c.value) === '/account/security'))
   assert.ok(!signupCookies.some(c => c.name.startsWith('bp_otp_')))
   await page.locator('[name="full_name"]').fill('Synthetic password customer')
   await page.locator('[name="household_name"]').fill('Synthetic Auth family')
