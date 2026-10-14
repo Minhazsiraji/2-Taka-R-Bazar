@@ -12,7 +12,7 @@ const nav = [
   ['/account', 'Account','অ্যাকাউন্ট'],
 ] as const
 
-export function MobileCustomerNav({language='en',homeHref='/home'}:{language?:MarketplaceLanguage;homeHref?:string}){
+export function MobileCustomerNav({language='en',homeHref='/'}:{language?:MarketplaceLanguage;homeHref?:string}){
   const pathname = usePathname()
 
   return <nav className="app-mobile-nav" aria-label="Mobile customer navigation">

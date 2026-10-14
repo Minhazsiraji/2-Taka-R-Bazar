@@ -42,5 +42,5 @@ export async function confirmCommunityQrJoin(formData:FormData){
   store.delete(COMMUNITY_QR_CODE_COOKIE)
   store.delete(COMMUNITY_QR_SCAN_COOKIE)
   store.delete(COMMUNITY_QR_SOURCE_COOKIE)
-  redirect('/home?notice='+encodeURIComponent('Welcome to '+qr.community_name+'. You can now browse active Pools and Group Deals.'))
+  redirect('/?notice='+encodeURIComponent('Welcome to '+qr.community_name+'. You can now browse active Pools and Group Deals.'))
 }

@@ -35,7 +35,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{q?:stri
         </Link>
         <div className="app-role-actions flex min-w-0 flex-1 items-center justify-end gap-1 text-[10px] sm:gap-2 sm:text-xs">
           <ThemeToggle className="shrink-0"/>
-          <Link href="/home" className="btn-primary shrink-0 rounded-full px-3 py-2" aria-label="Customer app"><span className="sm:hidden">App</span><span className="hidden sm:inline">Customer app</span></Link>
+          <Link href="/" className="btn-primary shrink-0 rounded-full px-3 py-2" aria-label="Customer app"><span className="sm:hidden">App</span><span className="hidden sm:inline">Customer app</span></Link>
         </div>
       </div>
     </header>

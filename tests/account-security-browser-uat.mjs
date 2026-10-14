@@ -164,9 +164,9 @@ try {
   await page.waitForURL(url => url.pathname === '/')
   await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
   assert.equal(await page.getByRole('heading', {name: 'Your community is buying smarter.', exact: true}).count(), 0)
-  const dashboard = page.getByRole('link', {name: 'My dashboard', exact: true})
-  assert.equal(await dashboard.getAttribute('href'), '/account')
-  await dashboard.click()
+  const dashboards = page.getByRole('link', {name: 'My dashboard', exact: true})
+  assert.deepEqual(await dashboards.evaluateAll(links => links.map(link => link.getAttribute('href'))), ['/account', '/account'])
+  await dashboards.first().click()
   await page.waitForURL(url => url.pathname === '/account')
   await page.getByRole('heading', {name: /Account/}).waitFor()
   // An old saved login return URL is canonicalized before redirecting.
