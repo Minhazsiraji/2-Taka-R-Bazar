@@ -1,6 +1,7 @@
 // Synthetic disposable Supabase only; never run with a hosted project URL.
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
+import {execFileSync} from 'node:child_process'
 import {chromium} from 'playwright'
 import {assertHeaderGeometry, assertCustomerPageHeader} from './header-layout-assertions.mjs'
 import {assertMobileDock} from './mobile-dock-assertions.mjs'
@@ -10,12 +11,13 @@ if(!api||new URL(api).hostname!=='127.0.0.1')throw new Error('Disposable local S
 const key=process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY
 if(!key)throw new Error('Local fixture credential required')
 const headers={apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json',Prefer:'return=minimal'}
-async function insert(table,row){const r=await fetch(`${api}/rest/v1/${table}`,{method:'POST',headers,body:JSON.stringify(row)});if(!r.ok)throw new Error(`Fixture ${table}: ${r.status} ${await r.text()}`)}
+async function insert(table,row,requestHeaders=headers){const r=await fetch(`${api}/rest/v1/${table}`,{method:'POST',headers:requestHeaders,body:JSON.stringify(row)});if(!r.ok)throw new Error(`Fixture ${table}: ${r.status} ${await r.text()}`)}
 const ids={community:'00000000-0000-4000-8000-000000000821',product:'00000000-0000-4000-8000-000000000822',pool:'00000000-0000-4000-8000-000000000823',item:'00000000-0000-4000-8000-000000000824'}
 await insert('communities',{id:ids.community,name:'Synthetic browser community',slug:'synthetic-browser-community'})
+// QR codes are operator-provisioned, with no public/client insert grant. Seed
+// only this disposable localhost DB; retain the deployed permission boundary.
+execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-c',"insert into public.community_qr_codes(code,community_id,campaign_name) values ('UAT-UI-SHELL','00000000-0000-4000-8000-000000000821','Synthetic customer UI qualification')"],{env:{...process.env,PGPASSWORD:'postgres'},stdio:'pipe'})
 await insert('products',{id:ids.product,name:'Synthetic browser rice',category:'Rice',package_size:'1 kg',unit:'bag',sku:'synthetic-browser-rice',active:true,is_demo:false,source_type:'PRIVATE_LABEL',image_url:null})
-await insert('own_product_showcase',{product_id:ids.product,published:true,description:'Synthetic UI qualification product'})
-await insert('community_qr_codes',{code:'UAT-UI-SHELL',community_id:ids.community,campaign_name:'Synthetic customer UI qualification'})
 await insert('pools',{id:ids.pool,community_id:ids.community,title:'Synthetic browser Pool',status:'open',cadence:'weekly',opens_at:new Date(Date.now()-60000).toISOString(),commitment_closes_at:new Date(Date.now()+86400000).toISOString(),confirmation_closes_at:new Date(Date.now()+172800000).toISOString()})
 await insert('pool_items',{id:ids.item,pool_id:ids.pool,product_id:ids.product,benchmark_price_snapshot:100})
 const email='storefront-browser-admin@example.invalid'
@@ -27,6 +29,7 @@ await insert('user_roles',{user_id:user.id,role:'admin'})
 const signed=await fetch(`${api}/auth/v1/token?grant_type=password`,{method:'POST',headers,body:JSON.stringify({email,password})})
 if(!signed.ok)throw new Error('Local synthetic admin sign-in failed')
 const session=await signed.json()
+await insert('own_product_showcase',{product_id:ids.product,published:true,description:'Synthetic UI qualification product'},{...headers,Authorization:`Bearer ${session.access_token}`})
 const published=await fetch(`${api}/rest/v1/rpc/admin_publish_storefront_pool`,{method:'POST',headers:{...headers,Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({p_pool_id:ids.pool,p_product_ids:[ids.product],p_published:true,p_sort_order:100})})
 if(!published.ok)throw new Error(`Authorized publication failed: ${published.status} ${await published.text()}`)
 const browser=await chromium.launch({headless:true})
