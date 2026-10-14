@@ -44,6 +44,6 @@ test('customer can switch language from product or pool pages too',()=>{
  for(const comp of ['components/demo-product-details.tsx','components/demo-pool-detail.tsx']){
   const code=source(comp)
   assert.match(code,/useStorefrontLanguage\(initialLanguage,hasLanguageCookie\)/)
-  assert.match(code,/onClick=\{\(\)=>setL(?:anguage|ang)\(/)
+  assert.match(code,/onLanguageChange=\{setL(?:anguage|ang)\}/)
  }
 })

@@ -4,7 +4,7 @@ import {randomUUID} from 'node:crypto'
 import {createClient} from '@supabase/supabase-js'
 import {createServerClient} from '@supabase/ssr'
 import {chromium} from 'playwright'
-import {assertHeaderGeometry} from './header-layout-assertions.mjs'
+import {assertHeaderGeometry, assertCustomerPageHeader} from './header-layout-assertions.mjs'
 
 const endpoint = process.env.NEXT_PUBLIC_SUPABASE_URL
 if (!endpoint || new URL(endpoint).hostname !== '127.0.0.1') throw new Error('Disposable local Auth required')
@@ -69,6 +69,22 @@ try {
   await page.goto('http://127.0.0.1:3000/account', {waitUntil: 'domcontentloaded'})
   await page.getByRole('heading', {name: 'My dashboard', exact: true}).waitFor()
   assert.equal(await page.getByRole('link', {name: 'Super Admin', exact: true}).getAttribute('href'), '/super-admin')
+  // Complete the synthetic owner's ordinary household setup, then check staff-role headers too.
+  await page.goto('http://127.0.0.1:3000/onboarding', {waitUntil: 'domcontentloaded'})
+  await page.locator('[name="full_name"]').fill('Synthetic header owner')
+  await page.locator('[name="household_name"]').fill('Synthetic header owner family')
+  await page.locator('[name="community_id"]').selectOption('00000000-0000-4000-8000-000000000821')
+  await page.getByRole('button', {name: 'Finish setup', exact: true}).click()
+  await page.waitForURL(url => url.pathname === '/account/security')
+  await page.goto('http://127.0.0.1:3000/money', {waitUntil: 'domcontentloaded'})
+  await page.getByRole('heading', {name: 'My Money Dashboard', exact: true}).waitFor()
+  for (const width of [320,393,768,820,1024,1440]) {
+    await page.setViewportSize({width, height: 900})
+    await assertCustomerPageHeader(page, width)
+    assert.equal(await page.locator('.app-role-link').last().isVisible(), width > 1100)
+  }
+  await page.setViewportSize({width:393,height:900})
+  await page.screenshot({path:'/tmp/2tbr-header-money-owner-mobile.png',fullPage:true})
   await page.context().clearCookies()
   await page.goto('http://127.0.0.1:3000/login?next=%2Faccount%2Fsecurity', {waitUntil: 'domcontentloaded'})
   await login('01700000091', previousPassword)
@@ -172,12 +188,12 @@ try {
   assert.deepEqual(await dashboards.evaluateAll(links => links.map(link => link.getAttribute('href'))), ['/account', '/account'])
   for (const width of [320, 360, 393, 640, 768, 1440]) {
     await page.setViewportSize({width, height: 900})
-    await assertHeaderGeometry(page, '.market-brand-copy strong', '.market-header-actions', width)
+    await assertHeaderGeometry(page, '.market-brand-lockup', '.market-header-actions', width)
   }
   await page.setViewportSize({width: 393, height: 900})
   await page.screenshot({path: '/tmp/2tbr-header-storefront-signed-in.png', fullPage: true})
   await page.locator('.market-single-language').click()
-  await assertHeaderGeometry(page, '.market-brand-copy strong', '.market-header-actions', 393)
+  await assertHeaderGeometry(page, '.market-brand-lockup', '.market-header-actions', 393)
   await page.getByRole('button', {name: 'Switch to dark mode', exact: true}).click()
   await page.screenshot({path: '/tmp/2tbr-header-storefront-bn-dark.png', fullPage: true})
   await page.getByRole('button', {name: 'Switch to light mode', exact: true}).click()
@@ -199,7 +215,7 @@ try {
     await page.setViewportSize({width, height: 900})
     await page.screenshot({path: '/tmp/2tbr-account-width-' + width + '.png', fullPage: true})
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
-    await assertHeaderGeometry(page, '.account-dashboard .market-brand-copy strong', '.account-dashboard .market-header-actions', width)
+    await assertHeaderGeometry(page, '.account-dashboard .market-brand-lockup', '.account-dashboard .market-header-actions', width)
     assert.equal(await page.locator('.market-storefront-dock').isVisible(), width < 768)
   }
   await page.screenshot({path: '/tmp/2tbr-account-desktop.png', fullPage: true})
@@ -220,7 +236,7 @@ try {
   await page.getByRole('heading', {name: 'My Money Dashboard', exact: true}).waitFor()
   for (const width of [320, 360, 393, 640, 768, 1440]) {
     await page.setViewportSize({width, height: 900})
-    await assertHeaderGeometry(page, '.app-header-brand-copy>div:first-child', '.app-role-actions', width)
+    await assertHeaderGeometry(page, '.app-header-brand', '.app-role-actions', width)
     assert.equal(await page.locator('.cx-header-money-label').isVisible(), true)
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
     const heights = await page.locator('.money-navigation-link').evaluateAll(links => links.map(link => link.getBoundingClientRect().height))
@@ -229,7 +245,7 @@ try {
   }
   await page.setViewportSize({width: 393, height: 900})
   await page.getByRole('button', {name: 'Switch to dark mode', exact: true}).click()
-  await assertHeaderGeometry(page, '.app-header-brand-copy>div:first-child', '.app-role-actions', 393)
+  await assertHeaderGeometry(page, '.app-header-brand', '.app-role-actions', 393)
   await page.screenshot({path: '/tmp/2tbr-header-money-dark.png', fullPage: true})
   const moneyNav = page.getByRole('navigation', {name: 'My Money navigation', exact: true})
   assert.equal(await moneyNav.locator('[aria-current="page"]').getAttribute('href'), '/money')
@@ -240,6 +256,23 @@ try {
   await page.waitForURL(url => url.pathname === '/money')
   await page.getByRole('heading', {name: 'My Money Dashboard', exact: true}).waitFor()
   await page.getByRole('button', {name: 'Switch to light mode', exact: true}).click()
+  // Every customer header family and every non-parameterized authenticated page.
+  // Only ordinary reads; never submit Money, shopping or privacy forms.
+  const customerPages = ['/account','/account/security','/account/addresses','/account/orders','/account/savings','/cart','/profile','/notifications','/orders','/pool','/group-deals','/subscription','/community','/savings','/pickup','/feedback','/money','/money/transactions','/money/accounts','/money/transfers','/money/budgets','/money/categories','/money/recurring','/money/reports','/money/monthly-income','/shop/00000000-0000-4000-8000-000000000822']
+  for (const path of customerPages) {
+    await page.goto('http://127.0.0.1:3000' + path, {waitUntil: 'domcontentloaded'})
+    assert.equal(new URL(page.url()).pathname, path, 'Native customer page must render: ' + path)
+    await page.locator('header').first().waitFor()
+    for (const width of [320,393,768,1440]) {
+      await page.setViewportSize({width, height: 900})
+      await assertCustomerPageHeader(page, width)
+    }
+    if (['/account/security','/cart','/profile','/money'].includes(path)) {
+      await page.setViewportSize({width: 393, height: 900})
+      await page.screenshot({path: '/tmp/2tbr-header-route-' + path.replaceAll('/','-') + '.png', fullPage: true})
+    }
+  }
+  console.log('Compact customer header UAT passed: 26 signed-in pages, same logo/control row, height limits and 44px targets at 320/393/768/1440px.')
   console.log('Mobile header UAT passed: signed-in and guest brand/control separation, EN/BAN, menu/theme, labelled My Money, compact tabs and native transaction navigation.')
   console.log('Account dashboard UAT passed: storefront design, responsive language/theme controls, role visibility and native My Money navigation.')
   // An old saved login return URL is canonicalized before redirecting.

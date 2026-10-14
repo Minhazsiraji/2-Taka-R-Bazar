@@ -7,10 +7,8 @@ import {formatPrice} from '@/lib/storefront'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
 import {useStorefrontLanguage} from '@/lib/use-storefront-language'
-import {BrandLogo} from '@/components/brand-logo'
-import {ThemeToggle} from '@/components/theme-toggle'
+import {PublicHeader} from '@/components/public-header'
 import {PublicFooter} from '@/components/public-footer'
-import {SITE_TAGLINE_EN,SITE_TAGLINE_BN} from '@/lib/site'
 
 type Delivery='pickup'|'home'
 const clamp=(n:number)=>Math.min(20,Math.max(0,Math.round(n)))
@@ -51,22 +49,8 @@ export function DemoPoolDetail({pool,communityName,initialLanguage='en',hasLangu
   setStatus(t('Selected items added to the demo basket. No checkout or payment is available.','পণ্য ডেমো বাস্কেটে যোগ হয়েছে। চেকআউট বা পেমেন্ট চালু নেই।'))
  }
  return <main className="public-marketplace-flat market-pool-detail-page min-h-screen">
-  <header className="public-glass-header market-flat-header market-pool-universal-header" aria-label={t('Pool details navigation','পুলের বিস্তারিত নেভিগেশন')}>
-   <div className="market-header-inner market-pool-header-inner">
-    <Link href="/" className="market-brand-lockup" aria-label="2-TAKA-R-BAZAR home">
-     <BrandLogo size={46}/>
-     <span className="market-brand-copy"><strong>2-TAKA-R-BAZAR</strong><small>{SITE_TAGLINE_EN}</small><small lang="bn">{SITE_TAGLINE_BN}</small></span>
-    </Link>
-    <div className="market-pool-header-actions">
-     <Link href="/#deals" className="btn-secondary">{t('Back to shopping','বাজারে ফিরুন')}</Link>
-     <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
-      <button className="market-single-language" type="button" onClick={()=>setLanguage(language==='bn'?'en':'bn')}
-       aria-label={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}>{language==='bn'?'EN':'BAN'}</button>
-     </div>
-     <ThemeToggle/>
-    </div>
-   </div>
-  </header>
+  <PublicHeader actionHref="/#deals" actionLabel={t('Back to shopping','বাজারে ফিরুন')} mobileActionLabel={t('Shop','বাজার')} language={language} onLanguageChange={setLanguage}/>
+
   <div className="market-pool-detail-content" lang={language}>
    <nav className="market-pool-breadcrumb" aria-label={t('Breadcrumb','পথ নির্দেশনা')}>
     <Link href="/">{t('Home','হোম')}</Link><span aria-hidden="true">/</span>

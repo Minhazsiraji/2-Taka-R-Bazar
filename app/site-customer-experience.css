@@ -282,12 +282,3 @@ html[data-theme="dark"] .site-glass-root :is(.cx-glass-subcard,.price-target-pro
  border-color:var(--cx-brand-rim-soft)!important;background:var(--cx-nav-active)!important;color:var(--cx-accent)!important;
 }
 .site-glass-root .money-navigation .money-navigation-link:focus-visible{outline:2px solid var(--cx-accent);outline-offset:-2px}
-@media(max-width:790px){
- .site-glass-root .app-shell-header .app-header-main{flex-direction:column;align-items:stretch;gap:10px}
- .site-glass-root .app-shell-header .app-header-brand-copy{display:block;min-width:0}
- .site-glass-root .app-shell-header .app-header-brand-copy>div:first-child{font-size:.85rem;overflow-wrap:anywhere}
- .site-glass-root .app-shell-header .app-header-brand-copy>div:not(:first-child){display:none}
- .site-glass-root .app-shell-header .app-role-actions{flex-wrap:wrap;gap:6px!important}
- .site-glass-root .app-shell-header .app-role-link{display:none!important}
- .site-glass-root .app-shell-header .app-shell-header-bar{padding:12px!important}
-}
