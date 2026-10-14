@@ -82,6 +82,11 @@ revoke all on public.product_seo_content,public.product_seo_faqs,public.product_
  public.product_seo_slug_aliases,public.product_seo_audit from public,anon,authenticated;
 grant select on public.product_seo_content,public.product_seo_faqs,public.product_seo_media,
  public.product_seo_slug_aliases,public.product_seo_audit to authenticated;
+-- Explicitly reserve privileged fixture/maintenance DML for server-only service-role credentials.
+-- Browser visitors and ordinary signed-in roles still have no direct table writes.
+grant select,insert,update,delete on public.product_seo_content,public.product_seo_faqs,public.product_seo_media,
+ public.product_seo_slug_aliases,public.product_seo_audit to service_role;
+grant usage,select on sequence public.product_seo_audit_id_seq to service_role;
 create policy product_seo_admin_content on public.product_seo_content for select to authenticated
  using(private.has_role((select auth.uid()),'admin') or private.has_role((select auth.uid()),'super_admin'));
 create policy product_seo_admin_faq on public.product_seo_faqs for select to authenticated
