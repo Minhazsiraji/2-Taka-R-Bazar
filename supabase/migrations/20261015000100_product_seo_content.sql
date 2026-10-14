@@ -246,12 +246,21 @@ returns text language sql stable security definer set search_path='' as $$
  limit 1
 $$;
 
+-- Published SEO identity for legacy offer/showcase URLs, used to set a single canonical target.
+create function public.get_public_product_seo_slug_for_id(p_product_id uuid)
+returns text language sql stable security definer set search_path='' as $
+ select c.slug from public.product_seo_content c
+ join public.products p on p.id=c.product_id
+ where p.id=p_product_id and p.active and not p.is_demo and c.status='published'
+ limit 1
+$;
+
 revoke all on function public.admin_save_product_seo(uuid,jsonb,jsonb,jsonb),
  public.admin_submit_product_seo(uuid),public.admin_review_product_seo(uuid,boolean,text),
  public.admin_unlist_product_seo(uuid,text),public.get_public_product_seo(text,integer,integer),
- public.resolve_product_seo_slug(text) from public,anon,authenticated;
+ public.resolve_product_seo_slug(text),public.get_public_product_seo_slug_for_id(uuid) from public,anon,authenticated;
 grant execute on function public.admin_save_product_seo(uuid,jsonb,jsonb,jsonb),
  public.admin_submit_product_seo(uuid),public.admin_review_product_seo(uuid,boolean,text),
  public.admin_unlist_product_seo(uuid,text) to authenticated;
 grant execute on function public.get_public_product_seo(text,integer,integer),
- public.resolve_product_seo_slug(text) to anon,authenticated;
+ public.resolve_product_seo_slug(text),public.get_public_product_seo_slug_for_id(uuid) to anon,authenticated;
