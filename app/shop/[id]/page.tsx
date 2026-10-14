@@ -4,8 +4,8 @@ import type {Metadata} from 'next'
 import Link from 'next/link'
 import {notFound} from 'next/navigation'
 import {createClient} from '@/lib/supabase/server'
-import {PublicHeader} from '@/components/public-header'
-import {PublicFooter} from '@/components/public-footer'
+import {CustomerHeader as PublicHeader} from '@/components/customer-header'
+import {CustomerFooter as PublicFooter} from '@/components/customer-footer'
 import {ShowcaseProductGallery} from '@/components/showcase-product-gallery'
 import {formatPrice} from '@/lib/storefront'
 import type {StorefrontOffer} from '@/lib/storefront'
@@ -50,7 +50,7 @@ export default async function PublicProductPage({params,searchParams}:Params){
  const schema={'@context':'https://schema.org','@type':'Product',name:item.product_name,
   brand:item.brand?{'@type':'Brand',name:item.brand}:undefined,
   image:gallery,category:item.category,url:`${SITE_URL}/shop/${id}`}
- return <main className="min-h-screen bg-white text-black">
+ return <main className="public-marketplace-flat customer-page-shell min-h-screen bg-white text-black">
   <PublicHeader actionHref={product.authenticated?'/account':'/login'} actionLabel={product.authenticated?'My dashboard':'Sign in'}/>
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}}/>
   <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
