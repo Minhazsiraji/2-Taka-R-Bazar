@@ -103,8 +103,12 @@ export async function signInPhonePassword(formData: FormData) {
   cookieStore.delete('bp_oauth_link_user')
   const qrCode = normalizeCommunityQrCode(cookieStore.get(COMMUNITY_QR_CODE_COOKIE)?.value)
   if(returnTo==='/account/security')redirect(returnTo)
+  // The public storefront cannot supply the old dashboard's household setup gate.
+  const {data:profile,error:profileError}=await supabase.from('profiles').select('full_name,phone,community_id,onboarding_completed_at').eq('id',data.user.id).maybeSingle()
+  if(profileError)redirect(back+'error=Your+account+profile+could+not+be+loaded.+Please+try+again.')
+  if(!profile?.full_name||!profile.phone||!profile.community_id||!profile.onboarding_completed_at)redirect('/onboarding')
   if (qrCode) redirect('/community-invite/' + encodeURIComponent(qrCode))
-  redirect(returnTo??'/home')
+  redirect(returnTo??'/')
 }
 
 export async function setMyPassword(formData: FormData) {
@@ -157,7 +161,7 @@ export async function completeOnboarding(formData: FormData) {
   const { supabase, user } = await requireUser(); const phone = user.phone || toBdE164Phone(getText(formData, 'phone'))?.replace(/^\+/, '')
   if (!phone) redirect('/onboarding?error=A+valid+mobile+contact+number+is+required')
   const {data:existingProfile}=await supabase.from('profiles').select('onboarding_completed_at').eq('id',user.id).maybeSingle()
-  if(existingProfile?.onboarding_completed_at)redirect('/home?notice=Your+household+is+already+set+up.+Contact+Operations+to+change+community.')
+  if(existingProfile?.onboarding_completed_at)redirect('/?notice=Your+household+is+already+set+up.+Contact+Operations+to+change+community.')
 
   const cookieStore=await cookies()
   const qrCode=normalizeCommunityQrCode(cookieStore.get(COMMUNITY_QR_CODE_COOKIE)?.value)
@@ -198,7 +202,7 @@ export async function completeOnboarding(formData: FormData) {
   const returnTo=safeAuthReturnPath(cookieStore.get('bp_post_auth_next')?.value)
   cookieStore.delete('bp_post_auth_next')
   const notice=qrCommunityName?'Welcome to '+qrCommunityName+'. You can now browse active Pools and Group Deals.':'Household setup complete.'
-  redirect((returnTo??'/home')+'?notice='+encodeURIComponent(notice))
+  redirect((returnTo??'/')+'?notice='+encodeURIComponent(notice))
 }
 
 export async function updateProfile(formData: FormData) {

@@ -31,5 +31,5 @@ export async function GET(request: Request) {
   store.delete('bp_post_auth_next')
   if (next === '/account/security') return NextResponse.redirect(origin + next)
   const qr = normalizeCommunityQrCode(store.get(COMMUNITY_QR_CODE_COOKIE)?.value)
-  return NextResponse.redirect(origin + (qr ? '/community-invite/' + encodeURIComponent(qr) : next || '/home'))
+  return NextResponse.redirect(origin + (qr ? '/community-invite/' + encodeURIComponent(qr) : next || '/'))
 }

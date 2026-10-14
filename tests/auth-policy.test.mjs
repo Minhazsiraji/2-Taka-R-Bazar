@@ -5,6 +5,9 @@ import {safeAuthReturnPath, authCallbackUrl, authProviderStatus} from '../lib/au
 test('authentication returns allowlisted paths and rejects external or privileged redirects', () => {
   assert.equal(safeAuthReturnPath('/account/security?ignored=true'), '/account/security')
   assert.equal(safeAuthReturnPath('/checkout'), '/checkout')
+  assert.equal(safeAuthReturnPath('/'), '/')
+  assert.equal(safeAuthReturnPath('/?ignored=true'), '/')
+  assert.equal(safeAuthReturnPath('/home'), '/home')
   for (const value of ['https://evil.example', '//evil.example', '/\\evil.example', '/super-admin', '/account#fragment', '/%2F%2Fevil.example', '/login', null]) assert.equal(safeAuthReturnPath(value), null)
 })
 
