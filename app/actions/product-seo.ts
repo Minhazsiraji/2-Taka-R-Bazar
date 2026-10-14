@@ -55,7 +55,7 @@ export async function saveProductSeo(fd:FormData){
    media.push({kind,url,alt_en,alt_bn})
   }
  }
- const {error}=await supabase.rpc('admin_save_product_seo',{p_product_id:id,p_data:result.data,p_faqs:faqs,p_media:media})
+ const {error}=await supabase.rpc('admin_save_product_seo',{p_product_id:id,p_data:{...result.data,expected_version:Number(read(fd,'expected_version'))},p_faqs:faqs,p_media:media})
  if(error)fail(error.message)
  done('SEO content saved as draft. Submit for independent review when complete.')
 }
