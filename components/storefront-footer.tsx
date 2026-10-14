@@ -4,8 +4,9 @@ import {LEGAL_LINKS} from '@/lib/legal'
 import {SITE_TAGLINE_BN,SITE_TAGLINE_EN} from '@/lib/site'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
+import {MobileCustomerNav} from '@/components/mobile-customer-nav'
 
-export function StorefrontFooter({language='bn',shopBaseHref='',activeHref='/'}:{language?:MarketplaceLanguage;shopBaseHref?:string;activeHref?:string}){
+export function StorefrontFooter({language='bn',shopBaseHref=''}:{language?:MarketplaceLanguage;shopBaseHref?:string}){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  return <><footer className="market-information-footer" lang={language}>
   <div className="market-content market-footer-information">
@@ -27,12 +28,6 @@ export function StorefrontFooter({language='bn',shopBaseHref='',activeHref='/'}:
    <div className="market-footer-developer-contact">{t('Contact','যোগাযোগ')}: <a href="mailto:business@agentsiraji.com">Business@agentsiraji.com</a></div>
   </div>
  </footer>
-  <nav className="app-mobile-nav market-storefront-dock" aria-label={t('Shopping navigation','কেনাকাটার নেভিগেশন')} lang={language}>
-   <div className="app-mobile-nav-inner">
-   {[
-    ['/', 'Home','হোম'],['/pool','Pools','পুল'],['/group-deals','Deals','ডিল'],['/cart','Cart','কার্ট'],['/account','Account','অ্যাকাউন্ট'],
-   ].map(([href,en,bn])=><Link className={'app-mobile-nav-link'+(href===activeHref?' is-active':'')} key={href} href={href} aria-current={href===activeHref?'page':undefined}><span>{t(en,bn)}</span></Link>)}
-   </div>
-  </nav>
+  <MobileCustomerNav language={language} storefront/>
  </>
 }

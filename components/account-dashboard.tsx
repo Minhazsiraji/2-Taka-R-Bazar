@@ -57,6 +57,6 @@ export function AccountDashboard({name,communityName,needsSetup,operations,super
     </div>
    </section>}
   </div></section>
-  <PublicFooter storefront language={language} shopBaseHref="/" activeHref="/account"/>
+  <PublicFooter storefront language={language} shopBaseHref="/"/>
  </main>
 }
