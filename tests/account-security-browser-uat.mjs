@@ -181,6 +181,12 @@ try {
   for (const width of [360, 393, 768, 1440]) {
     await page.setViewportSize({width, height: 900})
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
+    assert.equal(await page.evaluate(() => {
+      const brand = document.querySelector('.account-dashboard .market-brand-copy strong')
+      const actions = document.querySelector('.account-dashboard .market-header-actions')
+      const range = document.createRange(); range.selectNodeContents(brand)
+      return range.getBoundingClientRect().right <= actions.getBoundingClientRect().left
+    }), true, 'Dashboard brand must not overlap header controls')
     assert.equal(await page.locator('.market-storefront-dock').isVisible(), width < 768)
   }
   await page.screenshot({path: '/tmp/2tbr-account-desktop.png', fullPage: true})

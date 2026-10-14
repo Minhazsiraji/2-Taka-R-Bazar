@@ -26,7 +26,7 @@ export function AccountDashboard({name,communityName,needsSetup,operations,super
  return <main className="public-marketplace-flat account-dashboard min-h-screen" lang={language}>
   <PublicHeader storefront shopBaseHref="/" browseHref="/#deals" language={language} onLanguageChange={next=>{setLanguage(next);router.refresh()}}
    locationLabel={communityName||t('Your community','আপনার কমিউনিটি')} locationAriaLabel={t('View your community profile','আপনার কমিউনিটির প্রোফাইল দেখুন')}
-   onLocationClick={()=>router.push('/profile')} actionHref="/" actionLabel={t('Back to shopping','কেনাকাটায় ফিরুন')}/>
+   onLocationClick={()=>router.push('/profile')} actionHref="/" actionLabel={t('Shop','বাজার')}/>
   <section className="market-band account-dashboard-band"><div className="market-content">
    <div className="account-dashboard-intro">
     <div><span className="account-dashboard-kicker">{t('Your 2TBR account','আপনার 2TBR অ্যাকাউন্ট')}</span>
