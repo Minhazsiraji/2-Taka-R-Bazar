@@ -6,6 +6,7 @@ import {PublicHeader} from '@/components/public-header'
 import {PublicFooter} from '@/components/public-footer'
 import {ShowcaseProductGallery} from '@/components/showcase-product-gallery'
 import {SITE_NAME,SITE_URL} from '@/lib/site'
+import {getSeoCanonicalForProductId} from '@/lib/product-seo-public'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
 export const dynamic='force-dynamic'
@@ -21,8 +22,9 @@ export async function generateMetadata({params}:{params:Promise<{id:string}>}):P
   const {id}=await params
   const product=await getProduct(id)
   if(!product)return {title:'Product not found',robots:{index:false,follow:false}}
+  const canonical=await getSeoCanonicalForProductId(id)
   const description=product.description||`Discover ${product.name} from ${SITE_NAME}. Pool prices depend on your community and must be confirmed before ordering.`
-  return {title:product.name,description,alternates:{canonical:`${SITE_URL}/products/${id}`},
+  return {title:product.name,description,alternates:{canonical:canonical??`${SITE_URL}/products/${id}`},
     openGraph:{title:`${product.name} | ${SITE_NAME}`,description,images:product.image_url?[product.image_url]:undefined}}
 }
 
