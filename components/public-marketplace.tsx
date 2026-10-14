@@ -104,7 +104,6 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   setLocationState('manual')
   setGpsMessage(value?'Showing your chosen community. A verified address is required before joining a local Group Deal.':'Showing all operating areas.')
  }
- const activeLocationLabel=activeArea?.community_name??(locationState==='denied'?t('Choose area','এলাকা বাছুন'):t('Find my community','আমার এলাকা খুঁজুন'))
  const locationStatus=gpsBusy?t('Requesting location…','লোকেশন চাওয়া হচ্ছে…'):
  locationState==='matched'?t('Nearby community selected; joining requires verification.','কাছের কমিউনিটি নির্বাচিত হয়েছে; যোগ দিতে যাচাই প্রয়োজন।'):
  locationState==='denied'?t('Location denied. Select your area manually.','লোকেশন অনুমতি নেই। নিজে এলাকা বেছে নিন।'):
@@ -116,7 +115,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
 
  return <>
   <PublicHeader storefront actionHref={authenticated?'/account':'/login'} actionLabel={authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Sign in','লগইন')}
-   searchValue={search} onSearchChange={setSearch} onLocationClick={useLocation} locating={gpsBusy} locationLabel={activeLocationLabel}
+   searchValue={search} onSearchChange={setSearch}
    language={language} onLanguageChange={setLanguage}/>
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">
    <div className="market-location-panel">

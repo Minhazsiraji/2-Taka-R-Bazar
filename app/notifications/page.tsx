@@ -1,3 +1,4 @@
+import {NotificationInboxRefresh} from '@/components/notification-inbox-refresh'
 import { AppShell } from '@/components/app-shell'
 import { PushNotificationManager } from '@/components/push-notification-manager'
 import { markAllNotificationsRead, openNotification } from '@/app/actions/notifications'
@@ -7,7 +8,8 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat('en-BD', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Dhaka' }).format(new Date(value))
 }
 
-export default async function NotificationsPage() {
+export default async function NotificationsPage({searchParams}:{searchParams:Promise<{error?:string}>}) {
+  const query=await searchParams
   const { supabase, user, roles } = await requireOnboardedUser()
   const [{ data: notifications }, { data: publicKey }, { data: hasPush }] = await Promise.all([
     supabase.from('notifications').select('id,kind,title,body,href,priority,read_at,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(100),
@@ -17,8 +19,8 @@ export default async function NotificationsPage() {
   const unread = (notifications ?? []).filter((note) => !note.read_at).length
 
   return (
-    <AppShell roles={roles}>
-      <div className="grid gap-5">
+    <AppShell roles={roles}><NotificationInboxRefresh unread={unread}/>
+      <div className="grid gap-5">{query.error&&<p className="error" role="alert">{query.error}</p>}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Customer journey</p>

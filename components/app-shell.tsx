@@ -46,7 +46,7 @@ export function AppShell({children,roles=new Set<AppRole>()}:{children:React.Rea
           </div>
         </div>
 
-        <nav className="mt-2 hidden items-center gap-1 border-t border-sky-100 pt-2 md:flex" aria-label="Primary customer navigation">
+        <nav className="app-primary-nav mt-2 hidden items-center gap-1 border-t border-sky-100 pt-2 md:flex" aria-label="Primary customer navigation">
           {primaryNav.map(([href,label])=><Link key={href} href={href} className="rounded-xl px-4 py-2 text-xs font-black text-slate-700 transition hover:bg-sky-50">{label}</Link>)}
         </nav>
       </div>

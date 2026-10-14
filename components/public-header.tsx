@@ -3,17 +3,18 @@
 import Link from 'next/link'
 import {useState} from 'react'
 import { BrandLogo } from '@/components/brand-logo'
+import { NotificationBell } from '@/components/notification-bell'
+import { HeaderActionIcon } from '@/components/header-action-icon'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { SITE_TAGLINE_BN, SITE_TAGLINE_EN } from '@/lib/site'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
 
 type HeaderProps={
- actionHref?:string;actionLabel?:string;storefront?:boolean
+ actionHref?:string;actionLabel?:string;mobileActionLabel?:string;storefront?:boolean
  searchValue?:string;onSearchChange?:(value:string)=>void
- onLocationClick?:()=>void;locating?:boolean;locationLabel?:string
  language?:MarketplaceLanguage;onLanguageChange?:(language:MarketplaceLanguage)=>void
- shopBaseHref?:string;browseHref?:string;locationAriaLabel?:string
+ shopBaseHref?:string;browseHref?:string
 }
 const storefrontNav=[
  {href:'#deals',label:'Group Deals',bn:'গ্রুপ ডিল'},
@@ -26,9 +27,11 @@ const storefrontNav=[
 ] as const
 
 export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefront=false,
- searchValue='',onSearchChange,onLocationClick,locating=false,locationLabel='Find my community',language='bn',onLanguageChange,
- shopBaseHref='',browseHref,locationAriaLabel}:HeaderProps){
+ searchValue='',onSearchChange,language='en',onLanguageChange,
+ shopBaseHref='',browseHref,mobileActionLabel}:HeaderProps){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
+ const compactActionLabel=mobileActionLabel??(actionHref==='/account'?t('Account','অ্যাকাউন্ট'):actionHref==='/signup'?t('Sign up','নিবন্ধন'):actionHref==='/'?t('Home','হোম'):actionLabel)
+ const actionCopy=<><span className="public-header-action-desktop" aria-hidden="true">{actionLabel}</span><span className="public-header-action-mobile" aria-hidden="true">{compactActionLabel}</span></>
  const shopHref=(href:string)=>href.startsWith('#')?shopBaseHref+href:href
  const [menuOpen,setMenuOpen]=useState(false)
  if(storefront)return <header className="public-glass-header market-flat-header" aria-label="2-TAKA-R-BAZAR public shop header">
@@ -50,16 +53,14 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
      placeholder={t('Search rice, oil, groceries…','চাল, ডাল, তেল, বাজার খুঁজুন…')} autoComplete="off" enterKeyHint="search"/>}
    </div>
    <div className="market-header-actions">
-    <button type="button" onClick={onLocationClick} disabled={locating} className="market-header-location" aria-label={locationAriaLabel??t('Find communities near my location','আমার কাছের কমিউনিটি খুঁজুন')}>
-     <span aria-hidden="true">📍</span><span className="market-header-location-text">{locating?t('Finding area…','এলাকা খোঁজা হচ্ছে…'):locationLabel}</span>
-    </button>
     <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
      <button type="button" className="market-single-language" onClick={()=>onLanguageChange?.(language==='bn'?'en':'bn')}
       aria-label={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}
       title={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}>{language==='bn'?'EN':'BAN'}</button>
     </div>
     <ThemeToggle/>
-    <Link href={actionHref} className="public-header-action btn-secondary">{actionLabel}</Link>
+    <NotificationBell/>
+    <Link href={actionHref} className="public-header-action market-header-account btn-secondary" aria-label={actionLabel} title={actionLabel}><span className="market-header-account-icon"><HeaderActionIcon kind="profile"/></span><span className="market-header-account-copy">{actionCopy}</span></Link>
     <button type="button" className="market-mobile-menu-button" aria-expanded={menuOpen} aria-controls="market-mobile-navigation"
      aria-label={menuOpen?t('Close menu','মেনু বন্ধ করুন'):t('Open menu','মেনু খুলুন')}
      onClick={()=>setMenuOpen(open=>!open)}><span aria-hidden="true">{menuOpen?'✕':'☰'}</span></button>
@@ -77,18 +78,20 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
    <Link href="/signup" onClick={()=>setMenuOpen(false)}>{t('Join Community','কমিউনিটিতে যোগ দিন')} <span aria-hidden="true">↗</span></Link>
   </nav>}
  </header>
- return <header className="public-glass-header flex items-center justify-between gap-3">
-  <Link href="/" className="flex min-w-0 shrink items-center gap-2.5" aria-label="2-TAKA-R-BAZAR home">
+ return <header className="public-glass-header public-compact-header flex items-center justify-between gap-3">
+  <Link href="/" className="public-header-brand flex min-w-0 shrink items-center gap-2.5" aria-label="2-TAKA-R-BAZAR home">
    <BrandLogo size={46}/>
-   <div className="hidden min-w-0 sm:block">
+   <div className="public-header-brand-copy hidden min-w-0 sm:block">
     <div className="truncate text-sm font-black tracking-tight">2-TAKA-R-BAZAR</div>
     <div className="truncate text-[10px] font-semibold tracking-wide text-slate-500">{SITE_TAGLINE_EN}</div>
     <div className="truncate text-[9px] font-medium text-slate-400" lang="bn">{SITE_TAGLINE_BN}</div>
    </div>
   </Link>
   <div className="public-header-actions flex shrink-0 items-center gap-2">
+   {onLanguageChange&&<button type="button" className="public-header-language" onClick={()=>onLanguageChange(language==='bn'?'en':'bn')} aria-label={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}>{language==='bn'?'EN':'BAN'}</button>}
    <ThemeToggle/>
-   <Link href={actionHref} className="public-header-action btn-secondary shrink-0 px-4 text-xs sm:px-5 sm:text-sm">{actionLabel}</Link>
+   <NotificationBell/>
+   <Link href={actionHref} className="public-header-action btn-secondary shrink-0 px-4 text-xs sm:px-5 sm:text-sm" aria-label={actionLabel}>{actionCopy}</Link>
   </div>
  </header>
 }

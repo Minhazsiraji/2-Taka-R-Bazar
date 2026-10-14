@@ -1,6 +1,7 @@
 'use client'
 import {useState} from 'react'
 import Link from 'next/link'
+import {PublicHeader} from '@/components/public-header'
 import type {StorefrontOffer} from '@/lib/storefront'
 import {chooseText} from '@/lib/storefront-language'
 import {useStorefrontLanguage} from '@/lib/use-storefront-language'
@@ -26,16 +27,8 @@ export function DemoProductDetails({offer,initialLanguage='en',hasLanguageCookie
  const nextThreshold=Number(offer.next_threshold)||0
  const remaining=Math.max(0,nextThreshold-households)
  return <main className="public-marketplace-flat market-pool-detail-page min-h-screen">
-  <header className="market-pool-detail-header">
-   <Link href="/" className="market-pool-home-link">← 2-TAKA-R-BAZAR</Link>
-   <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
-    <button className="market-single-language" type="button"
-     onClick={()=>setLang(lang==='bn'?'en':'bn')}
-     aria-label={lang==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}>
-     {lang==='bn'?'EN':'BAN'}
-    </button>
-   </div>
-  </header>
+  <PublicHeader actionHref="/#deals" actionLabel={t('Back to shopping','বাজারে ফিরুন')} mobileActionLabel={t('Shop','বাজার')} language={lang} onLanguageChange={setLang}/>
+
   <div className="market-pool-detail-content">
    <div className="market-demo-detail-banner" role="status">{t('DEMO PRODUCT — all prices, group participation and product availability are fictional. No real ordering.','ডেমো পণ্য — দাম, গ্রুপে অংশগ্রহণ ও মজুত কাল্পনিক। বাস্তবে অর্ডার করা যাবে না।')}</div>
    <div className="market-demo-detail-grid market-ui-product-detail">

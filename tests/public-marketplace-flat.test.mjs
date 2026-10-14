@@ -42,7 +42,8 @@ test('design affects only the public landing route; dark mode and mobile are sty
 test('header search and opt-in geolocation keep guest browsing and manual fallback',()=>{
  assert.match(header,/market-header-product-search/)
  assert.match(header,/onSearchChange\?\./)
- assert.match(header,/onLocationClick/)
+ assert.doesNotMatch(header,/onLocationClick/)
+ assert.match(catalog,/onClick=\{useLocation\}/)
  assert.match(catalog,/navigator\.geolocation\.getCurrentPosition/)
  assert.match(catalog,/useEffect\(\(\)=>/)
  assert.doesNotMatch(catalog,/initialLocationRequested\.current/)

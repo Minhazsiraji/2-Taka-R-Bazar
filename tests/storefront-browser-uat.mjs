@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {chromium} from 'playwright'
-import {assertHeaderGeometry} from './header-layout-assertions.mjs'
+import {assertHeaderGeometry, assertCustomerPageHeader} from './header-layout-assertions.mjs'
 const api=process.env.NEXT_PUBLIC_SUPABASE_URL
 if(!api||new URL(api).hostname!=='127.0.0.1')throw new Error('Disposable local Supabase required')
 const key=process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY
@@ -52,7 +52,9 @@ try{
    await page.reload({waitUntil:'networkidle'})
    assert.equal((await toggle.innerText()).trim(),'BAN','EN choice must survive full reload')
   }
-  await assertHeaderGeometry(page,'.market-brand-copy strong','.market-header-actions',width)
+  assert.equal(await page.locator('header .market-header-location').count(),0)
+  assert.equal(await page.locator('.customer-notification-bell').count(),1)
+  await assertHeaderGeometry(page,'.market-brand-lockup','.market-header-actions',width)
   if(width===393)await page.screenshot({path:'/tmp/2tbr-header-storefront-guest.png',fullPage:true})
   assert.equal(await page.locator('.market-pool-demo-pill').count(),0)
   assert.equal(await page.locator('.market-pool-thumbnails a').first().getAttribute('href'),`/shop/${ids.product}?area=${ids.community}`)
@@ -77,6 +79,21 @@ try{
   assert.ok(!page.url().includes('/demo-'))
   await page.close()
  }
+ const infoPage=await browser.newPage({viewport:{width:393,height:900}})
+ infoPage.on('pageerror',e=>errors.push(e.message))
+ for(const path of ['/login','/signup','/about','/faq','/privacy','/terms','/refund-policy','/return-policy']){
+  await infoPage.goto('http://127.0.0.1:3000'+path,{waitUntil:'domcontentloaded'})
+  await infoPage.locator('.public-compact-header').waitFor()
+  for(const width of [320,393,768,1440]){
+   await infoPage.setViewportSize({width,height:900})
+   await assertCustomerPageHeader(infoPage,width)
+  }
+ }
+ const guestStatus=await infoPage.request.get('http://127.0.0.1:3000/api/notifications/status')
+ assert.deepEqual(await guestStatus.json(),{authenticated:false,unread:0,latest:null})
+ assert.match(guestStatus.headers()['cache-control'],/no-store/)
+ await infoPage.close()
+ console.log('Compact public header UAT passed: login, signup and six information/policy pages at four widths.')
  assert.deepEqual(errors,[])
  console.log('Storefront real-RPC → responsive UI → public product → gated login UAT passed at seven widths, with header geometry checks')
 }finally{await browser.close()}

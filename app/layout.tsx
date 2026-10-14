@@ -19,6 +19,7 @@ import './marketplace-shopper.css'
 import './marketplace-hero-motion.css'
 import './marketplace-exclusive-cards.css'
 import './marketplace-lower-polish.css'
+import './site-header-mobile.css'
 import { PwaRegister } from '@/components/pwa-register'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE_EN, SITE_URL } from '@/lib/site'
 

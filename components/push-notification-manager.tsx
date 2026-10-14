@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { disablePushSubscription, savePushSubscription } from '@/app/actions/notifications'
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -11,11 +11,17 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export function PushNotificationManager({ publicKey, serverHasSubscription }: { publicKey: string | null; serverHasSubscription: boolean }) {
-  const supported = useMemo(() => typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window, [])
-  const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(supported ? Notification.permission : 'unsupported')
-  const [enabled, setEnabled] = useState(serverHasSubscription)
+  const [supported, setSupported] = useState(false)
+  const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('unsupported')
+  const [enabled, setEnabled] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    const available = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+    setSupported(available)
+    setPermission(available ? Notification.permission : 'unsupported')
+  }, [])
 
   async function persistSubscription(subscription: PushSubscription) {
     const json = subscription.toJSON()
@@ -111,13 +117,13 @@ export function PushNotificationManager({ publicKey, serverHasSubscription }: { 
         {enabled && permission === 'granted' ? (
           <button type="button" onClick={disablePush} disabled={busy} className="btn-secondary shrink-0">{busy ? 'Working…' : 'Disable on this device'}</button>
         ) : (
-          <button type="button" onClick={enablePush} disabled={busy || permission === 'denied'} className="btn-primary shrink-0">{busy ? 'Enabling…' : permission === 'denied' ? 'Blocked by browser' : 'Enable notifications'}</button>
+          <button type="button" onClick={enablePush} disabled={busy || !supported || !publicKey || permission === 'denied'} className="btn-primary shrink-0">{busy ? 'Enabling…' : permission === 'denied' ? 'Blocked by browser' : 'Enable notifications'}</button>
         )}
       </div>
       <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
-        <span className="chip">In-app: Always on</span>
+        <span className="chip">In-app: Always on</span><span className="chip">Device delivery: {publicKey ? 'Configured' : 'Not configured yet'}</span>
         <span className="chip">Browser permission: {permission}</span>
-        <span className="chip">This device: {enabled ? 'Subscribed' : 'Not subscribed'}</span>
+        <span className="chip">This device: {enabled ? 'Subscribed' : 'Not subscribed'}</span>{serverHasSubscription&&<span className="chip">Account has enabled device alerts</span>}
       </div>
       {message && <p className="mt-3 text-sm text-slate-600">{message}</p>}
     </section>
