@@ -110,7 +110,20 @@ begin
  if jsonb_typeof(p_faqs) is distinct from 'array' or jsonb_array_length(p_faqs)>8 then raise exception 'Maximum eight bilingual FAQs';end if;
  if jsonb_typeof(p_media) is distinct from 'array' or jsonb_array_length(p_media)>12 then raise exception 'Maximum twelve media images';end if;
  if jsonb_typeof(coalesce(p_data->'specs','{}'::jsonb)) is distinct from 'object' then raise exception 'Specifications must be an object';end if;
+ if v_brand_type='2TBR_PRIVATE_LABEL' and not exists(
+   select 1 from public.products where id=p_product_id and source_type='PRIVATE_LABEL'
+     and upper(btrim(coalesce(brand,''))) in ('2TBR','2-TAKA-R-BAZAR')
+ ) then raise exception '2TBR private label requires an actual 2TBR branded product SKU and packaging';end if;
+ if v_brand_type='SUPPLIER_BRAND' and not exists(
+   select 1 from public.products where id=p_product_id and nullif(btrim(brand),'') is not null
+ ) then raise exception 'Supplier brand classification requires the actual brand';end if;
+ if v_brand_type='UNBRANDED_LOOSE' and exists(
+   select 1 from public.products where id=p_product_id and
+     upper(btrim(coalesce(brand,''))) not in ('','UNBRANDED','GENERIC')
+ ) then raise exception 'A third-party branded product must not be classified as unbranded';end if;
  select * into v_row from public.product_seo_content where product_id=p_product_id for update;
+ if v_row.product_id is not null and coalesce(nullif(p_data->>'expected_version','')::integer,-1)<>v_row.version
+  then raise exception 'Product content changed in another session. Reload before saving';end if;
  if v_row.product_id is not null and v_row.slug<>v_slug then
    if exists(select 1 from public.product_seo_slug_aliases where slug=v_slug) then raise exception 'Slug reserved by previous product';end if;
    insert into public.product_seo_slug_aliases(slug,product_id) values(v_row.slug,p_product_id) on conflict(slug) do nothing;
