@@ -98,6 +98,7 @@ jobs:
           done
           node tests/storefront-browser-uat.mjs
           node tests/account-security-browser-uat.mjs
+          node tests/product-seo-browser-uat.mjs
       - name: Upload synthetic account and header screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -106,6 +107,7 @@ jobs:
           path: |
             /tmp/2tbr-account-*.png
             /tmp/2tbr-header-*.png
+            /tmp/2tbr-product-seo-*.png
           if-no-files-found: ignore
           retention-days: 7
       - name: Stop disposable Supabase
