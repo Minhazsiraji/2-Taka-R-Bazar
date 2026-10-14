@@ -76,7 +76,7 @@ try{
   const links=await page.locator('footer a[href^="mailto:"]').evaluateAll(es=>es.map(e=>e.getAttribute('href')))
   assert.deepEqual(links,['mailto:business@2takarbazar.com','mailto:support@2takarbazar.com','mailto:business@agentsiraji.com'])
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true)
-  await page.getByRole('button',{name:'Switch to dark mode'}).click()
+  await page.locator('header').getByRole('button',{name:'Switch to dark mode'}).click()
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark')
   await assertCustomerChrome(page,width)
   assert.equal(await dock.isVisible(),width<768)
@@ -106,9 +106,9 @@ try{
    await infoPage.setViewportSize({width,height:900})
    await assertCustomerChrome(infoPage,width)
    await assertMobileDock(infoPage,width)
-   await infoPage.getByRole('button',{name:'Switch to dark mode',exact:true}).click()
+   await infoPage.locator('header').getByRole('button',{name:'Switch to dark mode',exact:true}).click()
    await assertCustomerChrome(infoPage,width)
-   await infoPage.getByRole('button',{name:'Switch to light mode',exact:true}).click()
+   await infoPage.locator('header').getByRole('button',{name:'Switch to light mode',exact:true}).click()
   }
  }
  await infoPage.goto('http://127.0.0.1:3000/about',{waitUntil:'networkidle'})

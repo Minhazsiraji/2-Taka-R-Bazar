@@ -21,7 +21,8 @@
     "components/customer-header-client.tsx": "9516d928e269d43cf1d03084b8917404b9efddc83dc88d0e4b9cc4cb320f03d5",
     "components/customer-shell-client.tsx": "af5c0aedb4906e6f8c1acf3a73a003b4bbd1372160bb8c06d144239eb4a640cc",
     "app/site-customer-shell.css": "9797fceb995adf79cac0a0ea05355ac63393039cb60e083c63d2cccb534aefa9",
-    "components/customer-footer.tsx": "6897dc663122b6bca66fb0e211b4c529b7427099c2dd67439a098d28e69ead79"
+    "components/customer-footer.tsx": "6897dc663122b6bca66fb0e211b4c529b7427099c2dd67439a098d28e69ead79",
+    "components/theme-toggle.tsx": "ad784cdfdeca0c299a3317b99acb95e9966bd399f1772568f3d8182062c7229a"
   },
   "navigation_change": {
     "source": "Issue #64, approved functional navigation",

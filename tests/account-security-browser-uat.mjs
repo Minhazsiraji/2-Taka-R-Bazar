@@ -197,9 +197,9 @@ try {
   await page.screenshot({path: '/tmp/2tbr-header-storefront-signed-in.png', fullPage: true})
   await page.locator('.market-single-language').click()
   await assertHeaderGeometry(page, '.market-brand-lockup', '.market-header-actions', 393)
-  await page.getByRole('button', {name: 'Switch to dark mode', exact: true}).click()
+  await page.locator('header').getByRole('button', {name: 'Switch to dark mode', exact: true}).click()
   await page.screenshot({path: '/tmp/2tbr-header-storefront-bn-dark.png', fullPage: true})
-  await page.getByRole('button', {name: 'Switch to light mode', exact: true}).click()
+  await page.locator('header').getByRole('button', {name: 'Switch to light mode', exact: true}).click()
   await page.locator('.market-single-language').click()
   await page.getByRole('button', {name: 'Open menu', exact: true}).click()
   await page.locator('#market-mobile-navigation').waitFor()
@@ -222,12 +222,12 @@ try {
     assert.equal(await page.locator('.market-storefront-dock').isVisible(), width < 768)
   }
   await page.screenshot({path: '/tmp/2tbr-account-desktop.png', fullPage: true})
-  await page.getByRole('button', {name: 'Switch to dark mode', exact: true}).click()
+  await page.locator('header').getByRole('button', {name: 'Switch to dark mode', exact: true}).click()
   assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark')
   await page.setViewportSize({width: 393, height: 900})
   await page.screenshot({path: '/tmp/2tbr-account-mobile-dark.png', fullPage: true})
   await page.setViewportSize({width: 1440, height: 900})
-  await page.getByRole('button', {name: 'Switch to light mode', exact: true}).click()
+  await page.locator('header').getByRole('button', {name: 'Switch to light mode', exact: true}).click()
   await page.locator('.market-single-language').click()
   await page.getByRole('heading', {name: 'আমার ড্যাশবোর্ড', exact: true}).waitFor()
   await page.reload({waitUntil: 'domcontentloaded'})
@@ -247,7 +247,7 @@ try {
     if (width === 393 || width === 1440) await page.screenshot({path: '/tmp/2tbr-header-money-' + width + '.png', fullPage: true})
   }
   await page.setViewportSize({width: 393, height: 900})
-  await page.getByRole('button', {name: 'Switch to dark mode', exact: true}).click()
+  await page.locator('header').getByRole('button', {name: 'Switch to dark mode', exact: true}).click()
   await assertCustomerChrome(page,393)
   await page.screenshot({path: '/tmp/2tbr-header-money-dark.png', fullPage: true})
   const moneyNav = page.getByRole('navigation', {name: 'My Money navigation', exact: true})
@@ -255,10 +255,11 @@ try {
   await moneyNav.getByRole('link', {name: 'Transactions', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/money/transactions')
   assert.equal(await moneyNav.locator('[aria-current="page"]').getAttribute('href'), '/money/transactions')
-  await moneyNav.getByRole('link', {name: 'Dashboard', exact: true}).click()
+  await page.locator('header').getByRole('button',{name:'Open menu',exact:true}).click()
+  await page.getByRole('link',{name:'My Money',exact:true}).click()
   await page.waitForURL(url => url.pathname === '/money')
   await page.getByRole('heading', {name: 'My Money Dashboard', exact: true}).waitFor()
-  await page.getByRole('button', {name: 'Switch to light mode', exact: true}).click()
+  await page.locator('header').getByRole('button', {name: 'Switch to light mode', exact: true}).click()
   // Every customer header family and every non-parameterized authenticated page.
   // Only ordinary reads; never submit Money, shopping or privacy forms.
   const customerPages = ['/account','/onboarding','/account/security','/account/addresses','/account/orders','/account/savings','/cart','/checkout','/profile','/notifications','/orders','/pool','/group-deals','/subscription','/community','/savings','/pickup','/feedback','/money','/money/transactions','/money/accounts','/money/transfers','/money/budgets','/money/categories','/money/recurring','/money/reports','/money/monthly-income','/shop/00000000-0000-4000-8000-000000000822']
@@ -271,9 +272,10 @@ try {
     for (const width of [320,393,768,820,1024,1440]) {
       await page.setViewportSize({width, height: 900})
       await assertCustomerChrome(page,width)
-      await page.getByRole('button',{name:'Switch to dark mode',exact:true}).click()
+      await page.locator('header').getByRole('button',{name:'Switch to dark mode',exact:true}).click()
       await assertCustomerChrome(page,width)
-      await page.getByRole('button',{name:'Switch to light mode',exact:true}).click()
+      if(path==='/profile')assert.equal(await page.getByRole('button',{name:'Switch to light mode',exact:true}).count(),2,'Profile and header theme controls stay synchronized')
+      await page.locator('header').getByRole('button',{name:'Switch to light mode',exact:true}).click()
     }
     if (['/account/security','/cart','/checkout','/profile','/money'].includes(path)) {
       await page.setViewportSize({width: 393, height: 900})
