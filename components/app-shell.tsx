@@ -8,6 +8,7 @@ import { MobileCustomerNav } from '@/components/mobile-customer-nav'
 import { SITE_TAGLINE_BN, SITE_TAGLINE_EN } from '@/lib/site'
 import { HeaderActionIcon } from '@/components/header-action-icon'
 import { SiteFooter } from '@/components/site-footer'
+import { CustomerShell } from '@/components/customer-shell'
 
 const primaryNav = [['/', 'Home'], ['/pool', 'Pools'], ['/group-deals', 'Group Deals'], ['/cart', 'Cart'], ['/account', 'Account']]
 
@@ -15,7 +16,8 @@ function NotificationBellFallback(){
   return <Link href="/notifications" className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm" aria-label="Notifications"><HeaderActionIcon kind="bell"/></Link>
 }
 
-export function AppShell({children,roles=new Set<AppRole>()}:{children:React.ReactNode;roles?:Set<AppRole>}){
+export function AppShell({children,roles=new Set<AppRole>(),staff=false}:{children:React.ReactNode;roles?:Set<AppRole>;staff?:boolean}){
+  if(!staff)return <CustomerShell roles={roles}>{children}</CustomerShell>
   const isSuperAdmin=roles.has('super_admin')
   const isAdmin=roles.has('admin')||isSuperAdmin
   const isPickup=roles.has('pickup_operator')||isSuperAdmin

@@ -6,11 +6,11 @@ import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
 import {MobileCustomerNav} from '@/components/mobile-customer-nav'
 
-export function StorefrontFooter({language='bn',shopBaseHref=''}:{language?:MarketplaceLanguage;shopBaseHref?:string}){
+export function StorefrontFooter({language='en',shopBaseHref='/'}:{language?:MarketplaceLanguage;shopBaseHref?:string}){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  return <><footer className="market-information-footer" lang={language}>
   <div className="market-content market-footer-information">
-   <div className="market-footer-brand"><BrandLogo size={44}/><div><strong>2-TAKA-R-BAZAR</strong><p>{t(SITE_TAGLINE_EN,SITE_TAGLINE_BN)}</p></div></div>
+   <div className="market-footer-brand"><BrandLogo size={44}/><div><strong>2-TAKA-R-BAZAR</strong><p>{SITE_TAGLINE_EN}</p><p lang="bn">{SITE_TAGLINE_BN}</p></div></div>
    <nav aria-label={t('About and shopping help','পরিচিতি ও কেনাকাটার সহায়তা')}><h2>{t('Explore & get help','পরিচিতি ও সহায়তা')}</h2>
     <Link href="/about">{t('About 2TBR','2TBR পরিচিতি')}</Link><Link href="/faq">{t('FAQ','প্রশ্নোত্তর')}</Link>
     <a href={shopBaseHref+'#how-it-works'}>{t('How it works','যেভাবে কাজ করে')}</a><a href={shopBaseHref+'#why-2tbr'}>{t('Pickup & delivery','সংগ্রহ ও ডেলিভারি')}</a><a href={shopBaseHref+'#our-communities'}>{t('Our communities','আমাদের কমিউনিটি')}</a>

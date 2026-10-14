@@ -1,8 +1,8 @@
 import { completeOnboarding, restartSignup } from '@/app/actions/auth'
 import { BdPhoneInput } from '@/components/bd-phone-input'
 import { cookies } from 'next/headers'
-import { PublicHeader } from '@/components/public-header'
-import { PublicFooter } from '@/components/public-footer'
+import { CustomerHeader as PublicHeader } from '@/components/customer-header'
+import { CustomerFooter as PublicFooter } from '@/components/customer-footer'
 import { SubmitButton } from '@/components/submit-button'
 import { requireUser } from '@/lib/auth'
 import { COMMUNITY_QR_CODE_COOKIE, normalizeCommunityQrCode } from '@/lib/community-qr'
@@ -19,7 +19,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   }
   const { data: communities } = await supabase.from('communities').select('id,name').eq('active', true).order('sort_order')
 
-  return <main className="min-h-screen bg-slate-50 text-black">
+  return <main className="public-marketplace-flat customer-page-shell min-h-screen bg-slate-50 text-black">
     <PublicHeader actionHref="/" actionLabel="2-TAKA-R-BAZAR" />
     <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
       <section className="card p-5 sm:p-8">

@@ -6,6 +6,7 @@ import {createServerClient} from '@supabase/ssr'
 import {chromium} from 'playwright'
 import {assertHeaderGeometry, assertCustomerPageHeader} from './header-layout-assertions.mjs'
 import {assertMobileDock} from './mobile-dock-assertions.mjs'
+import {assertCustomerChrome} from './customer-chrome-assertions.mjs'
 
 const endpoint = process.env.NEXT_PUBLIC_SUPABASE_URL
 if (!endpoint || new URL(endpoint).hostname !== '127.0.0.1') throw new Error('Disposable local Auth required')
@@ -238,8 +239,8 @@ try {
   await page.getByRole('heading', {name: 'My Money Dashboard', exact: true}).waitFor()
   for (const width of [320, 360, 393, 640, 768, 1440]) {
     await page.setViewportSize({width, height: 900})
-    await assertHeaderGeometry(page, '.app-header-brand', '.app-role-actions', width)
-    assert.equal(await page.locator('.cx-header-money-label').isVisible(), true)
+    await assertCustomerChrome(page,width)
+    assert.equal(await page.locator('header a[href="/money"]').count(),1)
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
     const heights = await page.locator('.money-navigation-link').evaluateAll(links => links.map(link => link.getBoundingClientRect().height))
     assert.ok(heights.every(height => height >= 44 && height <= 48), 'Compact My Money tabs at width ' + width)
@@ -247,20 +248,20 @@ try {
   }
   await page.setViewportSize({width: 393, height: 900})
   await page.getByRole('button', {name: 'Switch to dark mode', exact: true}).click()
-  await assertHeaderGeometry(page, '.app-header-brand', '.app-role-actions', 393)
+  await assertCustomerChrome(page,393)
   await page.screenshot({path: '/tmp/2tbr-header-money-dark.png', fullPage: true})
   const moneyNav = page.getByRole('navigation', {name: 'My Money navigation', exact: true})
   assert.equal(await moneyNav.locator('[aria-current="page"]').getAttribute('href'), '/money')
   await moneyNav.getByRole('link', {name: 'Transactions', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/money/transactions')
   assert.equal(await moneyNav.locator('[aria-current="page"]').getAttribute('href'), '/money/transactions')
-  await page.getByRole('link', {name: 'Open My Money dashboard', exact: true}).click()
+  await moneyNav.getByRole('link', {name: 'Dashboard', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/money')
   await page.getByRole('heading', {name: 'My Money Dashboard', exact: true}).waitFor()
   await page.getByRole('button', {name: 'Switch to light mode', exact: true}).click()
   // Every customer header family and every non-parameterized authenticated page.
   // Only ordinary reads; never submit Money, shopping or privacy forms.
-  const customerPages = ['/account','/account/security','/account/addresses','/account/orders','/account/savings','/cart','/profile','/notifications','/orders','/pool','/group-deals','/subscription','/community','/savings','/pickup','/feedback','/money','/money/transactions','/money/accounts','/money/transfers','/money/budgets','/money/categories','/money/recurring','/money/reports','/money/monthly-income','/shop/00000000-0000-4000-8000-000000000822']
+  const customerPages = ['/account','/onboarding','/account/security','/account/addresses','/account/orders','/account/savings','/cart','/checkout','/profile','/notifications','/orders','/pool','/group-deals','/subscription','/community','/savings','/pickup','/feedback','/money','/money/transactions','/money/accounts','/money/transfers','/money/budgets','/money/categories','/money/recurring','/money/reports','/money/monthly-income','/shop/00000000-0000-4000-8000-000000000822']
   for (const path of customerPages) {
     await page.goto('http://127.0.0.1:3000' + path, {waitUntil: 'domcontentloaded'})
     assert.equal(new URL(page.url()).pathname, path, 'Native customer page must render: ' + path)
@@ -269,14 +270,28 @@ try {
     assert.equal(await page.locator('header .market-header-location').count(),0,'No duplicate header location')
     for (const width of [320,393,768,820,1024,1440]) {
       await page.setViewportSize({width, height: 900})
-      await assertCustomerPageHeader(page, width)
-      await assertMobileDock(page, width)
+      await assertCustomerChrome(page,width)
+      await page.getByRole('button',{name:'Switch to dark mode',exact:true}).click()
+      await assertCustomerChrome(page,width)
+      await page.getByRole('button',{name:'Switch to light mode',exact:true}).click()
     }
-    if (['/account/security','/cart','/profile','/money'].includes(path)) {
+    if (['/account/security','/cart','/checkout','/profile','/money'].includes(path)) {
       await page.setViewportSize({width: 393, height: 900})
       await page.screenshot({path: '/tmp/2tbr-header-route-' + path.replaceAll('/','-') + '.png', fullPage: true})
     }
   }
+  await page.goto('http://127.0.0.1:3000/money',{waitUntil:'networkidle'})
+  await page.locator('.market-single-language').click()
+  await page.reload({waitUntil:'networkidle'})
+  assert.equal(await page.locator('.market-single-language').innerText(),'EN')
+  assert.equal(await page.locator('footer').getAttribute('lang'),'bn')
+  await assertCustomerChrome(page,1440)
+  await page.locator('footer a[href="/about"]').click()
+  await page.waitForURL(url=>url.pathname==='/about')
+  await page.locator('.market-single-language').filter({hasText:'EN'}).waitFor()
+  await page.locator('footer[lang="bn"]').waitFor()
+  assert.equal(await page.locator('footer').getAttribute('lang'),'bn')
+  await page.locator('.market-single-language').click()
   // Use the real dock links through client navigation, including their active state.
   await page.setViewportSize({width:393,height:640})
   for (const path of ['/','/group-deals','/pool','/cart','/account']) {

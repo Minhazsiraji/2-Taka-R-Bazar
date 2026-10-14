@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import {signInGoogle, signUpPhonePassword} from '@/app/actions/auth'
 import {BdPhoneInput} from '@/components/bd-phone-input'
-import {PublicHeader} from '@/components/public-header'
-import {PublicFooter} from '@/components/public-footer'
+import {CustomerHeader as PublicHeader} from '@/components/customer-header'
+import {CustomerFooter as PublicFooter} from '@/components/customer-footer'
 import {SubmitButton} from '@/components/submit-button'
 import {safeAuthReturnPath} from '@/lib/auth-intent'
 import {getAuthProviders} from '@/lib/auth-providers'
@@ -12,7 +12,7 @@ export default async function SignupPage({searchParams}: {searchParams: Promise<
   const [{error, notice, ref, next}, providers] = await Promise.all([searchParams, getAuthProviders()])
   const returnTo = safeAuthReturnPath(next)
   const referralCode = String(ref ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12)
-  return <main className="min-h-screen bg-slate-50 text-black">
+  return <main className="public-marketplace-flat customer-page-shell min-h-screen bg-slate-50 text-black">
     <PublicHeader actionHref="/login" actionLabel="Sign in"/>
     <div className="mx-auto flex min-h-[calc(100vh-81px)] max-w-6xl items-center justify-center px-4 py-10">
       <section className="card w-full max-w-md p-6 sm:p-8">
