@@ -34,7 +34,7 @@ test('separate evidence and discovery controls and no fake search promises',()=>
  assert.match(html,/9 factual\/claim checks/)
  assert.match(html,/9 technical\/index checks/)
  assert.match(sop,/cannot guarantee Google rankings/)
- assert.match(html,/No fake Offer\/rating/)
+ assert.match(html,/no fake Offer\/rating/)
  assert.doesNotMatch(sop,/100% guaranteed (ranking|SEO success)/i)
  assert.ok(existsSync(new URL('../public/docs/product-upload-guide.html',import.meta.url)))
 })
