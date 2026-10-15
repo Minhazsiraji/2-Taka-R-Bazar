@@ -119,7 +119,8 @@ export async function createProductWithSeo(fd:FormData):Promise<WizardResult>{
   // The browser compresses additional images to ~220 KB each; 6 MB request guard remains in place.
   let totalImageBytes=0
   const prepared:{bytes:Uint8Array;type:string;extension:string;kind?:'gallery'|'marketing';alt_en?:string;alt_bn?:string;fileField:string}[]=[]
-  const selected=[{file:fd.get('image_file'),fileField:'image_file'},...uploads.map(u=>({
+  const selected:{file:FormDataEntryValue|null;fileField:string;kind?:'gallery'|'marketing';alt_en?:string;alt_bn?:string}[]=
+   [{file:fd.get('image_file'),fileField:'image_file'},...uploads.map(u=>({
    file:u.file,fileField:u.kind+'_file_'+u.position,kind:u.kind,alt_en:u.alt_en,alt_bn:u.alt_bn
   }))]
   for(const item of selected){
