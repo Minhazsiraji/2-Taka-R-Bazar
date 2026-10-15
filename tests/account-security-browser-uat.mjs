@@ -456,13 +456,13 @@ try {
   // Issue #94: actual product SEO browser form must save fresh text BEFORE review, with
   // explicit blockers and browser-tab recovery. This is synthetic disposable DB only.
   const productCard=staff.locator('details.card').filter({hasText:'Synthetic draft recovery ghee'})
-  await productCard.locator('summary').click()
+  await productCard.locator(':scope > summary').click()
   const seoEditor=productCard.locator('form:has(input[name="expected_version"])')
   const evidenceNote='Synthetic independent-review evidence recorded in disposable CI only.'
   await seoEditor.locator('textarea[name="verification_notes"]').fill(evidenceNote)
   await staff.reload({waitUntil:'domcontentloaded'})
   const restoredCard=staff.locator('details.card').filter({hasText:'Synthetic draft recovery ghee'})
-  await restoredCard.locator('summary').click()
+  await restoredCard.locator(':scope > summary').click()
   const restoredEditor=restoredCard.locator('form:has(input[name="expected_version"])')
   await restoredCard.getByText('Unfinished edits recovered from this browser tab.').waitFor({timeout:15000})
   assert.equal(await restoredEditor.locator('textarea[name="verification_notes"]').inputValue(),evidenceNote,
