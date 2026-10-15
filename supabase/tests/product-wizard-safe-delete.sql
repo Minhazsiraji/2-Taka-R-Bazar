@@ -1,7 +1,7 @@
 -- Disposable CI database ONLY. Never run this synthetic data test on the shared 2TBR DB.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(15);
 select ok((select relrowsecurity from pg_class where oid='public.product_deletion_audit'::regclass),'Deletion history is protected by RLS');
 select ok(not has_function_privilege('anon','public.admin_delete_unused_product(uuid,text,text)','EXECUTE'),'Anonymous cannot delete product');
 select ok(not has_function_privilege('authenticated','public.product_deletion_audit','INSERT'),'Normal users cannot alter deletion audit');
