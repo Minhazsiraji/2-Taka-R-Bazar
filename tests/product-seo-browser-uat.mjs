@@ -38,7 +38,7 @@ const browser=await chromium.launch({headless:true})
 try{
  const page=await browser.newPage({viewport:{width:390,height:844}})
  // Keep synthetic image qualification independent of external image CDN outages.
- await page.route('https://res.cloudinary.com/**',route=>route.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WXKtU0AAAAASUVORK5CYII=','base64')}))
+ await page.route('https://res.cloudinary.com/**',route=>route.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC','base64')}))
  const en=await page.goto(base+'/p/'+slug,{waitUntil:'domcontentloaded'})
  assert.equal(en?.status(),200,'EN SEO page reachable')
  assert.match(await page.locator('h1').textContent()??'',/Brown Rice Loose 1 kg/)
