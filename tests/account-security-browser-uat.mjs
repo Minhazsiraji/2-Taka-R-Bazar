@@ -473,6 +473,8 @@ try {
   await restoredEditor.locator('textarea[name="meta_description_bn"]').fill('এটি শুধুমাত্র বিচ্ছিন্ন পরীক্ষার জন্য ঘি পণ্যের মেটা বিবরণ।')
   await restoredEditor.locator('input[name="alt_en"]').fill('Synthetic ghee photo for test')
   await restoredEditor.locator('input[name="alt_bn"]').fill('ঘি পণ্যের পরীক্ষার ছবি')
+  // Open the collapsed optional Media section before editing its URL like a real admin.
+  await restoredEditor.locator('summary').filter({hasText:'5 · Additional media'}).click()
   // Replace the CI-only localhost image reference with an approved HTTPS image source.
   await restoredEditor.locator('input[name="marketing_url_1"]').fill('https://res.cloudinary.com/demo/image/upload/sample.jpg')
   await restoredEditor.getByRole('button',{name:'Save & submit for independent review'}).click()
