@@ -40,7 +40,7 @@ test('product form remains a single six-step creation and protected actions unch
  assert.match(wizard,/createProductWithSeo/)
  assert.match(wizard,/title_bn/)
  assert.match(wizard,/ProductImageInput/)
- assert.match(wizard,/Create product &amp; save SEO draft/)
+ assert.match(wizard,/Create product & save SEO draft/)
  assert.match(page,/AdminProductLifecycle/)
  assert.match(page,/AdminProductSeoEditor/)
 })
