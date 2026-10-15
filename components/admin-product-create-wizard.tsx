@@ -4,7 +4,7 @@ import {ProductImageInput} from '@/components/product-image-input'
 import {SubmitButton} from '@/components/submit-button'
 import {createProductWithSeo} from '@/app/actions/product-wizard'
 const tabs=[
- ['1','Product & SKU'],['2','Specs'],['3','SEO · EN/BN'],
+ ['1','Product'],['2','Specs'],['3','SEO · EN/BN'],
  ['4','AEO / GEO'],['5','Media'],['6','Review']
 ] as const
 type FieldProps={name:string;label:string;placeholder?:string;multiline?:boolean;hint?:string;maxLength?:number;value?:string}
@@ -38,7 +38,7 @@ export function AdminProductCreateWizard(){
   <nav aria-label="Product creation steps" className="product-wizard-steps mb-5">
     {tabs.map(([n,label],i)=><button key={n} type="button" onClick={()=>setStep(i)}
       aria-current={step===i?'step':undefined}
-      aria-label={`Step ${n}: ${label}`}
+      aria-label={i===0 ? 'Step 1: Product & SKU' : `Step ${n}: ${label}`}
       className={'product-wizard-step'+(step===i?' is-current':'')}>
       <span className="product-wizard-step-number" aria-hidden="true">{n}</span>
       <span className="product-wizard-step-label">{label}</span>
