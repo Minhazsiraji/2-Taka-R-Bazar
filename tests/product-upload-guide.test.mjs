@@ -21,7 +21,7 @@ test('guide accurately reflects existing bilingual input and publication lifecyc
  assert.match(sop,/40 EN \/ 20 BN/)
  assert.match(sop,/10\+ characters/)
  assert.match(sop,/0–8/)
- assert.match(sop,/allowed HTTPS/)
+ assert.match(sop,/approved HTTPS/)
  assert.match(sop,/always returns edited content to Draft/)
  assert.match(sop,/Production checkout/)
  assert.match(html,/brown-rice-loose-1kg/)
