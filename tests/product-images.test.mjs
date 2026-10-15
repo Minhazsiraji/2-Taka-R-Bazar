@@ -31,7 +31,12 @@ test('all admin product types use the shared optimized file input instead of an 
   assert.match(input,/detectContentCrop/)
   assert.match(input,/lightCorners<3/)
   assert.match(input,/blank margins trimmed/)
-  assert.match(products,/createProductWithImage/)
+  assert.match(products,/AdminProductCreateWizard/)
+  const wizard=read('components/admin-product-create-wizard.tsx')
+  const wizardActions=read('app/actions/product-wizard.ts')
+  assert.match(wizard,/ProductImageInput/)
+  assert.match(wizardActions,/validateProductImage/)
+  assert.match(wizardActions,/admin_create_product_with_seo/)
   assert.match(own,/upsertOwnProductWithImage/)
 })
 
