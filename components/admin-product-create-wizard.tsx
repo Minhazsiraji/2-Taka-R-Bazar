@@ -4,8 +4,8 @@ import {ProductImageInput} from '@/components/product-image-input'
 import {SubmitButton} from '@/components/submit-button'
 import {createProductWithSeo} from '@/app/actions/product-wizard'
 const tabs=[
- ['1','Product & SKU'],['2','Specifications'],['3','SEO EN / BAN'],
- ['4','AEO / GEO'],['5','Photos & Posters'],['6','Review & Save']
+ ['1','Product & SKU'],['2','Specs'],['3','SEO · EN/BN'],
+ ['4','AEO / GEO'],['5','Media'],['6','Review']
 ] as const
 type FieldProps={name:string;label:string;placeholder?:string;multiline?:boolean;hint?:string;maxLength?:number;value?:string}
 function Field({name,label,placeholder,multiline,hint,maxLength,value}:FieldProps){
@@ -29,17 +29,24 @@ export function AdminProductCreateWizard(){
  const [step,setStep]=useState(0)
  const [kind,setKind]=useState('UNBRANDED_LOOSE')
  const fields=['variety','origin','processing','ingredients','storage','package_kind','net_quantity']
- return <form action={createProductWithSeo} className="card min-w-0 p-4 sm:p-5" id="guided-create-product">
-  <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-   <div><h2 className="section-title">Create product — one guided form</h2>
-    <p className="muted mt-1 text-sm">Complete six sections once, then save a single master product with its bilingual SEO draft.</p></div>
-   <span className="chip">Step {step+1} / 6</span>
+ return <form action={createProductWithSeo} className="card product-create-wizard min-w-0 p-4 sm:p-5" id="guided-create-product">
+  <div className="product-wizard-heading mb-4 flex flex-wrap items-start justify-between gap-3">
+   <div><span className="product-wizard-eyebrow">Product catalog</span><h2 className="section-title">Create product</h2>
+    <p className="muted mt-1 text-sm">One guided form · Product details, verified facts and bilingual SEO draft.</p></div>
+   <span className="product-wizard-counter" aria-live="polite">Step {step+1} of 6</span>
   </div>
-  <nav aria-label="Product creation steps" className="mb-6 grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+  <nav aria-label="Product creation steps" className="product-wizard-steps mb-5">
     {tabs.map(([n,label],i)=><button key={n} type="button" onClick={()=>setStep(i)}
-      aria-current={step===i?'step':undefined} className={'rounded-xl border p-2 text-left text-sm '+(step===i?'border-teal-600 bg-teal-50 font-bold text-teal-900':'border-slate-200')}>
-      <span className="block text-xs font-bold">STEP {n}</span>{label}</button>)}
+      aria-current={step===i?'step':undefined}
+      aria-label={`Step ${n}: ${label}`}
+      className={'product-wizard-step'+(step===i?' is-current':'')}>
+      <span className="product-wizard-step-number" aria-hidden="true">{n}</span>
+      <span className="product-wizard-step-label">{label}</span>
+    </button>)}
   </nav>
+  <div className="product-wizard-progress" role="progressbar" aria-label="Product creation progress" aria-valuemin={1} aria-valuemax={6} aria-valuenow={step+1}>
+    <span style={{width:`${(step+1)/6*100}%`}}/>
+  </div>
   <section hidden={step!==0} aria-label="Product identity and master photo">
    <h3 className="mb-3 text-lg font-bold">1. Product identity and master image</h3>
    <div className="grid gap-4 md:grid-cols-2">
@@ -124,7 +131,7 @@ export function AdminProductCreateWizard(){
    </div>
    <SubmitButton className="btn-primary mt-4 w-full sm:w-auto">Create product &amp; save SEO draft</SubmitButton>
   </section>
-  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
+  <div className="product-wizard-footer mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
     <button type="button" className="btn-secondary" disabled={step===0} onClick={()=>setStep(s=>Math.max(0,s-1))}>← Back</button>
     <span className="muted text-sm">You may revisit each step. Fields stay filled.</span>
     {step<5&&<button type="button" className="btn-primary" onClick={()=>setStep(s=>Math.min(5,s+1))}>Next step →</button>}
