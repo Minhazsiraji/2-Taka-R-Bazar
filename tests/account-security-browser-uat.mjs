@@ -344,6 +344,41 @@ try {
   const staff=await browser.newPage({viewport:{width:393,height:900}})
   staff.on('pageerror',e=>errors.push(e.message))
   await staff.context().addCookies(ownerCookies)
+  // Product Management shares storefront visual tokens but retains staff-only admin controls.
+  await staff.goto('http://127.0.0.1:3000/admin/products',{waitUntil:'domcontentloaded'})
+  await staff.getByRole('heading',{name:'Create product',exact:true}).waitFor()
+  const productSteps=staff.getByRole('navigation',{name:'Product creation steps'})
+  assert.equal(await productSteps.getByRole('button').count(),6)
+  for(const width of [320,393,768,1024,1440]){
+    await staff.setViewportSize({width,height:900})
+    const geometry=await productSteps.evaluate(nav=>{
+      const navRect=nav.getBoundingClientRect()
+      const buttons=[...nav.querySelectorAll('button')]
+      return {
+        screenOverflow:document.documentElement.scrollWidth>window.innerWidth+1,
+        invalid:buttons.some(button=>{
+          const rect=button.getBoundingClientRect()
+          const label=button.querySelector('.product-wizard-step-label')
+          return rect.left<navRect.left-2 || rect.right>navRect.right+2
+            || (label && label.scrollWidth>label.clientWidth+1)
+            || (label && window.getComputedStyle(label).whiteSpace!=='nowrap')
+        }),
+        rowCount:new Set(buttons.map(button=>Math.round(button.getBoundingClientRect().top))).size
+      }
+    })
+    assert.equal(geometry.screenOverflow,false,'Product Management must not overflow viewport at '+width)
+    assert.equal(geometry.invalid,false,'All six compact step labels must fit their pill at '+width)
+    assert.ok(geometry.rowCount<=3,'No more than three compact step rows at '+width)
+    if(width===393||width===1440)await staff.screenshot({path:'/tmp/2tbr-product-admin-steps-'+width+'.png',fullPage:false})
+  }
+  await staff.setViewportSize({width:393,height:900})
+  await staff.locator('#guided-create-product input[name="name"]').fill('Draft preview - do not submit')
+  await productSteps.getByRole('button',{name:'Step 3: SEO · EN/BN'}).click()
+  await staff.getByRole('heading',{name:'3. SEO and bilingual descriptions'}).waitFor()
+  assert.equal(await productSteps.getByRole('button',{name:'Step 3: SEO · EN/BN'}).getAttribute('aria-current'),'step')
+  await productSteps.getByRole('button',{name:'Step 1: Product & SKU'}).click()
+  assert.equal(await staff.locator('#guided-create-product input[name="name"]').inputValue(),'Draft preview - do not submit')
+  console.log('Product admin storefront styling and six compact steps PASS at 320/393/768/1024/1440.')
   await staff.goto('http://127.0.0.1:3000/admin/notifications',{waitUntil:'domcontentloaded'})
   await staff.getByRole('heading',{name:'Notification center',exact:true}).waitFor()
   const title='Synthetic live customer update'
