@@ -39,7 +39,7 @@ test('catalog source is an already gated public read model, not private tables',
 test('product cards show bilingual detail links, true photo and price-pending, but not purchase actions',()=>{
  assert.match(section,/<section id="published-products"/)
  assert.match(section,/All Products','সব পণ্য'/)
- assert.match(section,/PublishedPhoto item=\{item\} alt=\{alt\}/)
+ assert.match(section,/PublishedPhoto item=\{item\} alt=\{alt\} href=\{href\}/)
  assert.match(section,/item\.image_url&&!broken/)
  assert.match(section,/onError=\{\(\)=>setBroken\(true\)\}/)
  assert.match(section,/language==='bn'\?'\/bn':'\'/)
@@ -50,6 +50,9 @@ test('product cards show bilingual detail links, true photo and price-pending, b
  assert.match(section,/View Details','বিস্তারিত দেখুন'/)
  assert.match(section,/Show more products','আরও পণ্য দেখুন'/)
  assert.match(section,/lg:grid-cols-3/)
+ assert.match(section,/market-product-actions/)
+ assert.match(section,/market-product-meta/)
+ assert.match(section,/market-product-community/)
  assert.match(section,/Loading products/)
  assert.doesNotMatch(section,/setCommerceCartItem|action=\{|\/cart|Buy Alone|Add to cart|Join Pool/i)
  assert.doesNotMatch(section,/DEMO \/|Sample prices|Fake savings/)
