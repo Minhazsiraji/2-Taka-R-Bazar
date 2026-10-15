@@ -457,14 +457,13 @@ try {
   // explicit blockers and browser-tab recovery. This is synthetic disposable DB only.
   const productCard=staff.locator('details.card').filter({hasText:'Synthetic draft recovery ghee'})
   await productCard.locator('summary').click()
-  const seoEditor=productCard.locator('form').filter({has:productCard.locator('input[name="expected_version"]')})
+  const seoEditor=productCard.locator('form:has(input[name="expected_version"])')
   const evidenceNote='Synthetic independent-review evidence recorded in disposable CI only.'
   await seoEditor.locator('textarea[name="verification_notes"]').fill(evidenceNote)
   await staff.reload({waitUntil:'domcontentloaded'})
   const restoredCard=staff.locator('details.card').filter({hasText:'Synthetic draft recovery ghee'})
   await restoredCard.locator('summary').click()
-  const restoredEditor=restoredCard.locator('form').filter({has:restoredCard.locator('input[name="expected_version"]')})
-  await restoredEditor.getByText('Unfinished edits recovered from this browser tab.').waitFor({timeout:10000}).catch(()=>{})
+  const restoredEditor=restoredCard.locator('form:has(input[name="expected_version"])')
   assert.equal(await restoredEditor.locator('textarea[name="verification_notes"]').inputValue(),evidenceNote,
    'Existing product SEO notes should recover after refresh')
   await restoredEditor.locator('input[name="meta_title_en"]').fill('Synthetic 1 kg ghee - SEO test')
