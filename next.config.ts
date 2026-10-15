@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
   redirects: async () => [{ source: '/home', destination: '/', permanent: true }],
   experimental: {
     serverActions: {
-      bodySizeLimit: '2mb',
+      bodySizeLimit: '6mb',
     },
   },
   headers: async () => [
