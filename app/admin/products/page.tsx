@@ -31,6 +31,8 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
     supabase.from('product_seo_faqs').select('*'),
     supabase.from('product_seo_media').select('*'),
   ])
+  const {data:ownerFlag,error:ownerCheckError}=await supabase.rpc('is_current_platform_owner')
+  const isOwner=!ownerCheckError&&ownerFlag===true
   const rows=productRes.data??[]
   const canDelete=roles.has('super_admin')
   const eligibilityResults=canDelete?await Promise.all(rows.map((r:any)=>
@@ -70,7 +72,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
               <SubmitButton className="md:w-fit">Save product</SubmitButton>
             </form>
           </div>
-          <AdminProductSeoEditor product={r} seo={seoByProduct.get(r.id)} faqs={faqByProduct.get(r.id)??[]} media={mediaByProduct.get(r.id)??[]} canReview={roles.has('super_admin')} currentUser={user.id}/>
+          <AdminProductSeoEditor product={r} seo={seoByProduct.get(r.id)} faqs={faqByProduct.get(r.id)??[]} media={mediaByProduct.get(r.id)??[]} canReview={roles.has('super_admin')} isOwner={isOwner} currentUser={user.id}/>
           {canDelete&&<AdminProductLifecycle product={r} eligibility={eligibilityByProduct.get(r.id)}/>}
         </div>
       </details>)}
