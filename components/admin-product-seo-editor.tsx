@@ -1,4 +1,8 @@
-import {saveProductSeo,submitProductSeo,reviewProductSeo,unlistProductSeo} from '@/app/actions/product-seo'
+'use client'
+import {useEffect,useRef,useState,useTransition} from 'react'
+import type {FormEvent} from 'react'
+import {useRouter} from 'next/navigation'
+import {saveProductSeo,reviewProductSeo,unlistProductSeo} from '@/app/actions/product-seo'
 import {SubmitButton} from '@/components/submit-button'
 import {SITE_URL} from '@/lib/site'
 
@@ -14,8 +18,70 @@ const field=(name:string,title:string,value:string|undefined,opts?:{multiline?:b
  <input className="input" name={name} defaultValue={value??''} required={opts?.required}/>}
  {opts?.hint&&<span className="muted mt-1 block text-xs">{opts.hint}</span>}</label>
 export function AdminProductSeoEditor({product,seo,faqs,media,canReview,currentUser}:{product:any;seo?:SeoRow;faqs:FAQ[];media:Media[];canReview:boolean;currentUser:string}){
+ const [pending,startTransition]=useTransition()
+ const [feedback,setFeedback]=useState<{ok:boolean;saved:boolean;submitted:boolean;message:string;blockers?:string[];field?:string}|null>(null)
+ const [recovered,setRecovered]=useState(false)
+ const formRef=useRef<HTMLFormElement>(null)
+ const router=useRouter()
+ const draftKey='2tbr:seo-editor-draft:v1:'+currentUser+':'+product.id
+ useEffect(()=>{
+  try{
+   const raw=sessionStorage.getItem(draftKey)
+   if(!raw||!formRef.current)return
+   const draft=JSON.parse(raw) as {version:number;values:Record<string,string>}
+   // Never silently overwrite a newer server version from another editor.
+   if(draft.version!==(seo?.version??0))return
+   for(const [name,value] of Object.entries(draft.values)){
+    const field=formRef.current.elements.namedItem(name)
+    if(field instanceof HTMLInputElement||field instanceof HTMLTextAreaElement||field instanceof HTMLSelectElement){
+     if(field.type!=='hidden'&&field.type!=='file')field.value=value
+    }
+   }
+   setRecovered(true)
+  }catch{/* Storage is optional and never blocks form access. */}
+ },[draftKey,seo?.version])
+ function keepTabDraft(){
+  if(!formRef.current)return
+  const values:Record<string,string>={}
+  for(const field of Array.from(formRef.current.elements)){
+   if(!(field instanceof HTMLInputElement||field instanceof HTMLTextAreaElement||field instanceof HTMLSelectElement))continue
+   if(!field.name||field.type==='hidden'||field.type==='file')continue
+   values[field.name]=field.value
+  }
+  try{sessionStorage.setItem(draftKey,JSON.stringify({version:seo?.version??0,values}))}catch{/* Browser storage may be disabled. */}
+ }
+ function handleSave(event:FormEvent<HTMLFormElement>){
+  event.preventDefault()
+  if(pending||!formRef.current)return
+  const submitter=(event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement|null
+  const intent=submitter?.value==='submit'?'submit':'save'
+  const fd=new FormData(formRef.current)
+  fd.set('editor_intent',intent)
+  keepTabDraft()
+  setFeedback(null)
+  startTransition(async()=>{
+   try{
+    const result=await saveProductSeo(fd)
+    setFeedback(result)
+    if(result.saved){
+     try{sessionStorage.removeItem(draftKey)}catch{}
+     setRecovered(false)
+     const version=formRef.current?.elements.namedItem('expected_version')
+     if(version instanceof HTMLInputElement&&typeof result.version==='number')version.value=String(result.version)
+     router.refresh()
+    }else if(result.field){
+     window.requestAnimationFrame(()=>{
+      const field=formRef.current?.elements.namedItem(result.field!)
+      if(field instanceof HTMLElement){field.focus();field.scrollIntoView({block:'center',behavior:'smooth'})}
+     })
+    }
+   }catch{
+    setFeedback({ok:false,saved:false,submitted:false,message:'Connection interrupted. Nothing was intentionally cleared; your text remains here and in this browser tab.'})
+   }
+  })
+ }
  const getFaq=(i:number)=>faqs.find(f=>f.position===i)
- const getMedia=(kind:string,i:number)=>media.filter(m=>m.kind===kind).sort((a,b)=>a.position-b.position)[i-1]
+ const getMedia=(kind:string,i:number)=>media.find(m=>m.kind===kind&&m.position===i)
  const spec=seo?.specs??{}
  const slug=seo?.slug??product.sku.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')
  return <section className="mt-5 border-t border-slate-200 pt-5">
@@ -25,7 +91,13 @@ export function AdminProductSeoEditor({product,seo,faqs,media,canReview,currentU
    <span className="chip">{seo?.status??'Not started'}</span>
   </div>
   {seo?.status==='published'&&<a className="mt-2 inline-block underline" href={SITE_URL+'/p/'+seo.slug} target="_blank" rel="noreferrer">View published SEO page ↗</a>}
-  <form action={saveProductSeo} className="mt-4 grid min-w-0 gap-4 md:grid-cols-2">
+  {recovered&&<p className="mt-2 rounded-lg border border-teal-300 p-3 text-sm" role="status">Unfinished edits recovered from this browser tab. Nothing has been published.</p>}
+  {feedback&&<div className={'mt-3 rounded-xl border p-4 text-sm '+(feedback.ok?'border-teal-400 bg-teal-50 text-teal-900': 'border-red-400 bg-red-50 text-red-900')} role={feedback.ok?'status':'alert'}>
+   <strong>{feedback.saved?'Saved to database.':'Not saved.'}</strong>
+   <p className="mt-1">{feedback.message}</p>
+   {Boolean(feedback.blockers?.length)&&<ul className="mt-2 list-inside list-disc">{feedback.blockers?.map((problem,i)=><li key={i}>{problem}</li>)}</ul>}
+  </div>}
+  <form ref={formRef} onSubmit={handleSave} onInput={keepTabDraft} onChange={keepTabDraft} className="mt-4 grid min-w-0 gap-4 md:grid-cols-2">
    <input type="hidden" name="product_id" value={product.id}/><input type="hidden" name="expected_version" value={seo?.version??0}/>
    <div className="md:col-span-2 font-bold">1 · Identity & brand classification</div>
    <label><span className="label">Brand type</span>
@@ -85,11 +157,14 @@ export function AdminProductSeoEditor({product,seo,faqs,media,canReview,currentU
    </details>
    <div className="md:col-span-2 font-bold">6 · GEO verification and publication</div>
    {field('verification_notes','Internal supplier facts / claim evidence (never public)',seo?.verification_notes,{multiline:true,hint:'Record exactly how variety, origin, processing, packaging and any nutrition assertions were checked. No medical/organic/chemical-free claims without proof.'})}
-   <p className="muted text-sm md:col-span-2">Save always returns the content to Draft, including edits to previously published pages. Prices, stock, orders and existing SKU are not edited here.</p>
-   <SubmitButton className="md:col-span-2 md:w-fit">Save SEO draft</SubmitButton>
+   <p className="muted text-sm md:col-span-2">A review request now saves ALL edits in this form first. Private supplier verification notes must contain at least 10 characters and describe actual evidence; they are never shown to shoppers. A different Super Admin still has to approve publication. Prices, stock, orders and SKU stay unchanged.</p>
+   <div className="md:col-span-2 flex flex-wrap gap-3">
+    <button className="btn-secondary" type="submit" name="editor_intent" value="save" disabled={pending}>{pending?'Saving…':'Save SEO draft'}</button>
+    <button className="btn-primary" type="submit" name="editor_intent" value="submit" disabled={pending}>{pending?'Working…':'Save & submit for independent review'}</button>
+   </div>
   </form>
   {seo&&<div className="mt-4 flex flex-col gap-4 rounded-xl border border-slate-200 p-3 sm:flex-row sm:items-start">
-   {seo.status==='draft'&&<form action={submitProductSeo} className="flex-1"><input type="hidden" name="product_id" value={product.id}/><SubmitButton>Submit for independent review</SubmitButton></form>}
+   {seo.status==='draft'&&<p className="text-sm">Use <b>Save & submit for independent review</b> above so your latest edits are included.</p>}}
    {seo.status==='review'&&canReview&&seo.edited_by!==currentUser&&<form action={reviewProductSeo} className="flex flex-1 flex-wrap items-end gap-2">
     <input type="hidden" name="product_id" value={product.id}/>
     <label className="flex-1"><span className="label">Independent reviewer note (10+ characters)</span><input className="input" name="note" required minLength={10}/></label>
