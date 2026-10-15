@@ -464,6 +464,7 @@ try {
   const restoredCard=staff.locator('details.card').filter({hasText:'Synthetic draft recovery ghee'})
   await restoredCard.locator('summary').click()
   const restoredEditor=restoredCard.locator('form:has(input[name="expected_version"])')
+  await restoredCard.getByText('Unfinished edits recovered from this browser tab.').waitFor({timeout:15000})
   assert.equal(await restoredEditor.locator('textarea[name="verification_notes"]').inputValue(),evidenceNote,
    'Existing product SEO notes should recover after refresh')
   await restoredEditor.locator('input[name="meta_title_en"]').fill('Synthetic 1 kg ghee - SEO test')
