@@ -412,7 +412,7 @@ try {
   await productForm.getByRole('button',{name:'Create product & save SEO draft'}).click()
   await productForm.getByRole('alert').waitFor({timeout:25000})
   console.log('Issue 90 validation result:',await productForm.getByRole('alert').allTextContents())
-  assert.match((await productForm.getByRole('alert').textContent())??'',/marketing image 1: add an approved HTTPS URL/i)
+  assert.match((await productForm.getByRole('alert').textContent())??'',/marketing image 1: select a PC file, add an approved HTTPS URL/i)
   assert.ok(!staff.url().includes('?error='),'Validation error must not redirect')
   assert.equal(await productForm.locator('textarea[name="description_en"]').inputValue(),longEnglish)
   assert.equal(await productForm.locator('textarea[name="description_bn"]').inputValue(),longBangla)
