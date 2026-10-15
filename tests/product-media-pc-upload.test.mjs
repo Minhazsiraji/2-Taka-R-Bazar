@@ -19,7 +19,7 @@ test('all supplementary images and marketing posters optional, with direct file 
  assert.match(action,/media\.push\(\{kind:item\.kind,url:uploadedUrl/)
 })
 test('secure optional files reuse original genuine image validation and clean up on failure',()=>{
- assert.match(input,/supplementary\?MEDIA_TARGET_BYTES:TARGET_BYTES/)
+ assert.match(input,/MARKETING_TARGET_BYTES:MEDIA_TARGET_BYTES\):TARGET_BYTES,supplementary/)
  assert.match(input,/MEDIA_TARGET_BYTES=220\*1024/)
  assert.match(input,/name=\{inputName\}/)
  assert.match(action,/validateProductImage\(/)
