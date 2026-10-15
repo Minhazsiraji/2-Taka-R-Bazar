@@ -89,6 +89,10 @@ begin
      v_fk.sch,v_fk.tbl,v_fk.col) using p_product_id into v_used;
    if v_used then v_blockers:=array_append(v_blockers,v_fk.sch||'.'||v_fk.tbl);end if;
  end loop;
+ -- UUIDs embedded in storefront featured-product arrays are business references even without an FK.
+ if exists(select 1 from public.pool_storefront_publication where p_product_id=any(featured_product_ids)) then
+   v_blockers:=array_append(v_blockers,'public.pool_storefront_publication featured product');
+ end if;
  return jsonb_build_object('eligible',cardinality(v_blockers)=0,'blockers',to_jsonb(v_blockers),
     'product_id',p_product_id,'sku',v_p.sku);
 end $$;
