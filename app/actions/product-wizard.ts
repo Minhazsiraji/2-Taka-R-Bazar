@@ -71,20 +71,26 @@ function readContent(fd:FormData){
   }
  }
  const media:{kind:'gallery'|'marketing';url:string;alt_en:string;alt_bn:string}[]=[]
+ const uploads:{kind:'gallery'|'marketing';file:File;alt_en:string;alt_bn:string;position:number}[]=[]
  for(const kind of ['gallery','marketing'] as const){
   for(let i=1;i<=6;i++){
-   const urlField=kind+'_url_'+i,altEnField=kind+'_alt_en_'+i,altBnField=kind+'_alt_bn_'+i
+   const urlField=kind+'_url_'+i,fileField=kind+'_file_'+i
+   const altEnField=kind+'_alt_en_'+i,altBnField=kind+'_alt_bn_'+i
    const url=value(fd,urlField),alt_en=value(fd,altEnField),alt_bn=value(fd,altBnField)
-   // Entirely empty optional gallery/marketing rows MUST NOT block saving.
-   if(!url&&!alt_en&&!alt_bn)continue
-   if(!url)invalid(kind+' image '+i+': add an approved HTTPS URL or clear both optional alt texts.',urlField,4)
-   if(!publicShowcaseImageUrl(url))invalid(kind+' image '+i+': use an approved HTTPS image URL.',urlField,4)
+   const candidate=fd.get(fileField)
+   const file=candidate instanceof File&&candidate.size>0?candidate:null
+   // Completely empty optional gallery and marketing slots never block a product draft.
+   if(!url&&!file&&!alt_en&&!alt_bn)continue
+   if(url&&file)invalid(kind+' image '+i+': choose a PC file OR an approved HTTPS URL, not both.',fileField,4)
+   if(!file&&!url)invalid(kind+' image '+i+': select a PC file, add an approved HTTPS URL, or clear both optional alt texts.',fileField,4)
+   if(url&&!publicShowcaseImageUrl(url))invalid(kind+' image '+i+': use an approved HTTPS image URL.',urlField,4)
    if(alt_en.length<3||alt_en.length>200)invalid(kind+' image '+i+': enter English alt text (3–200 characters).',altEnField,4)
    if(alt_bn.length<3||alt_bn.length>200)invalid(kind+' image '+i+': enter Bangla alt text (3–200 characters).',altBnField,4)
-   media.push({kind,url,alt_en,alt_bn})
+   if(file)uploads.push({kind,file,alt_en,alt_bn,position:i})
+   else media.push({kind,url,alt_en,alt_bn})
   }
  }
- return {content:{...parsed.data,expected_version:0},faqs,media}
+ return {content:{...parsed.data,expected_version:0},faqs,media,uploads}
 }
 
 /**
@@ -93,7 +99,8 @@ function readContent(fd:FormData){
  */
 export async function createProductWithSeo(fd:FormData):Promise<WizardResult>{
  const {supabase,user}=await requireAdmin()
- let objectPath:string|null=null
+ const objectPaths:string[]=[]
+ const cleanup=async()=>{if(objectPaths.length)await supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove(objectPaths)}
  try{
   const master=masterSchema.safeParse(Object.fromEntries(['name','brand','category','package_size','unit','sku']
     .map(k=>[k,k==='sku'?value(fd,k).toUpperCase():value(fd,k)])))
@@ -101,31 +108,46 @@ export async function createProductWithSeo(fd:FormData):Promise<WizardResult>{
    const field=String(master.error.issues[0]?.path?.[0]??'name')
    invalid('Please check '+field.replaceAll('_',' ')+' — '+(master.error.issues[0]?.message??'This field is required.'),field,0)
   }
-  const {content,faqs,media}=readContent(fd)
+  const {content,faqs,media,uploads}=readContent(fd)
   if(content.brand_type==='SUPPLIER_BRAND'&&!master.data.brand)
    invalid('Enter the actual supplier brand, or choose Unbranded / Loose.','brand',0)
   if(content.brand_type==='UNBRANDED_LOOSE'&&master.data.brand&&!['UNBRANDED','GENERIC'].includes(master.data.brand.toUpperCase()))
    invalid('Leave Brand blank for unbranded loose products.','brand',0)
   if(content.brand_type==='2TBR_PRIVATE_LABEL'&&!['2TBR','2-TAKA-R-BAZAR'].includes(master.data.brand.toUpperCase()))
    invalid('2TBR own brand requires confirmed branded packaging.','brand',0)
+  // Validate every selected image and the aggregate size BEFORE uploading any assets.
+  // The browser compresses additional images to ~220 KB each; 6 MB request guard remains in place.
+  let totalImageBytes=0
+  const prepared:{bytes:Uint8Array;type:string;extension:string;kind?:'gallery'|'marketing';alt_en?:string;alt_bn?:string;fileField:string}[]=[]
+  const selected=[{file:fd.get('image_file'),fileField:'image_file'},...uploads.map(u=>({
+   file:u.file,fileField:u.kind+'_file_'+u.position,kind:u.kind,alt_en:u.alt_en,alt_bn:u.alt_bn
+  }))]
+  for(const item of selected){
+   if(!(item.file instanceof File)||item.file.size===0)continue
+   totalImageBytes+=item.file.size
+   if(totalImageBytes>5*1024*1024)invalid('Total selected images exceed 5 MB. Remove some optional images or choose smaller photos.',item.fileField,item.fileField==='image_file'?0:4)
+   const bytes=new Uint8Array(await item.file.arrayBuffer())
+   const checked=validateProductImage({type:item.file.type,size:item.file.size,bytes})
+   if(!checked.ok)invalid(checked.error,item.fileField,item.fileField==='image_file'?0:4)
+   prepared.push({bytes,type:item.file.type,extension:checked.extension,kind:item.kind,alt_en:item.alt_en,alt_bn:item.alt_bn,fileField:item.fileField})
+  }
   let url:string|null=null
-  const file=fd.get('image_file')
-  if(file instanceof File&&file.size>0){
-   const bytes=new Uint8Array(await file.arrayBuffer())
-   const check=validateProductImage({type:file.type,size:file.size,bytes})
-   if(!check.ok)invalid(check.error,'image_file',0)
-   objectPath='products/'+user.id+'/'+randomUUID()+'.'+check.extension
-   const uploaded=await supabase.storage.from(PRODUCT_IMAGE_BUCKET).upload(objectPath,bytes,
-     {contentType:file.type,cacheControl:'31536000',upsert:false})
-   if(uploaded.error)invalid('Image upload failed: '+uploaded.error.message,'image_file',0)
-   url=supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(objectPath).data.publicUrl
+  for(const item of prepared){
+   const objectPath='products/'+user.id+'/'+randomUUID()+'.'+item.extension
+   const uploaded=await supabase.storage.from(PRODUCT_IMAGE_BUCKET).upload(objectPath,item.bytes,
+     {contentType:item.type,cacheControl:'31536000',upsert:false})
+   if(uploaded.error)invalid('Image upload failed: '+uploaded.error.message,item.fileField,item.kind?4:0)
+   objectPaths.push(objectPath)
+   const uploadedUrl=supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(objectPath).data.publicUrl
+   if(!item.kind)url=uploadedUrl
+   else media.push({kind:item.kind,url:uploadedUrl,alt_en:item.alt_en!,alt_bn:item.alt_bn!})
   }
   const {error}=await supabase.rpc('admin_create_product_with_seo',{
    p_master:{...master.data,brand:master.data.brand||null,image_url:url,is_demo:fd.get('is_demo')==='on'},
    p_content:content,p_faqs:faqs,p_media:media
   })
   if(error){
-   if(objectPath)await supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove([objectPath])
+   await cleanup()
    return {ok:false,message:'Product not saved: '+error.message,step:5}
   }
   revalidatePath('/admin/products')
@@ -135,7 +157,7 @@ export async function createProductWithSeo(fd:FormData):Promise<WizardResult>{
   return {ok:true,message:'Product and bilingual SEO draft saved. You can open it for publication review.'}
  }catch(error){
   // There is no redirect and no form reset when validation or storage fails.
-  if(objectPath)await supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove([objectPath])
+  await cleanup()
   if(error instanceof WizardValidationError)
    return {ok:false,message:error.message,field:error.field,step:error.step}
   return {ok:false,message:'Unable to save product. Your entries are still here; please retry.',step:5}
