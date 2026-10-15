@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 
 const SOURCE_MAX_BYTES=5*1024*1024
 const TARGET_BYTES=850*1024
+const MEDIA_TARGET_BYTES=220*1024
 const MAX_EDGE=1600
 const ANALYSIS_EDGE=900
 const ACCEPTED=new Set(['image/jpeg','image/png','image/webp'])
@@ -61,14 +62,14 @@ function detectContentCrop(bitmap:ImageBitmap):Crop{
   return {x,y,width:Math.max(1,right-x),height:Math.max(1,bottom-y),trimmed:true}
 }
 
-async function optimizeImage(file:File){
+async function optimizeImage(file:File,targetBytes=TARGET_BYTES){
   if(!ACCEPTED.has(file.type))throw new Error('Choose a JPEG, PNG or WebP image.')
   if(file.size>SOURCE_MAX_BYTES)throw new Error('Choose an image that is 5 MB or smaller.')
 
   const bitmap=await createImageBitmap(file)
   try{
     const crop=detectContentCrop(bitmap)
-    if(file.size<=TARGET_BYTES&&!crop.trimmed)return {file,trimmed:false}
+    if(file.size<=targetBytes&&!crop.trimmed)return {file,trimmed:false}
 
     let scale=Math.min(1,MAX_EDGE/Math.max(crop.width,crop.height))
     let quality=.86
@@ -83,7 +84,7 @@ async function optimizeImage(file:File){
       const blob=await canvasBlob(canvas,quality)
       if(!blob)throw new Error('This browser could not optimize the image.')
       best=blob
-      if(blob.size<=TARGET_BYTES)break
+      if(blob.size<=targetBytes)break
       quality=Math.max(.58,quality-.08)
       scale*=.86
     }
@@ -93,7 +94,7 @@ async function optimizeImage(file:File){
   }finally{bitmap.close()}
 }
 
-export function ProductImageInput(){
+export function ProductImageInput({inputName='image_file',label='Product image',supplementary=false}:{inputName?:string;label?:string;supplementary?:boolean}={}){
   const inputRef=useRef<HTMLInputElement>(null)
   const busyRef=useRef(false)
   const [busy,setBusy]=useState(false)
@@ -114,7 +115,7 @@ export function ProductImageInput(){
     if(!input||!source)return
     busyRef.current=true;setBusy(true);setError('')
     try{
-      const result=await optimizeImage(source)
+      const result=await optimizeImage(source,supplementary?MEDIA_TARGET_BYTES:TARGET_BYTES)
       const dt=new DataTransfer();dt.items.add(result.file);input.files=dt.files
       const size=Math.max(1,Math.round(result.file.size/1024))
       setMessage(result.trimmed?`Ready · blank margins trimmed · ${size} KB.`:(result.file.size<source.size?`Ready · optimized to ${size} KB for faster mobile upload.`:'Ready to upload.'))
@@ -122,5 +123,5 @@ export function ProductImageInput(){
     finally{busyRef.current=false;setBusy(false)}
   }
 
-  return <label className="md:col-span-2"><span className="label">Product image</span><input ref={inputRef} className="input" type="file" name="image_file" accept="image/jpeg,image/png,image/webp" onChange={onChange} disabled={busy}/><span className="muted mt-1 block text-xs">{busy?'Preparing image…':message}</span>{error&&<span className="mt-1 block text-xs font-semibold text-red-700">{error}</span>}</label>
+  return <label className="md:col-span-2"><span className="label">{label}</span><input ref={inputRef} className="input" type="file" name={inputName} accept="image/jpeg,image/png,image/webp" onChange={onChange} disabled={busy}/><span className="muted mt-1 block text-xs">{busy?'Preparing image…':message}</span>{error&&<span className="mt-1 block text-xs font-semibold text-red-700">{error}</span>}</label>
 }
