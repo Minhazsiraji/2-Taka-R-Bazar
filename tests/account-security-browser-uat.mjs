@@ -435,7 +435,7 @@ try {
   await staff.waitForFunction(()=>{
     const input=document.querySelector('#guided-create-product input[name="marketing_file_1"]')
     const field=input?.closest('label')
-    return input?.files?.length===1 && !(field?.textContent||'').includes('Image preparation failed')
+    return input?.files?.length===1 && (field?.textContent||'').includes('Ready')
   },null,{timeout:10000})
   await productForm.locator('input[name="marketing_alt_en_1"]').fill('Synthetic test marketing photo for this product')
   await productForm.locator('input[name="marketing_alt_bn_1"]').fill('পণ্যের পরীক্ষামূলক প্রচারমূলক ছবি')
