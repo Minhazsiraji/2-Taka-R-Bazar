@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 const SOURCE_MAX_BYTES=5*1024*1024
 const TARGET_BYTES=850*1024
 const MEDIA_TARGET_BYTES=220*1024
+const MARKETING_TARGET_BYTES=400*1024
 const MAX_EDGE=1600
 const ANALYSIS_EDGE=900
 const ACCEPTED=new Set(['image/jpeg','image/png','image/webp'])
@@ -116,7 +117,7 @@ export function ProductImageInput({inputName='image_file',label='Product image',
     if(!input||!source)return
     busyRef.current=true;setBusy(true);setError('')
     try{
-      const result=await optimizeImage(source,supplementary?MEDIA_TARGET_BYTES:TARGET_BYTES,supplementary)
+      const result=await optimizeImage(source,supplementary?(inputName.startsWith('marketing_')?MARKETING_TARGET_BYTES:MEDIA_TARGET_BYTES):TARGET_BYTES,supplementary)
       const dt=new DataTransfer();dt.items.add(result.file);input.files=dt.files
       const size=Math.max(1,Math.round(result.file.size/1024))
       setMessage(result.trimmed?`Ready · blank margins trimmed · ${size} KB.`:(result.file.size<source.size?`Ready · optimized to ${size} KB for faster mobile upload.`:'Ready to upload.'))
