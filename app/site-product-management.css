@@ -130,6 +130,11 @@ body.site-glass-root:has(.product-management-shell){
 }
 .product-wizard-footer{border-color:var(--gloss-rim,rgba(255,255,255,.82))!important}
 .product-wizard-footer>.muted{font-size:12px}
+@container (max-width:429px){
+  .product-wizard-step{gap:4px;padding:5px 3px;min-height:38px}
+  .product-wizard-step-number{width:18px;height:18px;flex-basis:18px;font-size:10px}
+  .product-wizard-step-label{font-size:11px;letter-spacing:-.035em}
+}
 @container (min-width:430px){
   .product-wizard-steps{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
