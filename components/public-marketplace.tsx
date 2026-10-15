@@ -16,12 +16,14 @@ import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
 import {useStorefrontLanguage} from '@/lib/use-storefront-language'
 import {FeaturedProductsCarousel} from '@/components/featured-products-carousel'
+import {PublishedProductsSection} from '@/components/published-products-section'
+import type {PublishedCatalogPage} from '@/lib/published-product-catalog'
 import {FeaturedPoolShowcase} from '@/components/featured-pool-showcase'
 import {AnimatedHeroMessages} from '@/components/animated-hero-messages'
 import {getCommunityDemoFeaturedPools,type DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
-export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],demoMode=false,pools=[],initialArea='',initialLanguage='en',hasLanguageCookie=false}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];demoMode?:boolean;pools?:DemoFeaturedPool[];initialArea?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean}){
+export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],publishedProducts={items:[],hasMore:false,nextOffset:0},demoMode=false,pools=[],initialArea='',initialLanguage='en',hasLanguageCookie=false}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];publishedProducts?:PublishedCatalogPage;demoMode?:boolean;pools?:DemoFeaturedPool[];initialArea?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean}){
  const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const [area,setArea]=useState(()=>areas.some(a=>a.community_id===initialArea)?initialArea:'')
@@ -193,6 +195,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
     </article>
    })}</div>}
   </div></section>
+  <PublishedProductsSection initial={publishedProducts} language={language}/>
   <section id="exclusive-products" className="market-band market-exclusives-band">
    <div className="market-content market-exclusive-grid">
     <div className="market-exclusive-intro">

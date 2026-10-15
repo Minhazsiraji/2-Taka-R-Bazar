@@ -6,6 +6,7 @@ import type {Metadata} from 'next'
 import {createClient} from '@/lib/supabase/server'
 import {demoStorefrontEnabled,DEMO_AREAS,DEMO_OFFERS,DEMO_SHOWCASE} from '@/lib/public-demo-products'
 import {PublicMarketplace} from '@/components/public-marketplace'
+import {loadPublishedCatalogPage} from '@/lib/published-product-catalog-feed'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {BUSINESS_CONTACT_EMAIL,SUPPORT_CONTACT_EMAIL,SITE_DESCRIPTION,SITE_NAME,SITE_TAGLINE_EN,SITE_URL} from '@/lib/site'
@@ -22,12 +23,13 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  const storedLanguage=cookieStore.get(STOREFRONT_LANGUAGE_COOKIE)?.value
  const initialLanguage=languageFromPreference(storedLanguage)
  const supabase=await createClient()
- const [claims,areasRes,offersRes,featuredRes,poolsRes]=await Promise.all([
+ const [claims,areasRes,offersRes,featuredRes,poolsRes,publishedProducts]=await Promise.all([
   supabase.auth.getClaims(),
   supabase.rpc('get_public_storefront_areas'),
   supabase.rpc('get_public_storefront_offers',{p_community_id:null}),
   supabase.rpc('get_public_own_product_showcase',{p_product_id:null,p_featured_only:true}),
   supabase.rpc('get_public_featured_pools',{p_community_id:null}),
+  loadPublishedCatalogPage(),
  ])
  const authenticated=Boolean(claims.data?.claims?.sub)
  const realAreas=(areasRes.data??[]) as StorefrontArea[]
@@ -55,6 +57,6 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
   {/* English is the first-visit default. A previously selected BN/EN cookie wins on reload. */}
-  <PublicMarketplace initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
+  <PublicMarketplace initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} publishedProducts={publishedProducts} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
  </main>
 }
