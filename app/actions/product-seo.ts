@@ -117,12 +117,19 @@ export async function saveProductSeo(fd:FormData):Promise<SeoSaveResult>{
  const {error:reviewError}=await supabase.rpc('admin_submit_product_seo',{p_product_id:id})
  if(reviewError)
   return {ok:false,saved:true,submitted:false,version,
-   message:'Your changes were SAVED as a draft, but independent review could not be requested: '+reviewError.message}
+   message:'Your changes were SAVED as a draft, but publication/review submission failed: '+reviewError.message}
+ const {data:submittedRow,error:statusError}=await supabase.from('product_seo_content')
+  .select('status').eq('product_id',id).maybeSingle()
+ if(statusError||!submittedRow||!['review','published'].includes(submittedRow.status))
+  return {ok:false,saved:true,submitted:false,version,
+   message:'Submission was accepted, but the resulting publication status could not be confirmed. Reload the product before acting again.'}
  revalidatePath('/p','layout')
  revalidatePath('/bn/p','layout')
  revalidatePath('/sitemap.xml')
  return {ok:true,saved:true,submitted:true,version,
-  message:'Product details saved and submitted for independent review. A different Super Admin must approve publication.'}
+  message:submittedRow.status==='published'?
+   'Owner publication complete. The verified product information page is now public.':
+   'Product details saved and submitted for independent review. A different Super Admin must approve publication.'}
 }
 
 export async function submitProductSeo(fd:FormData){
@@ -130,7 +137,8 @@ export async function submitProductSeo(fd:FormData){
  if(!uuid.test(id))fail('Invalid product')
  const {error}=await supabase.rpc('admin_submit_product_seo',{p_product_id:id})
  if(error)fail(error.message)
- done('Product SEO submitted for independent review.')
+ const {data:row}=await supabase.from('product_seo_content').select('status').eq('product_id',id).maybeSingle()
+ done(row?.status==='published'?'Owner product SEO published.':'Product SEO submitted for independent review.')
 }
 export async function reviewProductSeo(fd:FormData){
  const {supabase,roles}=await requireAdmin();if(!roles.has('super_admin'))fail('Super Admin required')
