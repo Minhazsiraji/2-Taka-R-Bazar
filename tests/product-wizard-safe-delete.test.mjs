@@ -34,6 +34,8 @@ test('master and SEO creation is one authorized DB transaction and leaves public
 test('permanent deletion requires strict super admin and complete FK usage check',()=>{
  assert.match(sql,/private\.has_role\(v_user,'super_admin'\)/)
  assert.match(sql,/pg_constraint c/)
+ assert.match(sql,/c\.confrelid='public\.commerce_skus'::regclass/)
+ assert.match(sql,/delete from public\.commerce_skus where product_id=p_product_id/)
  assert.match(sql,/c\.confrelid='public\.products'::regclass/)
  assert.match(sql,/Delete blocked by usage\/history/)
  assert.match(sql,/delete from public\.products where id=p_product_id/)
