@@ -11,7 +11,7 @@ Version: 1.2 · Product Line · 2-TAKA-R-BAZAR · Issue #84
    - **Step 2**: Verified specifications and supplier facts (unknown facts remain blank).
    - **Step 3**: EN/BN product names, descriptions and SEO metadata.
    - **Step 4**: Optional bilingual questions/answers and private verification evidence.
-   - **Step 5**: Primary photo alt text and optional verified gallery/marketing URLs.
+   - **Step 5**: Primary photo alt text and optional gallery/marketing **PC file uploads or approved HTTPS URLs**. No link required for a PC upload; leave the entire item blank to skip.
    - **Step 6**: Final review and **Create product & save SEO draft**.
 3. The single creation action writes the master and SEO draft **atomically**. If either fails, no incomplete master/draft is committed. Uploaded files are removed on failure where possible. No price, Pool, cart, procurement or Finance transaction is created. **Production checkout remains disabled** until separately authorized.
 4. For **existing** products, expand the product card and use the existing SEO editor separately; the two-stage workflow remains supported for edits and maintenance, but is no longer required for new product creation. Editing an existing product's SEO **always returns edited content to Draft**; it needs renewed independent review before publication.
@@ -34,7 +34,7 @@ Version: 1.2 · Product Line · 2-TAKA-R-BAZAR · Issue #84
 | Meta description EN/BN | SEO editor → SEO | Up to 320 characters each; at least 30 EN / 20 BN **at submission** |
 | Actual primary image alt EN/BN | SEO editor → SEO | Up to 200 characters each; at least 5 characters each **at submission**; describe what is pictured, not a keyword list |
 | FAQs | Guided Create step 4 or existing SEO editor → “Bilingual customer questions (AEO)” | Optional: 0–8 **complete pairs** of EN/BN question+answer; question length 5–300, answer length 5–1,200 in each language |
-| Gallery 1–6 / Marketing 1–6 | Guided Create step 5 or existing SEO editor → “Additional media” | Optional approved HTTPS image URL + alt EN/BN for each image; max 12 images combined; each alt 3–200 characters. Actual-item gallery is separate from campaign posters |
+| Gallery 1–6 / Marketing 1–6 | Guided Create step 5 or existing SEO editor → “Additional media” | Optional image from PC (JPEG/PNG/WebP) **or** approved HTTPS image URL + alt EN/BN for each supplied image; max 6 of each kind and 5 MB combined optimized file uploads. If no extra image, leave file, URL and both alt fields blank. Actual-item gallery is separate from campaign posters |
 | Internal verification notes | Guided Create step 4 or existing SEO editor → “GEO verification and publication” | Max 3,000 characters; **at least 10 at submission**. References/notes remain private and should not include passwords or unnecessary personal data |
 | Expected version | Hidden revision field | Automatic. If another editor has saved, reload; do not overwrite their changes |
 

@@ -1,0 +1,40 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
+const wizard=read('components/admin-product-create-wizard.tsx')
+const action=read('app/actions/product-wizard.ts')
+const input=read('components/product-image-input.tsx')
+const config=read('next.config.ts')
+const uat=read('tests/account-security-browser-uat.mjs')
+
+test('all supplementary images and marketing posters optional, with direct file or HTTPS alternative',()=>{
+ assert.match(wizard,/inputName=\{kind\+'_file_'\+i\}/)
+ assert.match(wizard,/Or approved HTTPS URL \(optional\)/)
+ assert.match(wizard,/leave every field blank to skip/i)
+ assert.match(action,/if\(!url&&!file&&!alt_en&&!alt_bn\)continue/)
+ assert.match(action,/if\(url&&file\)invalid/)
+ assert.match(action,/if\(!file&&!url\)invalid/)
+ assert.match(action,/publicShowcaseImageUrl\(url\)/)
+ assert.match(action,/media\.push\(\{kind:item\.kind,url:uploadedUrl/)
+})
+test('secure optional files reuse original genuine image validation and clean up on failure',()=>{
+ assert.match(input,/MARKETING_TARGET_BYTES:MEDIA_TARGET_BYTES\):TARGET_BYTES,supplementary/)
+ assert.match(input,/MEDIA_TARGET_BYTES=220\*1024/)
+ assert.match(input,/name=\{inputName\}/)
+ assert.match(action,/validateProductImage\(/)
+ assert.match(action,/totalImageBytes>5\*1024\*1024/)
+ assert.match(action,/const cleanup=async/)
+ assert.match(action,/objectPaths\.push\(objectPath\)/)
+ assert.match(action,/await cleanup\(\)/)
+ assert.match(action,/admin_create_product_with_seo/)
+ assert.doesNotMatch(action,/p_media:\s*\[\]/)
+ assert.match(config,/bodySizeLimit: '6mb'/)
+})
+test('browser exercises uploaded PC marketing file in product save and bilingual alt metadata',()=>{
+ assert.match(uat,/input\[name="marketing_file_1"\]/)
+ assert.match(uat,/setInputFiles\(/)
+ assert.match(uat,/image\/png/)
+ assert.match(uat,/product_seo_media/)
+ assert.match(uat,/\/storage\/v1\/object\/public\/product-images\//)
+})

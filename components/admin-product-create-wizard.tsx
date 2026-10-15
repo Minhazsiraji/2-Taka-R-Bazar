@@ -53,7 +53,7 @@ export function AdminProductCreateWizard({userId}:{userId:string}){
    values[element.name]=element instanceof HTMLInputElement&&element.type==='checkbox'
      ?element.checked:element.value
   }
-  const hadImage=Boolean((form.elements.namedItem('image_file') as HTMLInputElement|null)?.files?.length)
+  const hadImage=Array.from(form.querySelectorAll<HTMLInputElement>('input[type="file"]')).some(input=>Boolean(input.files?.length))
   try{window.sessionStorage.setItem(storageKey,JSON.stringify({version:1,step:nextStep,values,hadImage} satisfies SavedDraft));setSaved(true)}
   catch{setSaved(false)}
  }
@@ -136,7 +136,7 @@ export function AdminProductCreateWizard({userId}:{userId:string}){
   </div>
   {restored&&<p role="status" className="mb-3 rounded-lg border border-teal-300 p-3 text-sm">
     Your unfinished product information was recovered from this browser tab.
-    {needsFile?' Please reselect the product image; browsers do not restore selected files.':''}
+    {needsFile?' Please reselect the main or supplementary images; browsers do not restore selected files.':''}
   </p>}
   {issue&&<div role="alert" className="mb-4 rounded-xl border border-red-400 bg-red-50 p-4 text-sm text-red-900">
     <strong>Product not saved. All your entries are preserved.</strong>
@@ -218,14 +218,15 @@ export function AdminProductCreateWizard({userId}:{userId:string}){
     <Field name="alt_en" label="Master photo alt text — EN" maxLength={200}/>
     <Field name="alt_bn" label="Master photo alt text — বাংলা" maxLength={200}/>
    </div>
-   <p className="muted my-4 text-sm">The master image is uploaded in Step 1. Supplementary pictures use approved HTTPS product storage or Cloudinary URLs and must be real product photos. Facebook posters belong under Marketing, not Gallery.</p>
+   <p className="muted my-4 text-sm">All extra images and posters are optional. Choose files directly from your PC, or paste an approved HTTPS URL as an alternative. Leave every field blank to skip. Gallery is for real product photos; promotional artwork belongs under Marketing.</p>
    {(['gallery','marketing'] as const).map(kind=><details key={kind} className="mb-3 rounded-xl border border-slate-200 p-3">
      <summary className="cursor-pointer font-semibold">{kind==='gallery'?'Product gallery (up to 6)':'Marketing posters (up to 6)'}</summary>
      <div className="mt-3 grid gap-4">{Array.from({length:6},(_,i)=>i+1).map(i=>
       <div key={i} className="rounded-lg border border-slate-200 p-3">
        <h4 className="mb-2 font-semibold">{kind} {i}</h4>
        <div className="grid gap-3 md:grid-cols-2">
-        <div className="md:col-span-2"><Field name={kind+'_url_'+i} label="Approved HTTPS image URL"/></div>
+        <div className="md:col-span-2"><ProductImageInput inputName={kind+'_file_'+i} label="Choose image from PC (optional)" supplementary/></div>
+        <div className="md:col-span-2"><Field name={kind+'_url_'+i} label="Or approved HTTPS URL (optional)" hint="Use only one source per item: uploaded file OR approved image URL."/></div>
         <Field name={kind+'_alt_en_'+i} label="Alt text EN" maxLength={200}/>
         <Field name={kind+'_alt_bn_'+i} label="Alt text BAN" maxLength={200}/>
        </div>
