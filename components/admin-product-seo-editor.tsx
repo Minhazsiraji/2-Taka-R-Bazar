@@ -164,7 +164,7 @@ export function AdminProductSeoEditor({product,seo,faqs,media,canReview,currentU
    </div>
   </form>
   {seo&&<div className="mt-4 flex flex-col gap-4 rounded-xl border border-slate-200 p-3 sm:flex-row sm:items-start">
-   {seo.status==='draft'&&<p className="text-sm">Use <b>Save & submit for independent review</b> above so your latest edits are included.</p>}}
+   {seo.status==='draft'&&<p className="text-sm">Use <b>Save & submit for independent review</b> above so your latest edits are included.</p>}
    {seo.status==='review'&&canReview&&seo.edited_by!==currentUser&&<form action={reviewProductSeo} className="flex flex-1 flex-wrap items-end gap-2">
     <input type="hidden" name="product_id" value={product.id}/>
     <label className="flex-1"><span className="label">Independent reviewer note (10+ characters)</span><input className="input" name="note" required minLength={10}/></label>
