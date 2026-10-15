@@ -31,7 +31,7 @@ test('PC uploads validate genuine images with strict aggregate limits and transa
  assert.match(actions,/if\(uploaded.error\)invalid/)
 })
 test('supplementary product files preserve all poster artwork and client page drafts',()=>{
- assert.match(picker,/supplementary\?MEDIA_TARGET_BYTES:TARGET_BYTES,supplementary/)
+ assert.match(picker,/MARKETING_TARGET_BYTES:MEDIA_TARGET_BYTES\):TARGET_BYTES,supplementary/)
  assert.match(picker,/preserveFullFrame/)
  assert.match(picker,/Never trim advertising\/poster borders/)
  assert.match(wizard,/sessionStorage\.setItem/)
