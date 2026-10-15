@@ -412,6 +412,7 @@ try {
   await productForm.getByRole('button',{name:'Create product & save SEO draft'}).click()
   await productForm.getByRole('alert').waitFor({timeout:25000})
   console.log('Issue 90 validation result:',await productForm.getByRole('alert').allTextContents())
+  assert.match((await productForm.getByRole('alert').textContent())??'',/marketing image 1: add an approved HTTPS URL/i)
   assert.ok(!staff.url().includes('?error='),'Validation error must not redirect')
   assert.equal(await productForm.locator('textarea[name="description_en"]').inputValue(),longEnglish)
   assert.equal(await productForm.locator('textarea[name="description_bn"]').inputValue(),longBangla)
@@ -424,7 +425,8 @@ try {
   assert.equal(await productForm.locator('textarea[name="description_en"]').inputValue(),longEnglish)
   assert.equal(await productForm.locator('input[name="q_bn_1"]').inputValue(),'এটি কি পরীক্ষার পণ্য?')
   assert.equal(await productForm.locator('input[name="marketing_alt_en_1"]').inputValue(),'Ghee promotion picture')
-  // Empty optional media rows are fine; clear partial metadata and retry the real synthetic draft save.
+  // Empty optional media rows are fine; expand the collapsed Marketing section after refresh.
+  await productForm.getByText('Marketing posters (up to 6)').click()
   await productForm.locator('input[name="marketing_alt_en_1"]').fill('')
   await productForm.locator('input[name="marketing_alt_bn_1"]').fill('')
   await productSteps.getByRole('button',{name:'Step 6: Review'}).click()
