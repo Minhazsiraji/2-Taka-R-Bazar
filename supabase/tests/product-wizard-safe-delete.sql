@@ -4,7 +4,7 @@ create extension if not exists pgtap with schema extensions;
 select plan(15);
 select ok((select relrowsecurity from pg_class where oid='public.product_deletion_audit'::regclass),'Deletion history is protected by RLS');
 select ok(not has_function_privilege('anon','public.admin_delete_unused_product(uuid,text,text)','EXECUTE'),'Anonymous cannot delete product');
-select ok(not has_function_privilege('authenticated','public.product_deletion_audit','INSERT'),'Normal users cannot alter deletion audit');
+select ok(not has_table_privilege('authenticated','public.product_deletion_audit','INSERT'),'Normal users cannot alter deletion audit');
 select ok(has_function_privilege('authenticated','public.admin_create_product_with_seo(jsonb,jsonb,jsonb,jsonb)','EXECUTE'),'Authenticated role has guarded wizard RPC');
 insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) values
  ('00000000-0000-4000-8000-000000008601','00000000-0000-0000-0000-000000000000','authenticated','authenticated','issue86-admin@example.invalid',now(),now()),
