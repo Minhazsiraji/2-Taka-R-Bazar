@@ -27,22 +27,22 @@ ul{padding-left:20px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}.
 <main>
 <section class="sheet">
 <div class="brand">2-TAKA-R-BAZAR</div><div class="tag">Smart shopping. Real savings!</div><div class="tag" lang="bn">একসাথে কিনি, কম দামে পাই!</div>
-<div style="height:80px"></div><div class="kicker">Issue #84 · Product content operations · v1.1</div>
+<div style="height:80px"></div><div class="kicker">Issue #84 · Product content operations · v1.2</div>
 <h1>Product Upload Workbook</h1><h2>SEO · AEO · GEO</h2>
 <p class="lead">A reusable field-by-field guide for real product uploads, supplier verification, bilingual content, images, publication and search readiness.</p>
 <div class="divider"></div>
 <p><b>Use for:</b> Unbranded/loose goods, supplier-branded goods and future verified 2TBR private-label products across Direct Purchase, Community Pools and Group Deals.</p>
 <div class="callout"><b>100% means complete readiness checks, not search rankings.</b><br>Google/AI search inclusion, citation, merchant eligibility and sales cannot be guaranteed.</div>
 <h3>Five-step workflow</h3><ol><li>Verify the actual item, selling unit, brand and genuine product photograph.</li>
-<li>Create or select an existing SKU in <b>Admin → Products</b>.</li><li>Complete the product's SEO/AEO/GEO editor in both languages.</li>
-<li>Save as Draft, then submit to a different Super Admin for review.</li>
-<li>Check approved EN/BN pages, canonical URLs and sitemap before use.</li></ol>
+<li>For a new item use <b>Create product — one guided form</b>: Step 1 master and image, Step 2 specifications, Step 3 EN/BN SEO, Step 4 FAQs and evidence, Step 5 media, Step 6 review.</li><li>Click <b>Create product &amp; save SEO draft</b> once; existing products can still be edited below.</li>
+<li>The creation saves one master + SEO Draft atomically; then submit to a different Super Admin for review.</li>
+<li>Check approved EN/BN pages, canonical URLs and sitemap; only unused products can be deleted permanently, while any used product must be archived.</li></ol>
 <p>Product ID / SKU: _____________________________________</p>
 <p>Supplier evidence / date: ______________________________</p>
 <div class="foot"><span>2TBR · Product Line SOP | Source: Issue #84</span><span>1 / 7</span></div></section>
 
 <section class="sheet"><div class="kicker">01 · Product master — existing Create/Edit product form</div>
-<h2>Identify what the customer will actually receive</h2><p>These fields belong to the <b>existing master product panel</b>, not the SEO editor.</p>
+<h2>Identify what the customer will actually receive</h2><p>For new products enter these fields in <b>Step 1 of the guided creation form</b>. For existing products use the master editor.</p>
 <div class="grid">
 <div><label>Name (master)</label><div class="fill">Brown Rice (Loose) – 1 kg</div></div>
 <div><label>Actual Brand</label><div class="fill">[BLANK FOR UNBRANDED]</div></div>
@@ -51,7 +51,7 @@ ul{padding-left:20px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}.
 <div><label>Unit</label><div class="fill">kg</div></div>
 <div><label>SKU</label><div class="fill">RICE-BRN-LOOSE-1KG [if unique]</div></div></div>
 <label>Primary product image</label><div class="fill">[ACTUAL PRODUCT PHOTO] — JPEG/PNG/WebP; up to 5 MB under current upload form. No ad stickers or promises.</div>
-<h3>In the SEO editor: Brand type</h3>
+<h3>In guided Step 1: Brand type</h3>
 <div class="fill">UNBRANDED_LOOSE (now) · SUPPLIER_BRAND (verified third party) · 2TBR_PRIVATE_LABEL (only once genuinely branded)</div>
 <div class="callout"><b>Important:</b> Do not convert historical loose-rice sales to branded sales. Future 2TBR retail packaging requires a distinct sellable product/SKU. The existing product UUID and order snapshots must remain intact.</div>
 <h3>English and Bangla SEO display titles (3–180 characters each)</h3>
@@ -60,7 +60,7 @@ ul{padding-left:20px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}.
 <div class="foot"><span>Real variety · Brand truth · Stable SKU</span><span>2 / 7</span></div></section>
 
 <section class="sheet"><div class="kicker">02 · Verified product specifications</div><h2>Facts first, claims second</h2>
-<p>In the SEO editor → Specifications. Leave unknown facts blank; use private verification notes for evidence references.</p>
+<p>In guided Step 2 (or existing product SEO editor) → Specifications. Leave unknown facts blank; use private verification notes for evidence references.</p>
 <table><tr><th>UI Field</th><th>Paste/placeholder</th><th>Verification</th></tr>
 <tr><td>Variety</td><td>[ACTUAL RICE VARIETY]</td><td>Supplier type/specification</td></tr>
 <tr><td>Origin</td><td>[TRACEABLE LOCATION]</td><td>Invoice/batch/source; blank if unknown</td></tr>
@@ -79,7 +79,7 @@ ul{padding-left:20px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}.
 <div class="foot"><span>Evidence is private · Avoid medical promises</span><span>3 / 7</span></div></section>
 
 <section class="sheet"><div class="kicker">03 · SEO metadata</div><h2>Copy-and-paste search fields</h2>
-<p>In the SEO editor → Identity and Search content. Both English and Bangla pages are supported.</p>
+<p>In guided Step 3 (or existing product SEO editor) → Identity and Search content. Both English and Bangla pages are supported.</p>
 <label>SEO URL slug (max 120 characters, lowercase a-z/0-9/hyphens)</label><div class="fill">brown-rice-loose-1kg</div>
 <label>Meta title EN (10–110 characters)</label><div class="fill">Brown Rice (Loose) 1kg | 2-TAKA-R-BAZAR</div>
 <label>Meta title BN (10–110 characters)</label><div class="fill" lang="bn">ব্রাউন রাইস (খোলা) ১ কেজি | 2-TAKA-R-BAZAR</div>
@@ -143,5 +143,5 @@ ul{padding-left:20px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}.
 <div class="line"><span>Review decision</span><span>☐ Publish　☐ Return to Draft</span></div>
 <div class="line"><span>Published canonical EN/BN links</span><span>[EN URL] / [BN URL]</span></div>
 <p class="small">Publishing SEO content never activates checkout. Schema.org Offer or price must not be invented from synthetic Commerce fixtures. Search engines decide indexing and rankings independently.</p>
-<div class="foot"><span>2TBR SOP v1.1 · Issue #84 · Print-ready A4</span><span>7 / 7</span></div></section>
+<div class="foot"><span>2TBR SOP v1.2 · Issues #84 + #86 · Print-ready A4</span><span>7 / 7</span></div></section>
 </main></body></html>
