@@ -5,7 +5,7 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
 const wizard=read('components/admin-product-create-wizard.tsx')
 const page=read('app/admin/products/page.tsx')
 const actions=read('app/actions/product-wizard.ts')
-const sql=read('supabase/migrations/20261015030000_product_wizard_safe_delete.sql')
+const sql=read('supabase/migrations/20261015031616_product_wizard_safe_delete_issue86.sql')
 const lifecycle=read('components/admin-product-lifecycle.tsx')
 
 test('single guided six-step Create Product form holds both master and bilingual SEO data',()=>{
