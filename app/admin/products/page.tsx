@@ -35,7 +35,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
   for(const r of faqRes.data??[])faqByProduct.set(r.product_id,[...(faqByProduct.get(r.product_id)??[]),r])
   for(const r of mediaRes.data??[])mediaByProduct.set(r.product_id,[...(mediaByProduct.get(r.product_id)??[]),r])
   return <AdminShell><div className="grid min-w-0 gap-5">
-    <section><div className="card-title">Catalog</div><h1 className="text-2xl font-black sm:text-3xl">Products</h1><p className="muted mt-1">Each product has one master image. The same image follows the product into Pool, order and savings views.</p></section>
+    <section><div className="card-title">Catalog</div><h1 className="text-2xl font-black sm:text-3xl">Products</h1><p className="muted mt-1">Each product has one master image. The same image follows the product into Pool, order and savings views.</p><p className="mt-2 text-sm"><a className="font-semibold text-teal-700 underline underline-offset-2" href="/docs/product-upload-guide.html" target="_blank" rel="noopener noreferrer" aria-label="Open Product Upload SEO AEO GEO guide and printable PDF instructions">Product Upload Guide (SEO / AEO / GEO) — View, Print or Save as PDF ↗</a></p></section>
     <Flash {...sp}/>
 
     <form action={createProduct} className="card grid min-w-0 gap-4 p-4 sm:p-5 md:grid-cols-2">

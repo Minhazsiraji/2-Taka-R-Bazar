@@ -1,0 +1,40 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync,existsSync} from 'node:fs'
+const read=(p)=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
+const html=read('public/docs/product-upload-guide.html')
+const sop=read('docs/product-upload-seo-aeo-geo-sop.md')
+const admin=read('app/admin/products/page.tsx')
+
+test('Product Management links to the maintained downloadable/printable upload guide',()=>{
+ assert.match(admin,/href="\/docs\/product-upload-guide\.html"/)
+ assert.match(admin,/Product Upload Guide/)
+ assert.equal((html.match(/<section class="sheet">/g)??[]).length,7)
+ assert.match(html,/@page\s*\{size:A4/)
+ assert.match(html,/window\.print\(\)/)
+ assert.match(html,/<meta charset="utf-8">/)
+})
+test('guide accurately reflects existing bilingual input and publication lifecycle',()=>{
+ assert.match(sop,/UNBRANDED_LOOSE/)
+ assert.match(sop,/2TBR_PRIVATE_LABEL/)
+ assert.match(sop,/Independent|independent/)
+ assert.match(sop,/40 EN \/ 20 BN/)
+ assert.match(sop,/10\+ characters/)
+ assert.match(sop,/0–8/)
+ assert.match(sop,/approved HTTPS/)
+ assert.match(sop,/always returns edited content to Draft/)
+ assert.match(sop,/Production checkout/)
+ assert.match(html,/brown-rice-loose-1kg/)
+ assert.match(html,/বাংলা/)
+ assert.match(html,/FAQ/)
+})
+test('separate evidence and discovery controls and no fake search promises',()=>{
+ assert.match(sop,/Checklist A — factual content & claim verification/)
+ assert.match(sop,/Checklist B — technical publication & discovery verification/)
+ assert.match(html,/9 factual\/claim checks/)
+ assert.match(html,/9 technical\/index checks/)
+ assert.match(sop,/cannot guarantee Google rankings/)
+ assert.match(html,/no fake Offer\/rating/)
+ assert.doesNotMatch(sop,/100% guaranteed (ranking|SEO success)/i)
+ assert.ok(existsSync(new URL('../public/docs/product-upload-guide.html',import.meta.url)))
+})
