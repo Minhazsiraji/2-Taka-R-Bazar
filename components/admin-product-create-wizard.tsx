@@ -1,7 +1,8 @@
 'use client'
-import {useState} from 'react'
+import {useEffect,useRef,useState,useTransition} from 'react'
+import type {FormEvent} from 'react'
+import {useRouter} from 'next/navigation'
 import {ProductImageInput} from '@/components/product-image-input'
-import {SubmitButton} from '@/components/submit-button'
 import {createProductWithSeo} from '@/app/actions/product-wizard'
 const tabs=[
  ['1','Product'],['2','Specs'],['3','SEO · EN/BN'],
@@ -25,18 +26,127 @@ function FAQ({index}:{index:number}){return <div className="rounded-xl border bo
   <Field name={'a_bn_'+index} label="উত্তর — বাংলা" multiline maxLength={1200}/>
  </div>
  </div>}
-export function AdminProductCreateWizard(){
+type FieldInput=HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement
+type WizardIssue={message:string;field?:string;step?:number}
+type SavedDraft={version:1;step:number;values:Record<string,string|boolean>;hadImage:boolean}
+export function AdminProductCreateWizard({userId}:{userId:string}){
  const [step,setStep]=useState(0)
  const [kind,setKind]=useState('UNBRANDED_LOOSE')
+ const [issue,setIssue]=useState<WizardIssue|null>(null)
+ const [success,setSuccess]=useState('')
+ const [saved,setSaved]=useState(false)
+ const [restored,setRestored]=useState(false)
+ const [needsFile,setNeedsFile]=useState(false)
+ const [pending,startTransition]=useTransition()
+ const formRef=useRef<HTMLFormElement>(null)
+ const router=useRouter()
+ // Private to this account and browser TAB. Do not store image bytes or upload any unsaved draft.
+ const storageKey='2tbr:product-draft:v1:'+userId
  const fields=['variety','origin','processing','ingredients','storage','package_kind','net_quantity']
- return <form action={createProductWithSeo} className="card product-create-wizard min-w-0 p-4 sm:p-5" id="guided-create-product">
+ function saveDraft(nextStep=step){
+  const form=formRef.current
+  if(!form)return
+  const values:Record<string,string|boolean>={}
+  for(const element of Array.from(form.elements)){
+   if(!(element instanceof HTMLInputElement||element instanceof HTMLTextAreaElement||
+     element instanceof HTMLSelectElement)||!element.name||element.type==='file')continue
+   values[element.name]=element instanceof HTMLInputElement&&element.type==='checkbox'
+     ?element.checked:element.value
+  }
+  const hadImage=Boolean((form.elements.namedItem('image_file') as HTMLInputElement|null)?.files?.length)
+  try{window.sessionStorage.setItem(storageKey,JSON.stringify({version:1,step:nextStep,values,hadImage} satisfies SavedDraft));setSaved(true)}
+  catch{setSaved(false)}
+ }
+ useEffect(()=>{
+  try{
+   const raw=window.sessionStorage.getItem(storageKey)
+   if(!raw)return
+   const data=JSON.parse(raw) as SavedDraft
+   if(data.version!==1||!data.values||!formRef.current)return
+   for(const [name,val] of Object.entries(data.values)){
+    const element=formRef.current.elements.namedItem(name)
+    if(element instanceof HTMLInputElement||element instanceof HTMLTextAreaElement||
+       element instanceof HTMLSelectElement){
+     if(element instanceof HTMLInputElement&&element.type==='checkbox')element.checked=val===true
+     else if(element.type!=='file')element.value=String(val)
+    }
+   }
+   const brand=formRef.current.elements.namedItem('brand_type')
+   if(brand instanceof HTMLSelectElement)setKind(brand.value)
+   setStep(Math.min(5,Math.max(0,Number(data.step)||0)))
+   setNeedsFile(Boolean(data.hadImage))
+   setSaved(true);setRestored(true)
+  }catch{
+   // Damaged tab draft must never block a new product.
+  }
+ },[storageKey])
+ function goToStep(i:number){const next=Math.min(5,Math.max(0,i));saveDraft(next);setStep(next);setIssue(null);setSuccess('')}
+ function newProduct(){
+  if(!window.confirm('Start a new product? This will clear the unfinished draft saved in this tab.'))return
+  window.sessionStorage.removeItem(storageKey)
+  formRef.current?.reset()
+  setStep(0);setKind('UNBRANDED_LOOSE');setIssue(null);setSuccess('')
+  setSaved(false);setRestored(false);setNeedsFile(false)
+ }
+ function handleSubmit(event:FormEvent<HTMLFormElement>){
+  if(event.defaultPrevented||pending)return
+  event.preventDefault()
+  const form=formRef.current
+  if(!form)return
+  saveDraft(5)
+  setIssue(null);setSuccess('')
+  const formData=new FormData(form)
+  startTransition(async()=>{
+   try{
+    const result=await createProductWithSeo(formData)
+    if(!result.ok){
+     setIssue({message:result.message,field:result.field,step:result.step})
+     const next=result.step??5
+     setStep(next);saveDraft(next)
+     if(result.field)window.requestAnimationFrame(()=>{
+      const field=formRef.current?.elements.namedItem(result.field!)
+      if(field instanceof HTMLElement){field.focus();field.scrollIntoView({block:'center',behavior:'smooth'})}
+     })
+     return
+    }
+    window.sessionStorage.removeItem(storageKey)
+    form.reset();setSaved(false);setRestored(false);setNeedsFile(false)
+    setKind('UNBRANDED_LOOSE');setStep(0);setIssue(null);setSuccess(result.message)
+    router.refresh()
+   }catch{
+    setIssue({message:'Connection interrupted. Your product information remains in this tab; check your connection and retry.',step:5})
+    setStep(5)
+   }
+  })
+ }
+ return <form ref={formRef} onSubmit={handleSubmit} onInput={()=>saveDraft()} onChange={()=>saveDraft()}
+  className="card product-create-wizard min-w-0 p-4 sm:p-5" id="guided-create-product">
   <div className="product-wizard-heading mb-4 flex flex-wrap items-start justify-between gap-3">
    <div><span className="product-wizard-eyebrow">Product catalog</span><h2 className="section-title">Create product</h2>
     <p className="muted mt-1 text-sm">One guided form · Product details, verified facts and bilingual SEO draft.</p></div>
    <span className="product-wizard-counter" aria-live="polite">Step {step+1} of 6</span>
   </div>
+  <div className="mb-4 flex flex-wrap items-center gap-3 text-xs">
+    <span role="status" className="font-semibold text-teal-800 dark:text-teal-200">
+      {saved?'Draft saved in this browser tab — not published':'Draft is kept while this form is open'}
+    </span>
+    {saved&&<button type="button" className="underline underline-offset-2" onClick={newProduct}>
+      Clear draft / New product
+    </button>}
+  </div>
+  {restored&&<p role="status" className="mb-3 rounded-lg border border-teal-300 p-3 text-sm">
+    Your unfinished product information was recovered from this browser tab.
+    {needsFile?' Please reselect the product image; browsers do not restore selected files.':''}
+  </p>}
+  {issue&&<div role="alert" className="mb-4 rounded-xl border border-red-400 bg-red-50 p-4 text-sm text-red-900">
+    <strong>Product not saved. All your entries are preserved.</strong>
+    <p className="mt-1">{issue.message}</p>
+    {typeof issue.step==='number'&&<button type="button" className="mt-2 underline underline-offset-2"
+      onClick={()=>goToStep(issue.step!)}>Go to Step {issue.step+1}</button>}
+  </div>}
+  {success&&<div role="status" className="mb-4 rounded-xl border border-teal-400 bg-teal-50 p-4 text-sm text-teal-900">{success}</div>}
   <nav aria-label="Product creation steps" className="product-wizard-steps mb-5">
-    {tabs.map(([n,label],i)=><button key={n} type="button" onClick={()=>setStep(i)}
+    {tabs.map(([n,label],i)=><button key={n} type="button" onClick={()=>goToStep(i)}
       aria-current={step===i?'step':undefined}
       aria-label={i===0 ? 'Step 1: Product & SKU' : `Step ${n}: ${label}`}
       className={'product-wizard-step'+(step===i?' is-current':'')}>
@@ -129,12 +239,12 @@ export function AdminProductCreateWizard(){
     <strong>One save creates the product and its SEO draft together.</strong>
     <p className="mt-2">No stock, purchase, offer, financial transaction or public SEO page will be published by this action. A different Super Admin must approve publication after verification.</p>
    </div>
-   <SubmitButton className="btn-primary mt-4 w-full sm:w-auto">Create product &amp; save SEO draft</SubmitButton>
+   <button type="submit" disabled={pending} className="btn-primary mt-4 w-full sm:w-auto">{pending?"Saving product…":"Create product & save SEO draft"}</button>
   </section>
   <div className="product-wizard-footer mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
-    <button type="button" className="btn-secondary" disabled={step===0} onClick={()=>setStep(s=>Math.max(0,s-1))}>← Back</button>
-    <span className="muted text-sm">You may revisit each step. Fields stay filled.</span>
-    {step<5&&<button type="button" className="btn-primary" onClick={()=>setStep(s=>Math.min(5,s+1))}>Next step →</button>}
+    <button type="button" className="btn-secondary" disabled={step===0} onClick={()=>goToStep(step-1)}>← Back</button>
+    <span className="muted text-sm">Entries remain on validation errors and are saved within this tab.</span>
+    {step<5&&<button type="button" className="btn-primary" onClick={()=>goToStep(step+1)}>Next step →</button>}
   </div>
  </form>
 }
