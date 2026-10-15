@@ -23,7 +23,8 @@ test('all admin product types use the shared optimized file input instead of an 
     assert.doesNotMatch(page,/type="url" name="image_url"/)
     assert.match(page,/ProductImage/)
   }
-  assert.match(input,/name="image_file"/)
+  assert.match(input,/inputName=\x27image_file\x27/)
+  assert.match(input,/name=\{inputName\}/)
   assert.match(input,/image\/jpeg,image\/png,image\/webp/)
   assert.match(input,/TARGET_BYTES=850\*1024/)
   assert.match(input,/createImageBitmap/)
