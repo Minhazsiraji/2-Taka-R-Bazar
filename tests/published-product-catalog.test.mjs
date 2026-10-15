@@ -1,0 +1,67 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8')
+const home=read('app/page.tsx'),market=read('components/public-marketplace.tsx')
+const section=read('components/published-products-section.tsx')
+const feed=read('lib/published-product-catalog-feed.ts')
+const helper=read('lib/published-product-catalog.ts')
+const route=read('app/api/published-products/route.ts')
+const sql=read('supabase/migrations/20261014164248_product_seo_content_issue80.sql')
+
+test('home fetches dynamic approved published products independently of local offers',()=>{
+ assert.match(home,/export const dynamic='force-dynamic'/)
+ assert.match(home,/loadPublishedCatalogPage\(\)/)
+ assert.match(home,/publishedProducts=\{publishedProducts\}/)
+ assert.match(market,/PublishedProductsSection initial=\{publishedProducts\} language=\{language\}/)
+ assert.ok(market.indexOf('<PublishedProductsSection')>market.indexOf('id="deals"'))
+ assert.ok(market.indexOf('<PublishedProductsSection')<market.indexOf('id="exclusive-products"'))
+ assert.match(market,/<FeaturedProductsCarousel products=\{featured\}/)
+ assert.match(market,/<PublicFooter storefront language=\{language\}\/>/)
+})
+
+test('catalog source is an already gated public read model, not private tables',()=>{
+ assert.match(feed,/supabase\/server/)
+ assert.match(feed,/rpc\('get_public_product_seo'/)
+ assert.match(feed,/p_slug:null/)
+ assert.match(feed,/p_limit:CATALOG_PAGE_SIZE\+1/)
+ assert.match(feed,/p_offset:offset/)
+ assert.match(feed,/publicShowcaseImageUrl/)
+ assert.match(sql,/c\.status='published' and p\.active and not p\.is_demo/)
+ assert.doesNotMatch(feed,/\.from\('products'\)|\.from\('product_seo_content'\)|service_role/i)
+ assert.match(route,/Cache-Control':'no-store'/)
+ assert.match(route,/Invalid catalog offset/)
+ assert.match(route,/nextUrl\.searchParams\.get\('offset'\)/)
+ assert.match(helper,/const CATALOG_PAGE_SIZE=12/)
+ assert.doesNotMatch(helper,/(verification_notes|supplier_id|reviewed_by|unit_price|cost_price|payment)/i)
+})
+
+test('product cards show bilingual detail links, true photo and price-pending, but not purchase actions',()=>{
+ assert.match(section,/<section id="published-products"/)
+ assert.match(section,/All Products','সব পণ্য'/)
+ assert.match(section,/PublishedPhoto item=\{item\} alt=\{alt\}/)
+ assert.match(section,/item\.image_url&&!broken/)
+ assert.match(section,/onError=\{\(\)=>setBroken\(true\)\}/)
+ assert.match(section,/language==='bn'\?'\/bn':'\'/)
+ assert.match(section,/href=\{href\}/)
+ assert.match(section,/item\.title_en,item\.title_bn/)
+ assert.match(section,/item\.alt_en,item\.alt_bn/)
+ assert.match(section,/Price pending','মূল্য শীঘ্রই'/)
+ assert.match(section,/View Details','বিস্তারিত দেখুন'/)
+ assert.match(section,/Show more products','আরও পণ্য দেখুন'/)
+ assert.match(section,/lg:grid-cols-3/)
+ assert.match(section,/Loading products/)
+ assert.doesNotMatch(section,/setCommerceCartItem|action=\{|\/cart|Buy Alone|Add to cart|Join Pool/i)
+ assert.doesNotMatch(section,/DEMO \/|Sample prices|Fake savings/)
+})
+
+test('catalog only transfers publicly safe fields and paginates without dropping the sentinel',()=>{
+ assert.match(feed,/data\.slice\(0,CATALOG_PAGE_SIZE\)/)
+ assert.match(feed,/hasMore:data\.length>CATALOG_PAGE_SIZE/)
+ assert.match(feed,/nextOffset:offset\+CATALOG_PAGE_SIZE/)
+ assert.match(section,/nextOffset\+CATALOG_PAGE_SIZE/)
+ assert.match(section,/new Set\(current\.map\(item=>item\.product_id\)\)/)
+ assert.match(helper,/slug\.length>120/)
+ assert.match(helper,/title_en,title_bn/)
+ assert.doesNotMatch(feed,/\.map\(.*supplier|review_notes|verified_at|published_at/)
+});
