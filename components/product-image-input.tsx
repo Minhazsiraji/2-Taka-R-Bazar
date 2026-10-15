@@ -62,13 +62,14 @@ function detectContentCrop(bitmap:ImageBitmap):Crop{
   return {x,y,width:Math.max(1,right-x),height:Math.max(1,bottom-y),trimmed:true}
 }
 
-async function optimizeImage(file:File,targetBytes=TARGET_BYTES){
+async function optimizeImage(file:File,targetBytes=TARGET_BYTES,preserveFullFrame=false){
   if(!ACCEPTED.has(file.type))throw new Error('Choose a JPEG, PNG or WebP image.')
   if(file.size>SOURCE_MAX_BYTES)throw new Error('Choose an image that is 5 MB or smaller.')
 
   const bitmap=await createImageBitmap(file)
   try{
-    const crop=detectContentCrop(bitmap)
+    // Never trim advertising/poster borders, logos, calls-to-action or disclaimer text.
+    const crop=preserveFullFrame?{x:0,y:0,width:bitmap.width,height:bitmap.height,trimmed:false}:detectContentCrop(bitmap)
     if(file.size<=targetBytes&&!crop.trimmed)return {file,trimmed:false}
 
     let scale=Math.min(1,MAX_EDGE/Math.max(crop.width,crop.height))
@@ -98,7 +99,7 @@ export function ProductImageInput({inputName='image_file',label='Product image',
   const inputRef=useRef<HTMLInputElement>(null)
   const busyRef=useRef(false)
   const [busy,setBusy]=useState(false)
-  const [message,setMessage]=useState('JPEG, PNG or WebP — max 5 MB. Blank outer margins are trimmed and large photos are optimized automatically.')
+  const [message,setMessage]=useState(supplementary?'Optional JPEG, PNG or WebP (max 5 MB source). Optimized without trimming poster/design edges.':'JPEG, PNG or WebP — max 5 MB. Blank outer margins are trimmed and large photos are optimized automatically.')
   const [error,setError]=useState('')
 
   useEffect(()=>{
@@ -115,7 +116,7 @@ export function ProductImageInput({inputName='image_file',label='Product image',
     if(!input||!source)return
     busyRef.current=true;setBusy(true);setError('')
     try{
-      const result=await optimizeImage(source,supplementary?MEDIA_TARGET_BYTES:TARGET_BYTES)
+      const result=await optimizeImage(source,supplementary?MEDIA_TARGET_BYTES:TARGET_BYTES,supplementary)
       const dt=new DataTransfer();dt.items.add(result.file);input.files=dt.files
       const size=Math.max(1,Math.round(result.file.size/1024))
       setMessage(result.trimmed?`Ready · blank margins trimmed · ${size} KB.`:(result.file.size<source.size?`Ready · optimized to ${size} KB for faster mobile upload.`:'Ready to upload.'))
