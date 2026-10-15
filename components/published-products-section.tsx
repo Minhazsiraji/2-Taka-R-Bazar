@@ -6,14 +6,14 @@ import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
 import {CATALOG_PAGE_SIZE,type PublishedCatalogPage,type PublishedCatalogProduct} from '@/lib/published-product-catalog'
 
-function PublishedPhoto({item,alt}:{item:PublishedCatalogProduct;alt:string}){
+function PublishedPhoto({item,alt,href}:{item:PublishedCatalogProduct;alt:string;href:string}){
  const [broken,setBroken]=useState(false)
- return <div className="market-product-image relative flex h-48 items-center justify-center overflow-hidden rounded-2xl bg-white/30">
+ return <Link href={href} className="market-product-image relative flex h-48 items-center justify-center overflow-hidden rounded-2xl bg-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600" aria-label={"View details: "+alt}>
   {item.image_url&&!broken?
    <img src={item.image_url} alt={alt} className="h-full w-full object-contain" loading="lazy"
     onError={()=>setBroken(true)}/>:
    <p className="px-3 text-center text-sm text-slate-500" role="status">Photo unavailable / ছবি পাওয়া যায়নি</p>}
- </div>
+ </Link>
 }
 
 export function PublishedProductsSection({initial,language}:{initial:PublishedCatalogPage;language:MarketplaceLanguage}){
@@ -64,17 +64,14 @@ export function PublishedProductsSection({initial,language}:{initial:PublishedCa
       const href=(language==='bn'?'/bn':'')+'/p/'+item.slug
       return <article key={item.product_id} data-testid="published-product-card"
        className="market-product-card flex min-w-0 flex-col rounded-3xl border border-black/10 bg-white p-4">
-       <Link href={href} className="block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"
-        aria-label={t('View details for ','বিস্তারিত দেখুন: ')+title}>
-        <PublishedPhoto item={item} alt={alt}/>
-       </Link>
+       <PublishedPhoto item={item} alt={alt} href={href}/>
        <h3 className="market-product-title mt-3 line-clamp-2 text-lg font-black">
         <Link href={href}>{title}</Link>
        </h3>
-       <p className="mt-1 text-xs text-slate-500">{[item.category,item.package_size].filter(Boolean).join(' · ')}</p>
+       <p className="market-product-meta mt-1 text-xs text-slate-500">{[item.category,item.package_size].filter(Boolean).join(' · ')}</p>
        {(language==='bn'?item.short_bn:item.short_en)&&
-        <p className="mt-2 line-clamp-2 text-sm text-slate-600">{language==='bn'?item.short_bn:item.short_en}</p>}
-       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-4">
+        <p className="market-product-community mt-2 line-clamp-2 text-sm text-slate-600">{language==='bn'?item.short_bn:item.short_en}</p>}
+       <div className="market-product-actions mt-auto flex flex-wrap items-center justify-between gap-2 pt-4">
         <span className="rounded-xl border border-teal-200/80 px-3 py-2 text-sm font-semibold text-teal-700">{t('Price pending','মূল্য শীঘ্রই')}</span>
         <Link href={href} className="btn-secondary text-sm">{t('View Details','বিস্তারিত দেখুন')} →</Link>
        </div>
