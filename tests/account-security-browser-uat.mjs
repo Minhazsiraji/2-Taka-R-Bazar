@@ -356,18 +356,19 @@ try {
       const buttons=[...nav.querySelectorAll('button')]
       return {
         screenOverflow:document.documentElement.scrollWidth>window.innerWidth+1,
-        invalid:buttons.some(button=>{
+        invalid:buttons.flatMap(button=>{
           const rect=button.getBoundingClientRect()
           const label=button.querySelector('.product-wizard-step-label')
-          return rect.left<navRect.left-2 || rect.right>navRect.right+2
+          const bad=rect.left<navRect.left-2 || rect.right>navRect.right+2
             || (label && label.scrollWidth>label.clientWidth+1)
             || (label && window.getComputedStyle(label).whiteSpace!=='nowrap')
+          return bad?[{label:label?.textContent,button:Math.round(rect.width),text:label?.scrollWidth}]:[]
         }),
         rowCount:new Set(buttons.map(button=>Math.round(button.getBoundingClientRect().top))).size
       }
     })
     assert.equal(geometry.screenOverflow,false,'Product Management must not overflow viewport at '+width)
-    assert.equal(geometry.invalid,false,'All six compact step labels must fit their pill at '+width)
+    assert.deepEqual(geometry.invalid,[],'All six compact step labels must fit their pill at '+width)
     assert.ok(geometry.rowCount<=3,'No more than three compact step rows at '+width)
     if(width===393||width===1440)await staff.screenshot({path:'/tmp/2tbr-product-admin-steps-'+width+'.png',fullPage:false})
   }
