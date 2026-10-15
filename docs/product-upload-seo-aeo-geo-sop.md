@@ -1,35 +1,41 @@
 # Product Upload SOP — SEO, AEO & GEO
-Version: 1.1 · Product Line · 2-TAKA-R-BAZAR · Issue #84
+Version: 1.2 · Product Line · 2-TAKA-R-BAZAR · Issue #84
 **Official slogans (unchanged):** “Smart shopping. Real savings!” / “একসাথে কিনি, কম দামে পাই!”
 
 > **Meaning of “100%”:** all applicable, verifiable content + technical checks pass before publication. Completing these checks cannot guarantee Google rankings, AI answers/citations, merchant eligibility or sales.
 
-## Start here — exact live workflow
+## Start here — one guided Create Product form
 1. Open https://2takarbazar.com/admin/products with an authorized Admin or Super Admin account.
-2. Create or find the **existing Product master**. This controls Name, Brand, Category, Package size, Unit, SKU and **primary product image**. The actual SKU must uniquely identify the sellable variant. Do not overwrite historic SKU/order details.
-3. Expand that product's **“SEO / AEO / GEO product content”** editor below the existing product fields. Choose **Brand type**, add a unique lowercase **SEO URL slug**, EN/BN product names, specifications, content, optional FAQs/media, and internal verification notes.
-4. **Save SEO draft**. This always returns edited content to Draft, including edits to a published entry; no buying/stock/Finance changes are made.
-5. Complete the readiness checks and **Submit for independent review**. The database blocks submission if the item is inactive/demo, has no genuine master image, or is missing required bilingual detail/evidence.
-6. A **different Super Admin** must review and add a note (10+ characters) before publishing. The person who edited cannot approve their own submission. Rejection returns content to Draft. Authorized users may Unlist with a recorded reason (10+ characters).
-7. Check the published EN and BN product pages, schema, sitemap and SEO metadata. Public publication **does not** enable Production checkout.
+2. Select **Create product — one guided form**. All six steps belong to **one form**:
+   - **Step 1**: Actual master product, SKU, quantity, brand classification and genuine master photo.
+   - **Step 2**: Verified specifications and supplier facts (unknown facts remain blank).
+   - **Step 3**: EN/BN product names, descriptions and SEO metadata.
+   - **Step 4**: Optional bilingual questions/answers and private verification evidence.
+   - **Step 5**: Primary photo alt text and optional verified gallery/marketing URLs.
+   - **Step 6**: Final review and **Create product & save SEO draft**.
+3. The single creation action writes the master and SEO draft **atomically**. If either fails, no incomplete master/draft is committed. Uploaded files are removed on failure where possible. No price, Pool, cart, procurement or Finance transaction is created. **Production checkout remains disabled** until separately authorized.
+4. For **existing** products, expand the product card and use the existing SEO editor separately; the two-stage workflow remains supported for edits and maintenance, but is no longer required for new product creation. Editing an existing product's SEO **always returns edited content to Draft**; it needs renewed independent review before publication.
+5. Complete required publication information and **Submit for independent review**. A **different Super Admin** must approve and note the reason (10+ characters) before publication. Draft, review and published content do not enable purchases.
+6. A Super Admin may permanently **Delete unused product** only if it has no business FK records and no prior publication or review history; they must confirm the exact SKU and enter a reason. Any sold, offered, inventoried, procured, supplier-linked, Pool/Group Deal or previously published item can **Archive / deactivate**, not hard delete. Archive keeps identifiers and financial/order history.
+7. Verify published EN/BN canonical pages, accessible content and sitemap.
 
 ### Current UI field map (do not confuse fields that are not in the admin)
 | UI field | Where | Rule / actual limit |
 |---|---|---|
-| Product Name, Brand, Category, Package size, Unit, SKU | Existing Create/Edit product panel | Use actual goods; for loose unbranded rice Brand may remain blank; Unit=kg and Package size=1 kg describe the selling measure, **not** a sealed manufacturer bag |
+| Product Name, Brand, Category, Package size, Unit, SKU | Guided Create step 1 / Existing Edit product panel | Use actual goods; for loose unbranded rice Brand may remain blank; Unit=kg and Package size=1 kg describe the selling measure, **not** a sealed manufacturer bag |
 | Primary image | Existing Product image upload | Genuine photo of actual goods; JPEG/PNG/WebP, current form max 5 MB; campaign posters belong elsewhere |
-| Brand type | SEO editor → Identity | UNBRANDED_LOOSE / SUPPLIER_BRAND / 2TBR_PRIVATE_LABEL. Own-label requires confirmed 2TBR branding/packaging and corresponding master |
+| Brand type | Guided Create step 1 or existing SEO editor → Identity | UNBRANDED_LOOSE / SUPPLIER_BRAND / 2TBR_PRIVATE_LABEL. Own-label requires confirmed 2TBR branding/packaging and corresponding master |
 | SEO URL slug | SEO editor → Identity | Lowercase `a-z`, `0-9` and hyphens only, max 120 characters; never recycle an old product's alias |
 | English/Bangla titles | SEO editor → Identity | Each 3–180 characters; both languages are required |
 | Short EN/BN summary | SEO editor → Identity | Up to 320 characters each |
-| Variety, origin, processing, ingredients, storage, package kind, net quantity | SEO editor → Specifications | Only known verified facts; each value up to 500 characters. Unknown attributes remain blank |
-| Full EN/BN descriptions | SEO editor → SEO | Up to 8,000 characters each; must be at least 40 EN / 20 BN characters **at submission** |
+| Variety, origin, processing, ingredients, storage, package kind, net quantity | Guided Create step 2 or existing SEO editor → Specifications | Only known verified facts; each value up to 500 characters. Unknown attributes remain blank |
+| Full EN/BN descriptions | Guided Create step 3 or existing SEO editor → SEO | Up to 8,000 characters each; must be at least 40 EN / 20 BN characters **at submission** |
 | Meta title EN/BN | SEO editor → SEO | Up to 110 characters each; at least 10 each **at submission**. Prioritize clarity over artificial character scores |
 | Meta description EN/BN | SEO editor → SEO | Up to 320 characters each; at least 30 EN / 20 BN **at submission** |
 | Actual primary image alt EN/BN | SEO editor → SEO | Up to 200 characters each; at least 5 characters each **at submission**; describe what is pictured, not a keyword list |
-| FAQs | SEO editor → “Bilingual customer questions (AEO)” | Optional: 0–8 **complete pairs** of EN/BN question+answer; question length 5–300, answer length 5–1,200 in each language |
-| Gallery 1–6 / Marketing 1–6 | SEO editor → “Additional media” | Optional approved HTTPS image URL + alt EN/BN for each image; max 12 images combined; each alt 3–200 characters. Actual-item gallery is separate from campaign posters |
-| Internal verification notes | SEO editor → “GEO verification and publication” | Max 3,000 characters; **at least 10 at submission**. References/notes remain private and should not include passwords or unnecessary personal data |
+| FAQs | Guided Create step 4 or existing SEO editor → “Bilingual customer questions (AEO)” | Optional: 0–8 **complete pairs** of EN/BN question+answer; question length 5–300, answer length 5–1,200 in each language |
+| Gallery 1–6 / Marketing 1–6 | Guided Create step 5 or existing SEO editor → “Additional media” | Optional approved HTTPS image URL + alt EN/BN for each image; max 12 images combined; each alt 3–200 characters. Actual-item gallery is separate from campaign posters |
+| Internal verification notes | Guided Create step 4 or existing SEO editor → “GEO verification and publication” | Max 3,000 characters; **at least 10 at submission**. References/notes remain private and should not include passwords or unnecessary personal data |
 | Expected version | Hidden revision field | Automatic. If another editor has saved, reload; do not overwrite their changes |
 
 ## Example — brown rice loose by weight (verify before using)

@@ -4,7 +4,9 @@ import { ProductImage } from '@/components/product-image'
 import { ProductImageInput } from '@/components/product-image-input'
 import { SubmitButton } from '@/components/submit-button'
 import { AdminProductSeoEditor } from '@/components/admin-product-seo-editor'
-import { createProductWithImage as createProduct, updateProductWithImage as updateProduct } from '@/app/actions/product-images'
+import { AdminProductCreateWizard } from '@/components/admin-product-create-wizard'
+import { AdminProductLifecycle } from '@/components/admin-product-lifecycle'
+import { updateProductWithImage as updateProduct } from '@/app/actions/product-images'
 import { requireAdmin } from '@/lib/auth'
 
 export const dynamic='force-dynamic'
@@ -30,6 +32,14 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
     supabase.from('product_seo_media').select('*'),
   ])
   const rows=productRes.data??[]
+  const canDelete=roles.has('super_admin')
+  const eligibilityResults=canDelete?await Promise.all(rows.map((r:any)=>
+    supabase.rpc('admin_product_delete_check',{p_product_id:r.id}))) : []
+  const eligibilityByProduct=new Map<string,any>()
+  if(canDelete)rows.forEach((r:any,i:number)=>{
+    const result=eligibilityResults[i]
+    eligibilityByProduct.set(r.id,!result?.error&&result?.data?result.data:{eligible:false,blockers:['Unable to confirm unused status']})
+  })
   const seoByProduct=new Map((seoRes.data??[]).map((r:any)=>[r.product_id,r]))
   const faqByProduct=new Map<string,any[]>(),mediaByProduct=new Map<string,any[]>()
   for(const r of faqRes.data??[])faqByProduct.set(r.product_id,[...(faqByProduct.get(r.product_id)??[]),r])
@@ -38,12 +48,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
     <section><div className="card-title">Catalog</div><h1 className="text-2xl font-black sm:text-3xl">Products</h1><p className="muted mt-1">Each product has one master image. The same image follows the product into Pool, order and savings views.</p><p className="mt-2 text-sm"><a className="font-semibold text-teal-700 underline underline-offset-2" href="/docs/product-upload-guide.html" target="_blank" rel="noopener noreferrer" aria-label="Open Product Upload SEO AEO GEO guide and printable PDF instructions">Product Upload Guide (SEO / AEO / GEO) — View, Print or Save as PDF ↗</a></p></section>
     <Flash {...sp}/>
 
-    <form action={createProduct} className="card grid min-w-0 gap-4 p-4 sm:p-5 md:grid-cols-2">
-      <div className="md:col-span-2"><h2 className="section-title">Create product</h2><p className="muted mt-1 text-sm">Upload the genuine product pack/image once. Large phone photos are optimized before upload for faster mobile use.</p></div>
-      <ProductFields/>
-      <label className="flex items-center gap-2"><input type="checkbox" name="is_demo"/><span>Demo/test product</span></label>
-      <SubmitButton className="md:w-fit">Create product</SubmitButton>
-    </form>
+    <AdminProductCreateWizard/>
 
     <section className="grid gap-3">
       {(rows??[]).map((r:any)=><details className="card min-w-0 p-0" key={r.id}>
@@ -66,10 +71,11 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
             </form>
           </div>
           <AdminProductSeoEditor product={r} seo={seoByProduct.get(r.id)} faqs={faqByProduct.get(r.id)??[]} media={mediaByProduct.get(r.id)??[]} canReview={roles.has('super_admin')} currentUser={user.id}/>
+          {canDelete&&<AdminProductLifecycle product={r} eligibility={eligibilityByProduct.get(r.id)}/>}
         </div>
       </details>)}
       {!(rows??[]).length&&<div className="card muted">No products yet.</div>}
     </section>
-    <p className="muted">Products with historical orders are deactivated rather than hard-deleted.</p>
+    <p className="muted">Only never-used products can be deleted by a Super Admin. Products with sales, Pools, procurements, inventory, supplier links or publication history can only be archived.</p>
   </div></AdminShell>
 }
