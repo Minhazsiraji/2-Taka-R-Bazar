@@ -441,6 +441,8 @@ try {
   await productForm.locator('input[name="marketing_alt_bn_1"]').fill('পণ্যের পরীক্ষামূলক প্রচারমূলক ছবি')
   await productSteps.getByRole('button',{name:'Step 6: Review'}).click()
   await productForm.getByRole('button',{name:'Create product & save SEO draft'}).click()
+  await staff.waitForTimeout(1200)
+  console.log('Optional media upload diagnostics',await productForm.locator('[role="alert"]').allTextContents(),await productForm.locator('[role="status"]').allTextContents())
   await productForm.getByRole('status').getByText(/Product and bilingual SEO draft saved/).waitFor({timeout:25000})
   const {data:createdMaster,error:masterLookupError}=await admin.from('products').select('id').eq('sku',draftSku).single()
   assert.equal(masterLookupError,null)
