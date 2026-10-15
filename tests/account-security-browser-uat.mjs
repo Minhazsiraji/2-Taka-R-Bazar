@@ -453,6 +453,52 @@ try {
   assert.equal(await staff.evaluate(()=>Object.keys(sessionStorage).filter(k=>k.startsWith('2tbr:product-draft:v1:')).length),0)
   console.log('Product wizard failed-save retention, refresh recovery and successful retry PASS.')
 
+  // Issue #94: actual product SEO browser form must save fresh text BEFORE review, with
+  // explicit blockers and browser-tab recovery. This is synthetic disposable DB only.
+  const productCard=staff.locator('details.card').filter({hasText:'Synthetic draft recovery ghee'})
+  await productCard.locator(':scope > summary').click()
+  const seoEditor=productCard.locator('form:has(input[name="expected_version"])')
+  const evidenceNote='Synthetic independent-review evidence recorded in disposable CI only.'
+  await seoEditor.locator('textarea[name="verification_notes"]').fill(evidenceNote)
+  await staff.reload({waitUntil:'domcontentloaded'})
+  const restoredCard=staff.locator('details.card').filter({hasText:'Synthetic draft recovery ghee'})
+  await restoredCard.locator(':scope > summary').click()
+  const restoredEditor=restoredCard.locator('form:has(input[name="expected_version"])')
+  await restoredCard.getByText('Unfinished edits recovered from this browser tab.').waitFor({timeout:15000})
+  assert.equal(await restoredEditor.locator('textarea[name="verification_notes"]').inputValue(),evidenceNote,
+   'Existing product SEO notes should recover after refresh')
+  await restoredEditor.locator('input[name="meta_title_en"]').fill('Synthetic 1 kg ghee - SEO test')
+  await restoredEditor.locator('input[name="meta_title_bn"]').fill('পরীক্ষামূলক ঘি এক কেজি')
+  await restoredEditor.locator('textarea[name="meta_description_en"]').fill('Synthetic ghee SEO meta description for an isolated product review save test only.')
+  await restoredEditor.locator('textarea[name="meta_description_bn"]').fill('এটি শুধুমাত্র বিচ্ছিন্ন পরীক্ষার জন্য ঘি পণ্যের মেটা বিবরণ।')
+  await restoredEditor.locator('input[name="alt_en"]').fill('Synthetic ghee photo for test')
+  await restoredEditor.locator('input[name="alt_bn"]').fill('ঘি পণ্যের পরীক্ষার ছবি')
+  // Open the collapsed optional Media section before editing its URL like a real admin.
+  await restoredEditor.locator('summary').filter({hasText:'5 · Additional media'}).click()
+  // Replace the CI-only localhost image reference with an approved HTTPS image source.
+  await restoredEditor.locator('input[name="marketing_url_1"]').fill('https://res.cloudinary.com/demo/image/upload/sample.jpg')
+  await restoredEditor.getByRole('button',{name:'Save & submit for independent review'}).click()
+  await restoredCard.getByRole('alert').filter({hasText:'Your changes were SAVED as a draft'}).waitFor({timeout:25000})
+  assert.match(await restoredCard.getByRole('alert').last().textContent()??'',/Demo\/test product cannot be published/)
+  assert.match(await restoredCard.getByRole('alert').last().textContent()??'',/Upload a genuine master product image/)
+  assert.equal(new URL(staff.url()).pathname,'/admin/products','validation cannot navigate away from edits')
+  const {data:noteSaved,error:noteError}=await admin.from('product_seo_content').select('verification_notes,status,version').eq('product_id',createdMaster.id).single()
+  assert.equal(noteError,null)
+  assert.equal(noteSaved.verification_notes,evidenceNote,'New evidence must save BEFORE review gating')
+  assert.equal(noteSaved.status,'draft','Blocked review must remain Draft')
+  assert.ok(noteSaved.version>=2,'Draft version must increment')
+  const {error:fixtureUpdateError}=await admin.from('products').update({
+   is_demo:false,image_url:'https://res.cloudinary.com/demo/image/upload/sample.jpg'
+  }).eq('id',createdMaster.id)
+  assert.equal(fixtureUpdateError,null,'Only the disposable synthetic fixture can be made review-eligible')
+  await restoredEditor.getByRole('button',{name:'Save & submit for independent review'}).click()
+  await restoredCard.getByRole('status').filter({hasText:'Product details saved and submitted for independent review'}).waitFor({timeout:25000})
+  const {data:reviewedDraft,error:reviewReadError}=await admin.from('product_seo_content').select('status,verification_notes').eq('product_id',createdMaster.id).single()
+  assert.equal(reviewReadError,null)
+  assert.equal(reviewedDraft.status,'review')
+  assert.equal(reviewedDraft.verification_notes,evidenceNote)
+  console.log('Issue 94 SEO edit refresh recovery -> failed review saves notes + exact reasons -> eligible review submission PASS.')
+
   await staff.goto('http://127.0.0.1:3000/admin/notifications',{waitUntil:'domcontentloaded'})
   await staff.getByRole('heading',{name:'Notification center',exact:true}).waitFor()
   const title='Synthetic live customer update'
