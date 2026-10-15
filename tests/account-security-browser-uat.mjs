@@ -430,8 +430,13 @@ try {
   await productForm.locator('input[name="marketing_alt_en_1"]').fill('')
   await productForm.locator('input[name="marketing_alt_bn_1"]').fill('')
   // Optional PC gallery or Marketing upload requires no approved HTTPS URL.
-  const pcImagePng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==','base64')
+  const pcImagePng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEElEQVR4nGP8zwAFTAyYLAAdWwEFNX6VDAAAAABJRU5ErkJggg==','base64')
   await productForm.locator('input[name="marketing_file_1"]').setInputFiles({name:'test-marketing.png',mimeType:'image/png',buffer:pcImagePng})
+  await staff.waitForFunction(()=>{
+    const input=document.querySelector('#guided-create-product input[name="marketing_file_1"]')
+    const field=input?.closest('label')
+    return input?.files?.length===1 && !(field?.textContent||'').includes('Image preparation failed')
+  },null,{timeout:10000})
   await productForm.locator('input[name="marketing_alt_en_1"]').fill('Synthetic test marketing photo for this product')
   await productForm.locator('input[name="marketing_alt_bn_1"]').fill('পণ্যের পরীক্ষামূলক প্রচারমূলক ছবি')
   await productSteps.getByRole('button',{name:'Step 6: Review'}).click()
