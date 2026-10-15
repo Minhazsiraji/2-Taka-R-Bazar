@@ -23,7 +23,7 @@ test('server-side product creation returns errors instead of redirecting',()=>{
  assert.doesNotMatch(create,/\bfail\(/)
  assert.doesNotMatch(create,/\bdone\(/)
  assert.doesNotMatch(create,/\bredirect\(/)
- assert.match(server,/if\(!url&&!alt_en&&!alt_bn\)continue/)
+ assert.match(server,/if\(!url&&!file&&!alt_en&&!alt_bn\)continue/)
  assert.match(server,/add an approved HTTPS URL or clear both optional alt texts/)
  assert.match(server,/invalid\(.*urlField,4\)/)
 })
