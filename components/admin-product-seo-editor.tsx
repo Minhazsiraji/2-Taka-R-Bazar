@@ -17,7 +17,7 @@ const field=(name:string,title:string,value:string|undefined,opts?:{multiline?:b
  {opts?.multiline?<textarea className="input min-h-24" name={name} defaultValue={value??''} required={opts?.required}/>:
  <input className="input" name={name} defaultValue={value??''} required={opts?.required}/>}
  {opts?.hint&&<span className="muted mt-1 block text-xs">{opts.hint}</span>}</label>
-export function AdminProductSeoEditor({product,seo,faqs,media,canReview,currentUser}:{product:any;seo?:SeoRow;faqs:FAQ[];media:Media[];canReview:boolean;currentUser:string}){
+export function AdminProductSeoEditor({product,seo,faqs,media,canReview,isOwner,currentUser}:{product:any;seo?:SeoRow;faqs:FAQ[];media:Media[];canReview:boolean;isOwner:boolean;currentUser:string}){
  const [pending,startTransition]=useTransition()
  const [feedback,setFeedback]=useState<{ok:boolean;saved:boolean;submitted:boolean;message:string;blockers?:string[];field?:string}|null>(null)
  const [recovered,setRecovered]=useState(false)
@@ -87,7 +87,7 @@ export function AdminProductSeoEditor({product,seo,faqs,media,canReview,currentU
  return <section className="mt-5 border-t border-slate-200 pt-5">
   <div className="flex flex-wrap items-center justify-between gap-2">
    <div><h3 className="text-xl font-bold">SEO / AEO / GEO product content</h3>
-    <p className="muted text-sm">Bilingual facts for search discovery. Edit as draft, then submit for independent publication review.</p></div>
+    <p className="muted text-sm">Bilingual facts for search discovery. Verified Owner content can be published directly; staff changes require independent review.</p></div>
    <span className="chip">{seo?.status??'Not started'}</span>
   </div>
   {seo?.status==='published'&&<a className="mt-2 inline-block underline" href={SITE_URL+'/p/'+seo.slug} target="_blank" rel="noreferrer">View published SEO page ↗</a>}
@@ -157,21 +157,22 @@ export function AdminProductSeoEditor({product,seo,faqs,media,canReview,currentU
    </details>
    <div className="md:col-span-2 font-bold">6 · GEO verification and publication</div>
    {field('verification_notes','Internal supplier facts / claim evidence (never public)',seo?.verification_notes,{multiline:true,hint:'Record exactly how variety, origin, processing, packaging and any nutrition assertions were checked. No medical/organic/chemical-free claims without proof.'})}
-   <p className="muted text-sm md:col-span-2">A review request now saves ALL edits in this form first. Private supplier verification notes must contain at least 10 characters and describe actual evidence; they are never shown to shoppers. A different Super Admin still has to approve publication. Prices, stock, orders and SKU stay unchanged.</p>
+   <p className="muted text-sm md:col-span-2">Saving or publishing validates all edits first. Private supplier verification notes must contain at least 10 characters and describe actual evidence; they are never shown to shoppers. The verified Owner may publish directly; staff changes require a different Super Admin reviewer. Prices, stock, orders and SKU stay unchanged.</p>
    <div className="md:col-span-2 flex flex-wrap gap-3">
     <button className="btn-secondary" type="submit" name="editor_intent" value="save" disabled={pending}>{pending?'Saving…':'Save SEO draft'}</button>
-    <button className="btn-primary" type="submit" name="editor_intent" value="submit" disabled={pending}>{pending?'Working…':'Save & submit for independent review'}</button>
+    <button className="btn-primary" type="submit" name="editor_intent" value="submit" disabled={pending}>{pending?'Working…':(isOwner?'Save & publish now':'Save & submit for independent review')}</button>
    </div>
   </form>
   {seo&&<div className="mt-4 flex flex-col gap-4 rounded-xl border border-slate-200 p-3 sm:flex-row sm:items-start">
-   {seo.status==='draft'&&<p className="text-sm">Use <b>Save & submit for independent review</b> above so your latest edits are included.</p>}
+   {seo.status==='draft'&&<p className="text-sm">Use <b>{isOwner?'Save & publish now':'Save & submit for independent review'}</b> above so your latest edits are included.</p>}
    {seo.status==='review'&&canReview&&seo.edited_by!==currentUser&&<form action={reviewProductSeo} className="flex flex-1 flex-wrap items-end gap-2">
     <input type="hidden" name="product_id" value={product.id}/>
     <label className="flex-1"><span className="label">Independent reviewer note (10+ characters)</span><input className="input" name="note" required minLength={10}/></label>
     <button className="btn-primary" type="submit" name="decision" value="approve">Approve & publish</button>
     <button className="btn-secondary" type="submit" name="decision" value="reject">Reject</button>
    </form>}
-   {seo.status==='review'&&(!canReview||seo.edited_by===currentUser)&&<p className="muted text-sm">Waiting for an independent Super Admin reviewer.</p>}
+   {seo.status==='review'&&isOwner&&seo.edited_by===currentUser&&<p className="muted text-sm">You authored this item as the verified Owner. Choose <b>Save & publish now</b> above; no independent content reviewer is required.</p>}
+   {seo.status==='review'&&(!canReview||seo.edited_by===currentUser)&&!(isOwner&&seo.edited_by===currentUser)&&<p className="muted text-sm">Waiting for an independent Super Admin reviewer.</p>}
    {(seo.status==='published'||seo.status==='review')&&<form action={unlistProductSeo} className="flex flex-1 flex-wrap items-end gap-2">
     <input type="hidden" name="product_id" value={product.id}/>
     <label className="flex-1"><span className="label">Reason to unlist (10+ characters)</span><input className="input" name="reason" required minLength={10}/></label>
