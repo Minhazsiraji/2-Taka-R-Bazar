@@ -34,6 +34,13 @@ function done(s:string):never{
  revalidatePath('/sitemap.xml')
  redirect(path+'?notice='+encodeURIComponent(s))
 }
+type WizardResult={ok:boolean;message:string;field?:string;step?:number}
+class WizardValidationError extends Error{
+ constructor(message:string,public field:string,public step:number){super(message)}
+}
+function invalid(message:string,field:string,step:number):never{
+ throw new WizardValidationError(message,field,step)
+}
 function readContent(fd:FormData){
  const specs=Object.fromEntries(['variety','origin','processing','ingredients','storage','package_kind','net_quantity']
    .map(k=>[k,value(fd,'spec_'+k)]).filter(x=>x[1]))
@@ -41,62 +48,98 @@ function readContent(fd:FormData){
    'description_bn','meta_title_en','meta_title_bn','meta_description_en','meta_description_bn','alt_en',
    'alt_bn','verification_notes','brand_type'].map(k=>[k,value(fd,k)]))
  const parsed=contentSchema.safeParse({...raw,slug:value(fd,'slug').toLowerCase(),specs,expected_version:0})
- if(!parsed.success)fail('Complete the product title in both languages and check all SEO field lengths.')
+ if(!parsed.success){
+  const field=String(parsed.error.issues[0]?.path?.[0]??'slug')
+  const issue=parsed.error.issues[0]?.message??'Enter valid SEO details.'
+  const step=field==='brand_type'?0:field==='specs'?1:field==='verification_notes'?3:
+   field.startsWith('alt_')?4:2
+  invalid('Please check '+field.replaceAll('_',' ')+' — '+issue,field,step)
+ }
  const faqs:{question_en:string;question_bn:string;answer_en:string;answer_bn:string}[]=[]
  for(let i=1;i<=8;i++){
-  const q={question_en:value(fd,'q_en_'+i),question_bn:value(fd,'q_bn_'+i),answer_en:value(fd,'a_en_'+i),answer_bn:value(fd,'a_bn_'+i)}
-  if(Object.values(q).some(Boolean)){
-   if(Math.min(q.question_en.length,q.question_bn.length,q.answer_en.length,q.answer_bn.length)<5||
-    Math.max(q.question_en.length,q.question_bn.length)>300||
-    Math.max(q.answer_en.length,q.answer_bn.length)>1200)fail('Complete both languages for every FAQ you use (max 8).')
+  const fields=['q_en_'+i,'q_bn_'+i,'a_en_'+i,'a_bn_'+i]
+  const q={question_en:value(fd,fields[0]),question_bn:value(fd,fields[1]),
+    answer_en:value(fd,fields[2]),answer_bn:value(fd,fields[3])}
+  const vals=Object.values(q)
+  if(vals.some(Boolean)){
+   if(Math.min(...vals.map(v=>v.length))<5||Math.max(q.question_en.length,q.question_bn.length)>300||
+     Math.max(q.answer_en.length,q.answer_bn.length)>1200){
+     const missing=fields.find((field,j)=>vals[j].length<5)??fields[0]
+     invalid('FAQ '+i+': complete both questions and answers in English and Bangla, or clear the entire FAQ.',missing,3)
+   }
    faqs.push(q)
   }
  }
  const media:{kind:'gallery'|'marketing';url:string;alt_en:string;alt_bn:string}[]=[]
  for(const kind of ['gallery','marketing'] as const){
   for(let i=1;i<=6;i++){
-   const url=value(fd,kind+'_url_'+i),alt_en=value(fd,kind+'_alt_en_'+i),alt_bn=value(fd,kind+'_alt_bn_'+i)
-   if(url||alt_en||alt_bn){
-    if(!publicShowcaseImageUrl(url)||alt_en.length<3||alt_bn.length<3||
-      alt_en.length>200||alt_bn.length>200)fail('Gallery and marketing images require approved HTTPS URLs and bilingual alt text.')
-    media.push({kind,url,alt_en,alt_bn})
-   }
+   const urlField=kind+'_url_'+i,altEnField=kind+'_alt_en_'+i,altBnField=kind+'_alt_bn_'+i
+   const url=value(fd,urlField),alt_en=value(fd,altEnField),alt_bn=value(fd,altBnField)
+   // Entirely empty optional gallery/marketing rows MUST NOT block saving.
+   if(!url&&!alt_en&&!alt_bn)continue
+   if(!url)invalid(kind+' image '+i+': add an approved HTTPS URL or clear both optional alt texts.',urlField,4)
+   if(!publicShowcaseImageUrl(url))invalid(kind+' image '+i+': use an approved HTTPS image URL.',urlField,4)
+   if(alt_en.length<3||alt_en.length>200)invalid(kind+' image '+i+': enter English alt text (3–200 characters).',altEnField,4)
+   if(alt_bn.length<3||alt_bn.length>200)invalid(kind+' image '+i+': enter Bangla alt text (3–200 characters).',altBnField,4)
+   media.push({kind,url,alt_en,alt_bn})
   }
  }
  return {content:{...parsed.data,expected_version:0},faqs,media}
 }
 
-export async function createProductWithSeo(fd:FormData){
+/**
+ * Invoked programmatically from the wizard after preventDefault().
+ * Never redirect on failure: that would unmount the entire six-step form.
+ */
+export async function createProductWithSeo(fd:FormData):Promise<WizardResult>{
  const {supabase,user}=await requireAdmin()
- const master=masterSchema.safeParse(Object.fromEntries(['name','brand','category','package_size','unit','sku'].map(k=>[k,k==='sku'?value(fd,k).toUpperCase():value(fd,k)])))
- if(!master.success)fail('Complete valid master product details, category, SKU and unit.')
- const {content,faqs,media}=readContent(fd)
- if(content.brand_type==='SUPPLIER_BRAND'&&!master.data.brand)fail('Actual supplier brand is required.')
- if(content.brand_type==='UNBRANDED_LOOSE'&&master.data.brand&&!['UNBRANDED','GENERIC'].includes(master.data.brand.toUpperCase()))
-   fail('Leave Brand empty for an unbranded loose product.')
- if(content.brand_type==='2TBR_PRIVATE_LABEL'&&!['2TBR','2-TAKA-R-BAZAR'].includes(master.data.brand.toUpperCase()))
-   fail('Choose 2TBR own brand only for confirmed branded packaging.')
  let objectPath:string|null=null
- let url:string|null=null
- const file=fd.get('image_file')
- if(file instanceof File&&file.size>0){
-  const bytes=new Uint8Array(await file.arrayBuffer())
-  const check=validateProductImage({type:file.type,size:file.size,bytes})
-  if(!check.ok)fail(check.error)
-  objectPath='products/'+user.id+'/'+randomUUID()+'.'+check.extension
-  const uploaded=await supabase.storage.from(PRODUCT_IMAGE_BUCKET).upload(objectPath,bytes,{contentType:file.type,cacheControl:'31536000',upsert:false})
-  if(uploaded.error)fail(uploaded.error.message)
-  url=supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(objectPath).data.publicUrl
- }
- const {error}=await supabase.rpc('admin_create_product_with_seo',{
-  p_master:{...master.data,brand:master.data.brand||null,image_url:url,is_demo:fd.get('is_demo')==='on'},
-  p_content:content,p_faqs:faqs,p_media:media
- })
- if(error){
+ try{
+  const master=masterSchema.safeParse(Object.fromEntries(['name','brand','category','package_size','unit','sku']
+    .map(k=>[k,k==='sku'?value(fd,k).toUpperCase():value(fd,k)])))
+  if(!master.success){
+   const field=String(master.error.issues[0]?.path?.[0]??'name')
+   invalid('Please check '+field.replaceAll('_',' ')+' — '+(master.error.issues[0]?.message??'This field is required.'),field,0)
+  }
+  const {content,faqs,media}=readContent(fd)
+  if(content.brand_type==='SUPPLIER_BRAND'&&!master.data.brand)
+   invalid('Enter the actual supplier brand, or choose Unbranded / Loose.','brand',0)
+  if(content.brand_type==='UNBRANDED_LOOSE'&&master.data.brand&&!['UNBRANDED','GENERIC'].includes(master.data.brand.toUpperCase()))
+   invalid('Leave Brand blank for unbranded loose products.','brand',0)
+  if(content.brand_type==='2TBR_PRIVATE_LABEL'&&!['2TBR','2-TAKA-R-BAZAR'].includes(master.data.brand.toUpperCase()))
+   invalid('2TBR own brand requires confirmed branded packaging.','brand',0)
+  let url:string|null=null
+  const file=fd.get('image_file')
+  if(file instanceof File&&file.size>0){
+   const bytes=new Uint8Array(await file.arrayBuffer())
+   const check=validateProductImage({type:file.type,size:file.size,bytes})
+   if(!check.ok)invalid(check.error,'image_file',0)
+   objectPath='products/'+user.id+'/'+randomUUID()+'.'+check.extension
+   const uploaded=await supabase.storage.from(PRODUCT_IMAGE_BUCKET).upload(objectPath,bytes,
+     {contentType:file.type,cacheControl:'31536000',upsert:false})
+   if(uploaded.error)invalid('Image upload failed: '+uploaded.error.message,'image_file',0)
+   url=supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(objectPath).data.publicUrl
+  }
+  const {error}=await supabase.rpc('admin_create_product_with_seo',{
+   p_master:{...master.data,brand:master.data.brand||null,image_url:url,is_demo:fd.get('is_demo')==='on'},
+   p_content:content,p_faqs:faqs,p_media:media
+  })
+  if(error){
+   if(objectPath)await supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove([objectPath])
+   return {ok:false,message:'Product not saved: '+error.message,step:5}
+  }
+  revalidatePath('/admin/products')
+  revalidatePath('/p','layout')
+  revalidatePath('/bn/p','layout')
+  revalidatePath('/sitemap.xml')
+  return {ok:true,message:'Product and bilingual SEO draft saved. You can open it for publication review.'}
+ }catch(error){
+  // There is no redirect and no form reset when validation or storage fails.
   if(objectPath)await supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove([objectPath])
-  fail(error.message)
+  if(error instanceof WizardValidationError)
+   return {ok:false,message:error.message,field:error.field,step:error.step}
+  return {ok:false,message:'Unable to save product. Your entries are still here; please retry.',step:5}
  }
- done('Master product and bilingual SEO draft created together. Review before publication.')
 }
 export async function deleteUnusedProduct(fd:FormData){
  const {supabase,roles}=await requireAdmin()
