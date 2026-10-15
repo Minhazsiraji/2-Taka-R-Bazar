@@ -9,8 +9,8 @@ const sql=read('supabase/migrations/20261015031616_product_wizard_safe_delete_is
 const lifecycle=read('components/admin-product-lifecycle.tsx')
 
 test('single guided six-step Create Product form holds both master and bilingual SEO data',()=>{
- assert.match(page,/<AdminProductCreateWizard\/>/)
- assert.match(wizard,/<form action=\{createProductWithSeo\}/)
+ assert.match(page,/<AdminProductCreateWizard key=\{user.id\} userId=\{user.id\}\/>/)
+ assert.match(wizard,/onSubmit=\{handleSubmit\}/)
  assert.equal((wizard.match(/<form\b/g)||[]).length,1,'one creation form, no nested SEO second form')
  assert.match(wizard,/ProductImageInput/)
  assert.match(wizard,/title_bn/)
@@ -19,7 +19,7 @@ test('single guided six-step Create Product form holds both master and bilingual
  assert.match(wizard,/q_bn_/)
  assert.match(wizard,/gallery/)
  assert.match(wizard,/marketing/)
- assert.match(wizard,/Create product &amp; save SEO draft/)
+ assert.match(wizard,/Create product & save SEO draft/)
 })
 test('master and SEO creation is one authorized DB transaction and leaves publication draft',()=>{
  assert.match(actions,/admin_create_product_with_seo/)
