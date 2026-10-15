@@ -69,10 +69,24 @@ begin
    join pg_namespace n on n.oid=cls.relnamespace
    join pg_attribute att on att.attrelid=c.conrelid and att.attnum=c.conkey[1]
    where c.contype='f' and c.confrelid='public.products'::regclass and cardinality(c.conkey)=1
-     and not (n.nspname='public' and cls.relname in ('product_seo_content','product_seo_audit','product_seo_slug_aliases'))
+     and not (n.nspname='public' and cls.relname in ('product_seo_content','product_seo_audit','product_seo_slug_aliases','commerce_skus'))
  loop
    execute format('select exists(select 1 from %I.%I where %I=$1)',v_fk.sch,v_fk.tbl,v_fk.col)
      using p_product_id into v_used;
+   if v_used then v_blockers:=array_append(v_blockers,v_fk.sch||'.'||v_fk.tbl);end if;
+ end loop;
+ -- A commerce_skus row is automatically generated on master creation. It is safe to
+ -- delete ONLY if no offer, order, inventory, stock or other FK-linked SKU history exists.
+ for v_fk in
+   select n.nspname as sch, cls.relname as tbl, att.attname as col
+   from pg_constraint c
+   join pg_class cls on cls.oid=c.conrelid
+   join pg_namespace n on n.oid=cls.relnamespace
+   join pg_attribute att on att.attrelid=c.conrelid and att.attnum=c.conkey[1]
+   where c.contype='f' and c.confrelid='public.commerce_skus'::regclass and cardinality(c.conkey)=1
+ loop
+   execute format('select exists(select 1 from %I.%I where %I in (select id from public.commerce_skus where product_id=$1))',
+     v_fk.sch,v_fk.tbl,v_fk.col) using p_product_id into v_used;
    if v_used then v_blockers:=array_append(v_blockers,v_fk.sch||'.'||v_fk.tbl);end if;
  end loop;
  return jsonb_build_object('eligible',cardinality(v_blockers)=0,'blockers',to_jsonb(v_blockers),
@@ -118,6 +132,8 @@ begin
  delete from public.product_seo_media where product_id=p_product_id;
  delete from public.product_seo_audit where product_id=p_product_id;
  delete from public.product_seo_content where product_id=p_product_id;
+ -- Delete only the automatically generated commerce identity, once its entire FK history is absent.
+ delete from public.commerce_skus where product_id=p_product_id;
  -- RESTRICT/NO ACTION on every business FK is the final concurrent-safety barrier.
  delete from public.products where id=p_product_id;
 end $$;
