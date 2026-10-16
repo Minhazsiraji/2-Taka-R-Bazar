@@ -345,6 +345,43 @@ try {
   staff.on('pageerror',e=>errors.push(e.message))
   await staff.context().addCookies(ownerCookies)
   // Product Management shares storefront visual tokens but retains staff-only admin controls.
+  // Easy Business UAT: same approved admin chrome, fail-closed draft creation,
+  // no financial posting and responsive navigation. Disposable synthetic DB only.
+  await staff.goto('http://127.0.0.1:3000/admin/easy-business',{waitUntil:'domcontentloaded'})
+  assert.equal(new URL(staff.url()).pathname,'/admin/easy-business')
+  await staff.getByRole('heading',{name:'Get a product ready to sell'}).waitFor()
+  await staff.getByRole('heading',{name:'1. Choose your product'}).waitFor()
+  await staff.getByRole('heading',{name:'2. Choose where to sell'}).waitFor()
+  const easyLaunch=staff.locator('section[aria-labelledby="easy-step-two"]')
+  const createOffer=easyLaunch.locator('details').first()
+  if(!(await createOffer.evaluate(el=>el.hasAttribute('open'))))await createOffer.locator(':scope > summary').click()
+  const easyForm=createOffer.locator('form')
+  const {data:pilotArea,error:pilotAreaError}=await admin.from('communities').select('id').eq('active',true).limit(1).maybeSingle()
+  assert.equal(pilotAreaError,null)
+  assert.ok(pilotArea?.id,'Local synthetic community is required for Easy Business browser UAT')
+  await easyForm.locator('select[name="community_id"]').selectOption(pilotArea.id)
+  await easyForm.locator('input[name="title"]').fill('Synthetic easy business '+id.slice(0,8))
+  await easyForm.getByRole('button',{name:'Create Draft Pool'}).click()
+  await staff.waitForURL(url=>url.pathname==='/admin/easy-business'&&Boolean(url.searchParams.get('pool')),{timeout:25000})
+  const createdEasyPool=new URL(staff.url()).searchParams.get('pool')
+  assert.ok(createdEasyPool)
+  const {data:easyPool,error:easyPoolError}=await admin.from('pools').select('status,title,community_id').eq('id',createdEasyPool).single()
+  assert.equal(easyPoolError,null)
+  assert.equal(easyPool.status,'draft')
+  assert.equal(easyPool.community_id,pilotArea.id)
+  await staff.getByRole('heading',{name:/3\. Prepare:/}).waitFor()
+  await staff.getByRole('heading',{name:'4. Open & show on storefront'}).waitFor()
+  assert.equal(await staff.getByRole('button',{name:'Open community Pool'}).count(),0,
+    'Empty draft cannot be opened through Easy Business')
+  await staff.getByText('Financial safety stays ON.').waitFor()
+  for(const width of [320,393,768,1024,1440]){
+   await staff.setViewportSize({width,height:900})
+   assert.equal(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,
+    'Easy Business cannot overflow at '+width)
+  }
+  await staff.setViewportSize({width:393,height:900})
+  await staff.screenshot({path:'/tmp/2tbr-easy-business-mobile.png',fullPage:true})
+  console.log('Easy Business: guided draft creation, no purchase/finance bypass, mobile/tablet widths PASS.')
   await staff.goto('http://127.0.0.1:3000/admin/products',{waitUntil:'domcontentloaded'})
   await staff.getByRole('heading',{name:'Create product',exact:true}).waitFor()
   const productSteps=staff.getByRole('navigation',{name:'Product creation steps'})
