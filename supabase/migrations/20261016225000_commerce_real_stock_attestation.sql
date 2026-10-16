@@ -37,7 +37,8 @@ returns boolean language sql stable security definer set search_path='' as $
  )
 $;
 revoke all on function private.commerce_live_stock_checker_can_read(text)
- from public,anon,authenticated,service_role;
+ from public,anon,service_role;
+grant execute on function private.commerce_live_stock_checker_can_read(text) to authenticated;
 create policy commerce_live_stock_checker_evidence_read on storage.objects
  for select to authenticated
  using (bucket_id='commerce-evidence' and private.commerce_live_stock_checker_can_read(name));
