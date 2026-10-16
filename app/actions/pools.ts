@@ -9,11 +9,11 @@ const t=(fd:FormData,k:string)=>String(fd.get(k)??'').trim()
 function isoOrNull(v:string,path:string){
  try{return bangladeshInputToUtc(v)}catch{fail('Invalid Bangladesh date or time (UTC+06).',path)}
 }
-const createReturnTo=(fd:FormData)=>t(fd,'return_to')==='/admin/pools/new'?'/admin/pools/new':'/admin/pools/workflow'
-const workflowPath=(poolId:string)=>`/admin/pools/workflow#pool-${encodeURIComponent(poolId)}`
+const createReturnTo=(fd:FormData)=>t(fd,'return_to')==='/admin/easy-business'?'/admin/easy-business':t(fd,'return_to')==='/admin/pools/new'?'/admin/pools/new':'/admin/pools/workflow'
+const workflowPath=(poolId:string,fd?:FormData)=>fd&&t(fd,'return_to')==='/admin/easy-business'?`/admin/easy-business?pool=${encodeURIComponent(poolId)}`:`/admin/pools/workflow#pool-${encodeURIComponent(poolId)}`
 function fail(message:string,path='/admin/pools'):never{redirect(`${path.includes('#')?path.split('#')[0]:path}?error=${encodeURIComponent(message)}${path.includes('#')?`#${path.split('#')[1]}`:''}`)}
 function done(message:string,path='/admin/pools'):never{revalidatePath('/admin','layout');redirect(`${path.includes('#')?path.split('#')[0]:path}?notice=${encodeURIComponent(message)}${path.includes('#')?`#${path.split('#')[1]}`:''}`)}
-function created(title:string,id:string):never{revalidatePath('/admin','layout');redirect(`/admin/pools/workflow?notice=${encodeURIComponent(`${title} created successfully`)}&created=${encodeURIComponent(id)}#pool-${encodeURIComponent(id)}`)}
+function created(title:string,id:string,fd:FormData):never{revalidatePath('/admin','layout');if(createReturnTo(fd)==='/admin/easy-business')redirect(`/admin/easy-business?pool=${encodeURIComponent(id)}&notice=${encodeURIComponent(`${title} draft created; next add a product`)}`);redirect(`/admin/pools/workflow?notice=${encodeURIComponent(`${title} created successfully`)}&created=${encodeURIComponent(id)}#pool-${encodeURIComponent(id)}`)}
 
 function validateTimeline(opensAt:string|null,commitmentCloses:string|null,confirmationCloses:string|null,supplierDeliveryAt:string|null,pickupAt:string|null,errorPath='/admin/pools'){
   const ts=(v:string|null)=>v?new Date(v).getTime():null
@@ -39,12 +39,12 @@ export async function createPoolV2(fd:FormData){
   if(payload.receiving_pickup_point_id){const {data:point}=await supabase.from('pickup_points').select('id').eq('id',payload.receiving_pickup_point_id).eq('community_id',payload.community_id).eq('active',true).maybeSingle();if(!point)fail('Receiving point must be active and belong to the selected community',errorPath)}
   const {data,error}=await supabase.from('pools').insert(payload).select('id').single()
   if(error||!data)fail(error?.message??'Pool could not be created',errorPath)
-  created(payload.title,data.id)
+  created(payload.title,data.id,fd)
 }
 
 export async function updateDraftPool(fd:FormData){
   const {supabase}=await requireAdmin()
-  const poolId=t(fd,'pool_id'),returnPath=workflowPath(poolId)
+  const poolId=t(fd,'pool_id'),returnPath=workflowPath(poolId,fd)
   const {data:pool,error:lookupError}=await supabase.from('pools').select('id,status,community_id').eq('id',poolId).single()
   if(lookupError||!pool)fail('Pool not found',returnPath)
   if(pool.status!=='draft')fail('Return the pool to Draft before editing its setup',returnPath)
@@ -64,7 +64,7 @@ export async function updateDraftPool(fd:FormData){
 
 export async function resetPoolToDraft(fd:FormData){
   const {supabase}=await requireAdmin()
-  const poolId=t(fd,'pool_id'),returnPath=workflowPath(poolId)
+  const poolId=t(fd,'pool_id'),returnPath=workflowPath(poolId,fd)
   const {error}=await supabase.rpc('admin_set_pool_status',{p_pool_id:poolId,p_status:'draft'})
   if(error)fail(error.message,returnPath)
   done('Pool returned to Draft',returnPath)
@@ -72,7 +72,7 @@ export async function resetPoolToDraft(fd:FormData){
 
 export async function setPoolPickupOptions(fd:FormData){
   const {supabase}=await requireAdmin()
-  const poolId=t(fd,'pool_id'),returnPath=workflowPath(poolId)
+  const poolId=t(fd,'pool_id'),returnPath=workflowPath(poolId,fd)
   const selected=fd.getAll('pickup_point_ids').map(v=>String(v))
   const {data:pool,error:poolError}=await supabase.from('pools').select('id,community_id,status').eq('id',poolId).single()
   if(poolError||!pool)fail('Pool not found',returnPath)
