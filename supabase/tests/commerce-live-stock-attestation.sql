@@ -47,8 +47,20 @@ select throws_like($$select public.commerce_review_live_stock_attestation(
  (select id from real_stock_case where key='claim'),true,'Self review not allowed')$$,
  '%Independent Super Admin approval required%', 'Maker cannot approve as Admin');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000009102',true);
-select lives_ok($$select public.commerce_review_live_stock_attestation(
- (select id from real_stock_case where key='claim'),true,'Independently checked the synthetic physical stock count')$$,
+select throws_like($select public.commerce_review_live_stock_attestation(
+ (select id from real_stock_case where key='claim'),true,'A separate stock checker requires the original evidence')$,
+ '%Original evidence file missing%', 'Evidence path alone cannot pass independent review');
+insert into storage.objects(bucket_id,name) values(
+ 'commerce-evidence',
+ '00000000-0000-4000-8000-000000009101/00000000-0000-4000-8000-000000009190.pdf');
+select ok(private.commerce_live_stock_checker_can_read(
+ '00000000-0000-4000-8000-000000009101/00000000-0000-4000-8000-000000009190.pdf'),
+ 'Independent checker may inspect only attested evidence');
+select ok(not private.commerce_live_stock_checker_can_read(
+ '00000000-0000-4000-8000-000000009101/00000000-0000-4000-8000-000000009191.pdf'),
+ 'Independent checker may not inspect unrelated user files');
+select lives_ok($select public.commerce_review_live_stock_attestation(
+ (select id from real_stock_case where key='claim'),true,'Independently checked the synthetic physical stock count')$,
  'Independent Super Admin approval works');
 select ok(private.commerce_live_stock_eligible('00000000-0000-4000-8000-000000009120','00000000-0000-4000-8000-000000009110',3),
  'Independently verified quantity eligible for full reservation');
