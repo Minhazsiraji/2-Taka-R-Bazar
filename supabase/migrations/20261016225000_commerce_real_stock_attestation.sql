@@ -35,7 +35,7 @@ returns boolean language sql stable security definer set search_path='' as $$
   select 1 from public.commerce_live_stock_attestations
   where evidence_path=p_path and status in ('pending','approved','rejected')
  )
-$;
+$$;
 revoke all on function private.commerce_live_stock_checker_can_read(text)
  from public,anon,service_role;
 grant execute on function private.commerce_live_stock_checker_can_read(text) to authenticated;
