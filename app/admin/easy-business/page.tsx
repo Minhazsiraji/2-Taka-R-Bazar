@@ -35,14 +35,14 @@ export default async function EasyBusiness({searchParams}:{searchParams:Promise<
  const selection=validUuid.test(sp.pool??'')?sp.pool:null
  const pool=pools.find(p=>p.id===selection)??pools.find(p=>p.status==='draft')??pools.find(p=>p.status==='open')??null
  const poolId=pool?.id??null
- const [itemsRes,quotesRes,pickupOptionsRes,publicationRes]=await Promise.all([
+ const [itemsRes,benchmarkRes,pickupOptionsRes,publicationRes]=await Promise.all([
   poolId?db.from('pool_items').select('id,product_id,benchmark_price_snapshot,pricing_mode,active').eq('pool_id',poolId):Promise.resolve({data:[],error:null}),
   db.from('market_price_benchmarks').select('product_id,community_id,benchmark_price').eq('approved',true).is('superseded_at',null),
   poolId?db.from('pool_pickup_points').select('pickup_point_id').eq('pool_id',poolId):Promise.resolve({data:[],error:null}),
   poolId?db.from('pool_storefront_publication').select('published,featured_product_ids').eq('pool_id',poolId).maybeSingle():Promise.resolve({data:null,error:null})
  ])
  // Benchmark result is the second element above; keep the separate query explicit.
- const benchmarks=quotesRes.data??[]
+ const benchmarks=benchmarkRes.data??[]
  const items=itemsRes.data??[]
  const itemIds=items.map(i=>i.id)
  const tierRes=itemIds.length?await db.from('supplier_quotes')
@@ -62,8 +62,8 @@ export default async function EasyBusiness({searchParams}:{searchParams:Promise<
  const ownPricingReady=items.filter(i=>productsById.get(i.product_id)?.source_type!=='SUPPLIER_POOL').every(i=>Boolean(i.pricing_mode))
  const progress=pool?poolLaunchChecklist({pool,itemCount:items.length,
   supplierItemTierCounts:supplierTierCounts,ownPricingReady,
-  pickupCount:poolPickups.size,homePublished:featured?.published??false}):null
- const loadError=criticalError||itemsRes.error||quotesRes.error||tierRes.error||pickupOptionsRes.error||publicationRes.error||seoRes.error||supplierRes.error||pickupRes.error
+  pickupCount:poolPickups.size,receivingIncluded:Boolean(pool.receiving_pickup_point_id&&poolPickups.has(pool.receiving_pickup_point_id)),homePublished:featured?.published??false}):null
+ const loadError=criticalError||itemsRes.error||benchmarkRes.error||tierRes.error||pickupOptionsRes.error||publicationRes.error||seoRes.error||supplierRes.error||pickupRes.error
 
  return <AdminShell><div className="grid min-w-0 gap-4">
   <section className="card">
