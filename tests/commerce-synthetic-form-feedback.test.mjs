@@ -30,3 +30,5 @@ test('UI feedback does not weaken production checkout/Finance controls',()=>{
  assert.doesNotMatch(action,/COMMERCE_PREVIEW_SECRET\s*=/)
  assert.doesNotMatch(commerce,/enableCheckout|allowProductionCommerce|service_role/)
 })
+
+// CI rerun after previous merged mobile storefront fix; real checkout remains gated.
