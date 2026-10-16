@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { AdminShell } from '@/components/admin-shell'
 import { StatusPill } from '@/components/status-pill'
 import { requireAdmin } from '@/lib/auth'
-import { shortDate } from '@/lib/format'
+import {displayBangladeshDate} from '@/lib/bangladesh-datetime.mjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,7 +58,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         const itemIds = itemIdsByPool.get(p.id) ?? []
         const demand = itemIds.reduce((sum, id) => sum + (demandByItem.get(id) ?? 0), 0)
         return <Link key={p.id} href={`/admin/pools/${p.id}`} className="card group grid gap-3 p-4 transition hover:-translate-y-0.5 sm:grid-cols-[1fr_auto] sm:items-center">
-          <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="chip capitalize">{p.cadence ?? 'weekly'}</span><span className="text-xs font-bold uppercase text-slate-500">{communityById.get(p.community_id) ?? 'Unknown community'}</span></div><h2 className="mt-2 truncate text-lg font-bold sm:text-xl">{p.title}</h2><p className="muted mt-1">Created {shortDate(p.created_at)} · {itemIds.length} SKU{itemIds.length === 1 ? '' : 's'} · {demand} committed units · pickup {p.pickup_at ? shortDate(p.pickup_at) : 'not set'}</p></div>
+          <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="chip capitalize">{p.cadence ?? 'weekly'}</span><span className="text-xs font-bold uppercase text-slate-500">{communityById.get(p.community_id) ?? 'Unknown community'}</span></div><h2 className="mt-2 truncate text-lg font-bold sm:text-xl">{p.title}</h2><p className="muted mt-1">Created {displayBangladeshDate(p.created_at)} · {itemIds.length} SKU{itemIds.length === 1 ? '' : 's'} · {demand} committed units · pickup {p.pickup_at ? displayBangladeshDate(p.pickup_at) : 'not set'}</p></div>
           <div className="flex items-center gap-3 sm:justify-end">{p.is_paused&&<span className="chip">Paused</span>}<StatusPill status={p.status}/><span className="btn-secondary px-4 py-2">Open →</span></div>
         </Link>
       })}
