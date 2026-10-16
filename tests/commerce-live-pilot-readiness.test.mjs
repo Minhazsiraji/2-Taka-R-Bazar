@@ -1,0 +1,41 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8')
+const helper=read('lib/commerce/pilot-release-readiness.ts')
+const screen=read('app/super-admin/commerce-release/page.tsx')
+const shell=read('components/super-admin-shell.tsx')
+const server=read('lib/commerce/server.ts')
+const actions=read('app/actions/commerce.ts')
+
+test('Owner-only page presents specific pilot products and proposed prices without publishing sales',()=>{
+ assert.match(screen,/await requireSuperAdmin\(\)/)
+ for(const sku of ['BUTTER-EXC-1KG','GHEE-1KG-UNB-001','DUC-ESC-001'])
+  assert.ok(helper.includes(sku),sku)
+ for(const price of ["price:1240","price:1450","price:950"])assert.ok(helper.includes(price))
+ assert.match(screen,/Owner-proposed price · not a published offer/)
+ assert.match(screen,/No live ordering authorized/)
+ assert.match(screen,/Commerce Production checkout: Disabled/)
+ assert.match(shell,/\/super-admin\/commerce-release/)
+ assert.doesNotMatch(screen,/action=\{|setCommerceCartItem|update.*inventory|create.*offer/i)
+})
+test('Physical stock and fulfillment are independently verified; synthetic database quantities are not proof',()=>{
+ assert.match(helper,/physicalStockVerified:boolean/)
+ assert.match(helper,/fulfillmentVerified:boolean/)
+ assert.match(screen,/physicalStockVerified:false,fulfillmentVerified:false/)
+ assert.match(helper,/o\.mode==='SOLO'&&!o\.is_synthetic&&o\.status==='approved'/)
+ assert.match(helper,/o\.community_id===communityId/)
+ assert.match(helper,/Number\(o\.unit_price\)===expected\.price/)
+ assert.match(helper,/Date\.parse\(o\.valid_until\)>now/)
+ assert.match(helper,/stockOnHand>reserved/)
+ assert.ok(helper.includes('pcs|piece|bird'), 'Reject mixed whole-bird units for per-kg sales')
+ assert.match(helper,/unit correctly recorded/)
+ assert.match(screen,/original receipts/i)
+ assert.match(screen,/seller custody/i)
+})
+test('Finance default-deny and Production Preview isolation untouched',()=>{
+ assert.match(server,/process\.env\.VERCEL_ENV==='preview'/)
+ assert.match(server,/COMMERCE_PREVIEW_SECRET/)
+ assert.match(actions,/commerceProof\(\)/)
+ assert.doesNotMatch(screen,/commerce_request_offer|commerce_confirm_checkout|COMMERCE_PREVIEW_SECRET/)
+})
