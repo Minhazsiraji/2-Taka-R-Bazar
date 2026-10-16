@@ -28,7 +28,7 @@ test('Physical stock and fulfillment are independently verified; synthetic datab
  assert.match(helper,/Number\(o\.unit_price\)===expected\.price/)
  assert.match(helper,/Date\.parse\(o\.valid_until\)>now/)
  assert.match(helper,/stockOnHand>reserved/)
- assert.match(helper,/!\/\(\\?:pcs\|piece\|bird\)\//)
+ assert.ok(helper.includes('pcs|piece|bird'), 'Reject mixed whole-bird units for per-kg sales')
  assert.match(helper,/unit correctly recorded/)
  assert.match(screen,/original receipts/i)
  assert.match(screen,/supplier/i)
