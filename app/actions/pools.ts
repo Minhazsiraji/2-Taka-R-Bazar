@@ -11,8 +11,9 @@ function isoOrNull(v:string,path:string){
 }
 const createReturnTo=(fd:FormData)=>t(fd,'return_to')==='/admin/easy-business'?'/admin/easy-business':t(fd,'return_to')==='/admin/pools/new'?'/admin/pools/new':'/admin/pools/workflow'
 const workflowPath=(poolId:string,fd?:FormData)=>fd&&t(fd,'return_to')==='/admin/easy-business'?`/admin/easy-business?pool=${encodeURIComponent(poolId)}`:`/admin/pools/workflow#pool-${encodeURIComponent(poolId)}`
-function fail(message:string,path='/admin/pools'):never{redirect(`${path.includes('#')?path.split('#')[0]:path}?error=${encodeURIComponent(message)}${path.includes('#')?`#${path.split('#')[1]}`:''}`)}
-function done(message:string,path='/admin/pools'):never{revalidatePath('/admin','layout');redirect(`${path.includes('#')?path.split('#')[0]:path}?notice=${encodeURIComponent(message)}${path.includes('#')?`#${path.split('#')[1]}`:''}`)}
+function withFeedback(path:string,key:'error'|'notice',message:string){const [base,fragment]=path.split('#');return `${base}${base.includes('?')?'&':'?'}${key}=${encodeURIComponent(message)}${fragment?'#'+fragment:''}`}
+function fail(message:string,path='/admin/pools'):never{redirect(withFeedback(path,'error',message))}
+function done(message:string,path='/admin/pools'):never{revalidatePath('/admin','layout');redirect(withFeedback(path,'notice',message))}
 function created(title:string,id:string,fd:FormData):never{revalidatePath('/admin','layout');if(createReturnTo(fd)==='/admin/easy-business')redirect(`/admin/easy-business?pool=${encodeURIComponent(id)}&notice=${encodeURIComponent(`${title} draft created; next add a product`)}`);redirect(`/admin/pools/workflow?notice=${encodeURIComponent(`${title} created successfully`)}&created=${encodeURIComponent(id)}#pool-${encodeURIComponent(id)}`)}
 
 function validateTimeline(opensAt:string|null,commitmentCloses:string|null,confirmationCloses:string|null,supplierDeliveryAt:string|null,pickupAt:string|null,errorPath='/admin/pools'){
