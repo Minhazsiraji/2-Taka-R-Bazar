@@ -89,6 +89,11 @@ try{
  assert.equal(home?.status(),200)
  const section=page.locator('#published-products')
  await section.getByRole('heading',{name:'All Products'}).waitFor()
+ assert.equal(await page.evaluate(()=>{
+  const special=document.querySelector('#exclusive-products')
+  const products=document.querySelector('#published-products')
+  return Boolean(special&&products&&(special.compareDocumentPosition(products)&Node.DOCUMENT_POSITION_FOLLOWING))
+ }),true,'All Products must appear directly after Special/Exclusive Products')
  assert.equal(await section.locator('[data-testid="published-product-card"]').count(),12,'First catalog page contains 12 eligible records')
  assert.equal(await section.getByRole('link',{name:/View Details/}).count(),12,'Every product has a public details link')
  assert.equal(await section.getByText('Price pending',{exact:true}).count(),12)
