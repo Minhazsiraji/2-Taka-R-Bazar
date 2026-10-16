@@ -27,7 +27,7 @@ export async function enterPlanningTier(fd:FormData){
     quoted_unit_price:quoted,delivery_cost:delivery,landed_unit_price:landed,customer_ceiling_price:ceiling,
     delivery_included:true,delivery_target_at:(item as any).pools?.supplier_delivery_at??null,valid_until:t(fd,'valid_until')||null,notes:t(fd,'notes')||null,created_by:user.id,
   })
-  if(error)fail(poolId,error.message)
+  if(error)fail(poolId,error.message,fd)
   done(poolId,`Planning tier saved: ${threshold} units unlock up to ৳${ceiling.toLocaleString('en-BD')}`,fd)
 }
 export async function enterFinalSupplierQuote(fd:FormData){
