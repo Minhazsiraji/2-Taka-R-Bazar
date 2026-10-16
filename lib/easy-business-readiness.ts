@@ -1,5 +1,5 @@
 /** Read-only guide. Actual release rules stay enforced by DB procedures. */
-export function poolLaunchChecklist({pool,itemCount,supplierItemTierCounts,ownPricingReady,pickupCount,homePublished}:{pool:{
+export function poolLaunchChecklist({pool,itemCount,supplierItemTierCounts,ownPricingReady,pickupCount,receivingIncluded,homePublished}:{pool:{
  status:string;is_paused:boolean;opens_at:string|null;commitment_closes_at:string|null;
  confirmation_closes_at:string|null;supplier_delivery_at:string|null;pickup_at:string|null;
  receiving_pickup_point_id:string|null
