@@ -10,9 +10,11 @@ export async function publishStorefrontPool(fd:FormData){
  const order=Number(fd.get('sort_order')??100)
  if(!uuid.test(poolId))redirect('/admin/pools?error=Invalid+Pool')
  const path=`/admin/pools/${poolId}`
- if(ids.length>3||new Set(ids).size!==ids.length||ids.some(id=>!uuid.test(id))||!Number.isInteger(order))redirect(`${path}?error=Choose+up+to+three+distinct+products`)
+ const easy=fd.get('return_to')==='/admin/easy-business'
+ const destination=easy?`/admin/easy-business?pool=${encodeURIComponent(poolId)}`:path
+ if(ids.length>3||new Set(ids).size!==ids.length||ids.some(id=>!uuid.test(id))||!Number.isInteger(order))redirect(`${destination}${easy?'&':'?'}error=Choose+up+to+three+distinct+products`)
  const {error}=await supabase.rpc('admin_publish_storefront_pool',{p_pool_id:poolId,p_product_ids:ids,p_published:fd.get('published')==='on',p_sort_order:order})
- if(error)redirect(`${path}?error=${encodeURIComponent(error.message)}`)
+ if(error)redirect(`${destination}${easy?'&':'?'}error=${encodeURIComponent(error.message)}`)
  revalidatePath('/');revalidatePath(path)
- redirect(`${path}?notice=Home+Pool+publication+saved`)
+ redirect(`${destination}${easy?'&':'?'}notice=Home+Pool+publication+saved`)
 }
