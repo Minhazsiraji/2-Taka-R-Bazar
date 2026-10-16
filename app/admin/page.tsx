@@ -39,6 +39,12 @@ export default async function AdminDashboard(){
 
   return <AdminShell><div className="grid gap-5">
     <section><h1 className="text-3xl font-black">Operations dashboard</h1><p className="muted">Pilot controls and real database-derived KPIs.</p></section>
+    <section className="card">
+     <div className="card-title">QUICK START · EASY BUSINESS MODE</div>
+     <h2 className="mt-1 text-xl font-black">Add product → Set price → Choose area → Publish</h2>
+     <p className="muted mt-2 text-sm">Keep the same business controls, without jumping between multiple administration screens.</p>
+     <div className="mt-3 flex flex-wrap gap-2"><Link href="/admin/easy-business" className="btn-primary">Open Easy Business →</Link><Link href="/admin/products" className="btn-secondary">Add product</Link></div>
+    </section>
     <div><Link href="/admin/delivery-locations" className="btn-secondary inline-flex">Verify customer locations & buildings →</Link></div>
 
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
