@@ -27,6 +27,42 @@ create index if not exists commerce_live_stock_by_product
 alter table public.commerce_live_stock_attestations enable row level security;
 revoke all on public.commerce_live_stock_attestations from public,anon,authenticated,service_role;
 
+-- Checker can read original evidence created under a different staff account,
+-- but only when the path belongs to an actual stock attestation.
+create or replace function private.commerce_live_stock_checker_can_read(p_path text)
+returns boolean language sql stable security definer set search_path='' as $
+ select private.has_role(auth.uid(),'super_admin') and exists(
+  select 1 from public.commerce_live_stock_attestations
+  where evidence_path=p_path and status in ('pending','approved','rejected')
+ )
+$;
+revoke all on function private.commerce_live_stock_checker_can_read(text)
+ from public,anon,authenticated,service_role;
+create policy commerce_live_stock_checker_evidence_read on storage.objects
+ for select to authenticated
+ using (bucket_id='commerce-evidence' and private.commerce_live_stock_checker_can_read(name));
+
+-- Scoped workbench. Customers and guests have no direct table read access.
+create or replace function public.commerce_live_stock_workbench()
+returns jsonb language plpgsql stable security definer set search_path='' as $
+begin
+ if not private.commerce_admin() then
+  raise exception using errcode='42501',message='Authorized Admin required';end if;
+ return coalesce((select jsonb_agg(jsonb_build_object(
+  'id',a.id,'product_id',a.product_id,'product',p.name,
+  'community_id',a.community_id,'community',c.name,
+  'quantity',a.verified_quantity,'unit',a.unit_snapshot,
+  'status',a.status,'evidence_path',a.evidence_path,
+  'requested_by',a.requested_by,'reviewed_by',a.reviewed_by,
+  'review_reason',a.review_reason,'created_at',a.requested_at,
+  'valid_until',a.valid_until
+ ) order by a.requested_at desc)
+ from public.commerce_live_stock_attestations a
+ join public.products p on p.id=a.product_id
+ join public.communities c on c.id=a.community_id), '[]'::jsonb);
+end $;
+grant execute on function public.commerce_live_stock_workbench() to authenticated;
+
 create or replace function public.commerce_request_live_stock_attestation(
  p_product uuid,p_community uuid,p_quantity integer,p_unit text,
  p_evidence_path text,p_evidence_sha256 text,p_valid_until timestamptz
@@ -77,6 +113,7 @@ begin
   then raise exception 'Independent pending stock attestation and review reason required';end if;
  select * into p from public.products where id=a.product_id for share;
  select * into i from public.own_product_inventory where product_id=a.product_id for share;
+ if p_approve and not exists(select 1 from storage.objects so where so.bucket_id='commerce-evidence' and so.name=a.evidence_path) then raise exception 'Original evidence file missing';end if;
  if p_approve and (p.id is null or not p.active or p.is_demo
   or p.unit is distinct from a.unit_snapshot or i.stock_on_hand is distinct from a.verified_quantity
   or coalesce(i.reserved_quantity,0)>0
