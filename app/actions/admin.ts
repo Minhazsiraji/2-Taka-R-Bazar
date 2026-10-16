@@ -3,12 +3,13 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth'
+import {bangladeshInputToUtc} from '@/lib/bangladesh-datetime.mjs'
 import { randomUUID } from 'node:crypto'
 import { PRODUCT_IMAGE_BUCKET, validateProductImage } from '@/lib/product-image.mjs'
 
 const t=(fd:FormData,k:string)=>String(fd.get(k)??'').trim()
 const n=(fd:FormData,k:string)=>Number(t(fd,k))
-const isoOrNull=(v:string)=>v?new Date(v).toISOString():null
+const isoOrNull=(v:string)=>{try{return bangladeshInputToUtc(v)}catch{fail('/admin/pools','Invalid Bangladesh date or time (UTC+06).')}}
 function existingProductImagePath(url:string){
   const marker=`/storage/v1/object/public/${PRODUCT_IMAGE_BUCKET}/`
   const i=url.indexOf(marker)
