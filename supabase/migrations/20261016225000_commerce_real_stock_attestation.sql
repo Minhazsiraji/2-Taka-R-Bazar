@@ -30,7 +30,7 @@ revoke all on public.commerce_live_stock_attestations from public,anon,authentic
 -- Checker can read original evidence created under a different staff account,
 -- but only when the path belongs to an actual stock attestation.
 create or replace function private.commerce_live_stock_checker_can_read(p_path text)
-returns boolean language sql stable security definer set search_path='' as $
+returns boolean language sql stable security definer set search_path='' as $$
  select private.has_role(auth.uid(),'super_admin') and exists(
   select 1 from public.commerce_live_stock_attestations
   where evidence_path=p_path and status in ('pending','approved','rejected')
@@ -45,7 +45,7 @@ create policy commerce_live_stock_checker_evidence_read on storage.objects
 
 -- Scoped workbench. Customers and guests have no direct table read access.
 create or replace function public.commerce_live_stock_workbench()
-returns jsonb language plpgsql stable security definer set search_path='' as $
+returns jsonb language plpgsql stable security definer set search_path='' as $$
 begin
  if not private.commerce_admin() then
   raise exception using errcode='42501',message='Authorized Admin required';end if;
@@ -61,7 +61,7 @@ begin
  from public.commerce_live_stock_attestations a
  join public.products p on p.id=a.product_id
  join public.communities c on c.id=a.community_id), '[]'::jsonb);
-end $;
+end $$;
 grant execute on function public.commerce_live_stock_workbench() to authenticated;
 
 create or replace function public.commerce_request_live_stock_attestation(
