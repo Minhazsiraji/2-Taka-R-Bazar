@@ -5,9 +5,10 @@ import { SubmitButton } from '@/components/submit-button'
 import { StatusPill } from '@/components/status-pill'
 import { updateActivePoolDetails } from '@/app/actions/pool-ops-edit'
 import { requireAdmin } from '@/lib/auth'
+import {utcToBangladeshInput} from '@/lib/bangladesh-datetime.mjs'
 
 export const dynamic='force-dynamic'
-const dt=(value:string|null)=>value?new Date(value).toISOString().slice(0,16):''
+const dt=utcToBangladeshInput
 
 type Search={pool?:string;error?:string;notice?:string}
 
@@ -21,7 +22,7 @@ export default async function Page({searchParams}:{searchParams:Promise<Search>}
 
   return <AdminShell><div className="grid gap-5">
     <div className="flex flex-wrap items-center gap-2 text-sm"><Link className="font-bold text-cyan-800 underline" href="/admin/pools">← Pools</Link>{selected&&<><span className="text-slate-400">/</span><Link className="font-bold text-cyan-800 underline" href={`/admin/pools/${selected.id}`}>{selected.title}</Link></>}</div>
-    <section><div className="card-title">Pool operations</div><h1 className="text-2xl font-bold sm:text-3xl">Edit active pool details</h1><p className="muted mt-1">Use this page only for operational corrections. It does not change products, benchmarks, demand history or pricing tiers.</p></section>
+    <section><div className="card-title">Pool operations</div><h1 className="text-2xl font-bold sm:text-3xl">Edit active pool details</h1><p className="muted mt-1">Use this page only for operational corrections. All times below are Bangladesh time (Asia/Dhaka, UTC+06). It does not change products, benchmarks, demand history or pricing tiers.</p></section>
     <Flash {...sp}/>
 
     {!sp.pool ? <div className="grid gap-3">
