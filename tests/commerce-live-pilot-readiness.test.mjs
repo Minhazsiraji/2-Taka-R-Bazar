@@ -31,7 +31,7 @@ test('Physical stock and fulfillment are independently verified; synthetic datab
  assert.ok(helper.includes('pcs|piece|bird'), 'Reject mixed whole-bird units for per-kg sales')
  assert.match(helper,/unit correctly recorded/)
  assert.match(screen,/original receipts/i)
- assert.match(screen,/supplier/i)
+ assert.match(screen,/seller custody/i)
 })
 test('Finance default-deny and Production Preview isolation untouched',()=>{
  assert.match(server,/process\.env\.VERCEL_ENV==='preview'/)
