@@ -36,8 +36,8 @@ export function FeaturedProductsCarousel({products,language='en',offers=[],areas
     const eligibleOffers=offers.filter(o=>o.product_id===item.product_id&&(!selectedArea||o.community_id===selectedArea))
     const offer=eligibleOffers.find(o=>o.offer_kind!=='SOLO')??eligibleOffers[0]
     const soloOffer=eligibleOffers.find(o=>Boolean(o.commerce_solo_id))
-    const canBuyAlone=!item.is_demo&&Boolean(soloOffer?.commerce_solo_id&&soloOffer.commerce_solo_available)
-    const soldOut=!item.is_demo&&Boolean(soloOffer?.commerce_solo_id&&!soloOffer.commerce_solo_available)
+    const canBuyAlone=Boolean(selectedArea)&&!item.is_demo&&Boolean(soloOffer?.commerce_solo_id&&soloOffer.commerce_solo_available)
+    const soldOut=Boolean(selectedArea)&&!item.is_demo&&Boolean(soloOffer?.commerce_solo_id&&!soloOffer.commerce_solo_available)
     const href=item.is_demo?`/demo-product/${item.product_id}`:`/products/${item.product_id}`
     const title=t(item.name,item.name_bn??item.name)
     const community=areas.find(a=>a.community_id===(soloOffer?.community_id??offer?.community_id??selectedArea))
@@ -52,7 +52,7 @@ export function FeaturedProductsCarousel({products,language='en',offers=[],areas
      <p className="market-product-meta">{[item.brand,item.package_size].filter(Boolean).join(' · ')}</p>
      <p className="market-product-community">{community?.community_name??t('Choose a community for local prices','স্থানীয় দাম দেখতে এলাকা বাছুন')}</p>
      <div className="market-product-prices grid grid-cols-2 gap-2">
-      <div className="rounded-xl border p-2"><p>{t('Buy Alone','একা কিনুন')}</p><strong>{Number(soloOffer?.solo_price)>0?formatPrice(soloOffer?.solo_price):t('Not quoted yet','দাম দেওয়া হয়নি')}</strong><p>{item.is_demo?t('Sample price only · DEMO','শুধু নমুনা মূল্য · ডেমো'):t('Individual quote required','একা কেনার আলাদা দাম প্রয়োজন')}</p></div>
+      <div className="rounded-xl border p-2"><p>{t('Buy Alone','একা কিনুন')}</p><strong>{selectedArea&&Number(soloOffer?.solo_price)>0?formatPrice(soloOffer?.solo_price):t('Not quoted yet','দাম দেওয়া হয়নি')}</strong><p>{item.is_demo?t('Sample price only · DEMO','শুধু নমুনা মূল্য · ডেমো'):t('Individual quote required','একা কেনার আলাদা দাম প্রয়োজন')}</p></div>
       <div className="rounded-xl border p-2"><p>{t('Group Buy','গ্রুপে কিনুন')}</p><strong>{Number(groupPrice)>0?formatPrice(groupPrice):t('Price pending','দাম দেওয়া হয়নি')}</strong><p>{item.is_demo?t('Sample price · DEMO','নমুনা মূল্য · ডেমো'):hasCurrentPrice?t('Published / unlocked','প্রকাশিত / আনলক হয়েছে'):t('Conditional price or quote pending','শর্তসাপেক্ষ দাম বা মূল্য বাকি')}</p></div>
      </div>
      {offer&&<p className="market-product-count">{offer.buyer_count} {t('buyers','জন ক্রেতা')} · {offer.quantity_joined} {t('units','ইউনিট')}{item.is_demo?' (DEMO)':''}{offer.next_threshold?` · ${t('Next threshold','পরের লক্ষ্য')} ${offer.next_threshold}`:''}</p>}
@@ -62,8 +62,8 @@ export function FeaturedProductsCarousel({products,language='en',offers=[],areas
        <input type="hidden" name="offer_id" value={soloOffer!.commerce_solo_id}/>
        <input type="hidden" name="quantity" value="1"/>
        <button type="submit" className="btn-secondary">{t('Buy Alone','একা কিনুন')}</button>
-      </form>:<button type="button" disabled aria-disabled="true" title={soldOut?t('This verified offer has no remaining stock','এই অফারে স্টক নেই'):t('Individual checkout requires a verified, approved offer','একা কেনার জন্য যাচাইকৃত, অনুমোদিত অফার প্রয়োজন')} className="btn-secondary">
-       {item.is_demo?t('Buy Alone · Demo','একা কিনুন · ডেমো'):soldOut?t('Sold out','স্টক শেষ'):t('Buy Alone · Soon','একা কেনা · শিগগিরই')}
+      </form>:<button type="button" disabled aria-disabled="true" title={!selectedArea?t('Choose your community for individual pricing','একা কেনার দাম দেখতে এলাকা বাছুন'):soldOut?t('This verified offer has no remaining stock','এই অফারে স্টক নেই'):t('Individual checkout requires a verified, approved offer','একা কেনার জন্য যাচাইকৃত, অনুমোদিত অফার প্রয়োজন')} className="btn-secondary">
+       {item.is_demo?t('Buy Alone · Demo','একা কিনুন · ডেমো'):!selectedArea?t('Choose area','এলাকা বাছুন'):soldOut?t('Sold out','স্টক শেষ'):t('Buy Alone · Soon','একা কেনা · শিগগিরই')}
       </button>}
       {item.is_demo?<button type="button" disabled aria-disabled="true" className="btn-primary">{t('Group Buy · Demo','গ্রুপে কিনুন · ডেমো')}</button>:<Link href={href} className="btn-primary">{t('View product →','পণ্য দেখুন →')}</Link>}
      </div>
