@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8')
-const styles=read('app/marketplace-story.css')
+const styles=read('app/marketplace-review-mobile-fix.css')
 const page=read('components/public-marketplace-lower.tsx')
 const browser=read('tests/storefront-browser-uat.mjs')
 
@@ -20,7 +20,7 @@ test('reviews retain meaningful honest copy, accessible language and glass brand
  assert.match(page,/Verified purchases only/)
  assert.match(page,/No borrowed quotes, invented customers, fabricated ratings or unverified savings/)
  assert.match(page,/lang=\{language\}/)
- assert.match(styles,/market-review-mark\{[\s\S]*?color:var\(--theme-accent/)
+ assert.match(read('app/marketplace-story.css'),/market-review-mark\{[\s\S]*?color:var\(--theme-accent/)
  assert.match(read('app/marketplace-unified.css'),/\.market-story \.market-review-pending/)
 })
 test('real browser verifies the section at small widths in EN/BN and dark mode',()=>{
@@ -30,4 +30,5 @@ test('real browser verifies the section at small widths in EN/BN and dark mode',
  assert.match(browser,/copyTop>=geometry\.noteBottom-1/)
  assert.match(browser,/await assertReviewLayout\(page,width\)/)
  assert.match(browser,/Bengali: ensure the review copy stays full width/)
+ assert.match(read('app/layout.tsx'),/import '\.\/marketplace-review-mobile-fix\.css'/)
 });
