@@ -6,7 +6,8 @@ import { AdminShell } from '@/components/admin-shell'
 import { ProductImage } from '@/components/product-image'
 import { StatusPill } from '@/components/status-pill'
 import { requireAdmin } from '@/lib/auth'
-import { dateTime, taka } from '@/lib/format'
+import {taka} from '@/lib/format'
+import {displayBangladeshDateTime} from '@/lib/bangladesh-datetime.mjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,15 +46,15 @@ export default async function Page({ params,searchParams }: { params: Promise<{ 
       <div className="card p-4"><div className="card-title">Community</div><b>{community?.name ?? 'Unknown'}</b></div>
       <div className="card p-4"><div className="card-title">SKUs</div><b>{items?.length ?? 0}</b></div>
       <div className="card p-4"><div className="card-title">Committed units</div><b>{totalDemand}</b></div>
-      <div className="card p-4"><div className="card-title">Pickup</div><b>{pool.pickup_at ? dateTime(pool.pickup_at) : 'Not set'}</b></div>
+      <div className="card p-4"><div className="card-title">Pickup</div><b>{pool.pickup_at ? displayBangladeshDateTime(pool.pickup_at) : 'Not set'}</b></div>
     </section>
 
     <section className="card p-4 sm:p-5">
-      <h2 className="text-xl font-bold">Operational timeline</h2>
+      <h2 className="text-xl font-bold">Operational timeline</h2><p className="muted mt-1 text-sm">Bangladesh time (Asia/Dhaka, UTC+06)</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div><div className="label">Commitment closes</div><div>{pool.commitment_closes_at ? dateTime(pool.commitment_closes_at) : 'Not set'}</div></div>
-        <div><div className="label">Confirmation closes</div><div>{pool.confirmation_closes_at ? dateTime(pool.confirmation_closes_at) : 'Not set'}</div></div>
-        <div><div className="label">Supplier handover</div><div>{pool.supplier_delivery_at ? dateTime(pool.supplier_delivery_at) : 'Not set'}</div></div>
+        <div><div className="label">Commitment closes</div><div>{pool.commitment_closes_at ? displayBangladeshDateTime(pool.commitment_closes_at) : 'Not set'}</div></div>
+        <div><div className="label">Confirmation closes</div><div>{pool.confirmation_closes_at ? displayBangladeshDateTime(pool.confirmation_closes_at) : 'Not set'}</div></div>
+        <div><div className="label">Supplier handover</div><div>{pool.supplier_delivery_at ? displayBangladeshDateTime(pool.supplier_delivery_at) : 'Not set'}</div></div>
         <div><div className="label">Receiving point</div><div>{selectedPickup ? `${selectedPickup.name} · ${selectedPickup.address}` : 'Not set'}</div></div>
       </div>
       {pool.notes && <div className="notice mt-4"><b>Notes:</b> {pool.notes}</div>}
