@@ -573,6 +573,14 @@ try {
   assert.ok(readReceipt.read_at)
   await page.getByRole('button',{name:/Mark all read/}).click()
   await page.waitForFunction(()=>!document.querySelector('.notification-unread-badge'),null,{timeout:25000})
+  // The browser may optimistically hide the badge before the read RPC finishes.
+  // Keep the strict zero-unread assertion, but wait for server-side convergence.
+  await page.waitForFunction(async()=>{
+   const r=await fetch('/api/notifications/status',{cache:'no-store'})
+   if(!r.ok)return false
+   const x=await r.json()
+   return x.unread===0
+  },null,{timeout:25000})
   const statusResponse=await page.request.get('http://127.0.0.1:3000/api/notifications/status')
   assert.match(statusResponse.headers()['cache-control'],/no-store/)
   assert.equal((await statusResponse.json()).unread,0)
