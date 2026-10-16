@@ -195,7 +195,6 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
     </article>
    })}</div>}
   </div></section>
-  <PublishedProductsSection initial={publishedProducts} language={language}/>
   <section id="exclusive-products" className="market-band market-exclusives-band">
    <div className="market-content market-exclusive-grid">
     <div className="market-exclusive-intro">
@@ -207,6 +206,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
     <div className="market-exclusive-carousel"><FeaturedProductsCarousel products={featured} language={language} offers={offers} areas={areas} selectedArea={area}/></div>
    </div>
   </section>
+  <PublishedProductsSection initial={publishedProducts} language={language}/>
   <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={selectArea} language={language} demoMode={demoMode}/>
   <PublicFooter storefront language={language}/>
  </>
