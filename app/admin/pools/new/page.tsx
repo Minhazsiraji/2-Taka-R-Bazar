@@ -18,7 +18,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
 
   return <AdminShell><div className="grid gap-5">
     <div className="flex items-center gap-2 text-sm"><Link className="font-bold text-cyan-800 underline" href="/admin/pools">← Pools</Link><span className="text-slate-400">/</span><span>Create pool</span></div>
-    <section><div className="card-title">Pool setup</div><h1 className="text-2xl font-bold sm:text-3xl">Create a new draft pool</h1><p className="muted mt-1">Create the schedule first. Products and planning tiers are added in Advanced workflow while the pool is still Draft.</p></section>
+    <section><div className="card-title">Pool setup</div><h1 className="text-2xl font-bold sm:text-3xl">Create a new draft pool</h1><p className="muted mt-1">All times are Bangladesh time (Asia/Dhaka, UTC+06). Create the schedule first. Products and planning tiers are added in Advanced workflow while the pool is still Draft.</p></section>
     <Flash {...sp}/>
     <form action={createPoolV2} className="card form-grid p-5">
       <input type="hidden" name="return_to" value="/admin/pools/new"/>
