@@ -7,7 +7,8 @@ import { PriceTargetProgress } from '@/components/price-target-progress'
 import { ShareUnlockButton } from '@/components/share-unlock-button'
 import { commitToPool, submitPoolItemReview, submitPoolReview, togglePoolItemLove, togglePoolLove } from '@/app/actions/customer'
 import { requireOnboardedUser } from '@/lib/auth'
-import { taka, shortDate } from '@/lib/format'
+import {taka} from '@/lib/format'
+import {displayBangladeshDate} from '@/lib/bangladesh-datetime.mjs'
 
 export const dynamic = 'force-dynamic'
 const activeStatuses=['open','pricing','final_price','confirmation','ordered','ready_for_pickup']
@@ -137,7 +138,7 @@ export default async function PoolPage({searchParams}:{searchParams:Promise<{err
                     {rs.count>0&&<span className="chip"><Stars value={rs.avg}/> · {rs.count}</span>}
                   </div>
                   <h2 className="mt-2 text-xl font-black leading-tight sm:text-2xl">{pool.title}</h2>
-                  <p className="muted mt-1 text-sm">Fulfilment target · {shortDate(pool.pickup_at)}</p>
+                  <p className="muted mt-1 text-sm">Fulfilment target · {displayBangladeshDate(pool.pickup_at)}</p>
                 </div>
 
                 <form action={togglePoolLove}>

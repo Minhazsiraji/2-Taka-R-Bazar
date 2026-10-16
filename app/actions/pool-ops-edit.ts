@@ -3,9 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth'
+import {bangladeshInputToUtc} from '@/lib/bangladesh-datetime.mjs'
 
 const t=(fd:FormData,k:string)=>String(fd.get(k)??'').trim()
-const isoOrNull=(v:string)=>v?new Date(v).toISOString():null
+function isoOrNull(v:string,poolId:string){
+ try{return bangladeshInputToUtc(v)}catch{fail(poolId,'Invalid Bangladesh date or time (UTC+06).')}
+}
 const target=(poolId:string,message:string,key:'error'|'notice')=>`/admin/pools/edit?pool=${encodeURIComponent(poolId)}&${key}=${encodeURIComponent(message)}`
 function fail(poolId:string,message:string):never{redirect(target(poolId,message,'error'))}
 function done(poolId:string,message:string):never{revalidatePath('/admin','layout');revalidatePath('/pool');revalidatePath(`/admin/pools/${poolId}`);redirect(target(poolId,message,'notice'))}
@@ -27,10 +30,10 @@ export async function updateActivePoolDetails(fd:FormData){
 
   const payload={
     title:t(fd,'title'),
-    commitment_closes_at:isoOrNull(t(fd,'commitment_closes_at')),
-    confirmation_closes_at:isoOrNull(t(fd,'confirmation_closes_at')),
-    supplier_delivery_at:isoOrNull(t(fd,'supplier_delivery_at')),
-    pickup_at:isoOrNull(t(fd,'pickup_at')),
+    commitment_closes_at:isoOrNull(t(fd,'commitment_closes_at'),poolId),
+    confirmation_closes_at:isoOrNull(t(fd,'confirmation_closes_at'),poolId),
+    supplier_delivery_at:isoOrNull(t(fd,'supplier_delivery_at'),poolId),
+    pickup_at:isoOrNull(t(fd,'pickup_at'),poolId),
     receiving_pickup_point_id:t(fd,'receiving_pickup_point_id')||null,
     notes:t(fd,'notes')||null,
   }

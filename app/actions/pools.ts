@@ -3,9 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth'
+import {bangladeshInputToUtc} from '@/lib/bangladesh-datetime.mjs'
 
 const t=(fd:FormData,k:string)=>String(fd.get(k)??'').trim()
-const isoOrNull=(v:string)=>v?new Date(v).toISOString():null
+function isoOrNull(v:string,path:string){
+ try{return bangladeshInputToUtc(v)}catch{fail('Invalid Bangladesh date or time (UTC+06).',path)}
+}
 const createReturnTo=(fd:FormData)=>t(fd,'return_to')==='/admin/pools/new'?'/admin/pools/new':'/admin/pools/workflow'
 const workflowPath=(poolId:string)=>`/admin/pools/workflow#pool-${encodeURIComponent(poolId)}`
 function fail(message:string,path='/admin/pools'):never{redirect(`${path.includes('#')?path.split('#')[0]:path}?error=${encodeURIComponent(message)}${path.includes('#')?`#${path.split('#')[1]}`:''}`)}
@@ -27,8 +30,8 @@ export async function createPoolV2(fd:FormData){
   const cadence=t(fd,'cadence')==='monthly'?'monthly':'weekly'
   const payload={
     community_id:t(fd,'community_id'),title:t(fd,'title'),cadence,status:'draft',
-    opens_at:isoOrNull(t(fd,'opens_at')),commitment_closes_at:isoOrNull(t(fd,'commitment_closes_at')),
-    confirmation_closes_at:isoOrNull(t(fd,'confirmation_closes_at')),supplier_delivery_at:isoOrNull(t(fd,'supplier_delivery_at')),pickup_at:isoOrNull(t(fd,'pickup_at')),
+    opens_at:isoOrNull(t(fd,'opens_at'),errorPath),commitment_closes_at:isoOrNull(t(fd,'commitment_closes_at'),errorPath),
+    confirmation_closes_at:isoOrNull(t(fd,'confirmation_closes_at'),errorPath),supplier_delivery_at:isoOrNull(t(fd,'supplier_delivery_at'),errorPath),pickup_at:isoOrNull(t(fd,'pickup_at'),errorPath),
     receiving_pickup_point_id:t(fd,'receiving_pickup_point_id')||null,notes:t(fd,'notes')||null,created_by:user.id,
   }
   if(!payload.community_id||!payload.title)fail('Community and title required',errorPath)
@@ -47,8 +50,8 @@ export async function updateDraftPool(fd:FormData){
   if(pool.status!=='draft')fail('Return the pool to Draft before editing its setup',returnPath)
   const payload={
     title:t(fd,'title'),cadence:t(fd,'cadence')==='monthly'?'monthly':'weekly',
-    opens_at:isoOrNull(t(fd,'opens_at')),commitment_closes_at:isoOrNull(t(fd,'commitment_closes_at')),
-    confirmation_closes_at:isoOrNull(t(fd,'confirmation_closes_at')),supplier_delivery_at:isoOrNull(t(fd,'supplier_delivery_at')),pickup_at:isoOrNull(t(fd,'pickup_at')),
+    opens_at:isoOrNull(t(fd,'opens_at'),returnPath),commitment_closes_at:isoOrNull(t(fd,'commitment_closes_at'),returnPath),
+    confirmation_closes_at:isoOrNull(t(fd,'confirmation_closes_at'),returnPath),supplier_delivery_at:isoOrNull(t(fd,'supplier_delivery_at'),returnPath),pickup_at:isoOrNull(t(fd,'pickup_at'),returnPath),
     receiving_pickup_point_id:t(fd,'receiving_pickup_point_id')||null,notes:t(fd,'notes')||null,
   }
   if(!payload.title)fail('Pool title is required',returnPath)
