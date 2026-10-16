@@ -6,28 +6,29 @@ import { requireAdmin } from '@/lib/auth'
 
 const t=(fd:FormData,k:string)=>String(fd.get(k)??'').trim()
 const n=(fd:FormData,k:string)=>Number(t(fd,k))
-function fail(poolId:string,message:string):never{redirect(`/admin/pools/workflow?error=${encodeURIComponent(message)}#pool-${encodeURIComponent(poolId)}`)}
-function done(poolId:string,message:string):never{revalidatePath('/admin','layout');redirect(`/admin/pools/workflow?notice=${encodeURIComponent(message)}#pool-${encodeURIComponent(poolId)}`)}
+const easyPath=(poolId:string,fd?:FormData)=>fd?.get('return_to')==='/admin/easy-business'?`/admin/easy-business?pool=${encodeURIComponent(poolId)}`:null
+function fail(poolId:string,message:string,fd?:FormData):never{const easy=easyPath(poolId,fd);if(easy)redirect(`${easy}&error=${encodeURIComponent(message)}`);redirect(`/admin/pools/workflow?error=${encodeURIComponent(message)}#pool-${encodeURIComponent(poolId)}`)}
+function done(poolId:string,message:string,fd?:FormData):never{revalidatePath('/admin','layout');const easy=easyPath(poolId,fd);if(easy)redirect(`${easy}&notice=${encodeURIComponent(message)}`);redirect(`/admin/pools/workflow?notice=${encodeURIComponent(message)}#pool-${encodeURIComponent(poolId)}`)}
 
 export async function enterPlanningTier(fd:FormData){
   const {supabase,user}=await requireAdmin()
   const requestedPoolId=t(fd,'pool_id'),poolItemId=t(fd,'pool_item_id'),supplierId=t(fd,'supplier_id'),threshold=n(fd,'threshold_quantity'),quoted=n(fd,'quoted_unit_price'),delivery=n(fd,'delivery_cost')||0,landed=n(fd,'landed_unit_price'),ceiling=n(fd,'customer_ceiling_price')
   const {data:item}=await supabase.from('pool_items').select('id,pool_id,pools(status,supplier_delivery_at)').eq('id',poolItemId).single()
   const poolId=(item as any)?.pool_id??requestedPoolId
-  if(!item||((item as any).pools?.status)!=='draft')fail(poolId,'Planning tiers are entered while the pool is Draft')
-  if(!supplierId||!Number.isInteger(threshold)||threshold<1||!(quoted>0)||!(landed>0)||!(ceiling>0))fail(poolId,'Complete supplier, threshold and positive planning prices')
-  if(ceiling<landed)fail(poolId,'Customer ceiling cannot be below delivered supplier cost')
+  if(!item||((item as any).pools?.status)!=='draft')fail(poolId,'Planning tiers are entered while the pool is Draft',fd)
+  if(!supplierId||!Number.isInteger(threshold)||threshold<1||!(quoted>0)||!(landed>0)||!(ceiling>0))fail(poolId,'Complete supplier, threshold and positive planning prices',fd)
+  if(ceiling<landed)fail(poolId,'Customer ceiling cannot be below delivered supplier cost',fd)
   const {data:existingTiers,error:tierLookupError}=await supabase.from('supplier_quotes').select('id,threshold_quantity').eq('pool_item_id',poolItemId).eq('quote_phase','planning_tier')
-  if(tierLookupError)fail(poolId,'Could not validate existing planning tiers')
-  if((existingTiers??[]).some((row:any)=>Number(row.threshold_quantity)===threshold))fail(poolId,'A planning tier with this quantity threshold already exists')
-  if((existingTiers??[]).length>=3)fail(poolId,'A supplier-backed pool item can have at most 3 planning price tiers')
+  if(tierLookupError)fail(poolId,'Could not validate existing planning tiers',fd)
+  if((existingTiers??[]).some((row:any)=>Number(row.threshold_quantity)===threshold))fail(poolId,'A planning tier with this quantity threshold already exists',fd)
+  if((existingTiers??[]).length>=3)fail(poolId,'A supplier-backed pool item can have at most 3 planning price tiers',fd)
   const {error}=await supabase.from('supplier_quotes').insert({
     pool_item_id:poolItemId,supplier_id:supplierId,quote_phase:'planning_tier',threshold_quantity:threshold,quantity:threshold,
     quoted_unit_price:quoted,delivery_cost:delivery,landed_unit_price:landed,customer_ceiling_price:ceiling,
     delivery_included:true,delivery_target_at:(item as any).pools?.supplier_delivery_at??null,valid_until:t(fd,'valid_until')||null,notes:t(fd,'notes')||null,created_by:user.id,
   })
-  if(error)fail(poolId,error.message)
-  done(poolId,`Planning tier saved: ${threshold} units unlock up to ৳${ceiling.toLocaleString('en-BD')}`)
+  if(error)fail(poolId,error.message,fd)
+  done(poolId,`Planning tier saved: ${threshold} units unlock up to ৳${ceiling.toLocaleString('en-BD')}`,fd)
 }
 export async function enterFinalSupplierQuote(fd:FormData){
   const {supabase,user}=await requireAdmin()

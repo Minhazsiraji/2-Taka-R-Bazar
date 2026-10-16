@@ -48,6 +48,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
   for(const r of mediaRes.data??[])mediaByProduct.set(r.product_id,[...(mediaByProduct.get(r.product_id)??[]),r])
   return <AdminShell variant="product"><div className="grid min-w-0 gap-5">
     <section><div className="card-title">Catalog</div><h1 className="text-2xl font-black sm:text-3xl">Products</h1><p className="muted mt-1">Each product has one master image. The same image follows the product into Pool, order and savings views.</p><p className="mt-2 text-sm"><a className="font-semibold text-teal-700 underline underline-offset-2" href="/docs/product-upload-guide.html" target="_blank" rel="noopener noreferrer" aria-label="Open Product Upload SEO AEO GEO guide and printable PDF instructions">Product Upload Guide (SEO / AEO / GEO) — View, Print or Save as PDF ↗</a></p></section>
+    <div className="card flex flex-wrap items-center justify-between gap-3"><div><b>Already added your product?</b><p className="muted text-sm">Next, choose the area, verified supplier price and Pool on one screen.</p></div><a className="btn-primary" href="/admin/easy-business">Continue to Easy Business →</a></div>
     <Flash {...sp}/>
 
     <AdminProductCreateWizard key={user.id} userId={user.id}/>

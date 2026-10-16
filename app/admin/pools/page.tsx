@@ -42,7 +42,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   return <AdminShell><div className="grid gap-5">
     <section className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div><div className="card-title">Pool operations</div><h1 className="text-2xl font-bold sm:text-3xl">Pools</h1><p className="muted mt-1">Search the list, open one pool, then manage only that pool.</p></div>
-      <div className="flex flex-wrap gap-2"><Link className="btn-primary" href="/admin/pools/new">Create pool</Link><Link className="btn-secondary" href="/admin/pools/workflow">Advanced workflow</Link></div>
+      <div className="flex flex-wrap gap-2"><Link className="btn-primary" href="/admin/easy-business">Easy Business →</Link><Link className="btn-primary" href="/admin/pools/new">Create pool</Link><Link className="btn-secondary" href="/admin/pools/workflow">Advanced workflow</Link></div>
     </section>
 
     <form className="card grid gap-3 p-4 sm:grid-cols-[1fr_180px_auto]" method="get">
