@@ -34,7 +34,7 @@ insert into public.products(id,name,category,package_size,unit,sku,source_type,i
 insert into public.own_product_costs(product_id,purchase_cost) values('00000000-0000-4000-8000-000000009120',100);
 insert into public.own_product_inventory(product_id,stock_on_hand) values('00000000-0000-4000-8000-000000009120',3);
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000009101',true);
-select throws_like($select public.commerce_request_live_stock_attestation(
+select throws_like($$select public.commerce_request_live_stock_attestation(
  '00000000-0000-4000-8000-000000009120','00000000-0000-4000-8000-000000009110',4,'Kg',
  '00000000-0000-4000-8000-000000009101/00000000-0000-4000-8000-000000009190.pdf',
  repeat('a',64),now()+interval '1 day')$$,
@@ -46,12 +46,12 @@ insert into real_stock_case values('claim',public.commerce_request_live_stock_at
  repeat('a',64),now()+interval '1 day'));
 select ok(not private.commerce_live_stock_eligible('00000000-0000-4000-8000-000000009120','00000000-0000-4000-8000-000000009110',1),
  'Pending maker submission cannot authorize real sale');
-select throws_like($select public.commerce_request_live_stock_attestation(
+select throws_like($$select public.commerce_request_live_stock_attestation(
  '00000000-0000-4000-8000-000000009120','00000000-0000-4000-8000-000000009110',3,'Kg',
  '00000000-0000-4000-8000-000000009101/00000000-0000-4000-8000-000000009190.pdf',
  repeat('a',64),now()+interval '1 day')$$,
  '%awaits independent review%', 'Duplicate pending attestations are blocked');
-select throws_like($select public.commerce_review_live_stock_attestation(
+select throws_like($$select public.commerce_review_live_stock_attestation(
  (select id from real_stock_case where key='claim'),true,'Self review not allowed')$$,
  '%Independent Super Admin approval required%', 'Maker cannot approve as Admin');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000009102',true);
@@ -93,7 +93,7 @@ select ok(private.commerce_live_stock_eligible('00000000-0000-4000-8000-00000000
 update public.own_product_inventory set stock_on_hand=10,reserved_quantity=0 where product_id='00000000-0000-4000-8000-000000009120';
 select ok(not private.commerce_live_stock_eligible('00000000-0000-4000-8000-000000009120','00000000-0000-4000-8000-000000009110',1),
  'Unverified stock increases invalidate approved physical quantity');
-select throws_like($select public.commerce_review_live_stock_attestation(
+select throws_like($$select public.commerce_review_live_stock_attestation(
  (select id from real_stock_case where key='claim'),true,'Double approval invalid')$$,
  '%pending stock attestation%', 'One verification cannot be approved twice');
 select is((select count(*)::integer from public.commerce_offers where not is_synthetic),0,
