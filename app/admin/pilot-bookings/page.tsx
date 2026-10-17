@@ -51,8 +51,8 @@ export default async function PilotBookingInbox({searchParams}:Props){
       <label className="grid gap-1 text-sm font-bold">Delivery fee (৳; 0 for free pickup)
        <input className="input" type="number" name="delivery_fee" min="0" step="0.01" defaultValue={b.confirmed_delivery_fee??''} placeholder="0 for free pickup"/></label>
      </div>
-     <label className="grid gap-1 text-sm font-bold">Staff note / timing
-      <textarea className="input" name="staff_note" maxLength={500} defaultValue={b.staff_note??''} placeholder="Agreed time, pickup point, stock or cancellation reason"/></label>
+     <label className="grid gap-1 text-sm font-bold">Customer-facing update / agreed timing
+      <textarea className="input" name="staff_note" maxLength={500} defaultValue={b.staff_note??''} placeholder="A message the customer will see: pickup point/time or cancellation details"/></label>
      <div className="flex flex-wrap gap-2">
       {b.status==='requested'&&<button type="submit" className="btn-secondary" name="status" value="contacted">Mark contacted</button>}
       {b.status!=='confirmed'&&<button type="submit" className="btn-primary" name="status" value="confirmed">Confirm booking</button>}
