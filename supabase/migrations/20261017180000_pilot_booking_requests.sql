@@ -109,6 +109,12 @@ begin
  ) returning id into v_booking;
  insert into public.pilot_booking_events(booking_id,actor_user_id,to_status,note)
  values(v_booking,v_user,'requested','Customer submitted a non-payable booking request');
+ insert into public.notifications(user_id,kind,title,body,href,priority,dedupe_key)
+ select distinct ur.user_id,'pilot_booking','New pilot booking',
+  'A customer requested '||v_product.name||' × '||p_quantity||'. Please confirm availability and contact them.',
+  '/admin/pilot-bookings','high','pilot:new:'||v_booking::text
+ from public.user_roles ur where ur.role in ('admin','super_admin')
+ on conflict(user_id,dedupe_key) do nothing;
  return v_booking;
 end $$;
 
@@ -140,6 +146,11 @@ begin
  where id=v.id;
  insert into public.pilot_booking_events(booking_id,actor_user_id,from_status,to_status,note)
  values(v.id,v_user,v.status,p_status,v_note);
+ insert into public.notifications(user_id,kind,title,body,href,priority,dedupe_key)
+ values(v.customer_id,'pilot_booking','Your booking has an update',
+  'Your booking for '||v.product_name||' is now '||p_status||'. Open My bookings for details.',
+  '/pilot-bookings','normal','pilot:status:'||v.id::text||':'||p_status)
+ on conflict(user_id,dedupe_key) do nothing;
  return p_status;
 end $$;
 
@@ -156,6 +167,12 @@ begin
  update public.pilot_booking_requests set status='cancelled',updated_at=now(),last_action_by=v_user where id=v.id;
  insert into public.pilot_booking_events(booking_id,actor_user_id,from_status,to_status,note)
  values(v.id,v_user,v.status,'cancelled','Cancelled by customer before confirmation');
+ insert into public.notifications(user_id,kind,title,body,href,priority,dedupe_key)
+ select distinct ur.user_id,'pilot_booking','Pilot booking cancelled',
+  'Customer cancelled an unconfirmed booking for '||v.product_name||'.',
+  '/admin/pilot-bookings','normal','pilot:cancel:'||v.id::text
+ from public.user_roles ur where ur.role in ('admin','super_admin')
+ on conflict(user_id,dedupe_key) do nothing;
  return 'cancelled';
 end $$;
 
