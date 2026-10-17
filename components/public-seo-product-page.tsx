@@ -44,7 +44,11 @@ export function PublicSeoProductPage({product:p,locale}:{product:ProductSeoPubli
      <div className="mt-7 rounded-2xl border border-teal-200 bg-teal-50 p-4 text-sm text-slate-800">
       <b>{bn?'কমিউনিটিতে কেনাকাটা':'Community buying'}</b>
       <p className="mt-2">{bn?'এটি পণ্যের তথ্য পৃষ্ঠা। আপনার কমিউনিটিতে বর্তমান দাম, স্টক ও পুল বা গ্রুপ ডিলের প্রাপ্যতা যাচাই করুন।':'This is an informational product page. Check your community for currently approved prices, stock and Pool or Group Deal availability.'}</p>
-      <Link href="/" className="mt-3 inline-block font-bold underline">{bn?'উপলব্ধ অফার দেখুন':'Browse current offers'} →</Link>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+       <Link href="/" className="font-bold underline">{bn?'উপলব্ধ অফার দেখুন':'Browse current offers'} →</Link>
+       <Link href={'/pilot-book?product='+p.product_id} className="btn-primary">{bn?'পাইলটে পণ্য বুক করুন':'Book product · Pilot'}</Link>
+      </div>
+      <p className="mt-2 text-xs">{bn?'বুকিংয়ের পর আমাদের টিম দাম ও ডেলিভারি নিশ্চিত করবে; এখন কোনো পেমেন্ট নয়।':'A request only; our team will confirm price and delivery. No online payment.'}</p>
      </div>
     </div>
    </div>

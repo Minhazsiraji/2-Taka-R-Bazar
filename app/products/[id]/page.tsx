@@ -49,7 +49,8 @@ export default async function ProductDetailsPage({params}:{params:Promise<{id:st
           <div className="mt-6 border-t border-black/10 pt-6"><h2 className="text-lg font-black">Product details</h2><p className="mt-3 whitespace-pre-line text-base leading-8 text-slate-600">{product.description||'More product information will be added soon.'}</p></div>
           {product.highlights?.length>0&&<div className="mt-6"><h2 className="font-black">Highlights</h2><ul className="mt-3 grid gap-3">{product.highlights.map((s,index)=><li key={index} className="flex items-start gap-3 text-sm leading-6 text-slate-600"><span className="text-teal-600" aria-hidden="true">✓</span><span>{s}</span></li>)}</ul></div>}
           <div className="mt-7 rounded-2xl border border-teal-200/50 bg-teal-50/50 p-4"><p className="font-bold">Transparent community pricing</p><p className="mt-1 text-sm leading-6 text-slate-600">This is a product showcase, not a confirmed order or price offer. Your relevant Pool or Group Deal will show its current price before you commit or confirm.</p><p className="mt-1 text-xs text-slate-500" lang="bn">আপনার কমিউনিটির পুলে মূল্য দেখে নিশ্চিত করুন।</p></div>
-          <div className="mt-6 flex flex-wrap gap-3"><Link href="/signup" className="btn-primary">Join the community pool</Link><Link href="/login" className="btn-secondary">Sign in to see pools</Link></div>
+          <div className="mt-6 flex flex-wrap gap-3"><Link href={'/pilot-book?product='+product.product_id} className="btn-primary">Book now · Pilot</Link><Link href="/signup" className="btn-secondary">Join the community pool</Link></div>
+          <p className="mt-2 text-sm">Pilot booking is a request. Our staff will confirm stock, price and collection or delivery; no online payment is taken.</p>
         </section>
       </div>
       <div className="mt-8"><Link href="/" className="font-bold text-teal-700 underline">← Back to homepage</Link></div>
