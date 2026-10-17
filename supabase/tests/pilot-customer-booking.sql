@@ -67,6 +67,9 @@ select is((select status from public.pilot_booking_requests where id=(select id 
  'requested','Pilot request persisted without paid or confirmed status');
 select is((select contact_phone from public.pilot_booking_requests where id=(select id from pilot_ids)),
  '01712348801','Contact comes from actual authenticated household profile');
+select is((select count(*)::integer from public.notifications where kind='pilot_booking'
+ and user_id='00000000-0000-4000-8000-000000008803'
+ and href='/admin/pilot-bookings'),1,'New requests notify authorized staff');
 select is(public.pilot_request_booking(
  '00000000-0000-4000-8000-000000008820',2,'pickup',null,'Call in the evening',
  '00000000-0000-4000-8000-000000008890',true),(select id from pilot_ids),
@@ -89,6 +92,9 @@ select is(public.pilot_staff_update_booking(
  'confirmed','Staff can confirm agreed booking and no online payment');
 select is((select confirmed_unit_price::integer from public.pilot_booking_requests
  where id=(select id from pilot_ids)),1240,'Exact agreed price persisted');
+select is((select count(*)::integer from public.notifications where kind='pilot_booking'
+ and user_id='00000000-0000-4000-8000-000000008801'
+ and href='/pilot-bookings'),1,'Customer is notified about staff confirmation');
 select is((select count(*)::integer from public.pilot_booking_events
  where booking_id=(select id from pilot_ids)),2,'Request and staff confirmation create immutable event history');
 select is((select count(*)::integer from public.commerce_orders where not is_synthetic),0,
