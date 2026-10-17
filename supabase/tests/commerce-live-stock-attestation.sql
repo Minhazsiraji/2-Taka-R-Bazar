@@ -13,6 +13,14 @@ select ok(not has_function_privilege('authenticated','private.commerce_live_stoc
 select is((select production_purchases_enabled from private.commerce_configuration),false,
  'Commerce purchases remain disabled after new migration');
 
+select is((select public from storage.buckets where id='commerce-evidence'),false,
+ 'Evidence bucket is private by default');
+select is((select file_size_limit from storage.buckets where id='commerce-evidence'),10485760::bigint,
+ 'Evidence bucket enforces a 10 MiB maximum file size');
+select ok(exists(select 1 from pg_policies where schemaname='storage'
+ and tablename='objects' and policyname='commerce_live_stock_evidence_upload'),
+ 'Stock proof upload is restricted through an authenticated policy');
+
 insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) values
  ('00000000-0000-4000-8000-000000009101','00000000-0000-0000-0000-000000000000','authenticated','authenticated','stock-maker@example.invalid',now(),now()),
  ('00000000-0000-4000-8000-000000009102','00000000-0000-0000-0000-000000000000','authenticated','authenticated','stock-checker@example.invalid',now(),now());
@@ -64,6 +72,14 @@ select lives_ok($$select public.commerce_review_live_stock_attestation(
  'Independent Super Admin approval works');
 select ok(private.commerce_live_stock_eligible('00000000-0000-4000-8000-000000009120','00000000-0000-4000-8000-000000009110',3),
  'Independently verified quantity eligible for full reservation');
+
+delete from storage.objects where bucket_id='commerce-evidence'
+ and name='00000000-0000-4000-8000-000000009101/00000000-0000-4000-8000-000000009190.pdf';
+select ok(not private.commerce_live_stock_eligible('00000000-0000-4000-8000-000000009120','00000000-0000-4000-8000-000000009110',1),
+ 'Deleted evidence makes an otherwise approved attestation ineligible');
+insert into storage.objects(bucket_id,name) values(
+ 'commerce-evidence',
+ '00000000-0000-4000-8000-000000009101/00000000-0000-4000-8000-000000009190.pdf');
 select ok(not private.commerce_live_stock_eligible('00000000-0000-4000-8000-000000009120','00000000-0000-4000-8000-000000009110',4),
  'Overselling beyond physical stock remains blocked');
 update public.own_product_inventory set reserved_quantity=2 where product_id='00000000-0000-4000-8000-000000009120';
