@@ -24,6 +24,11 @@ create table if not exists public.commerce_live_stock_attestations (
 );
 create index if not exists commerce_live_stock_by_product
  on public.commerce_live_stock_attestations(product_id,community_id,status,valid_until desc);
+
+-- Prevent concurrent makers from creating two competing unreviewed counts.
+create unique index if not exists commerce_live_stock_single_pending
+ on public.commerce_live_stock_attestations(product_id,community_id)
+ where status='pending';
 alter table public.commerce_live_stock_attestations enable row level security;
 revoke all on public.commerce_live_stock_attestations from public,anon,authenticated,service_role;
 
@@ -165,6 +170,12 @@ language sql stable security definer set search_path='' as $$
  join public.own_product_inventory i on i.product_id=p.id
  where a.product_id=p_product and a.community_id=p_community
   and a.status='approved' and a.valid_until>now()
+  -- An older approved count must not authorize sales after a new recount begins.
+  and not exists (
+    select 1 from public.commerce_live_stock_attestations newer
+    where newer.product_id=a.product_id and newer.community_id=a.community_id
+      and (newer.requested_at,newer.id)>(a.requested_at,a.id)
+  )
   and exists (select 1 from storage.objects so where so.bucket_id='commerce-evidence' and so.name=a.evidence_path)
   and a.unit_snapshot=p.unit
   and a.verified_quantity>=i.stock_on_hand
