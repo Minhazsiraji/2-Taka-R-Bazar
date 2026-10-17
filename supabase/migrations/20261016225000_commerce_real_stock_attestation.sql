@@ -55,6 +55,16 @@ create policy commerce_live_stock_maker_evidence_read on storage.objects
   and (storage.foldername(name))[1]=auth.uid()::text
  );
 
+-- RESTRICTIVE policies close UPDATE/DELETE routes even if another
+-- permissive storage policy would otherwise match this bucket.
+create policy commerce_live_stock_evidence_no_update on storage.objects
+ as restrictive for update to authenticated
+ using (bucket_id <> 'commerce-evidence')
+ with check (bucket_id <> 'commerce-evidence');
+create policy commerce_live_stock_evidence_no_delete on storage.objects
+ as restrictive for delete to authenticated
+ using (bucket_id <> 'commerce-evidence');
+
 -- Checker can read original evidence created under a different staff account,
 -- but only when the path belongs to an actual stock attestation.
 create or replace function private.commerce_live_stock_checker_can_read(p_path text)
