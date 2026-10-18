@@ -33,12 +33,14 @@ async function assertReviewLayout(page,width){
   assert.ok(geometry.cardHeight<560,`Review card should remain compact at ${width}px`)
  }
 }
-async function assertMobileApprovedHome(page,width){
+async function assertUnifiedApprovedHome(page,width){
  const mobile=page.locator('.mhome')
  await mobile.waitFor({state:'visible'})
  assert.equal(await page.locator('.market-legacy-home').isVisible(),false,'Only the approved mobile home is visible')
  const headings=await mobile.locator('.mhome-section-heading h2').allTextContents()
- assert.deepEqual(headings,['Group Deals','Exclusive Products','Community Pools'])
+ assert.deepEqual(headings,['Your Savings Summary','Group Deals','Exclusive Products','Community Pools'])
+ assert.equal(await mobile.locator('.mhome-savings-card').count(),4,'Four safely derived savings cards are present')
+ assert.ok(await mobile.locator('.mhome-savings-grid').isVisible(),'Savings grid is visible on every viewport')
  const hero=mobile.locator('.mhome-hero')
  await hero.getByRole('heading',{level:1}).waitFor()
  const title=await hero.getByRole('heading',{level:1}).textContent()
@@ -89,8 +91,7 @@ try{
   const page=await browser.newPage({viewport:{width,height:900}})
   page.on('pageerror',e=>errors.push(e.message))
   await page.goto('http://127.0.0.1:3000/',{waitUntil:'domcontentloaded',timeout:60000})
-  if(width<768)await page.locator('.mhome').waitFor({state:'visible'})
-  else await page.locator('.market-legacy-home').waitFor({state:'visible'})
+  await page.locator('.mhome').waitFor({state:'visible'})
   await page.getByRole('heading',{name:'Synthetic browser Pool',exact:true}).waitFor()
   if(width===393){
    const toggle=page.locator('.market-flat-header .market-single-language')
@@ -98,7 +99,7 @@ try{
    assert.equal((await toggle.innerText()).trim(),'BAN')
    await toggle.click()
    assert.equal((await toggle.innerText()).trim(),'EN')
-   if(width>=768)await assertReviewLayout(page,width) // Desktop reference layout remains locked
+   // All viewports now share the same approved responsive component tree.
    await page.reload({waitUntil:'domcontentloaded',timeout:60000})
    assert.equal((await toggle.innerText()).trim(),'EN','BAN choice must survive full reload')
    assert.equal((await page.context().cookies()).some(c=>c.name==='2tbr_storefront_language'&&c.value==='bn'),true)
@@ -112,15 +113,9 @@ try{
   await assertCustomerChrome(page,width)
   if([768,820,1024].includes(width))await page.screenshot({path:'/tmp/2tbr-header-tablet-brand-'+width+'.png'})
   if(width===393)await page.screenshot({path:'/tmp/2tbr-header-storefront-guest.png',fullPage:true})
-  if(width<768){
-   await assertMobileApprovedHome(page,width)
-  }else{
-   assert.equal(await page.locator('.market-pool-demo-pill').count(),0)
-   assert.equal(await page.locator('.market-pool-thumbnails a').first().getAttribute('href'),`/shop/${ids.product}?area=${ids.community}`)
-   const poolText=await page.locator('.market-featured-pool').innerText()
-   assert.ok(!poolText.includes('নমুনা'))
-   assert.ok(poolText.includes('Price pending'))
-  }
+  await assertUnifiedApprovedHome(page,width)
+  const savingsColumns=await page.locator('.mhome-savings-grid').evaluate(e=>getComputedStyle(e).gridTemplateColumns.split(' ').length)
+  assert.equal(savingsColumns,width<768?2:4,'Approved savings cards respond to viewport')
   const dock=page.locator('.market-storefront-dock')
   assert.equal(await dock.isVisible(),width<768)
   if(width<768)assert.equal(await dock.evaluate(e=>getComputedStyle(e).position),'fixed')
@@ -128,21 +123,19 @@ try{
   const links=await page.locator('footer a[href^="mailto:"]').evaluateAll(es=>es.map(e=>e.getAttribute('href')))
   assert.deepEqual(links,['mailto:business@2takarbazar.com','mailto:support@2takarbazar.com','mailto:business@agentsiraji.com'])
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true)
-  if(width>=768)await assertReviewLayout(page,width)
-  if(width===393)await page.locator('.mhome').screenshot({path:'/tmp/2tbr-approved-mobile-home-393-en.png'})
+  if([393,820,1440].includes(width))await page.locator('.mhome').screenshot({path:'/tmp/2tbr-approved-unified-home-'+width+'-en.png'})
   await page.locator('header').getByRole('button',{name:'Switch to dark mode'}).click()
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark')
   await assertCustomerChrome(page,width)
   assert.equal(await dock.isVisible(),width<768)
   await assertMobileDock(page,width)
-  if(width>=768)await assertReviewLayout(page,width)
-  else await assertMobileApprovedHome(page,width)
+  else await assertUnifiedApprovedHome(page,width)
   if(width===393){
    await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}))
    await page.screenshot({path:'/tmp/2tbr-header-dock-storefront-footer.png'})
    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}))
   }
-  await page.locator(width<768?'.mhome-pool-photos a':'.market-pool-thumbnail').first().click()
+  await page.locator('.mhome-pool-photos a').first().click()
   await page.waitForURL(url=>url.pathname==='/shop/'+ids.product)
   await page.getByRole('heading',{name:'Synthetic browser rice',exact:true,level:1}).waitFor()
   await assertCustomerChrome(page,width)
