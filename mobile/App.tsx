@@ -32,6 +32,7 @@ function Shop(){
  const [screen,setScreen]=useState<Screen>('home');
  const [selectedOffer,setSelectedOffer]=useState<Offer|null>(null);
  const [selectedPool,setSelectedPool]=useState<Pool|null>(null);
+ const [poolQuantities,setPoolQuantities]=useState<Record<string,Record<string,number>>>({});
  const [productInfoOpen,setProductInfoOpen]=useState<Record<string,boolean>>({});
  const [slide,setSlide]=useState(0);
  const [query,setQuery]=useState('');
@@ -65,6 +66,7 @@ function Shop(){
  const onTab=(tab:Tab)=>{setSelectedOffer(null);setSelectedPool(null);setScreen(tab)};
  const selectOffer=(offer:Offer)=>{setSelectedOffer(offer);setScreen(offer.mode==='GROUP_DEAL'?'group':'product')};
  const selectPool=(pool:Pool)=>{setSelectedPool(pool);setScreen('pool')};
+ const changePoolQty=(poolId:string,id:string,delta:number)=>setPoolQuantities(old=>{const before=old[poolId]||{};return {...old,[poolId]:{...before,[id]:Math.max(0,Math.min(20,(before[id]||0)+delta))}}});
  const updateCart=(id:string,delta:number)=>setCart(previous=>{
   const current=previous[id]||0;const next=Math.max(0,Math.min(100,current+delta));
   const clone={...previous};if(next)clone[id]=next;else delete clone[id];return clone;
@@ -276,7 +278,7 @@ function Shop(){
          })}
        </View>}
      </View>)}
-     <View style={{flexDirection:'row',marginBottom:12}}>{button(offer.mode==='GROUP_DEAL'?'Back to Group Deal':'Back to Offer',()=>setScreen(offer.mode==='GROUP_DEAL'?'group':'product'))}</View>
+     <View style={{flexDirection:'row',marginBottom:12}}>{button(offer.mode==='POOL'&&selectedPool?'Back to Pool':offer.mode==='GROUP_DEAL'?'Back to Group Deal':'Back to Offer',()=>setScreen(offer.mode==='POOL'&&selectedPool?'pool':offer.mode==='GROUP_DEAL'?'group':'product'))}</View>
    </>;
  }
  function OfferDetails(){const offer=selectedOffer;if(!offer)return null;const p=byId(offer.productId);if(!p)return null;
@@ -298,20 +300,89 @@ function Shop(){
     </>)}
   </>;
  }
- function PoolDetails(){const pool=selectedPool;if(!pool)return null;const list=offers.filter(o=>o.mode==='POOL'&&o.poolId===pool.id);return <>
-   {title(pool.frequency.toUpperCase()+' POOL',lang==='bn'?pool.nameBn:pool.name)}
-   {panel(<><Text style={{color:theme.accent,fontWeight:'900'}}>{pool.productIds.length} {t.products} · {pool.participants.toLocaleString('en-US')} {t.members}</Text>
-    <Text style={{color:theme.muted,marginTop:6,fontSize:12}}>No cap on people · Next savings milestone: {pool.nextTier.toLocaleString('en-US')} households.</Text>
-    <View style={{height:8,backgroundColor:theme.field,borderRadius:5,marginTop:9}}><View style={{height:8,width:(Math.min(100,100*pool.participants/pool.nextTier)+'%') as `${number}%`,backgroundColor:theme.accent,borderRadius:5}}/></View>
+
+ function PoolDetails(){
+  const pool=selectedPool;if(!pool)return null;
+  const label=(en:string,bn:string)=>lang==='bn'?bn:en;
+  const records=pool.productIds.map(id=>({product:byId(id),offer:offers.find(o=>o.mode==='POOL'&&o.poolId===pool.id&&o.productId===id)}));
+  const quantities=poolQuantities[pool.id]||{};
+  const selected=records.filter(r=>r.offer&&(quantities[r.offer.productId]||0)>0);
+  const units=selected.reduce((v,r)=>v+(quantities[r.offer!.productId]||0),0);
+  const retail=selected.reduce((v,r)=>v+(r.product?.referencePrice||0)*(quantities[r.offer!.productId]||0),0);
+  const current=selected.reduce((v,r)=>v+(r.offer?.price||0)*(quantities[r.offer!.productId]||0),0);
+  const next=selected.reduce((v,r)=>v+(r.offer?.nextTierPrice??r.offer?.price??0)*(quantities[r.offer!.productId]||0),0);
+  const progress=Math.min(100,Math.round(100*pool.participants/pool.nextTier));
+  const sumRow=(name:string,value:number,big=false)=><View style={[styles.between,{paddingVertical:6,borderBottomWidth:1,borderColor:theme.line}]}>
+   <Text style={{fontSize:11,color:theme.muted,flex:1}}>{name}</Text><Text style={{fontSize:big?18:13,color:theme.accent,fontWeight:'900'}}>{money(value)}</Text>
+  </View>;
+  return <>
+   <View style={[styles.between,{marginTop:10,marginBottom:6,flexWrap:'wrap'}]}>
+    {pill(pool.frequency==='weekly'?label('WEEKLY POOL','সাপ্তাহিক পুল'):label('MONTHLY POOL','মাসিক পুল'),true)}
+    <View style={{flexDirection:'row',alignItems:'center',gap:5,backgroundColor:dark?'#154F39':'#DDF8E9',paddingHorizontal:8,paddingVertical:5,borderRadius:14}}>
+     <View style={{height:6,width:6,backgroundColor:'#11A865',borderRadius:4}}/><Text style={{fontSize:10,color:dark?'#A9F9CF':'#087B4F',fontWeight:'900'}}>ACTIVE</Text>
+    </View>
+    {demo&&pill('DEMO DATA')}
+   </View>
+   <Text style={{fontSize:22,color:theme.text,fontWeight:'900'}}>{lang==='bn'?pool.nameBn:pool.name}</Text>
+   <Text style={{fontSize:11,color:theme.muted,marginBottom:10}}>{pool.productIds.length} {t.products} · {pool.participants.toLocaleString('en-US')} {t.members}</Text>
+   {panel(<>
+    <Text style={{fontSize:14,color:theme.text,fontWeight:'900',marginBottom:7}}>{label('Community savings progress','কমিউনিটির অগ্রগতি')}</Text>
+    <View style={styles.between}><Text style={{fontSize:13,color:theme.accent,fontWeight:'900'}}>{pool.participants.toLocaleString('en-US')} {label('households joined','পরিবার যুক্ত')}</Text><Text style={{fontSize:10,color:theme.muted}}>{pool.nextTier.toLocaleString('en-US')} {label('next milestone','পরের ধাপ')}</Text></View>
+    <View style={{height:7,backgroundColor:theme.field,borderRadius:6,marginVertical:9,overflow:'hidden'}}><View style={{height:7,width:(progress+'%') as any,backgroundColor:theme.highlight,borderRadius:6}}/></View>
+    <Text style={{fontSize:10,color:theme.muted}}>{label('No cap on participation. Progress shows the next price milestone, not Pool capacity.','অংশগ্রহণ সীমাহীন। এটি পরের সাশ্রয় স্তর, সদস্যসীমা নয়।')}</Text>
+    <View style={[styles.between,{paddingTop:9,marginTop:9,borderTopWidth:1,borderColor:theme.line}]}>
+     <View style={{flexDirection:'row',gap:4,alignItems:'center'}}><Ionicons name="time-outline" color={theme.accent} size={14}/><Text style={{fontSize:10,color:theme.text,fontWeight:'800'}}>{label('Commitment ends','যোগদান শেষ')}: {pool.commitEndsLabel||'TBD'}</Text></View>
+     <Text style={{fontSize:10,fontWeight:'800',color:theme.accent}}>{pool.commitDaysLeft??0} {label('days left','দিন বাকি')}</Text>
+    </View>
    </>)}
-   {list.map(o=>{const p=byId(o.productId);if(!p)return null;return panel(<View style={{flexDirection:'row',gap:9,alignItems:'center'}}>
-    <View style={{width:80}}><ProductPhoto item={p} height={76}/></View>
-    <View style={{flex:1}}><Text style={{color:theme.text,fontSize:13,fontWeight:'800'}}>{lang==='bn'?p.nameBn:p.name} · {p.unit}</Text>
-    <Text style={{color:theme.accent,fontWeight:'900'}}>{money(o.price)}  <Text style={{color:theme.muted,textDecorationLine:'line-through',fontSize:10}}>{money(p.referencePrice)}</Text></Text>
-    <Text style={{color:theme.muted,fontSize:10}}>{t.save} {money(customerSaving(p.referencePrice,o.price))}</Text></View>
-    <Pressable onPress={notify} style={{padding:8,borderRadius:8,backgroundColor:theme.accent}}><Text style={{color:'#fff',fontWeight:'800'}}>Join</Text></Pressable>
-   </View>)})}
-   {panel(<Text style={{color:theme.muted,fontSize:11}}>{t.notice} Pool quantities and the final selling price will be confirmed by the real system.</Text>)}
+   <View style={[styles.between,{marginBottom:8,marginTop:4}]}>
+    <View style={{flex:1}}><Text style={{fontSize:18,fontWeight:'900',color:theme.text}}>{label('Choose your products','প্রয়োজনীয় পণ্য বেছে নিন')}</Text><Text style={{fontSize:10,color:theme.muted}}>{label('Pick only what you need · 1–20 products per Pool','যা প্রয়োজন শুধু তাই নিন · পুলে ১–২০টি পণ্য')}</Text></View>
+    {pill(selected.length+' '+label('selected','নির্বাচিত'),true)}
+   </View>
+   {records.map(({product,offer})=>{
+    if(!product)return null;
+    const q=offer?quantities[offer.productId]||0:0;
+    return <View key={product.id} style={[styles.panel,{backgroundColor:theme.card,borderColor:q?theme.accent:theme.line,padding:9,flexDirection:'row',gap:8,alignItems:'stretch'}]}>
+     <Pressable style={{width:small?88:102}} onPress={()=>{if(offer){setSelectedOffer(offer);setScreen('retail')}}}><ProductPhoto item={product} height={134}/></Pressable>
+     <View style={{flex:1,minWidth:0,justifyContent:'space-between',gap:4}}>
+      <View style={styles.between}><Text numberOfLines={2} style={{fontSize:12,fontWeight:'900',color:theme.text,flex:1}}>{lang==='bn'?product.nameBn:product.name}</Text><Text style={{fontSize:9,color:theme.muted}}>{product.unit}</Text></View>
+      <View style={{flexDirection:'row',alignItems:'baseline',gap:5,flexWrap:'wrap'}}><Text style={{fontSize:18,fontWeight:'900',color:theme.accent}}>{offer?money(offer.price):label('Pending','অপেক্ষমাণ')}</Text><Text style={{color:theme.muted,fontSize:10,textDecorationLine:'line-through'}}>{money(product.referencePrice)}</Text></View>
+      {offer?<Text style={{fontSize:10,color:theme.accent,fontWeight:'800'}}>{label('Potential saving','সম্ভাব্য সাশ্রয়')} {money(customerSaving(product.referencePrice,offer.price))} / {product.unit}</Text>:<Text style={{fontSize:10,color:theme.muted}}>{label('Price pending','দাম নির্ধারণ বাকি')}</Text>}
+      {offer?.nextTierPrice!==undefined&&<Text style={{fontSize:9,color:theme.muted}}>{label('Next tier','পরবর্তী স্তর')}: {money(offer.nextTierPrice)} · {pool.nextTier.toLocaleString('en-US')} {label('households','পরিবার')}</Text>}
+      <View style={[styles.between,{gap:4,marginTop:4}]}>
+       <Pressable accessibilityRole="button" onPress={()=>{if(offer){setSelectedOffer(offer);setScreen('retail')}}}><Text style={{fontSize:9,fontWeight:'900',color:theme.accent,textDecorationLine:'underline'}}>{label('Product Details','পণ্যের বিস্তারিত')} →</Text></Pressable>
+       <View style={{flexDirection:'row',gap:5,alignItems:'center'}}>
+        <Pressable accessibilityLabel={'Decrease '+product.name} disabled={!q} onPress={()=>changePoolQty(pool.id,product.id,-1)} style={{width:29,height:29,backgroundColor:theme.soft,borderRadius:8,alignItems:'center',justifyContent:'center',opacity:q?1:.3}}><Ionicons name="remove" color={theme.accent} size={17}/></Pressable>
+        <Text style={{fontSize:12,fontWeight:'900',color:theme.text,minWidth:14,textAlign:'center'}}>{q}</Text>
+        <Pressable accessibilityLabel={'Increase '+product.name} disabled={!offer||q>=20} onPress={()=>changePoolQty(pool.id,product.id,1)} style={{width:29,height:29,backgroundColor:theme.soft,borderRadius:8,alignItems:'center',justifyContent:'center',opacity:!offer||q>=20?.3:1}}><Ionicons name="add" color={theme.accent} size={17}/></Pressable>
+       </View>
+      </View>
+     </View>
+    </View>;
+   })}
+   {panel(<><Text style={{fontSize:13,fontWeight:'900',color:theme.text,marginBottom:8}}>{label('How Pool prices unlock','পুলের দাম কীভাবে কমে')}</Text>
+    <View style={{flexDirection:'row',gap:5}}>
+     {[label('Starting','শুরু'),label('Current tier','বর্তমান'),label('Next unlock','পরবর্তী')].map((name,index)=><View key={index} style={{flex:1,minWidth:0,padding:7,borderRadius:10,borderWidth:1,borderColor:index===1?theme.accent:theme.line,backgroundColor:index===1?theme.soft:theme.field}}><Text style={{fontSize:9,color:theme.muted}}>{name}</Text><Text style={{fontSize:11,fontWeight:'900',color:theme.accent,marginTop:6}}>{index===0?label('Opening','শুরুর দাম'):index===1?pool.participants.toLocaleString('en-US'):pool.nextTier.toLocaleString('en-US')}</Text></View>)}
+    </View>
+    <Text style={{fontSize:10,color:theme.muted,marginTop:9}}>{label('Each item has an independent tier price. Final prices require server qualification.','প্রতিটি পণ্যের আলাদা স্তরভিত্তিক দাম; নিশ্চিতকরণ জরুরি।')}</Text>
+   </>)}
+   {panel(<>
+    <View style={styles.between}><Text style={{fontSize:14,fontWeight:'900',color:theme.text}}>{label('Your Pool basket','আপনার পুলের বাজার')}</Text><Text style={{fontSize:10,color:theme.muted}}>{selected.length} {t.products} · {units} {label('units','ইউনিট')}</Text></View>
+    <View style={{marginTop:8}}>{sumRow(label('Market retail total','খুচরা বাজারমূল্য'),retail)}</View>
+    {sumRow(label('Current estimated Pool total','বর্তমান পুলের আনুমানিক মূল্য'),current,true)}
+    {sumRow(label('Potential savings','সম্ভাব্য সাশ্রয়'),Math.max(0,retail-current))}
+    {sumRow(label('Total at next tier','পরবর্তী স্তরে মোট মূল্য'),next)}
+    <Text style={{fontSize:10,color:theme.muted,marginTop:9}}>{label('Excludes delivery fees. No real stock, booking or payment occurs in demo.','ডেলিভারি চার্জ বাদে। ডেমোতে আসল স্টক, বুকিং বা পেমেন্ট হয় না।')}</Text>
+   </>)}
+   {panel(<>
+    <Text style={{fontSize:12,color:theme.text,fontWeight:'900'}}>{label('Before you join','যোগদানের আগে জানুন')}</Text>
+    <Text style={{fontSize:10,color:theme.muted,marginTop:7}}>{label('Select only what you need. The final price, availability, deadline and delivery rules must be confirmed.','শুধু প্রয়োজনীয় পণ্য নিন। মূল্য, স্টক, সময় ও ডেলিভারি নিশ্চিত করতে হবে।')}</Text>
+    <Text style={{fontSize:10,color:theme.muted,marginTop:7}}>{label('No order, Pool commitment or payment is created from this preview.','ডেমোতে কোনো অর্ডার, পুলে যোগদান বা পেমেন্ট হয় না।')}</Text>
+   </>)}
+   <View style={{borderRadius:12,borderWidth:1,borderColor:theme.line,padding:10,marginBottom:8,backgroundColor:theme.card,flexDirection:'row',alignItems:'center',gap:9}}>
+    <View><Text style={{fontSize:10,color:theme.muted}}>{units} {label('units selected','টি ইউনিট নির্বাচিত')}</Text><Text style={{fontSize:18,fontWeight:'900',color:theme.accent}}>{money(current)}</Text></View>
+    <Pressable accessibilityRole="button" disabled={!units} onPress={notify} style={{flex:1,paddingVertical:11,paddingHorizontal:7,borderRadius:10,backgroundColor:theme.accent,opacity:units?1:.35,alignItems:'center'}}><Text style={{fontSize:11,color:theme.onPrimary,fontWeight:'900'}}>{label('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো')} →</Text></Pressable>
+   </View>
   </>;
  }
  function Cart(){const rows=Object.entries(cart).filter(([,q])=>q>0);return <>
@@ -382,7 +453,7 @@ function Shop(){
   </View>
   {busy&&<Text style={{textAlign:'center',color:theme.accent,fontSize:11}}>Loading public product catalog…</Text>}
   <ScrollView key={screen} keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingHorizontal:12,paddingTop:4,paddingBottom:30}}>
-   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
+   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
    {body()}
   </ScrollView>
   <View style={[styles.bottom,{backgroundColor:theme.card,borderColor:theme.line}]}>
