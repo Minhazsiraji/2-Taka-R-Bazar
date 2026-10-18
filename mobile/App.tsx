@@ -577,7 +577,7 @@ function Shop(){
   <View style={[styles.bottom,{backgroundColor:theme.card,borderColor:theme.line}]}>
    {tabs.map(([tab,icon])=>{const active=screen===tab;const label=tab==='exclusive'?t.shop:t[tab==='pools'?'pool':tab==='deals'?'deals':tab==='cart'?'cart':'home'];
     return <Pressable key={tab} accessibilityRole="tab" accessibilityState={{selected:active}} onPress={()=>onTab(tab)} style={{flex:1,alignItems:'center',gap:2,paddingVertical:6,backgroundColor:active?theme.soft:'transparent',borderRadius:12}}>
-     <View><Ionicons name={icon} size={23} color={active?'#08717d':theme.text}/>{tab==='cart'&&totalBadge>0&&<View style={styles.badge}><Text style={styles.badgeText}{totalBadge>99?'99+':demoNum(totalBadge)}</Text></View>}</View>
+     <View><Ionicons name={icon} size={23} color={active?'#08717d':theme.text}/>{tab==='cart'&&totalBadge>0&&<View style={styles.badge}><Text style={styles.badgeText}>{totalBadge>99?'99+':demoNum(totalBadge)}</Text></View>}</View>
      <Text style={{fontSize:small?9:10,fontWeight:active?'900':'600',color:active?theme.brandText:theme.text}}>{label}</Text>
     </Pressable>
    })}
