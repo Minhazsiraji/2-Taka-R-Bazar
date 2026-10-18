@@ -9,6 +9,7 @@ import {copy,heroMessages,type Language} from './src/content';
 import {demoOrders,demoSavings,offers as demoOffers,pools as demoPools,products as demoProducts,type Offer,type Pool,type Product} from './src/data';
 import {cartLineCount,cartQuantity,cartSubtotal,customerSaving} from './src/domain.mjs';
 import {loadPublicCatalog} from './src/live';
+import {productInfoSections,productMissing} from './src/product-content';
 
 type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
 type Screen=Tab|'account'|'orders'|'savings'|'product'|'group'|'retail'|'pool'|'menu';
@@ -31,6 +32,7 @@ function Shop(){
  const [screen,setScreen]=useState<Screen>('home');
  const [selectedOffer,setSelectedOffer]=useState<Offer|null>(null);
  const [selectedPool,setSelectedPool]=useState<Pool|null>(null);
+ const [productInfoOpen,setProductInfoOpen]=useState<Record<string,boolean>>({});
  const [slide,setSlide]=useState(0);
  const [query,setQuery]=useState('');
  const [cart,setCart]=useState<Record<string,number>>({});
@@ -246,13 +248,34 @@ function Shop(){
       <Text style={{color:theme.muted,fontSize:11}}>Retail reference only. Group Deal and Pool tier prices are not displayed on the individual product page.</Text>
      </>)}
      {panel(<>
-      <Text style={{color:theme.text,fontWeight:'900',fontSize:13,marginBottom:9}}>Product information</Text>
-      <Text style={{color:theme.text,fontSize:12}}>Name: {lang==='bn'?product.nameBn:product.name}</Text>
-      <Text style={{color:theme.text,fontSize:12,marginTop:5}}>Package: {product.unit}</Text>
+      <Text style={{color:theme.text,fontWeight:'900',fontSize:13,marginBottom:9}}>{lang==='bn'?'পণ্যের তথ্য':'Product information'}</Text>
+      <Text style={{color:theme.text,fontSize:12}}>{lang==='bn'?'পণ্যের নাম':'Name'}: {lang==='bn'?product.nameBn:product.name}</Text>
+      <Text style={{color:theme.text,fontSize:12,marginTop:5}}>{lang==='bn'?'পণ্যের ব্র্যান্ড':'Product brand'}: <Text style={{color:product.brand?theme.text:theme.muted}}>{productMissing(product.brand,lang)}</Text></Text>
+      <Text style={{color:theme.text,fontSize:12,marginTop:5}}>{lang==='bn'?'প্যাকেটের পরিমাণ':'Package'}: {product.unit}</Text>
       <Text style={{color:theme.text,fontSize:12,marginTop:5}}>SKU: {product.id}</Text>
-      <Text style={{color:theme.text,fontSize:12,marginTop:5}}>Category: {product.category}</Text>
-      <Text style={{color:theme.muted,fontSize:11,marginTop:10}}>Demo data. Ingredients, origin, expiry and other verified specifications will come from the master product record.</Text>
+      <Text style={{color:theme.text,fontSize:12,marginTop:5}}>{lang==='bn'?'বিভাগ':'Category'}: {product.category}</Text>
      </>)}
+     {productInfoSections.map(section=><View key={section.id} style={{borderRadius:12,borderWidth:1,borderColor:theme.line,backgroundColor:theme.card,marginBottom:8,overflow:'hidden'}}>
+       <Pressable accessibilityRole="button" accessibilityLabel={lang==='bn'?section.titleBn:section.titleEn}
+         accessibilityState={{expanded:!!productInfoOpen[section.id]}}
+         onPress={()=>setProductInfoOpen(current=>({...current,[section.id]:!current[section.id]}))}
+         style={{paddingVertical:12,paddingHorizontal:12,flexDirection:'row',alignItems:'center',gap:7}}>
+         <Text style={{fontSize:12,fontWeight:'900',color:theme.text,flex:1}}>{lang==='bn'?section.titleBn:section.titleEn}</Text>
+         <Text style={{fontSize:10,color:theme.muted}}>{lang==='bn'?'অ্যাডমিন নিয়ন্ত্রিত':'Admin-managed'}</Text>
+         <Ionicons name={productInfoOpen[section.id]?'remove':'add'} size={17} color={theme.accent}/>
+       </Pressable>
+       {!!productInfoOpen[section.id]&&<View style={{paddingHorizontal:12,paddingBottom:12,gap:8,borderTopWidth:1,borderColor:theme.line}}>
+         <Text style={{fontSize:10,color:theme.muted,paddingTop:8}}>{lang==='bn'?'অ্যাডমিন যাচাইকৃত তথ্য দিলে এখানে দেখানো হবে।':'Verified product data will appear when Admin supplies it.'}</Text>
+         {section.fields.map(field=>{
+           const key=lang==='bn'&&field.keyBn?field.keyBn:field.keyEn;
+           const value=product.content?.[key];
+           return <View key={field.keyEn} style={{flexDirection:'row',gap:8}}>
+             <Text style={{fontSize:11,color:theme.muted,width:108}}>{lang==='bn'?field.labelBn:field.labelEn}</Text>
+             <Text style={{fontSize:11,color:theme.text,flex:1}}>{productMissing(value,lang)}</Text>
+           </View>;
+         })}
+       </View>}
+     </View>)}
      <View style={{flexDirection:'row',marginBottom:12}}>{button(offer.mode==='GROUP_DEAL'?'Back to Group Deal':'Back to Offer',()=>setScreen(offer.mode==='GROUP_DEAL'?'group':'product'))}</View>
    </>;
  }

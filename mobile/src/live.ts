@@ -25,7 +25,8 @@ export async function loadPublicCatalog():Promise<{products:Product[];offers:Off
   if(!products.some(p=>p.id===productId))products.push({
     id:productId,name:x.product_name,nameBn:x.product_name,unit:typeof x.package_size==='string'?x.package_size:'1 unit',
     image:typeof x.image_url==='string'?x.image_url:'',referencePrice:Number(x.reference_price)||price,
-    category:typeof x.category==='string'?x.category:'Grocery'
+    category:typeof x.category==='string'?x.category:'Grocery',
+    brand:typeof x.brand==='string'&&x.brand.trim()?x.brand.trim():undefined
   });
   offers.push({id:x.offer_id,productId,mode,price,phase:x.phase==='ready'?'ready':'waiting',
     exclusive:mode==='SOLO',stock:Number(x.available_quantity)||0,
