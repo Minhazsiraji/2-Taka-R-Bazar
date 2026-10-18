@@ -37,3 +37,11 @@ test('Locked Home remains unchanged in navigation and layout',()=>{
  assert.ok(home.includes(token),token);
  assert.ok(!home.includes('OrderDetail'));
 });
+
+test('Guest sign-in hands off to existing secure website instead of impersonating native auth',()=>{
+ assert.ok(app.includes("Sign in on 2takarbazar.com"));
+ assert.ok(app.includes("Website sign-in does not authenticate this demo app."));
+ assert.ok(app.includes("link('/login?next=%2Faccount')"));
+ assert.ok(app.includes("Google or mobile-number/password login"));
+ assert.ok(!app.includes("simulateUserLogin("));
+});
