@@ -1,6 +1,7 @@
 // Native Auth and disposable localhost only. No hosted identities or provider credentials.
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
+import {execFileSync} from 'node:child_process'
 import {createClient} from '@supabase/supabase-js'
 import {createServerClient} from '@supabase/ssr'
 import {chromium} from 'playwright'
@@ -78,6 +79,32 @@ try {
   await page.locator('[name="community_id"]').selectOption('00000000-0000-4000-8000-000000000821')
   await page.getByRole('button', {name: 'Finish setup', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/account/security')
+  // The customer account's Orders dashboard includes a confirmed pilot
+  // request without creating a Commerce order or marking payment verified.
+  const syntheticPilotId=randomUUID(),syntheticProductId=randomUUID()
+  const quotedPilotFixture=`insert into public.products
+    (id,name,category,package_size,unit,sku,source_type,is_demo,active)
+    values ('${syntheticProductId}','Synthetic pilot Ghee - 1 kg','Groceries','1 kg','pack',
+    'UAT-PILOT-${syntheticProductId.slice(0,8)}','PRIVATE_LABEL',false,true);
+   insert into public.pilot_booking_requests
+    (id,customer_id,community_id,product_id,product_name,quantity,fulfillment_method,
+    contact_name,contact_phone,customer_note,request_key,status,
+    confirmed_unit_price,confirmed_delivery_fee,staff_note,terms_accepted_at)
+    values ('${syntheticPilotId}','${id}','00000000-0000-4000-8000-000000000821',
+    '${syntheticProductId}','Synthetic pilot Ghee - 1 kg',1,'pickup',
+    'Synthetic header owner','01700000091','',gen_random_uuid(),'confirmed',
+    1450,0,'Collect at synthetic community gate',now());`
+  execFileSync('psql',['-h','127.0.0.1','-p','54322','-U','postgres','-d','postgres',
+    '-v','ON_ERROR_STOP=1','-c',quotedPilotFixture],
+    {env:{...process.env,PGPASSWORD:'postgres'},stdio:'pipe'})
+  await page.goto('http://127.0.0.1:3000/account/orders', {waitUntil: 'domcontentloaded'})
+  await page.getByRole('heading',{name:'My orders & bookings'}).waitFor()
+  const displayedBooking=page.locator('article').filter({hasText:'Synthetic pilot Ghee - 1 kg'})
+  await displayedBooking.getByText('Booking confirmed').waitFor()
+  assert.match(await displayedBooking.textContent()??'',/1,450/)
+  await displayedBooking.getByText('Payment not yet recorded').waitFor()
+  assert.equal(await displayedBooking.locator('a[href="/pilot-bookings"]').count(),1)
+  assert.equal(await page.getByText('No pilot booking requests yet.').count(),0)
   await page.goto('http://127.0.0.1:3000/money', {waitUntil: 'domcontentloaded'})
   await page.getByRole('heading', {name: 'My Money Dashboard', exact: true}).waitFor()
   for (const width of [320,393,768,820,1024,1440]) {
