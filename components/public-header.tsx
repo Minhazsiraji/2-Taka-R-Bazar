@@ -75,7 +75,7 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
   </nav>
   {menuOpen&&<nav id="market-mobile-navigation" className="market-mobile-nav-panel"
     aria-label={t('Mobile navigation','মোবাইল মেনু')} onKeyDown={e=>{if(e.key==='Escape')setMenuOpen(false)}}>
-   {storefrontNav.map(item=><a key={item.href} href={shopHref(item.href)} onClick={()=>setMenuOpen(false)}>{t(item.label,item.bn)} <span aria-hidden="true">↗</span></a>)}
+   {storefrontNav.map(item=><a key={item.href} href={shopHref(item.href==='#deals'?'#mobile-deals':item.href==='#exclusive-products'?'#mobile-exclusive':item.href)} onClick={()=>setMenuOpen(false)}>{t(item.label,item.bn)} <span aria-hidden="true">↗</span></a>)}
    <Link href="/signup" onClick={()=>setMenuOpen(false)}>{t('Join Community','কমিউনিটিতে যোগ দিন')} <span aria-hidden="true">↗</span></Link>
   </nav>}
  </header>
