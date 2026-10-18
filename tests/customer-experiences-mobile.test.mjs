@@ -23,8 +23,8 @@ test('reviews retain meaningful honest copy, accessible language and glass brand
  assert.match(read('app/marketplace-story.css'),/market-review-mark\{[\s\S]*?color:var\(--theme-accent/)
  assert.match(read('app/marketplace-unified.css'),/\.market-story \.market-review-pending/)
 })
-test('approved mobile shopping layout and preserved desktop reviews have browser regressions',()=>{
- assert.match(browser,/async function assertMobileApprovedHome/)
+test('approved mobile-master layout also covers desktop with savings and no overflow',()=>{
+ assert.match(browser,/async function assertUnifiedApprovedHome/)
  assert.match(browser,/No horizontal overflow at/)
  assert.match(browser,/mhome-section-heading/)
  assert.match(browser,/assert\.deepEqual\(labels,\['Home','Pools','Deals','Exclusive','Cart'\]\)/)
