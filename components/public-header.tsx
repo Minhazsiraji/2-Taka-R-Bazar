@@ -27,6 +27,16 @@ const storefrontNav=[
  {href:'/money',label:'My Money',bn:'আমার অর্থ'},
 ] as const
 
+const approvedMobileNav=[
+ {href:'#mobile-deals',label:'Group Deals',bn:'গ্রুপ ডিল'},
+ {href:'#mobile-exclusive',label:'Exclusive Products',bn:'এক্সক্লুসিভ পণ্য'},
+ {href:'#mobile-pools',label:'Community Pools',bn:'কমিউনিটি পুল'},
+ {href:'#mhome-community',label:'Your community',bn:'আপনার এলাকা'},
+ {href:'/cart',label:'Cart',bn:'কার্ট'},
+ {href:'/account/orders',label:'My Orders',bn:'আমার অর্ডার'},
+ {href:'/about',label:'How it works',bn:'যেভাবে কাজ করে'},
+] as const
+
 export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefront=false,
  searchValue='',onSearchChange,language='en',onLanguageChange,
  shopBaseHref='',browseHref,mobileActionLabel}:HeaderProps){
@@ -75,7 +85,7 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
   </nav>
   {menuOpen&&<nav id="market-mobile-navigation" className="market-mobile-nav-panel"
     aria-label={t('Mobile navigation','মোবাইল মেনু')} onKeyDown={e=>{if(e.key==='Escape')setMenuOpen(false)}}>
-   {storefrontNav.map(item=><a key={item.href} href={shopHref(item.href==='#deals'?'#mobile-deals':item.href==='#exclusive-products'?'#mobile-exclusive':item.href)} onClick={()=>setMenuOpen(false)}>{t(item.label,item.bn)} <span aria-hidden="true">↗</span></a>)}
+   {approvedMobileNav.map(item=><a key={item.href} href={shopHref(item.href)} onClick={()=>setMenuOpen(false)}>{t(item.label,item.bn)} <span aria-hidden="true">↗</span></a>)}
    <Link href="/signup" onClick={()=>setMenuOpen(false)}>{t('Join Community','কমিউনিটিতে যোগ দিন')} <span aria-hidden="true">↗</span></Link>
   </nav>}
  </header>
