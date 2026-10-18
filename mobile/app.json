@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "2-TAKA-R-BAZAR",
+    "slug": "2tbr-mobile",
+    "scheme": "twotbr",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "edgeToEdgeEnabled": true
+    },
+    "extra": {
+      "releaseStage": "development"
+    }
+  }
+}
