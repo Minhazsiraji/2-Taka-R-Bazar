@@ -56,6 +56,19 @@ export async function staffUpdatePilotBooking(fd:FormData){
  revalidatePath('/pilot-bookings')
  redirect('/admin/pilot-bookings?notice='+encodeURIComponent('Booking status updated. No payment or Finance journal has been created.'))
 }
+export async function staffSendPilotServiceUpdate(fd:FormData){
+ const {supabase}=await requireAdmin()
+ const id=text(fd,'booking_id'),note=text(fd,'staff_note')
+ if(!uuid(id)||note.length<5||note.length>500)
+  fail('/admin/pilot-bookings','Enter a pickup or delivery update between 5 and 500 characters.')
+ const {error}=await supabase.rpc('pilot_staff_send_service_update',{
+  p_booking_id:id,p_customer_message:note,
+ })
+ if(error)fail('/admin/pilot-bookings',error.message)
+ revalidatePath('/admin/pilot-bookings')
+ revalidatePath('/pilot-bookings')
+ redirect('/admin/pilot-bookings?notice='+encodeURIComponent('Pickup/delivery instructions saved and customer notified.'))
+}
 export async function cancelPilotBooking(fd:FormData){
  const {supabase}=await requireOnboardedUser()
  const id=text(fd,'booking_id')
