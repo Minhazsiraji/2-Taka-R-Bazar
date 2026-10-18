@@ -90,7 +90,7 @@ test('approved Exclusive Products prioritize sellable SOLO prices without invent
 })
 test('approved Pool cards display real thumbnail, participation, deadline and next tier information',()=>{
  assert.match(home,/photoOffers=chosen\.length\?chosen:p\.bundle\.slice\(0,3\)/)
- assert.match(home,/className="mhome-pool-description"/)
+ assert.match(home,/className="mhome-muted mhome-pool-description"/)
  assert.match(home,/className="mhome-pool-joined"/)
  assert.match(home,/className="mhome-pool-meta"/)
  assert.match(home,/className="mhome-pool-bottom"/)
