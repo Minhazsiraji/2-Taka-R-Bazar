@@ -87,7 +87,7 @@ try{
  const location = new URL(legacy.headers.get('location'), 'http://127.0.0.1:3000')
  assert.equal(location.pathname, '/')
  assert.equal(location.searchParams.get('notice'), 'legacy-bookmark')
- for(const width of [320,360,393,640,767,768,790,820,1024,1100,1440,1920]){
+ for(const width of [320,360,393,430,640,767,768,790,820,1024,1100,1440,1920]){
   const page=await browser.newPage({viewport:{width,height:900}})
   page.on('pageerror',e=>errors.push(e.message))
   await page.goto('http://127.0.0.1:3000/',{waitUntil:'domcontentloaded',timeout:60000})
