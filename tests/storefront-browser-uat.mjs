@@ -118,7 +118,7 @@ try{
   if(width===393)await page.screenshot({path:'/tmp/2tbr-header-storefront-guest.png',fullPage:true})
   await assertUnifiedApprovedHome(page,width)
   const savingsColumns=await page.locator('.mhome-savings-grid').evaluate(e=>getComputedStyle(e).gridTemplateColumns.split(' ').length)
-  assert.equal(savingsColumns,width<768?2:4,'Approved savings cards respond to viewport')
+  assert.equal(savingsColumns,4,'All four approved savings cards remain in one row at '+width+'px')
   const dock=page.locator('.market-storefront-dock')
   assert.equal(await dock.isVisible(),width<768)
   if(width<768)assert.equal(await dock.evaluate(e=>getComputedStyle(e).position),'fixed')
