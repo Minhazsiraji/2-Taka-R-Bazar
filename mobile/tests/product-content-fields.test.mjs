@@ -25,3 +25,21 @@ test('retail details and homepage remain conceptually independent',()=>{
  assert.ok(!home.includes('productInfoSections.map'));
  assert.ok(app.includes('Retail reference only. Group Deal and Pool tier prices are not displayed'));
 });
+
+test('Owner-approved Retail Details design remains photo-first, retail-only and with return action',()=>{
+ const start=app.indexOf('function RetailDetails()');
+ const end=app.indexOf('function OfferDetails()',start);
+ assert.ok(start>=0 && end>start);
+ const screen=app.slice(start,end);
+ const required=[
+  'ProductPhoto item={product} height={small?330:360}',
+  'Market retail reference price',
+  'Product brand',
+  'productMissing(product.brand,lang)',
+  "productInfoSections.map(section=>",
+  "accessibilityState={{expanded:!!productInfoOpen[section.id]}}",
+  "Group Deal and Pool tier prices are not displayed",
+  'Back to Group Deal'
+ ];
+ for(const token of required)assert.ok(screen.includes(token),'Retail Details design lock: '+token);
+});
