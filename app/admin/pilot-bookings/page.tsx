@@ -61,13 +61,13 @@ export default async function PilotBookingInbox({searchParams}:Props){
     </form>}
     {b.status==='confirmed'&&<div className="mt-4 grid gap-3 rounded-xl border border-teal-200 p-3">
       <p className="text-sm font-bold">Confirm pickup point & time / সংগ্রহের স্থান ও সময়</p>
-      <p className="muted text-sm">Send a customer-visible update without changing the agreed price, booking status or Finance records.</p>
+      <p className="muted text-sm">Send a customer-visible update without changing the agreed price, booking status or Finance records. If the text is unchanged, no new notification is sent.</p>
       <form action={staffSendPilotServiceUpdate} className="grid gap-3">
        <input type="hidden" name="booking_id" value={b.id}/>
        <label className="grid gap-1 text-sm font-semibold">Pickup location, scheduled time or delivery instructions
         <textarea required minLength={5} maxLength={500} className="input min-h-24" name="staff_note" defaultValue={b.staff_note??''} placeholder="Example: Collect at the agreed community point tomorrow at 6:00 PM. Please bring your booking reference."/>
        </label>
-       <button type="submit" className="btn-primary">Save instructions & notify customer</button>
+       <button type="submit" className="btn-primary">{b.staff_note?'Update instructions & notify customer':'Save instructions & notify customer'}</button>
       </form>
       <form action={staffUpdatePilotBooking}>
        <input type="hidden" name="booking_id" value={b.id}/>
