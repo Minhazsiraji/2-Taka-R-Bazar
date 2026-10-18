@@ -568,7 +568,14 @@ function Shop(){
      <Ionicons name={icon as IconName} color={theme.accent} size={19}/><Text style={{fontSize:11,flex:1,fontWeight:'700',color:theme.text}}>{name}</Text><Ionicons name="chevron-forward" color={theme.muted} size={15}/>
     </Pressable>)}
    </>)}
-   <View style={{flexDirection:'row',marginBottom:9}}>{button(t.signin,()=>link('/login'),false)}</View>
+   <View style={{flexDirection:'row',marginBottom:7}}>{button(lang==='bn'?'ওয়েবসাইটে নিরাপদে লগইন করুন':'Sign in on 2takarbazar.com',()=>{
+     Alert.alert(
+       lang==='bn'?'ওয়েবসাইটে লগইন':'Website sign-in',
+       lang==='bn'?'2TBR-এর আসল লগইন ব্রাউজারে খুলবে। এতে এই ডেমো অ্যাপের লগইন হবে না।':'This opens the existing 2TBR login in your browser. Website sign-in does not authenticate this demo app.',
+       [{text:lang==='bn'?'বাতিল':'Cancel',style:'cancel'},{text:lang==='bn'?'লগইন খুলুন':'Open sign-in',onPress:()=>link('/login?next=%2Faccount')}]
+     );
+   },false)}</View>
+   <Text style={{color:theme.muted,fontSize:10,marginBottom:9}}>{lang==='bn'?'Google অথবা যুক্ত মোবাইল নম্বর ও পাসওয়ার্ড দিয়ে ওয়েবসাইটে লগইন করুন।':'Website supports Google or mobile-number/password login. Native sign-in and secure session handoff are not connected yet.'}</Text>
    <Text style={{fontSize:10,color:theme.muted,marginBottom:15}}>{text('Demo profile and savings are not linked to real accounts or financial balances.','ডেমো অ্যাকাউন্ট ও সাশ্রয় আসল গ্রাহক বা ব্যালেন্সের সাথে যুক্ত নয়।')}</Text>
   </>;
  }
