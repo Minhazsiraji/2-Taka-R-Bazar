@@ -435,3 +435,20 @@ html[data-theme="dark"] .mhome-savings-card.is-community{background:#3c2a48}
  body.site-glass-root main.public-marketplace-flat .mhome .mhome-hero-art{width:48%}
  body.site-glass-root main.public-marketplace-flat .mhome .mhome-deal-card{min-height:205px}
 }
+
+/* Compact two-column contact layout; keep real clickable email links and brand footer. */
+body.site-glass-root main.public-marketplace-flat + footer.market-information-footer .market-footer-contact,
+body.site-glass-root .market-information-footer .market-footer-contact{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 12px;align-content:start;
+}
+body.site-glass-root .market-information-footer .market-footer-contact>h2{grid-column:1/-1}
+body.site-glass-root .market-information-footer .market-footer-contact>p:first-of-type{grid-column:1;grid-row:2}
+body.site-glass-root .market-information-footer .market-footer-contact>a[href="mailto:business@2takarbazar.com"]{grid-column:1;grid-row:3}
+body.site-glass-root .market-information-footer .market-footer-contact>p:nth-of-type(2){grid-column:2;grid-row:2}
+body.site-glass-root .market-information-footer .market-footer-contact>a[href="mailto:support@2takarbazar.com"]{grid-column:2;grid-row:3}
+body.site-glass-root .market-information-footer .market-footer-contact>a[href*="#supplier-network"]{grid-column:1/-1;grid-row:4}
+body.site-glass-root .market-information-footer .market-footer-contact>a{overflow-wrap:anywhere}
+@media(max-width:767px){
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card{min-height:90px;padding:10px 11px}
+}
