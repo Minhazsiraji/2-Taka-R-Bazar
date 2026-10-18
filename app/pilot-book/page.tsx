@@ -18,7 +18,7 @@ export default async function PilotBookPage({searchParams}:Props){
  if(!user)redirect('/login?next='+encodeURIComponent('/pilot-book'+(selectedId?'?product='+selectedId:'')))
  const {supabase,profile}=await requireOnboardedUser()
  const {data:products,error}=await supabase.from('products')
-  .select('id,name,package_size,unit')
+  .select('id,name,sku,package_size,unit')
   .eq('active',true).eq('is_demo',false).order('name').limit(200)
  const items=products??[]
  const current=items.find(p=>p.id===selectedId)
@@ -43,7 +43,7 @@ export default async function PilotBookPage({searchParams}:Props){
       <label className="grid gap-1.5 font-semibold">Product / পণ্য
        <select required name="product_id" defaultValue={current?.id??''} className="input">
         <option value="" disabled>Select a product / পণ্য বাছুন</option>
-        {items.map(p=><option key={p.id} value={p.id}>{p.name} · {p.package_size}</option>)}
+        {items.map(p=><option key={p.id} value={p.id}>{p.name} · {p.package_size} · SKU {p.sku}</option>)}
        </select>
       </label>
       <label className="grid gap-1.5 font-semibold">Quantity / পরিমাণ
