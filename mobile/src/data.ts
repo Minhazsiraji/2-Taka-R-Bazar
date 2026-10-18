@@ -1,7 +1,7 @@
 import type {ProductContent} from './product-content';
 export type Mode='SOLO'|'GROUP_DEAL'|'POOL';
 export type Product={id:string;name:string;nameBn:string;unit:string;image:string;referencePrice:number;category:string;brand?:string;content?:ProductContent};
-export type Offer={id:string;productId:string;mode:Mode;price:number;phase:'ready'|'waiting';groupSize?:3|5|10;joined?:number;exclusive?:boolean;poolId?:string;stock?:number;daysLeft?:number;community:string};
+export type Offer={id:string;productId:string;mode:Mode;price:number;phase:'ready'|'waiting';groupSize?:3|5|10;joined?:number;exclusive?:boolean;poolId?:string;stock?:number;daysLeft?:number;community:string;openingPrice?:number;nextTierPrice?:number};
 export type Pool={id:string;name:string;nameBn:string;frequency:'weekly'|'monthly';productIds:string[];participants:number;nextTier:number;commitDaysLeft?:number;commitEndsLabel?:string};
 const photo=(id:string)=>'https://images.unsplash.com/'+id+'?auto=format&fit=crop&w=600&q=85';
 export const products:Product[]=[
@@ -17,10 +17,12 @@ export const offers:Offer[]=[
  {id:'solo-ghee',productId:'ghee',mode:'SOLO',price:680,phase:'ready',exclusive:true,stock:20,community:'Savar DOHS'},
  {id:'solo-rice',productId:'rice',mode:'SOLO',price:145,phase:'ready',exclusive:true,stock:45,community:'Savar DOHS'},
  {id:'solo-eggs',productId:'eggs',mode:'SOLO',price:145,phase:'ready',exclusive:true,stock:24,community:'Savar DOHS'},
- {id:'pool-butter',productId:'butter',mode:'POOL',price:1050,phase:'waiting',poolId:'weekly',community:'Savar DOHS'},
- {id:'pool-rice',productId:'rice',mode:'POOL',price:130,phase:'waiting',poolId:'weekly',community:'Savar DOHS'},
- {id:'pool-eggs',productId:'eggs',mode:'POOL',price:140,phase:'waiting',poolId:'weekly',community:'Savar DOHS'},
- {id:'pool-ghee',productId:'ghee',mode:'POOL',price:660,phase:'waiting',poolId:'monthly',community:'Savar DOHS'}
+ {id:'pool-butter',productId:'butter',mode:'POOL',price:1100,openingPrice:1160,nextTierPrice:1050,phase:'waiting',poolId:'weekly',community:'Savar DOHS'},
+ {id:'pool-rice',productId:'rice',mode:'POOL',price:140,openingPrice:155,nextTierPrice:130,phase:'waiting',poolId:'weekly',community:'Savar DOHS'},
+ {id:'pool-eggs',productId:'eggs',mode:'POOL',price:145,openingPrice:155,nextTierPrice:140,phase:'waiting',poolId:'weekly',community:'Savar DOHS'},
+ {id:'pool-ghee',productId:'ghee',mode:'POOL',price:690,openingPrice:720,nextTierPrice:660,phase:'waiting',poolId:'monthly',community:'Savar DOHS'},
+ {id:'pool-rice-monthly',productId:'rice',mode:'POOL',price:140,openingPrice:155,nextTierPrice:130,phase:'waiting',poolId:'monthly',community:'Savar DOHS'},
+ {id:'pool-butter-monthly',productId:'butter',mode:'POOL',price:1100,openingPrice:1160,nextTierPrice:1050,phase:'waiting',poolId:'monthly',community:'Savar DOHS'}
 ];
 export const pools:Pool[]=[
  {id:'weekly',name:'Weekly Family Essentials',nameBn:'সাপ্তাহিক পরিবারের বাজার',frequency:'weekly',productIds:['butter','rice','eggs'],participants:875,nextTier:1000,commitDaysLeft:5,commitEndsLabel:'23 Oct'},
