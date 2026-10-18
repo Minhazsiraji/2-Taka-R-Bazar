@@ -455,7 +455,7 @@ function Shop(){
     }):empty('No direct products yet.','সরাসরি পণ্য যোগ হয়নি।','exclusive','Browse Exclusive','বিশেষ পণ্য দেখুন')}
    </>)}
    {panel(<>
-    {header('Group Deal requests · pending','গ্রুপ ডিলের অনুরোধ · অপেক্ষমাণ',groups.length)}
+    {header('Group Deal requests · Pending','গ্রুপ ডিলের অনুরোধ · অপেক্ষমাণ',groups.length)}
     {groups.length?groups.map(([id,q])=>{
       const o=offers.find(o=>o.id===id),p=o&&byId(o.productId);if(!o||!p)return null;
       const price=demoGroupTierPrices(o,p)?.current.price??o.price;
@@ -491,6 +491,9 @@ function Shop(){
    </>)}
    {panel(<>
     {header('Cart summary','কার্টের সারসংক্ষেপ',direct.length)}
+    <Text style={{color:theme.text,backgroundColor:theme.field,borderRadius:8,padding:8,fontSize:10,marginBottom:9}}>
+     {text('Cart badge: ','কার্ট ব্যাজ: ')}{demoNum(direct.length)} {text('Direct','সরাসরি')} · {demoNum(groups.length)} {text('Group Deal','গ্রুপ ডিল')} · {demoNum(drafts.reduce((n,[,items])=>n+Object.values(items).filter(q=>q>0).length,0))} {text('Pool product lines','পুল পণ্যের লাইন')} = {demoNum(totalBadge)} {text('lines','লাইন')}
+    </Text>
     <View style={styles.between}><Text style={{fontSize:11,color:theme.muted}}>{text('Direct subtotal','সরাসরি পণ্যের মূল্য')}</Text><Text style={{fontSize:19,fontWeight:'900',color:theme.accent}}>{demoMoney(subtotal)}</Text></View>
     <Text style={{fontSize:11,color:theme.muted,marginTop:9}}>{text('Delivery fee is determined after address confirmation.','ঠিকানা নিশ্চিতের পর ডেলিভারি চার্জ নির্ধারিত হবে।')}</Text>
     <Text style={{fontSize:10,color:theme.muted,marginTop:7}}>{text('Pending Group Deal and Pool totals are not payable or included in this amount.','গ্রুপ ডিল ও পুলের অপেক্ষমাণ মূল্য এই মোটে অন্তর্ভুক্ত নয়।')}</Text>
@@ -508,12 +511,12 @@ function Shop(){
    </>;
   const subtotal=cartSubtotal(cart,offers);
   const section=(en:string,bn:string,children:React.ReactNode)=>panel(<><Text style={{fontSize:14,fontWeight:'900',color:theme.text,marginBottom:9}}>{text(en,bn)}</Text>{children}</>);
-  const option=(name:string,active:boolean,fn:()=>void)=><Pressable accessibilityRole="button" accessibilityState={{selected:active}} onPress={fn} style={{flex:1,borderRadius:10,borderWidth:1,borderColor:active?theme.accent:theme.line,padding:10,backgroundColor:active?theme.soft:theme.field,alignItems:'center'}}><Text style={{color:theme.text,fontSize:11,fontWeight:active?'900':'600'}}>{name}</Text></Pressable>;
+  const option=(name:string,active:boolean,fn:()=>void,disabled=false)=><Pressable accessibilityRole="button" disabled={disabled} accessibilityState={{selected:active,disabled}} onPress={fn} style={{flex:1,borderRadius:10,borderWidth:1,borderColor:active?theme.accent:theme.line,padding:10,backgroundColor:active?theme.soft:theme.field,alignItems:'center',opacity:disabled?.4:1}}><Text style={{color:theme.text,fontSize:11,fontWeight:active?'900':'600'}}>{name}</Text></Pressable>;
   return <>{title('',text('Review checkout','চেকআউট পর্যালোচনা'))}
    <Text style={{fontSize:11,color:theme.accent,marginBottom:10}}>{text('1 · Items → 2 · Delivery → 3 · Review','১ · পণ্য → ২ · ডেলিভারি → ৩ · পর্যালোচনা')}</Text>
    {section('Direct items','সরাসরি পণ্য',<>{direct.map(([id,q])=>{const o=offers.find(o=>o.id===id),p=o&&byId(o.productId);return o&&p?<View key={id} style={[styles.between,{marginBottom:8}]}><Text style={{color:theme.text,fontSize:11,flex:1}}>{lang==='bn'?p.nameBn:p.name} × {demoNum(q)}</Text><Text style={{color:theme.accent,fontWeight:'800'}}>{demoMoney(o.price*q)}</Text></View>:null})}<View style={styles.between}><Text style={{color:theme.muted}}>{text('Product subtotal','পণ্যের মোট')}</Text><Text style={{fontWeight:'900',color:theme.text}}>{demoMoney(subtotal)}</Text></View></>)}
    {section('Delivery method','ডেলিভারির পদ্ধতি',<><View style={{flexDirection:'row',gap:8}}>{option(text('Home delivery','বাসায় ডেলিভারি'),delivery==='home',()=>setDelivery('home'))}{option(text('Pickup point','সংগ্রহের স্থান'),delivery==='pickup',()=>setDelivery('pickup'))}</View><Text style={{color:theme.muted,fontSize:11,marginTop:9}}>{delivery==='home'?text('Savar DOHS · SAMPLE address. Account, delivery coverage and fees require confirmation.','সাভার ডিওএইচএস · ডেমো ঠিকানা। ডেলিভারি ও চার্জ নিশ্চিত করা হবে।'):text('Pickup point and opening hours will be confirmed.','সংগ্রহের স্থান ও সময় নিশ্চিত করা হবে।')}</Text></>)}
-   {section('Payment method','পেমেন্ট পদ্ধতি',<><View style={{flexDirection:'row',gap:8}}>{option(text('Cash on delivery','ক্যাশ অন ডেলিভারি'),payment==='cod',()=>setPayment('cod'))}{option(text('Online (future)','অনলাইন (পরে)'),payment==='online',()=>setPayment('online'))}</View><Text style={{color:theme.muted,fontSize:11,marginTop:9}}>{text('No money is collected. COD eligibility and any advance delivery fee require confirmation.','এখানে পেমেন্ট হয় না। ক্যাশ অন ডেলিভারি ও আগাম ডেলিভারি চার্জ নিশ্চিত করা হবে।')}</Text></>)}
+   {section('Payment method','পেমেন্ট পদ্ধতি',<><View style={{flexDirection:'row',gap:8}}>{option(text('Cash on delivery','ক্যাশ অন ডেলিভারি'),payment==='cod',()=>setPayment('cod'))}{option(text('Online (future) · Unavailable','অনলাইন (পরে) · বন্ধ'),false,()=>{},true)}</View><Text style={{color:theme.muted,fontSize:11,marginTop:9}}>{text('No money is collected. COD eligibility and any advance delivery fee require confirmation.','এখানে পেমেন্ট হয় না। ক্যাশ অন ডেলিভারি ও আগাম ডেলিভারি চার্জ নিশ্চিত করা হবে।')}</Text></>)}
    {section('Estimated checkout summary','আনুমানিক চেকআউট',<><View style={styles.between}><Text style={{color:theme.muted}}>{text('Products','পণ্য')}</Text><Text style={{color:theme.text,fontWeight:'900'}}>{demoMoney(subtotal)}</Text></View><View style={[styles.between,{marginTop:8}]}><Text style={{color:theme.muted}}>{text('Delivery fee','ডেলিভারি চার্জ')}</Text><Text style={{color:theme.text}}>{text('Not yet quoted','নির্ধারিত নয়')}</Text></View><View style={[styles.between,{marginTop:8}]}><Text style={{color:theme.muted}}>{text('Amount payable','পরিশোধযোগ্য মূল্য')}</Text><Text style={{color:theme.accent,fontWeight:'900'}}>{text('Awaiting final quote','চূড়ান্ত দাম বাকি')}</Text></View><Text style={{color:theme.muted,fontSize:10,marginTop:12}}>{text('Group Deals and Pools are excluded until separately qualified. This checkout cannot place an order.','গ্রুপ ডিল ও পুল যোগ হবে না যতক্ষণ না আলাদাভাবে অনুমোদিত হয়। এখানে কোনো অর্ডার দেওয়া যায় না।')}</Text></>)}
    <View style={{flexDirection:'row'}}>{button(text('Check readiness · Demo only','প্রস্তুতি দেখুন · ডেমো'),notify)}</View>
   </>;
