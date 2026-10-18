@@ -52,10 +52,10 @@ function ProductImage({url,title}:{url:string|null|undefined;title:string}){
 function SectionHeading({number,eyebrow,title,description,href,viewText}:{
  number:string;eyebrow:string;title:string;description:string;href:string;viewText:string
 }){
- return <header className="mhome-section-heading">
+ return <div className="mhome-section-heading">
   <div><p className="mhome-eyebrow">{number} · {eyebrow}</p><h2>{title}</h2><p className="mhome-muted">{description}</p></div>
   <Link className="mhome-view-all" href={href}>{viewText} <span aria-hidden="true">›</span></Link>
- </header>
+ </div>
 }
 const money=(n:number|null|undefined)=>n!=null&&Number(n)>0?formatPrice(n):null
 
