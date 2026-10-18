@@ -48,3 +48,6 @@ A verified retail benchmark can change with product, locality and effective date
 ## Branding rule
 
 Exact reference: approved Oct 18 2TBR Home mockup. **No redesign** of current website, approved product cards, logo, approved color system, slogans, hero text pairs or tab labels. Any visual deviations must be reviewed before release.
+
+## Oct 18 design corrections
+Blue people icon + clock in Group Deals, compact matched Exclusive/Pool cards, split contact footer, and a hero cart containing only nonperishable rice/dal/oil/tea/sugar. Backend Group Deal lifecycle remains unchanged; auto-repeat requires explicit policy and separate qualification.

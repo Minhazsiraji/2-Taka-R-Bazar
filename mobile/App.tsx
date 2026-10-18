@@ -1,6 +1,7 @@
 import React,{useEffect,useMemo,useState} from 'react';
 import {Alert,Image,Linking,Pressable,ScrollView,StyleSheet,Text,TextInput,View,useWindowDimensions} from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import {NonperishableCart} from './src/nonperishable-cart';
 import {SafeAreaProvider,SafeAreaView} from 'react-native-safe-area-context';
 import {StatusBar} from 'expo-status-bar';
 import {copy,heroMessages,type Language} from './src/content';
@@ -104,7 +105,10 @@ function Shop(){
      <View><Text style={{color:theme.accent,fontSize:9,fontWeight:'900'}}>BUY TOGETHER · SAVE MORE</Text><Text style={{color:theme.text,fontSize:15,fontWeight:'900'}} numberOfLines={2}>{lang==='bn'?item.nameBn:item.name}</Text><Text style={{color:theme.muted,fontSize:11}}>{item.unit} · {offer.community}</Text></View>
      <View style={{flexDirection:'row',alignItems:'center',gap:6,flexWrap:'wrap'}}><Text style={{fontSize:21,fontWeight:'900',color:theme.accent}}>{money(offer.price)}</Text><Text style={{fontSize:11,color:theme.muted,textDecorationLine:'line-through'}}>{money(item.referencePrice)}</Text></View>
      <View style={{alignSelf:'flex-start'}}>{pill(t.save+' '+money(customerSaving(item.referencePrice,offer.price)),true)}</View>
-     <Text style={{color:theme.muted,fontSize:10}}>{offer.joined||0}/{offer.groupSize||5} joined · {offer.daysLeft} day(s) left</Text>
+     <View style={{flexDirection:'row',alignItems:'center',gap:5,flexWrap:'wrap'}}>
+  <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="people" size={14} color="#149be7"/><Text style={{color:theme.text,fontSize:10,fontWeight:'800'}}>{offer.joined||0}/{offer.groupSize||5}</Text><Text style={{color:theme.muted,fontSize:9}}>joined</Text></View>
+  <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="time-outline" size={14} color="#6385b1"/><Text style={{color:theme.muted,fontSize:9}}>Ends in {offer.daysLeft} day{offer.daysLeft===1?'':'s'}</Text></View>
+ </View>
      <View style={{height:5,backgroundColor:theme.field,borderRadius:5,overflow:'hidden'}}><View style={{height:5,width:(ratio+'%') as `${number}%`,backgroundColor:'#2ec9b5'}}/></View>
      <View style={{flexDirection:'row',gap:5}}>{button(t.details,()=>selectOffer(offer),false,true)}{button(t.join,()=>selectOffer(offer),true,true)}</View>
     </View>
@@ -114,14 +118,13 @@ function Shop(){
   const item=byId(offer.productId);if(!item)return null;
   return <View style={[styles.exclusiveCard,{backgroundColor:theme.card,borderColor:theme.line}]}>
    <View style={{flexDirection:'row',gap:6,flex:1}}>
-    <Pressable onPress={()=>selectOffer(offer)} style={{width:'49%'}}><ProductPhoto item={item} height={120}/></Pressable>
+    <Pressable onPress={()=>selectOffer(offer)} style={{width:'49%'}}><ProductPhoto item={item} height={128}/></Pressable>
     <View style={{flex:1,justifyContent:'space-around'}}>
      <Text numberOfLines={2} style={{fontSize:12,fontWeight:'800',color:theme.text}}>{lang==='bn'?item.nameBn:item.name}</Text>
      <Text style={{fontSize:10,color:theme.muted}}>{item.unit}</Text>
-     <Text style={{fontSize:16,fontWeight:'900',color:theme.accent}}>{money(offer.price)}</Text>
-     <Text style={{fontSize:10,color:theme.muted,textDecorationLine:'line-through'}}>{money(item.referencePrice)}</Text>
+     <View style={{flexDirection:'row',alignItems:'center',gap:4,flexWrap:'wrap'}}><Text style={{fontSize:16,fontWeight:'900',color:theme.accent}}>{money(offer.price)}</Text><Text style={{fontSize:10,color:theme.muted,textDecorationLine:'line-through'}}>{money(item.referencePrice)}</Text></View>
      <View>{pill(t.save+' '+money(customerSaving(item.referencePrice,offer.price)),true)}</View>
-     <Text style={{fontSize:9,color:theme.muted}}>{t.stock} · {offer.stock||0}</Text>
+     <Text numberOfLines={1} style={{fontSize:9,color:theme.muted}}>{t.stock} · {offer.stock||0} available</Text>
     </View>
    </View>
    <View style={{marginTop:6,flexDirection:'row'}}>{button('🛒 '+t.add,()=>add(offer),true,true)}</View>
@@ -137,15 +140,15 @@ function Shop(){
     <Text style={{fontSize:13,fontWeight:'900',color:theme.text}} numberOfLines={1}>{lang==='bn'?pool.nameBn:pool.name}</Text>
     <Text style={{fontSize:10,color:theme.muted}}>{pool.productIds.length} {t.products} · {pool.participants.toLocaleString('en-US')} {t.members}</Text>
     <View style={{height:5,borderRadius:6,backgroundColor:theme.field}}><View style={{height:5,width:(Math.min(100,100*pool.participants/pool.nextTier)+'%') as `${number}%`,backgroundColor:'#35cdb9',borderRadius:5}}/></View>
-    <Text style={{fontSize:10,color:theme.accent,fontWeight:'700'}}>{t.next}: {pool.nextTier.toLocaleString('en-US')}</Text>
+    <View style={{flexDirection:'row',alignItems:'center',gap:6}}><Text numberOfLines={1} style={{fontSize:9,color:theme.muted,flex:1}}>{t.next}: {pool.nextTier.toLocaleString('en-US')}</Text><Pressable onPress={()=>selectPool(pool)} style={{backgroundColor:theme.accent,borderRadius:8,paddingVertical:6,paddingHorizontal:8}}><Text style={{fontSize:9,fontWeight:'800',color:dark?'#082d34':'white'}}>Explore Pool →</Text></Pressable></View>
    </View>
   </Pressable>);
  }
- const Hero=()=><View style={[styles.hero,{backgroundColor:dark?'#063f48':'#087682'}]}>
+ const Hero=()=><View style={[styles.hero,{backgroundColor:dark?'#063f48':'#087682'}]}><NonperishableCart style={{position:'absolute',right:-3,top:30,width:154,height:152,opacity:.95}}/>
   <Text style={{color:'#a5fbef',fontWeight:'800',fontSize:10,letterSpacing:1.5}}>✦ SMART SHOPPING. REAL SAVINGS!</Text>
   <Text style={{fontSize:small?20:23,fontWeight:'900',color:'white',lineHeight:26,marginTop:7}}>{heroMessages[slide][lang][0]}</Text>
   <Text style={{fontSize:small?16:18,fontWeight:'900',color:'#cbffea',marginTop:1}}>{heroMessages[slide][lang][1]}</Text>
-  <Text style={{color:'#e9fffa',fontSize:11,marginTop:8,maxWidth:'83%'}}>{heroMessages[slide][lang][2]}</Text>
+  <Text style={{color:'#e9fffa',fontSize:11,marginTop:8,maxWidth:'69%'}}>{heroMessages[slide][lang][2]}</Text>
   <View style={[styles.between,{marginTop:12}]}>
    <Pressable onPress={()=>onTab('deals')} style={{backgroundColor:'white',paddingVertical:8,paddingHorizontal:12,borderRadius:18}}><Text style={{color:'#086a74',fontWeight:'800',fontSize:11}}>Explore group deals →</Text></Pressable>
    <View style={{flexDirection:'row',gap:8}}><Pressable onPress={()=>setSlide(v=>(v+3)%4)}><Text style={styles.heroArrow}>‹</Text></Pressable><Pressable onPress={()=>setSlide(v=>(v+1)%4)}><Text style={styles.heroArrow}>›</Text></Pressable></View>
@@ -163,8 +166,15 @@ function Shop(){
  </>}
  function Footer(){return <View style={{paddingVertical:16,marginTop:12,borderTopWidth:1,borderColor:theme.line}}>
   <Text style={{fontSize:13,fontWeight:'900',color:theme.text}}>2-TAKA-R-BAZAR</Text><Text style={{fontSize:11,color:theme.muted}}>Smart shopping. Real savings!</Text><Text style={{fontSize:11,color:theme.muted}}>একসাথে কিনি, কম দামে পাই!</Text>
-  <Text style={{fontSize:11,color:theme.muted,marginTop:9}}>About 2TBR  ·  FAQ  ·  How it works  ·  Terms & Policies</Text>
-  <Text style={{fontSize:11,color:theme.muted,marginTop:3}}>support@2takarbazar.com</Text>
+  <View style={{flexDirection:'row',gap:12,marginTop:8}}>
+    <View style={{flex:1}}><Text style={{color:theme.text,fontSize:10,fontWeight:'900'}}>Explore & get help</Text><Text style={{color:theme.muted,fontSize:9,marginTop:3}}>About 2TBR · FAQ · How it works · Pickup & delivery · Communities</Text></View>
+    <View style={{flex:1}}><Text style={{color:theme.text,fontSize:10,fontWeight:'900'}}>Terms & policies</Text><Text style={{color:theme.muted,fontSize:9,marginTop:3}}>Privacy · Terms · Returns · Refunds</Text></View>
+  </View>
+  <Text style={{color:theme.text,fontSize:10,fontWeight:'900',marginTop:9}}>Contact us</Text>
+  <View style={{flexDirection:'row',gap:12,marginTop:4}}>
+    <View style={{flex:1,minWidth:0}}><Text style={{color:theme.muted,fontSize:9}}>Business & supplier enquiries</Text><Text style={{color:theme.accent,fontSize:9}} numberOfLines={2}>business@2takarbazar.com</Text><Text style={{color:theme.muted,fontSize:9}}>Become a supply partner →</Text></View>
+    <View style={{flex:1,minWidth:0}}><Text style={{color:theme.muted,fontSize:9}}>Customer support</Text><Text style={{color:theme.accent,fontSize:9}} numberOfLines={2}>support@2takarbazar.com</Text></View>
+  </View>
   <Text style={{fontSize:10,color:theme.muted,marginTop:8}}>© 2026 2-TAKA-R-BAZAR · Developed by agentsiraji.com</Text>
  </View>}
  function OfferDetails(){const offer=selectedOffer;if(!offer)return null;const p=byId(offer.productId);if(!p)return null;
