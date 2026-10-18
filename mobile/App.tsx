@@ -10,7 +10,7 @@ import {cartLineCount,cartQuantity,cartSubtotal,customerSaving} from './src/doma
 import {loadPublicCatalog} from './src/live';
 
 type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
-type Screen=Tab|'account'|'orders'|'savings'|'product'|'group'|'pool'|'menu';
+type Screen=Tab|'account'|'orders'|'savings'|'product'|'group'|'retail'|'pool'|'menu';
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
@@ -180,7 +180,86 @@ function Shop(){
   </View>
   <Text style={{fontSize:10,color:theme.muted,marginTop:8}}>© 2026 2-TAKA-R-BAZAR · Developed by agentsiraji.com</Text>
  </View>}
+
+ type DemoTier={minimum:number;price:number};
+ function demoGroupTierPrices(offer:Offer,product:Product):{list:DemoTier[];current:DemoTier;next:DemoTier|undefined}|null {
+   if(!demo||offer.mode!=='GROUP_DEAL')return null;
+   const list:DemoTier[]=offer.groupSize===10?[{minimum:1,price:1160},{minimum:5,price:1120},{minimum:10,price:offer.price}]
+     :[{minimum:1,price:155},{minimum:5,price:offer.price}];
+   const valid=list.filter(x=>x.price>0&&x.price<=product.referencePrice);
+   const current=valid.filter(x=>x.minimum<=(offer.joined||0)).at(-1)||valid[0];
+   return current?{list:valid,current,next:valid.find(x=>x.minimum>(offer.joined||0))}:null;
+ }
+ function GroupDealDetails({offer,product}:{offer:Offer;product:Product}){
+   const tiers=demoGroupTierPrices(offer,product);
+   const currentPrice=tiers?.current.price??offer.price;
+   return <>
+    <ProductPhoto item={product} height={small?330:360}/>
+    <View style={[styles.between,{marginTop:9,marginBottom:8}]}>
+     <Text style={{color:theme.accent,fontSize:11,fontWeight:'900'}}>GROUP DEAL</Text>
+     <Pressable accessibilityRole="button" onPress={()=>setScreen('retail')} style={{paddingVertical:9,paddingHorizontal:10,borderRadius:10,borderWidth:1,borderColor:theme.accent,backgroundColor:theme.field}}>
+       <Text style={{color:theme.accent,fontSize:12,fontWeight:'900'}}>Product Details →</Text>
+     </Pressable>
+    </View>
+    <Text style={{fontSize:23,fontWeight:'900',color:theme.text}}>{lang==='bn'?product.nameBn:product.name}</Text>
+    <Text style={{fontSize:11,color:theme.muted,marginVertical:4}}>{product.unit} · {offer.community} · SKU {product.id}</Text>
+    {panel(<>
+     <Text style={{color:theme.muted,fontSize:11,fontWeight:'700'}}>Current qualifying tier · Price not final</Text>
+     <Text style={{color:theme.accent,fontSize:29,fontWeight:'900',marginTop:4}}>{money(currentPrice)}</Text>
+     <Text style={{color:theme.muted,fontSize:11,marginTop:4}}>Market retail: {money(product.referencePrice)}</Text>
+     {tiers&&<Text style={{color:theme.accent,fontSize:11,fontWeight:'800',marginTop:5}}>Potential saving: {money(customerSaving(product.referencePrice,currentPrice))}</Text>}
+     {tiers?.next&&<Text style={{color:theme.muted,fontSize:11,marginTop:8}}>Next tier at {tiers.next.minimum} people: {money(tiers.next.price)} · {tiers.next.minimum-(offer.joined||0)} more needed</Text>}
+    </>)}
+    {tiers&&panel(<>
+      <Text style={{color:theme.text,fontSize:13,fontWeight:'900',marginBottom:8}}>Group Deal price tiers</Text>
+      <View style={{flexDirection:'row',gap:6}}>
+      {tiers.list.map(tier=><View key={tier.minimum} style={{flex:1,minWidth:0,borderRadius:10,paddingVertical:9,paddingHorizontal:5,alignItems:'center',borderWidth:1,borderColor:tiers.current.minimum===tier.minimum?theme.accent:theme.line,backgroundColor:tiers.current.minimum===tier.minimum?theme.soft:theme.field}}>
+       <Text style={{color:theme.muted,fontSize:10}}>{tier.minimum===1?'Starting':tier.minimum+' people'}</Text>
+       <Text style={{color:theme.accent,fontWeight:'900',fontSize:15,marginTop:6}}>{money(tier.price)}</Text>
+       <Text style={{color:theme.muted,fontSize:9,marginTop:4}}>{tiers.current.minimum===tier.minimum?'Current tier':tier.minimum>(offer.joined||0)?'Not yet unlocked':'Unlocked'}</Text>
+      </View>)}
+      </View>
+      <Text style={{color:theme.muted,fontSize:10,marginTop:9}}>Demo price tiers only. Server-authoritative prices required before checkout.</Text>
+    </>)}
+    {panel(<>
+      <Text style={{color:theme.text,fontWeight:'900',fontSize:13}}>Community progress</Text>
+      <View style={[styles.between,{marginTop:9}]}>
+       <Text style={{color:theme.text,fontSize:11,fontWeight:'800'}}>👥 {offer.joined||0}/{offer.groupSize||5} joined</Text>
+       <Text style={{color:theme.muted,fontSize:10}}>◷ Ends in {offer.daysLeft||0} day(s)</Text>
+      </View>
+      <View style={{height:7,backgroundColor:theme.field,borderRadius:6,overflow:'hidden',marginVertical:9}}>
+       <View style={{height:7,width:(Math.min(100,100*(offer.joined||0)/(offer.groupSize||5))+'%') as any,backgroundColor:theme.accent,borderRadius:6}}/>
+      </View>
+      <Text style={{color:theme.muted,fontSize:11}}>Qualified buyers and closing rules determine the final price. Below-minimum groups expire without payment.</Text>
+    </>)}
+    <View style={{flexDirection:'row',gap:8,marginBottom:10}}>{button('Product Details',()=>setScreen('retail'),false)}{button('Join Deal · Preview',notify)}</View>
+    <Text style={{fontSize:10,color:theme.muted,marginBottom:8}}>{t.notice}</Text>
+   </>;
+ }
+ function RetailDetails(){
+   const offer=selectedOffer;if(!offer)return null;const product=byId(offer.productId);if(!product)return null;
+   return <>
+     <ProductPhoto item={product} height={small?330:360}/>
+     {title('PRODUCT INFORMATION',lang==='bn'?product.nameBn:product.name)}
+     <Text style={{color:theme.muted,fontSize:11,marginBottom:9}}>{product.unit} · SKU {product.id}</Text>
+     {panel(<>
+      <Text style={{color:theme.muted,fontWeight:'800',fontSize:12}}>Market retail reference price</Text>
+      <Text style={{color:theme.accent,fontSize:29,fontWeight:'900',marginVertical:8}}>{money(product.referencePrice)}</Text>
+      <Text style={{color:theme.muted,fontSize:11}}>Retail reference only. Group Deal and Pool tier prices are not displayed on the individual product page.</Text>
+     </>)}
+     {panel(<>
+      <Text style={{color:theme.text,fontWeight:'900',fontSize:13,marginBottom:9}}>Product information</Text>
+      <Text style={{color:theme.text,fontSize:12}}>Name: {lang==='bn'?product.nameBn:product.name}</Text>
+      <Text style={{color:theme.text,fontSize:12,marginTop:5}}>Package: {product.unit}</Text>
+      <Text style={{color:theme.text,fontSize:12,marginTop:5}}>SKU: {product.id}</Text>
+      <Text style={{color:theme.text,fontSize:12,marginTop:5}}>Category: {product.category}</Text>
+      <Text style={{color:theme.muted,fontSize:11,marginTop:10}}>Demo data. Ingredients, origin, expiry and other verified specifications will come from the master product record.</Text>
+     </>)}
+     <View style={{flexDirection:'row',marginBottom:12}}>{button(offer.mode==='GROUP_DEAL'?'Back to Group Deal':'Back to Offer',()=>setScreen(offer.mode==='GROUP_DEAL'?'group':'product'))}</View>
+   </>;
+ }
  function OfferDetails(){const offer=selectedOffer;if(!offer)return null;const p=byId(offer.productId);if(!p)return null;
+  if(offer.mode==='GROUP_DEAL')return <GroupDealDetails offer={offer} product={p}/>;
   const all=offers.filter(o=>o.productId===p.id);
   return <>{title(offer.mode==='GROUP_DEAL'?'GROUP DEAL':'PRODUCT DETAILS',lang==='bn'?p.nameBn:p.name)}
     <ProductPhoto item={p} height={260}/>
@@ -258,6 +337,7 @@ function Shop(){
  case 'orders':return <Orders/>;
  case 'savings':return <>{title('VERIFIED REPORT',t.savings)}<Savings/>{panel(<Text style={{color:theme.muted}}>{demo?'All values on this screen are illustrative.':t.notEarned} Verified orders only; this is not a withdrawable cash balance.</Text>)}</>;
  case 'group':case 'product':return <OfferDetails/>;
+ case 'retail':return <RetailDetails/>;
  case 'pool':return <PoolDetails/>;
  case 'menu':return <Menu/>;
  }}
@@ -283,7 +363,7 @@ function Shop(){
   </View>
   {busy&&<Text style={{textAlign:'center',color:theme.accent,fontSize:11}}>Loading public product catalog…</Text>}
   <ScrollView key={screen} keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingHorizontal:12,paddingTop:4,paddingBottom:30}}>
-   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
+   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
    {body()}
   </ScrollView>
   <View style={[styles.bottom,{backgroundColor:theme.card,borderColor:theme.line}]}>
