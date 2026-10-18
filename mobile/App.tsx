@@ -261,14 +261,12 @@ function Shop(){
  function OfferDetails(){const offer=selectedOffer;if(!offer)return null;const p=byId(offer.productId);if(!p)return null;
   if(offer.mode==='GROUP_DEAL')return <GroupDealDetails offer={offer} product={p}/>;
   const all=offers.filter(o=>o.productId===p.id);
-  return <>{title(offer.mode==='GROUP_DEAL'?'GROUP DEAL':'PRODUCT DETAILS',lang==='bn'?p.nameBn:p.name)}
+  return <>{title('PRODUCT DETAILS',lang==='bn'?p.nameBn:p.name)}
     <ProductPhoto item={p} height={260}/>
     {panel(<><Text style={{color:theme.muted,marginBottom:8}}>{p.unit} · {offer.community}</Text>
       <View style={styles.between}><Text style={{color:theme.accent,fontSize:27,fontWeight:'900'}}>{money(offer.price)}</Text><Text style={{textDecorationLine:'line-through',color:theme.muted}}>{money(p.referencePrice)}</Text></View>
       <View style={{marginVertical:8,alignSelf:'flex-start'}}>{pill(t.save+' '+money(customerSaving(p.referencePrice,offer.price)),true)}</View>
-      {offer.mode==='GROUP_DEAL'&&<><Text style={{color:theme.text,fontWeight:'800',marginBottom:5}}>{offer.joined}/{offer.groupSize} neighbours joined</Text>
-       <View style={{height:8,backgroundColor:theme.field,borderRadius:5}}><View style={{height:8,width:(Math.min(100,100*(offer.joined||0)/(offer.groupSize||5))+'%') as `${number}%`,backgroundColor:theme.accent,borderRadius:5}}/></View>
-       <Text style={{color:theme.muted,marginVertical:7,fontSize:11}}>Target: {offer.groupSize} people · Ends in {offer.daysLeft} day(s). Confirmation depends on the published deal rules.</Text></>}
+
       <Text style={{fontSize:12,fontWeight:'900',color:theme.text,marginBottom:5,marginTop:7}}>Same product · Available offers</Text>
       {all.map(o=><Pressable key={o.id} onPress={()=>setSelectedOffer(o)} style={[styles.priceOption,{borderColor:o.id===offer.id?theme.accent:theme.line}]}>
        <Text style={{color:theme.text,fontSize:12}}>{o.mode==='SOLO'?'Direct / Exclusive':o.mode==='GROUP_DEAL'?String(o.groupSize)+'-person Group Deal':'Community Pool'}</Text>
