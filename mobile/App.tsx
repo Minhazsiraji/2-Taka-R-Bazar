@@ -147,16 +147,16 @@ function Shop(){
    </View>
   </Pressable>);
  }
- const Hero=()=><View style={[styles.hero,{backgroundColor:dark?'#063f48':'#087682'}]}><NonperishableCart style={{position:'absolute',right:-3,top:30,width:154,height:152,opacity:.95}}/>
-  <Text style={{color:'#a5fbef',fontWeight:'800',fontSize:10,letterSpacing:1.5}}>✦ SMART SHOPPING. REAL SAVINGS!</Text>
-  <Text style={{fontSize:small?20:23,fontWeight:'900',color:'white',lineHeight:26,marginTop:7}}>{heroMessages[slide][lang][0]}</Text>
-  <Text style={{fontSize:small?16:18,fontWeight:'900',color:'#cbffea',marginTop:1}}>{heroMessages[slide][lang][1]}</Text>
-  <Text style={{color:'#e9fffa',fontSize:11,marginTop:8,maxWidth:'69%'}}>{heroMessages[slide][lang][2]}</Text>
-  <View style={[styles.between,{marginTop:12}]}>
-   <Pressable onPress={()=>onTab('deals')} style={{backgroundColor:'white',paddingVertical:8,paddingHorizontal:12,borderRadius:18}}><Text style={{color:'#086a74',fontWeight:'800',fontSize:11}}>Explore group deals →</Text></Pressable>
+ const Hero=()=><View style={[styles.hero,{backgroundColor:dark?'#063f48':'#087682'}]}><NonperishableCart style={{position:'absolute',right:-4,top:3,width:'53%',height:'98%',opacity:.98}}/>
+  <Text style={{color:'#a5fbef',fontWeight:'800',fontSize:9,letterSpacing:1.2}}>✦ SMART SHOPPING. REAL SAVINGS!</Text>
+  <Text style={{fontSize:small?14:15,fontWeight:'900',color:'white',lineHeight:small?16:17,maxWidth:'55%',marginTop:5}}>{heroMessages[slide][lang][0]}</Text>
+  <Text style={{fontSize:small?14:15,fontWeight:'900',color:'#cbffea',lineHeight:small?16:17,maxWidth:'55%',marginTop:2}}>{heroMessages[slide][lang][1]}</Text>
+  <Text style={{color:'#e9fffa',fontSize:small?8.5:9,lineHeight:small?10:11,marginTop:5,maxWidth:'54%'}}>{heroMessages[slide][lang][2]}</Text>
+  <View style={[styles.between,{marginTop:8}]}>
+   <Pressable onPress={()=>onTab('deals')} style={{backgroundColor:'white',paddingVertical:7,paddingHorizontal:10,borderRadius:18}}><Text style={{color:'#086a74',fontWeight:'800',fontSize:9}}>Explore group deals →</Text></Pressable>
    <View style={{flexDirection:'row',gap:8}}><Pressable onPress={()=>setSlide(v=>(v+3)%4)}><Text style={styles.heroArrow}>‹</Text></Pressable><Pressable onPress={()=>setSlide(v=>(v+1)%4)}><Text style={styles.heroArrow}>›</Text></Pressable></View>
   </View>
-  <View style={{alignSelf:'center',flexDirection:'row',gap:5,marginTop:8}}>{heroMessages.map((_,i)=><Pressable key={i} accessibilityLabel={'Slide '+(i+1)} onPress={()=>setSlide(i)} style={{height:5,width:i===slide?14:5,borderRadius:5,backgroundColor:i===slide?'white':'#8ac8cb'}}/>)}</View>
+  <View style={{alignSelf:'center',flexDirection:'row',gap:5,marginTop:5}}>{heroMessages.map((_,i)=><Pressable key={i} accessibilityLabel={'Slide '+(i+1)} onPress={()=>setSlide(i)} style={{height:5,width:i===slide?14:5,borderRadius:5,backgroundColor:i===slide?'white':'#8ac8cb'}}/>)}</View>
  </View>;
  function Home(){return <>
   <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>Savar DOHS⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
@@ -306,9 +306,9 @@ const styles=StyleSheet.create({
  titleRow:{flexDirection:'row',alignItems:'flex-end',justifyContent:'space-between',marginTop:16,marginBottom:8},
  panel:{borderWidth:1,borderRadius:17,padding:10,marginBottom:9,shadowColor:'#18213b',shadowOpacity:.04,shadowRadius:9,elevation:1},
  twoCol:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'space-between'},
- savingTile:{width:'23.9%',minHeight:77,paddingHorizontal:5,paddingVertical:7,borderRadius:12,alignItems:'flex-start',justifyContent:'center',gap:2,borderWidth:1},
+ savingTile:{width:'23.9%',minHeight:72,paddingHorizontal:5,paddingVertical:6,borderRadius:12,alignItems:'flex-start',justifyContent:'center',gap:2,borderWidth:1},
  savingsFour:{flexDirection:'row',alignItems:'stretch',justifyContent:'space-between',gap:4},
- hero:{padding:15,borderRadius:17,marginBottom:1,minHeight:196,overflow:'hidden'},
+ hero:{padding:12,borderRadius:17,marginBottom:1,minHeight:181,overflow:'hidden'},
  heroArrow:{fontSize:24,color:'white',fontWeight:'700'},
  exclusiveCard:{width:'48.6%',borderRadius:15,padding:7,borderWidth:1,marginBottom:2,minHeight:168},
  bottom:{flexDirection:'row',paddingTop:5,borderTopWidth:1,paddingHorizontal:7},
