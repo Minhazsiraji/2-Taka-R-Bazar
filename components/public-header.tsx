@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import {usePathname} from 'next/navigation'
 import {useState} from 'react'
 import { BrandLogo } from '@/components/brand-logo'
 import { NotificationBell } from '@/components/notification-bell'
@@ -45,6 +46,7 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
  const actionCopy=<><span className="public-header-action-desktop" aria-hidden="true">{actionLabel}</span><span className="public-header-action-mobile" aria-hidden="true">{compactActionLabel}</span></>
  const shopHref=(href:string)=>href.startsWith('#')?shopBaseHref+href:href
  const [menuOpen,setMenuOpen]=useState(false)
+ const pathname=usePathname()
  if(storefront)return <header className="public-glass-header market-flat-header" lang={language} aria-label="2-TAKA-R-BAZAR public shop header">
   <div className="market-header-inner">
    <Link href="/" className="market-brand-lockup" aria-label="2-TAKA-R-BAZAR home">
@@ -85,7 +87,7 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
   </nav>
   {menuOpen&&<nav id="market-mobile-navigation" className="market-mobile-nav-panel"
     aria-label={t('Mobile navigation','মোবাইল মেনু')} onKeyDown={e=>{if(e.key==='Escape')setMenuOpen(false)}}>
-   {approvedMobileNav.map(item=><a key={item.href} href={shopHref(item.href)} onClick={()=>setMenuOpen(false)}>{t(item.label,item.bn)} <span aria-hidden="true">↗</span></a>)}
+   {(pathname==='/'?approvedMobileNav:storefrontNav).map(item=><a key={item.href} href={shopHref(item.href)} onClick={()=>setMenuOpen(false)}>{t(item.label,item.bn)} <span aria-hidden="true">↗</span></a>)}
    <Link href="/signup" onClick={()=>setMenuOpen(false)}>{t('Join Community','কমিউনিটিতে যোগ দিন')} <span aria-hidden="true">↗</span></Link>
   </nav>}
  </header>
