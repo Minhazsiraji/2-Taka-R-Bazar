@@ -52,6 +52,15 @@ create table public.store_offer_items (
   primary key(offer_id,product_id)
 );
 
+create table public.store_settings (
+  id boolean primary key default true check(id),
+  home_delivery_fee numeric(12,2) check(home_delivery_fee>=0),
+  updated_at timestamptz not null default now()
+);
+-- Home delivery starts disabled until Admin sets a real fee, including zero
+-- only if they intentionally approve free home delivery.
+insert into public.store_settings(id,home_delivery_fee) values(true,null);
+
 create table public.store_orders (
   id uuid primary key default gen_random_uuid(),
   order_code text not null unique default (
@@ -134,17 +143,19 @@ alter table public.store_members enable row level security;
 alter table public.store_products enable row level security;
 alter table public.store_offers enable row level security;
 alter table public.store_offer_items enable row level security;
+alter table public.store_settings enable row level security;
 alter table public.store_orders enable row level security;
 alter table public.store_order_items enable row level security;
 alter table public.store_payment_receipts enable row level security;
 alter table public.store_order_events enable row level security;
 
 revoke all on table public.store_members,public.store_products,
- public.store_offers,public.store_offer_items,public.store_orders,
+ public.store_offers,public.store_offer_items,public.store_settings,public.store_orders,
  public.store_order_items,public.store_payment_receipts,
  public.store_order_events from public,anon,authenticated;
 revoke all on sequence public.store_order_events_id_seq from public,anon,authenticated;
-grant select on public.store_products,public.store_offers,public.store_offer_items to anon,authenticated;
+grant select on public.store_products,public.store_offers,public.store_offer_items,public.store_settings to anon,authenticated;
+grant update on public.store_settings to authenticated;
 grant select on public.store_members,public.store_orders,public.store_order_items,
  public.store_payment_receipts,public.store_order_events to authenticated;
 grant insert,update on public.store_products,public.store_offers,public.store_offer_items to authenticated;
@@ -170,6 +181,9 @@ create policy store_offer_items_public on public.store_offer_items for select
 create policy store_offer_items_staff_write on public.store_offer_items for all to authenticated
  using((select public.store_is_staff()))
  with check((select public.store_is_staff()));
+create policy store_settings_public on public.store_settings for select using(true);
+create policy store_settings_staff_update on public.store_settings for update to authenticated
+ using((select public.store_is_staff())) with check((select public.store_is_staff()));
 create policy store_orders_scoped on public.store_orders for select to authenticated
  using(customer_id=(select auth.uid()) or (select public.store_is_staff()));
 create policy store_items_scoped on public.store_order_items for select to authenticated
@@ -190,6 +204,7 @@ begin
  if not public.store_is_super_admin() then
   raise exception using errcode='42501',message='Super Admin access required';
  end if;
+ perform pg_advisory_xact_lock(1091029381);
  if p_role not in ('customer','admin','super_admin') then
   raise exception 'Invalid role';
  end if;
@@ -214,7 +229,7 @@ declare
  v_order uuid;v_existing uuid;v_offer public.store_offers%rowtype;
  v_line record;v_product public.store_products%rowtype;
  v_price numeric(12,2);v_total numeric(12,2):=0;v_qty numeric(12,3);
- v_seen uuid[]:='{}';v_count int:=0;
+ v_seen uuid[]:='{}';v_count int:=0;v_delivery numeric(12,2):=0;
 begin
  if v_user is null then raise exception using errcode='42501',message='Sign in before checkout';end if;
  if p_request_key is null then raise exception 'Request key required';end if;
@@ -230,7 +245,11 @@ begin
  -- Fee MUST be server-defined by an approved delivery rule at implementation;
  -- user input cannot establish arbitrary delivery fees in a production app.
  if p_delivery_fee is distinct from 0 then
-  raise exception 'Delivery charge must come from approved server configuration';
+  raise exception 'Delivery charge is calculated on the server';
+ end if;
+ if p_method='home_delivery' then
+   select home_delivery_fee into v_delivery from public.store_settings where id=true;
+   if v_delivery is null then raise exception 'Home delivery is not enabled yet';end if;
  end if;
  perform pg_advisory_xact_lock(hashtextextended(v_user::text,10881));
  select id into v_existing from public.store_orders
@@ -292,7 +311,7 @@ begin
    values(v_order,v_product.id,v_product.title,v_product.unit,v_qty,v_price);
    v_total:=v_total+round(v_qty*v_price,2);
  end loop;
- update public.store_orders set total_amount=v_total,updated_at=now() where id=v_order;
+ update public.store_orders set total_amount=v_total+v_delivery,delivery_fee=v_delivery,updated_at=now() where id=v_order;
  insert into public.store_order_events(order_id,actor_id,event,details)
  values(v_order,v_user,'placed','Customer order created; stock reserved, payment not verified');
  return v_order;
@@ -325,6 +344,8 @@ begin
  end if;
  if p_next='completed' and v.payment_status<>'verified' then
   raise exception 'Verify payment before completion';end if;
+ if p_next='cancelled' and v.payment_status<>'unpaid' then
+  raise exception 'Collected payment requires a documented refund before cancellation';end if;
  if p_next='cancelled' then
    update public.store_products p set reserved=p.reserved-i.quantity,updated_at=now()
    from public.store_order_items i where i.order_id=v.id and p.id=i.product_id;
