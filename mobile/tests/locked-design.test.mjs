@@ -91,3 +91,23 @@ test('Group Deal price tier display is demo-only; Home remains locked',()=>{
  assert.match(home,/<Hero\/>/);
  assert.match(home,/<Savings home\/>/);
 });
+
+test('Pool details support 1–20 products without a cap on participating households',()=>{
+ assert.match(app,/function PoolDetails/);
+ assert.match(app,/pool.productIds.map/);
+ assert.match(app,/No cap on participation/);
+ assert.match(app,/next milestone/);
+ assert.match(app,/Commitment ends/);
+ assert.match(app,/pool.commitDaysLeft/);
+ assert.match(app,/pool.commitEndsLabel/);
+});
+test('Pool product selections, total and retail navigation are isolated from approved Home',()=>{
+ for(const token of ['changePoolQty','poolQuantities','Potential savings','Current estimated Pool total','Total at next tier','Product Details','Review Join Pool · Demo']){
+  assert.ok(app.includes(token),token);
+ }
+ assert.ok(app.includes("disabled={!units} onPress={notify}"));
+ assert.ok(app.includes("offer.mode==='POOL'&&selectedPool?'pool'"));
+ const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
+ assert.ok(home.includes('<Hero/>'));
+ assert.ok(home.includes('<Savings home/>'));
+});
