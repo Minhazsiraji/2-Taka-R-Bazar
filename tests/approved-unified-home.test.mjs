@@ -1,0 +1,53 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8')
+const home=read('components/mobile-marketplace-home.tsx')
+const wrapper=read('components/public-marketplace.tsx')
+const css=read('app/marketplace-mobile-approved.css')
+const loader=read('lib/home-savings.ts')
+const query=read('relaunch/sql/002_home_savings.sql')
+const page=read('app/page.tsx')
+
+test('the mobile master design supplies each visible viewport with the four savings cards before offers',()=>{
+ const order=['id="mobile-savings"','id="mobile-deals"','id="mobile-exclusive"','id="mobile-pools"']
+ assert.ok(order.every(k=>home.includes(k)),'Missing approved section')
+ for(let i=1;i<order.length;i++)assert.ok(home.indexOf(order[i-1])<home.indexOf(order[i]),'Invalid approved section order')
+ for(const phrase of ['This Month','Prev. Month','Lifetime','Community','View details'])assert.ok(home.includes(phrase))
+ assert.match(wrapper,/<MobileMarketplaceHome/)
+ assert.match(css,/@media\(min-width:768px\)/)
+ assert.match(css,/\.market-legacy-home\{display:none!important\}/)
+ assert.match(css,/repeat\(4,minmax\(0,1fr\)\)/)
+ assert.match(css,/repeat\(2,minmax\(0,1fr\)\)/)
+ assert.match(read('components/mobile-customer-nav.tsx'),/\['\/', 'Home'/)
+ assert.match(page,/savings=\{savings\}/)
+})
+
+test('savings cannot be sourced from demonstrations, raw catalog prices or pending orders',()=>{
+ assert.match(loader,/server-only/)
+ assert.match(loader,/return zero/)
+ assert.match(loader,/store_home_savings/)
+ assert.match(query,/o\.status='completed'/)
+ assert.match(query,/o\.payment_status='verified'/)
+ assert.match(query,/r\.verified_at is not null/)
+ assert.match(query,/r\.amount=o\.total_amount/)
+ assert.match(query,/reference_price_each/)
+ assert.match(query,/refunded_quantity/)
+ assert.match(query,/o\.customer_id=v_customer/)
+ assert.match(query,/'community',null/)
+ assert.doesNotMatch(loader,/DEMO_OFFERS|DEMO_SHOWCASE|localStorage|finance_/)
+ assert.doesNotMatch(home,/This Month[^\n]*৳\d+/)
+})
+
+test('unpriced SEO-only products remain read-only and saved login, footer and catalog are preserved',()=>{
+ assert.match(home,/bookable:false,href:/)
+ assert.match(home,/p\.bookable&&selectedArea/)
+ assert.match(home,/View Details \/ Ask for Price/)
+ assert.match(home,/commerceId&&p\.available&&selectedArea/)
+ assert.match(read('app/products/page.tsx'),/PublishedProductsSection/)
+ assert.match(wrapper,/<PublicHeader storefront/)
+ assert.match(wrapper,/<PublicFooter storefront/)
+ assert.match(read('components/public-header.tsx'),/<NotificationBell\/>/)
+ assert.match(read('lib/site.ts'),/Smart shopping\. Real savings!/)
+ assert.match(read('lib/site.ts'),/একসাথে কিনি, কম দামে পাই!/)
+})
