@@ -87,6 +87,16 @@ try{
  })))
  const home=await page.goto(base+'/',{waitUntil:'domcontentloaded'})
  assert.equal(home?.status(),200)
+ const mobileCatalog=page.locator('#mobile-exclusive')
+ await mobileCatalog.getByRole('heading',{name:'Exclusive Products'}).waitFor()
+ const previewCards=mobileCatalog.locator('.mhome-exclusive-card')
+ assert.equal(await previewCards.count(),6,'The approved mobile grid includes six published listings')
+ assert.ok(await mobileCatalog.locator('a[href^="/p/"]').count()>=6,'SEO-published product details available on phones')
+ assert.equal(await mobileCatalog.locator('form,[href^="/cart"],[href^="/checkout"]').count(),0,
+  'Unpriced published catalog products stay read-only on phones')
+ for(const excluded of ineligible)assert.equal(await mobileCatalog.getByText(excluded.slug).count(),0,
+  'Unapproved, inactive and demo products absent from mobile grid')
+ await page.setViewportSize({width:1024,height:900})
  const section=page.locator('#published-products')
  await section.getByRole('heading',{name:'All Products'}).waitFor()
  assert.equal(await page.evaluate(()=>{
@@ -111,11 +121,13 @@ try{
  assert.equal(await section.getByRole('heading',{name:'সব পণ্য'}).count(),1)
  assert.equal(await section.getByText('মূল্য শীঘ্রই',{exact:true}).count(),14)
  assert.match(await firstLink.getAttribute('href')??'',/^\/bn\/p\/(?:catalog-uat|seo-uat)/)
+ await page.setViewportSize({width:390,height:844})
+ await mobileCatalog.getByRole('heading',{name:'এক্সক্লুসিভ পণ্য'}).waitFor()
  await page.screenshot({path:'/tmp/2tbr-product-seo-catalog-bn-mobile.png',fullPage:true})
  await toggle.click()
  for(const width of [320,393,768,1024,1440]){
   await page.setViewportSize({width,height:900})
-  await page.locator('#published-products').scrollIntoViewIfNeeded()
+  await page.locator(width<768?'#mobile-exclusive':'#published-products').scrollIntoViewIfNeeded()
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,
    'No catalog horizontal overflow at '+width)
  }
