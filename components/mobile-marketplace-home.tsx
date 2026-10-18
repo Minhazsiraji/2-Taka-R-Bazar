@@ -92,39 +92,76 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
   !query||[o.product_name,o.product_name_bn,o.brand,o.category,o.offer_title].some(v=>(v??'').toLocaleLowerCase().includes(query))))
  const deals=localOffers.filter(o=>o.offer_kind==='GROUP_DEAL').slice(0,4)
  const poolRows=pools.filter(p=>!selectedArea||!p.community_id||p.community_id===selectedArea).slice(0,3)
+ // Show genuine checkout-ready SOLO offers first. SEO/showcase entries are read-only
+ // fallbacks, never a source of made-up price, savings or inventory.
+ type HomeProduct={
+  id:string;name:string;nameBn:string;package:string;image:string|null;
+  price:number|null;oldPrice:number|null;stock:number|null;
+  demo:boolean;commerceId:string|null;available:boolean;bookable:boolean;href?:string
+ }
+ const exclusive:HomeProduct[]=[]
  const unique=new Set<string>()
- const exclusive: {id:string;name:string;nameBn:string;package:string;image:string|null;price:number|null;
-  oldPrice:number|null;demo:boolean;commerceId:string|null;available:boolean;bookable:boolean;href?:string}[]=[]
- const eligible=products.filter(p=>!query||[p.name,p.name_bn,p.brand].some(v=>(v??'').toLowerCase().includes(query)))
+ const featuredById=new Map(products.map(p=>[p.product_id,p]))
+ const publishedById=new Map(publishedProducts.items.map(p=>[p.product_id,p]))
+ const eligibleSolo=localOffers.filter(o=>o.offer_kind==='SOLO')
+  .sort((a,b)=>{
+   const score=(o:StorefrontOffer)=>{
+    const price=Number(o.solo_price??o.confirmed_price??0)
+    if(!Number.isFinite(price)||price<=0)return 3
+    if(o.commerce_solo_id&&o.commerce_solo_available&&!o.is_demo)return 0
+    if(!o.is_demo)return 1
+    return 2
+   }
+   return score(a)-score(b)
+  })
+ for(const o of eligibleSolo){
+  if(unique.has(o.product_id))continue
+  const feature=featuredById.get(o.product_id)
+  const published=publishedById.get(o.product_id)
+  const price=Number(o.solo_price??o.confirmed_price??0)
+  const validPrice=Number.isFinite(price)&&price>0?price:null
+  const old=Number(o.reference_price)
+  const verifiedStock=typeof o.commerce_available_quantity==='number'&&
+   Number.isSafeInteger(o.commerce_available_quantity)&&o.commerce_available_quantity>=0
+   ?o.commerce_available_quantity:null
+  exclusive.push({
+   id:o.product_id,name:feature?.name??published?.title_en??o.product_name,
+   nameBn:feature?.name_bn??published?.title_bn??o.product_name_bn??o.product_name,
+   package:feature?.package_size??published?.package_size??o.package_size,
+   image:feature?.image_url??feature?.gallery_urls?.[0]??published?.image_url??o.image_url,
+   price:validPrice,oldPrice:validPrice&&Number.isFinite(old)&&old>validPrice?old:null,
+   stock:verifiedStock,
+   demo:Boolean(o.is_demo||feature?.is_demo),
+   commerceId:o.commerce_solo_id??null,available:Boolean(o.commerce_solo_available),
+   bookable:Boolean(validPrice&&!o.commerce_solo_id&&!o.is_demo),
+   href:published?(language==='bn'?'/bn':'')+'/p/'+published.slug:undefined
+  })
+  unique.add(o.product_id)
+ }
+ const eligible=products.filter(p=>!query||[p.name,p.name_bn,p.brand].some(v=>(v??'').toLocaleLowerCase().includes(query)))
  for(const p of eligible){
   if(unique.has(p.product_id))continue
-  const productOffer=localOffers.find(o=>o.product_id===p.product_id&&o.offer_kind==='SOLO')
-  if(selectedArea&&offers.some(o=>o.product_id===p.product_id)&&!productOffer)continue
+  if(selectedArea&&offers.some(o=>o.product_id===p.product_id))continue
+  exclusive.push({id:p.product_id,name:p.name,nameBn:p.name_bn??p.name,
+   package:p.package_size,image:p.image_url??p.gallery_urls?.[0]??null,
+   price:null,oldPrice:null,stock:null,demo:Boolean(p.is_demo),
+   commerceId:null,available:false,bookable:false})
   unique.add(p.product_id)
-  const price=Number(productOffer?.solo_price??productOffer?.confirmed_price??0)||null
-  exclusive.push({id:p.product_id,name:p.name,nameBn:p.name_bn??p.name,package:p.package_size,
-   image:p.image_url??p.gallery_urls?.[0]??null,price,oldPrice:productOffer?.reference_price??null,
-   demo:Boolean(p.is_demo||productOffer?.is_demo),commerceId:productOffer?.commerce_solo_id??null,
-   available:Boolean(productOffer?.commerce_solo_available),bookable:Boolean(productOffer?.offer_kind==='SOLO'&&price&&!productOffer?.commerce_solo_id)})
  }
  for(const item of publishedProducts.items){
   if(unique.has(item.product_id))continue
   if(query&&![item.title_en,item.title_bn,item.category].some(v=>v.toLocaleLowerCase().includes(query)))continue
-  unique.add(item.product_id)
-  const priceOffer=localOffers.find(o=>o.product_id===item.product_id&&o.offer_kind==='SOLO')
+  if(selectedArea&&offers.some(o=>o.product_id===item.product_id))continue
   exclusive.push({id:item.product_id,name:item.title_en,nameBn:item.title_bn,
-   package:item.package_size,image:item.image_url,price:Number(priceOffer?.solo_price??priceOffer?.confirmed_price??0)||null,
-   oldPrice:priceOffer?.reference_price??null,demo:false,commerceId:priceOffer?.commerce_solo_id??null,
-   available:Boolean(priceOffer?.commerce_solo_available),bookable:false,href:(language==='bn'?'/bn':'')+'/p/'+item.slug})
+   package:item.package_size,image:item.image_url,price:null,oldPrice:null,stock:null,
+   demo:false,commerceId:null,available:false,bookable:false,
+   href:(language==='bn'?'/bn':'')+'/p/'+item.slug})
+  unique.add(item.product_id)
  }
- for(const o of localOffers){
-  if(o.offer_kind!=='SOLO'||unique.has(o.product_id))continue
-  unique.add(o.product_id)
-  exclusive.push({id:o.product_id,name:o.product_name,nameBn:o.product_name_bn??o.product_name,
-   package:o.package_size,image:o.image_url,price:Number(o.solo_price??o.confirmed_price??0)||null,
-   oldPrice:o.reference_price,demo:Boolean(o.is_demo),commerceId:o.commerce_solo_id??null,
-   available:Boolean(o.commerce_solo_available),bookable:Boolean(o.offer_kind==='SOLO'&&Number(o.confirmed_price)>0&&!o.commerce_solo_id)})
- }
+ // A partially populated catalog must not drown out shoppable cards.
+ // When no priced SOLO offer is published, show a truthful browse-only fallback.
+ const pricedExclusive=exclusive.filter(p=>p.price!==null&&!p.demo)
+ const visibleExclusive=(pricedExclusive.length?pricedExclusive:exclusive).slice(0,6)
  const activeSlide=heroSlides[slide]
  return <div className="mhome" lang={language} aria-label={t('2TBR marketplace homepage','২টিবিআর বাজার হোম')}>
   <div className="mhome-area-strip">
@@ -226,10 +263,10 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
    <SectionHeading 
     title={t('Exclusive Products','এক্সক্লুসিভ পণ্য')} description={t('Handpicked essentials, great everyday value.','প্রতিদিনের প্রয়োজনীয় পণ্য, ভালো দাম।')}
     href="/products" viewText={t('View all','সব দেখুন')}/>
-   {exclusive.length?<div className="mhome-exclusive-grid">{exclusive.slice(0,6).map(p=>{
+   {visibleExclusive.length?<div className="mhome-exclusive-grid">{visibleExclusive.map(p=>{
     const href=p.href??(p.demo?'/demo-product/'+p.id:'/products/'+p.id)
-    const canCart=!p.demo&&Boolean(p.commerceId&&p.available&&selectedArea)
-    const saving=p.oldPrice&&p.price&&p.oldPrice>p.price&&!p.demo&&p.available?p.oldPrice-p.price:null
+    const canCart=!p.demo&&Boolean(p.commerceId&&p.available&&selectedArea&&p.price)
+    const saving=p.oldPrice&&p.price&&p.oldPrice>p.price&&!p.demo?p.oldPrice-p.price:null
     return <article className="mhome-exclusive-card" key={p.id}>
      <Link href={href} className="mhome-exclusive-image" aria-label={t('View ','দেখুন: ')+t(p.name,p.nameBn)}>
       <ProductImage url={p.image} title={t(p.name,p.nameBn)}/></Link>
@@ -239,16 +276,17 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
        {saving!=null&&<s>{money(p.oldPrice)}</s>}</div>
       {saving!=null&&<span className="mhome-save">{t('Save','সাশ্রয়')} {money(saving)}</span>}
       {p.demo?<span className="mhome-exclusive-availability">{t('DEMO · Not for sale','ডেমো · বিক্রির জন্য নয়')}</span>:
-       p.available&&p.price?<span className="mhome-exclusive-availability">{t('Available to order','অর্ডার করা যাবে')}</span>:
-       <span className="mhome-exclusive-availability">{t('Check availability','প্রাপ্যতা যাচাই করুন')}</span>}
+       p.stock!==null?<span className="mhome-exclusive-availability">{p.stock>0?t('In stock','স্টকে আছে'):t('Out of stock','স্টক শেষ')} · {p.stock.toLocaleString('en-BD')} {t('available','পিস উপলব্ধ')}</span>:
+       p.price?<span className="mhome-exclusive-availability">{t('Stock confirmed at checkout','চেকআউটে স্টক নিশ্চিত হবে')}</span>:
+       <span className="mhome-exclusive-availability">{t('View product information','পণ্যের তথ্য দেখুন')}</span>}
      </div>
      <div className="mhome-exclusive-actions">
       {canCart?<form action={setCommerceCartItem}>
        <input type="hidden" name="offer_id" value={p.commerceId!}/>
        <input type="hidden" name="quantity" value="1"/>
        <button className="mhome-cart-btn" type="submit">🛒 {t('Add to cart','কার্টে যোগ')}</button></form>:
-       <Link className="mhome-cart-btn" href={p.bookable&&selectedArea?'/pilot-book?product='+p.id:href}>
-        {p.demo?t('Preview product','পণ্য দেখুন'):p.bookable&&selectedArea?t('Book Product','পণ্য বুক করুন'):p.price?t('View Details','বিস্তারিত দেখুন'):t('View Details / Ask for Price','বিস্তারিত / দাম জানতে')} <span aria-hidden="true">→</span></Link>}
+       <Link className="mhome-cart-btn" href={p.bookable&&selectedArea?'/pilot-book?product='+p.id:p.price&&p.commerceId&&!selectedArea?'#mhome-community':href}>
+        {p.demo?t('Preview product','পণ্য দেখুন'):p.bookable&&selectedArea?t('Book Product','পণ্য বুক করুন'):p.price&&p.commerceId&&!selectedArea?t('Select community','কমিউনিটি বাছুন'):p.price?t('View Details','বিস্তারিত দেখুন'):t('View Details / Ask for Price','বিস্তারিত / দাম জানতে')} <span aria-hidden="true">→</span></Link>}
      </div>
     </article>})}</div>:
     <div className="mhome-empty">{t('Products will appear as soon as they are published.','পণ্য প্রকাশিত হলে এখানে দেখা যাবে।')}</div>}
@@ -264,7 +302,8 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
     const progress=Math.round(Math.min(1,p.sampleHouseholds/target)*100)
     const nextTier=p.livePricing?.householdsNeeded&&p.livePricing.householdsNeeded>0
      ?p.sampleHouseholds+p.livePricing.householdsNeeded:null
-    const photoOffers=(p.featuredProductIds.slice(0,3).map(id=>p.bundle.find(b=>b.offer.product_id===id)?.offer).filter(Boolean) as StorefrontOffer[])
+    const chosen=(p.featuredProductIds.slice(0,3).map(id=>p.bundle.find(b=>b.offer.product_id===id)?.offer).filter(Boolean) as StorefrontOffer[])
+    const photoOffers=chosen.length?chosen:p.bundle.slice(0,3).map(b=>b.offer)
     const deadlines=p.bundle.map(b=>b.offer.closes_at)
     const closesAt=deadlines.length>0&&deadlines.every(d=>d!==null&&d===deadlines[0])?deadlines[0]:null
     return <article className="mhome-pool-card" key={p.id??p.slug}>
@@ -277,9 +316,11 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
      <div className="mhome-pool-copy"><div className="mhome-pool-top"><span className="mhome-pool-kind">{t(p.slug.toUpperCase()+' POOL',p.slug==='weekly'?'সাপ্তাহিক পুল':p.slug==='monthly'?'মাসিক পুল':'বিশেষ পুল')}</span>
       <span className="mhome-pool-status">{p.isDemo?'DEMO':t('● ACTIVE','● সক্রিয়')}</span></div>
       <h3>{t(p.title.en,p.title.bn)}</h3>
-      <p className="mhome-muted">{p.bundle.length} {t('products','পণ্য')} · {p.sampleHouseholds.toLocaleString('en-BD')} {t('households joined','পরিবার যোগ দিয়েছে')}</p>
+      <p className="mhome-muted mhome-pool-description">{p.bundle.length} {t('products','পণ্য')} · {t(p.subtitle.en,p.subtitle.bn)}</p>
+      <p className="mhome-pool-joined"><span aria-hidden="true">👥</span> {p.sampleHouseholds.toLocaleString('en-BD')} {t('households joined','পরিবার যোগ দিয়েছে')}</p>
       <div className="mhome-pool-meta"><span>{nextTier?t('Next tier','পরবর্তী ধাপ'):t('Minimum','ন্যূনতম')}: {(nextTier??target).toLocaleString('en-BD')}</span>
-       {closesAt&&<span className="mhome-time-stat"><span aria-hidden="true">◷</span> {endsLabel(closesAt)}</span>}</div>
+       {closesAt?<span className="mhome-time-stat"><span aria-hidden="true">◷</span> {endsLabel(closesAt)}</span>:
+        <span className="mhome-time-unset">{t('Schedule pending','সময়সূচি আসছে')}</span>}</div>
       <div className="mhome-pool-bottom">
        <div className="mhome-progress" role="progressbar" aria-label={t('Household progress','অংশগ্রহণের অগ্রগতি')}
         aria-valuenow={Math.min(p.sampleHouseholds,target)} aria-valuemin={0} aria-valuemax={target}>
