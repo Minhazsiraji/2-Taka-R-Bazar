@@ -45,7 +45,7 @@ export default async function AdminDashboard(){
      <p className="muted mt-2 text-sm">Keep the same business controls, without jumping between multiple administration screens.</p>
      <div className="mt-3 flex flex-wrap gap-2"><Link href="/admin/easy-business" className="btn-primary">Open Easy Business →</Link><Link href="/admin/products" className="btn-secondary">Add product</Link></div>
     </section>
-    <div><Link href="/admin/delivery-locations" className="btn-secondary inline-flex">Verify customer locations & buildings →</Link></div>
+    <div className="flex flex-wrap gap-2"><Link href="/admin/pilot-bookings" className="btn-primary inline-flex">Pilot booking inbox →</Link><Link href="/admin/delivery-locations" className="btn-secondary inline-flex">Verify customer locations & buildings →</Link></div>
 
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {[

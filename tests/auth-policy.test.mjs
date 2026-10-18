@@ -5,6 +5,11 @@ import {safeAuthReturnPath, authCallbackUrl, authProviderStatus} from '../lib/au
 test('authentication returns allowlisted paths and rejects external or privileged redirects', () => {
   assert.equal(safeAuthReturnPath('/account/security?ignored=true'), '/account/security')
   assert.equal(safeAuthReturnPath('/checkout'), '/checkout')
+  const productId='12345678-1234-4123-8123-123456789abc'
+  assert.equal(safeAuthReturnPath('/pilot-book?product='+productId),'/pilot-book?product='+productId)
+  assert.equal(safeAuthReturnPath('/pilot-bookings'),'/pilot-bookings')
+  assert.equal(safeAuthReturnPath('/pilot-book?product=not-a-uuid'),'/pilot-book')
+  assert.equal(safeAuthReturnPath('/pilot-book?product='+productId+'&evil=1'),'/pilot-book?product='+productId)
   assert.equal(safeAuthReturnPath('/'), '/')
   assert.equal(safeAuthReturnPath('/?ignored=true'), '/')
   assert.equal(safeAuthReturnPath('/home'), '/')

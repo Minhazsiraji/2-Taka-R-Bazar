@@ -202,7 +202,8 @@ export async function completeOnboarding(formData: FormData) {
   const returnTo=safeAuthReturnPath(cookieStore.get('bp_post_auth_next')?.value)
   cookieStore.delete('bp_post_auth_next')
   const notice=qrCommunityName?'Welcome to '+qrCommunityName+'. You can now browse active Pools and Group Deals.':'Household setup complete.'
-  redirect((returnTo??'/')+'?notice='+encodeURIComponent(notice))
+  const destination=returnTo??'/'
+  redirect(destination+(destination.includes('?')?'&':'?')+'notice='+encodeURIComponent(notice))
 }
 
 export async function updateProfile(formData: FormData) {

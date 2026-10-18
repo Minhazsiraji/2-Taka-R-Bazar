@@ -65,6 +65,7 @@ export function FeaturedProductsCarousel({products,language='en',offers=[],areas
       </form>:<button type="button" disabled aria-disabled="true" title={!selectedArea?t('Choose your community for individual pricing','একা কেনার দাম দেখতে এলাকা বাছুন'):soldOut?t('This verified offer has no remaining stock','এই অফারে স্টক নেই'):t('Individual checkout requires a verified, approved offer','একা কেনার জন্য যাচাইকৃত, অনুমোদিত অফার প্রয়োজন')} className="btn-secondary">
        {item.is_demo?t('Buy Alone · Demo','একা কিনুন · ডেমো'):!selectedArea?t('Choose area','এলাকা বাছুন'):soldOut?t('Sold out','স্টক শেষ'):t('Buy Alone · Soon','একা কেনা · শিগগিরই')}
       </button>}
+      {!item.is_demo&&<Link href={'/pilot-book?product='+item.product_id} className="btn-primary col-span-2 text-center text-sm">{t('Book now · Pilot','এখনই বুক করুন · পাইলট')}</Link>}
       {item.is_demo?<button type="button" disabled aria-disabled="true" className="btn-primary">{t('Group Buy · Demo','গ্রুপে কিনুন · ডেমো')}</button>:<Link href={href} className="btn-primary">{t('View product →','পণ্য দেখুন →')}</Link>}
      </div>
     </article>
