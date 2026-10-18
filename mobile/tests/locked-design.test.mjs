@@ -14,7 +14,7 @@ test('approved navigation: account only in header, five bottom tabs',()=>{
 });
 test('approved homepage content order preserved',()=>{
  const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
- const keys=['<Hero/>','<Savings/>',"t.groups","t.exclusive","t.pools"];
+ const keys=['<Hero/>','<Savings home/>',"t.groups","t.exclusive","t.pools"];
  const positions=keys.map(key=>home.indexOf(key));
  assert.ok(positions.every(p=>p>=0),JSON.stringify(positions));
  assert.ok(positions.every((p,i)=>i===0||p>positions[i-1]),JSON.stringify(positions));
