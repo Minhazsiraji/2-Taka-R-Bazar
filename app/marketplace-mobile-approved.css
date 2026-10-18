@@ -173,6 +173,10 @@
   display:flex!important}
  body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header>.market-header-nav{display:none!important}
  body.site-glass-root main.public-marketplace-flat .market-information-footer{margin-bottom:60px}
+ body.site-glass-root .market-storefront-dock .app-mobile-nav-link{display:flex;flex-direction:column;gap:2px;line-height:1.05}
+ body.site-glass-root .market-storefront-dock .mhome-dock-icon{display:block;width:23px;height:23px;max-width:25px;flex-shrink:0}
+ body.site-glass-root .market-storefront-dock .app-mobile-nav-link>span{font-size:11px;font-weight:850}
+ body.site-glass-root .market-storefront-dock .app-mobile-nav-link.is-active{border-radius:999px 999px 0 0}
 }
 @media (max-width:355px){
  body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy small:last-child{
