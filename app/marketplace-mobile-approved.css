@@ -140,38 +140,38 @@
   width:100%;height:100%;min-height:72px;color:#007c89;font-weight:900;font-size:16px;text-align:center}
  .mhome-image-empty span{font-size:9px;font-weight:500;margin-top:3px}
  /* Match compact approved top row: logo, full brand and slogans, actions, full-width search. */
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header>.market-header-inner{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header>.market-header-inner{
   grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;
   width:min(100% - 24px,600px)!important;column-gap:4px!important;row-gap:5px!important;padding:7px 0 6px!important;
  }
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-lockup{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-brand-lockup{
   grid-column:1!important;grid-row:1!important;display:flex!important;align-items:center!important;
   max-width:none!important;min-width:0;gap:6px!important
  }
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-brand-copy{
   display:flex!important;min-width:0;flex-direction:column;gap:0}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy strong{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-brand-copy strong{
   font-size:clamp(10px,2.8vw,14px)!important;letter-spacing:-.035em;line-height:1.13}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy small{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-brand-copy small{
   display:block!important;font-size:clamp(7px,1.8vw,9px)!important;line-height:1.2;white-space:nowrap}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-actions{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-header-actions{
   grid-column:2!important;grid-row:1!important;gap:2px!important
  }
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-lockup .brand-logo{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-brand-lockup .brand-logo{
   width:33px!important;height:33px!important;min-width:33px!important;max-width:33px!important;
   min-height:33px!important;max-height:33px!important}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header
   :is(.market-single-language,.theme-toggle,.market-mobile-menu-button,.customer-notification-bell,.market-header-account){
   width:clamp(29px,8vw,36px)!important;min-width:clamp(29px,8vw,36px)!important;
   height:clamp(29px,8vw,36px)!important;min-height:clamp(29px,8vw,36px)!important;
   flex-basis:clamp(29px,8vw,36px)!important;padding:0!important}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-search{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-header-search{
   grid-column:1/-1!important;grid-row:2!important;height:40px!important;min-height:40px!important}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-search input{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-header-search input{
   font-size:13px!important}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-header-account-icon{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-header-account-icon{
   display:flex!important}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header>.market-header-nav{display:none!important}
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header>.market-header-nav{display:none!important}
  body.site-glass-root main.public-marketplace-flat .market-information-footer{margin-bottom:60px}
  body.site-glass-root .market-storefront-dock .app-mobile-nav-link{display:flex;flex-direction:column;gap:2px;line-height:1.05}
  body.site-glass-root .market-storefront-dock .mhome-dock-icon{display:block;width:23px;height:23px;max-width:25px;flex-shrink:0}
@@ -179,16 +179,16 @@
  body.site-glass-root .market-storefront-dock .app-mobile-nav-link.is-active{border-radius:999px 999px 0 0}
 }
 @media (max-width:355px){
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header>.market-header-inner{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header>.market-header-inner{
   width:calc(100% - 12px)!important;column-gap:2px!important}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-lockup{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-brand-lockup{
   gap:3px!important;max-width:100%!important;overflow:hidden}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-lockup .brand-logo{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-brand-lockup .brand-logo{
   width:28px!important;min-width:28px!important;max-width:28px!important;
   height:28px!important;min-height:28px!important;max-height:28px!important}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy small:last-child{
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-brand-copy small:last-child{
   font-size:6.5px!important}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy strong{font-size:8.7px!important}
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-brand-copy strong{font-size:8.7px!important}
  .mhome-hero{padding-right:39%;min-height:172px}
  .mhome-deal-card{gap:6px;grid-template-columns:minmax(0,42%) minmax(0,58%)}
  .mhome-exclusive-card{padding:4px;gap:4px;grid-template-columns:minmax(0,42%) minmax(0,58%)}
