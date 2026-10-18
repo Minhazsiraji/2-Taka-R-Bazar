@@ -33,11 +33,13 @@ export default async function MyPilotBookings({searchParams}:Params){
       <div><h2 className="text-lg font-black">{item.product_name} × {item.quantity}</h2><p className="muted mt-1 text-xs">{new Date(item.created_at).toLocaleString('en-BD',{timeZone:'Asia/Dhaka'})} · Ref {item.id.slice(0,8).toUpperCase()}</p></div>
       <strong className="rounded-full border border-teal-200 px-3 py-1 text-sm uppercase">{item.status}</strong>
      </div>
-     <p className="mt-3 text-sm">{item.fulfillment_method==='pickup'?'Community pickup · point to be agreed':'Home delivery · address to be confirmed'}</p>
+     <p className="mt-3 text-sm">{item.fulfillment_method==='pickup'
+      ?item.staff_note?'Community pickup · see confirmed arrangements below':'Community pickup · point to be agreed'
+      :item.staff_note?'Home delivery · see confirmed arrangements below':'Home delivery · address to be confirmed'}</p>
      {item.delivery_address&&<p className="muted mt-1 text-sm">{item.delivery_address}</p>}
      {item.status==='confirmed'&&item.confirmed_unit_price!=null&&item.confirmed_delivery_fee!=null&&
       <p className="mt-3 rounded-xl border p-3 text-sm font-semibold">Agreed products: {format(item.confirmed_unit_price*item.quantity)} · Delivery: {format(item.confirmed_delivery_fee)} · Total: {format(item.confirmed_unit_price*item.quantity+item.confirmed_delivery_fee)}. Pay at collection / delivery, as agreed.</p>}
-     {item.staff_note&&<p className="mt-2 text-sm">2TBR update: {item.staff_note}</p>}
+     {item.staff_note&&<p className="mt-2 rounded-xl border border-teal-200 p-3 text-sm"><b>Pickup / delivery instructions:</b> {item.staff_note}</p>}
      {['requested','contacted'].includes(item.status)&&<form action={cancelPilotBooking} className="mt-3">
       <input type="hidden" name="booking_id" value={item.id}/><button type="submit" className="btn-secondary text-sm">Cancel this request</button>
      </form>}
