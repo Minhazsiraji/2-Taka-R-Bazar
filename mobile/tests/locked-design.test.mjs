@@ -35,13 +35,13 @@ test('savings and cart cannot silently behave like paid verified orders',()=>{
 });
 
 test('Group Deal card visibly shows a people icon and deadline clock',()=>{
- assert.match(app,/name="people" size={14} color="#149be7"/);
- assert.match(app,/name="time-outline" size={14}/);
- assert.match(app,/Ends in \{offer.daysLeft\} day/);
+ assert.ok(app.includes('name="people" size={14} color="#149be7"'));
+ assert.ok(app.includes('name="time-outline" size={14}'));
+ assert.ok(app.includes('Ends in {offer.daysLeft} day'));
 });
 test('Exclusive card keeps image-first layout, price and available inventory',()=>{
  assert.match(app,/function ExclusiveCard/);
- assert.match(app,/height={128}/);
+ assert.ok(app.includes('height={128}'));
  assert.match(app,/offer.stock\|\|0} available/);
 });
 test('Pools show product count, weekly-monthly modes and Explore Pool action',()=>{
