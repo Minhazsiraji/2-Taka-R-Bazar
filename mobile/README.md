@@ -9,7 +9,7 @@ This is a **native cross-platform Expo / React Native app** at \`mobile/\`, enti
 - Bottom tabs: Home, Pools, Deals, Exclusive, Cart. Cart badge counts **distinct lines**; cart summary also shows total units.
 - Detail screens: individual/product deal pricing, member progress and Pool product lists. All public demo data is clearly labeled.
 - Local demo cart with quantity controls, no server checkout. No real orders, stock reservation, payments, saved preferences or fake verified savings.
-- Optional public **read-only** \`commerce_catalog\` adapter for browsing non-synthetic offers. Native authenticated sessions and transaction flows are intentionally disabled pending security + browser/UAT qualification.
+- Optional public read-only commerce catalog adapter. A gated native sign-in scaffold now supports existing-account mobile/password, PKCE Google OAuth, encrypted device session restoration, identity verification and local sign-out. Both auth flags are OFF by default until native development-build/device qualification; real customer order and finance reads are NOT connected.
 - Demo product images use temporary external illustrative images. Replace with real canonical product media before release.
 
 ## Run locally
@@ -51,3 +51,7 @@ Exact reference: approved Oct 18 2TBR Home mockup. **No redesign** of current we
 
 ## Oct 18 design corrections
 Blue people icon + clock in Group Deals, compact matched Exclusive/Pool cards, split contact footer, and a hero cart containing only nonperishable rice/dal/oil/tea/sugar. Backend Group Deal lifecycle remains unchanged; auto-repeat requires explicit policy and separate qualification.
+
+## Native sign-in security and test plan
+
+See `mobile/docs/NATIVE_AUTH_SECURITY_REVIEW.md`. Configure EXPO_PUBLIC_NATIVE_AUTH_ENABLED only in isolated development builds using the existing Supabase *publishable* key and URL. Google additionally requires `twotbr://auth/callback` allowed in Supabase Auth Redirect URLs, a linked identity and EXPO_PUBLIC_NATIVE_GOOGLE_ENABLED. The downloaded browser mockup is not a native login test. Never commit `.env` or use a service-role key.
