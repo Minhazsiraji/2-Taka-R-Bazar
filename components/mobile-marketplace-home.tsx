@@ -164,9 +164,9 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
     href="/account/orders" viewText={t('View details','বিস্তারিত দেখুন')}/>
    <div className="mhome-savings-grid">
     {([
-     ['month',t('This Month','এই মাস'),savings.thisMonth],
-     ['previous',t('Prev. Month','গত মাস'),savings.previousMonth],
-     ['lifetime',t('Lifetime','মোট সাশ্রয়'),savings.lifetime],
+     ['month',t('This Month','এই মাস'),savings.verified?savings.thisMonth:null],
+     ['previous',t('Prev. Month','গত মাস'),savings.verified?savings.previousMonth:null],
+     ['lifetime',t('Lifetime','মোট সাশ্রয়'),savings.verified?savings.lifetime:null],
      ['community',t('Community','কমিউনিটি'),savings.community],
     ] as const).map(([kind,label,value])=><article className={'mhome-savings-card is-'+kind} key={kind}>
      <span className="mhome-savings-icon" aria-hidden="true">{kind==='month'?'▥':kind==='previous'?'◷':kind==='lifetime'?'★':'♧'}</span>
@@ -262,6 +262,8 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
    {poolRows.length?<div className="mhome-pool-list">{poolRows.map(p=>{
     const target=Math.max(1,p.minHouseholds)
     const progress=Math.round(Math.min(1,p.sampleHouseholds/target)*100)
+    const nextTier=p.livePricing?.householdsNeeded&&p.livePricing.householdsNeeded>0
+     ?p.sampleHouseholds+p.livePricing.householdsNeeded:null
     const photoOffers=(p.featuredProductIds.slice(0,3).map(id=>p.bundle.find(b=>b.offer.product_id===id)?.offer).filter(Boolean) as StorefrontOffer[])
     const deadlines=p.bundle.map(b=>b.offer.closes_at)
     const closesAt=deadlines.length>0&&deadlines.every(d=>d!==null&&d===deadlines[0])?deadlines[0]:null
@@ -276,7 +278,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
       <span className="mhome-pool-status">{p.isDemo?'DEMO':t('● ACTIVE','● সক্রিয়')}</span></div>
       <h3>{t(p.title.en,p.title.bn)}</h3>
       <p className="mhome-muted">{p.bundle.length} {t('products','পণ্য')} · {p.sampleHouseholds.toLocaleString('en-BD')} {t('households joined','পরিবার যোগ দিয়েছে')}</p>
-      <div className="mhome-pool-meta"><span>{t('Next tier','পরবর্তী ধাপ')}: {target.toLocaleString('en-BD')}</span>
+      <div className="mhome-pool-meta"><span>{nextTier?t('Next tier','পরবর্তী ধাপ'):t('Minimum','ন্যূনতম')}: {(nextTier??target).toLocaleString('en-BD')}</span>
        {closesAt&&<span className="mhome-time-stat"><span aria-hidden="true">◷</span> {endsLabel(closesAt)}</span>}</div>
       <div className="mhome-pool-bottom">
        <div className="mhome-progress" role="progressbar" aria-label={t('Household progress','অংশগ্রহণের অগ্রগতি')}
