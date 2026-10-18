@@ -23,12 +23,17 @@ test('reviews retain meaningful honest copy, accessible language and glass brand
  assert.match(read('app/marketplace-story.css'),/market-review-mark\{[\s\S]*?color:var\(--theme-accent/)
  assert.match(read('app/marketplace-unified.css'),/\.market-story \.market-review-pending/)
 })
-test('real browser verifies the section at small widths in EN/BN and dark mode',()=>{
- assert.match(browser,/async function assertReviewLayout/)
- assert.match(browser,/width<=767/)
+test('approved mobile shopping layout and preserved desktop reviews have browser regressions',()=>{
+ assert.match(browser,/async function assertMobileApprovedHome/)
+ assert.match(browser,/No horizontal overflow at/)
+ assert.match(browser,/mhome-section-heading/)
+ assert.match(browser,/assert\.deepEqual\(labels,\['Home','Pools','Deals','Exclusive','Cart'\]\)/)
+ assert.match(browser,/if\(width>=768\)await assertReviewLayout\(page,width\)/)
  assert.match(browser,/copyWidth>=geometry\.cardWidth\*\.72/)
  assert.match(browser,/copyTop>=geometry\.noteBottom-1/)
- assert.match(browser,/await assertReviewLayout\(page,width\)/)
- assert.match(browser,/Bengali: ensure the review copy stays full width/)
  assert.match(read('app/layout.tsx'),/import '\.\/marketplace-review-mobile-fix\.css'/)
+ assert.match(read('app/layout.tsx'),/import '\.\/marketplace-mobile-approved\.css'/)
+ assert.match(read('app/marketplace-mobile-approved.css'),/\.mhome-deal-card/)
+ assert.match(read('app/marketplace-mobile-approved.css'),/\.mhome-exclusive-grid/)
+ assert.match(read('app/marketplace-mobile-approved.css'),/\.mhome-pool-card/)
 });
