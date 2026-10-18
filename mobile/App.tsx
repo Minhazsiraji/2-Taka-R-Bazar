@@ -78,7 +78,7 @@ function Shop(){
   <Text style={{fontSize:compact?11:13,fontWeight:'800',color:solid?(dark?'#082d34':'white'):theme.text}} numberOfLines={1}>{label}</Text>
  </Pressable>;
  const panel=(child:React.ReactNode)=><View style={[styles.panel,{backgroundColor:theme.card,borderColor:theme.line}]}>{child}</View>;
- const title=(k:string,name:string,action?:()=>void)=><View style={styles.titleRow}><View style={{flex:1}}><Text style={{color:theme.accent,fontWeight:'900',fontSize:10,letterSpacing:1.5}}>{k}</Text><Text style={{color:theme.text,fontSize:21,fontWeight:'900',letterSpacing:-.65}}>{name}</Text></View>{action&&<Pressable onPress={action}><Text style={{color:theme.accent,fontWeight:'700',fontSize:12}}>{t.viewAll}  ›</Text></Pressable>}</View>;
+ const title=(k:string,name:string,action?:()=>void)=><View style={[styles.titleRow,!k&&{marginTop:9,marginBottom:6}]}><View style={{flex:1}}>{!!k&&<Text style={{color:theme.accent,fontWeight:'900',fontSize:10,letterSpacing:1.5}}>{k}</Text>}<Text style={{color:theme.text,fontSize:21,fontWeight:'900',letterSpacing:-.65}}>{name}</Text></View>{action&&<Pressable onPress={action}><Text style={{color:theme.accent,fontWeight:'700',fontSize:12}}>{t.viewAll}  ›</Text></Pressable>}</View>;
  const headerAction=(name:IconName,fn:()=>void,badge=0)=><Pressable accessibilityRole="button" accessibilityLabel={name} onPress={fn} style={[styles.headerIcon,{borderColor:theme.line,backgroundColor:theme.field}]}>
    <Ionicons name={name} size={18} color={theme.text}/>{badge>0&&<View style={styles.badge}><Text style={styles.badgeText}>{badge>99?'99+':badge}</Text></View>}
   </Pressable>;
@@ -87,13 +87,13 @@ function Shop(){
    <Text numberOfLines={2} style={{fontSize:small?8:9,lineHeight:11,color:theme.muted}}>{name}</Text>
    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.68} style={{fontSize:small?11:12,fontWeight:'900',color:theme.text,width:'100%'}}>{value}</Text>
  </Pressable>;
- function Savings(){return panel(<><View style={styles.between}><Text style={{fontSize:16,fontWeight:'900',color:theme.text}}>▥  {t.savings}</Text><Pressable onPress={()=>setScreen('savings')}><Text style={{color:theme.accent,fontSize:12}}>{t.viewReport} ›</Text></Pressable></View>
+ function Savings({home=false}:{home?:boolean}={}){return panel(<><View style={styles.between}><Text style={{fontSize:16,fontWeight:'900',color:theme.text}}>▥  {t.savings}</Text><Pressable onPress={()=>setScreen('savings')}><Text style={{color:theme.accent,fontSize:12}}>{t.viewReport} ›</Text></Pressable></View>
   <View style={styles.savingsFour}>
    {savingTile(t.thisMonth,demo?money(demoSavings.thisMonth):'—','calendar-outline','#e2faed')}
    {savingTile(t.lastMonth,demo?money(demoSavings.lastMonth):'—','time-outline','#e8f2fe')}
    {savingTile(t.lifetime,demo?money(demoSavings.lifetime):'—','star-outline','#fff7df')}
    {savingTile(t.communityTotal,demo?money(demoSavings.community):'—','people-outline','#f2e8ff')}
-  </View><Text style={{color:theme.muted,fontSize:10,marginTop:7}}>{demo?'Illustrative only · Verified savings after eligible completion.':t.notEarned}</Text>
+  </View>{!home&&<Text style={{color:theme.muted,fontSize:10,marginTop:7}}>{demo?'Illustrative only · Verified savings after eligible completion.':t.notEarned}</Text>}
  </>)}
  function DealCard({offer}:{offer:Offer}){
   const item=byId(offer.productId);if(!item)return null;
@@ -160,11 +160,11 @@ function Shop(){
  </View>;
  function Home(){return <>
   <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>Savar DOHS⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
-  <Hero/><View style={{marginTop:10}}><Savings/></View>
-  {title('01 · COMMUNITY SAVINGS',t.groups,()=>onTab('deals'))}{group.slice(0,2).map(o=><DealCard key={o.id} offer={o}/>)}
-  {title('02 · CURATED FOR YOU',t.exclusive,()=>onTab('exclusive'))}
+  <Hero/><View style={{marginTop:7}}><Savings home/></View>
+  {title('',t.groups,()=>onTab('deals'))}{group.slice(0,2).map(o=><DealCard key={o.id} offer={o}/>)}
+  {title('',t.exclusive,()=>onTab('exclusive'))}
   <View style={styles.twoCol}>{solo.slice(0,4).map(o=><ExclusiveCard key={o.id} offer={o}/>)}</View>
-  {title('03 · BUY IN A POOL',t.pools,()=>onTab('pools'))}{pools.map(p=><PoolCard key={p.id} pool={p}/>)}
+  {title('',t.pools,()=>onTab('pools'))}{pools.map(p=><PoolCard key={p.id} pool={p}/>)}
   <Footer/>
  </>}
  function Footer(){return <View style={{paddingVertical:16,marginTop:12,borderTopWidth:1,borderColor:theme.line}}>
