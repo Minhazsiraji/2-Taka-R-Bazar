@@ -29,7 +29,17 @@ export const pools:Pool[]=[
  {id:'monthly',name:'Monthly Pantry Pool',nameBn:'মাসিক বাজার পুল',frequency:'monthly',productIds:['rice','ghee','butter'],participants:1320,nextTier:1500,commitDaysLeft:18,commitEndsLabel:'5 Nov'}
 ];
 export const demoSavings={thisMonth:1250,lastMonth:1060,lifetime:8450,community:248620};
-export const demoOrders=[
- {id:'2T-DEMO-1001',status:'Completed',date:'15 Oct 2026',items:['butter','rice'],value:1210,saving:195},
- {id:'2T-DEMO-1002',status:'Preparing',date:'17 Oct 2026',items:['ghee'],value:680,saving:0}
+export type DemoOrderStatus='completed'|'preparing'|'in_transit'|'cancelled';
+export type DemoOrder={
+ id:string;status:DemoOrderStatus;date:string;items:string[];value:number;saving:number;channel:'exclusive'|'group'|'pool';units:Record<string,number>;
+};
+/** Illustrative only. All earned-savings examples are completed, net eligible orders.
+ * These are not connected to real accounts, fulfillment, payment or user sessions. */
+export const demoOrders:DemoOrder[]=[
+ {id:'2T-DEMO-1002',status:'preparing',date:'2026-10-17',items:['ghee'],units:{ghee:1},value:680,saving:0,channel:'exclusive'},
+ {id:'2T-DEMO-1001',status:'completed',date:'2026-10-15',items:['butter','rice'],units:{butter:1,rice:1},value:1210,saving:195,channel:'group'},
+ {id:'2T-DEMO-0999',status:'completed',date:'2026-10-08',items:['butter','rice','eggs'],units:{butter:2,rice:2,eggs:3},value:5410,saving:1055,channel:'pool'},
+ {id:'2T-DEMO-0997',status:'cancelled',date:'2026-10-06',items:['rice'],units:{rice:1},value:0,saving:0,channel:'group'},
+ {id:'2T-DEMO-0915',status:'completed',date:'2026-09-20',items:['rice','ghee'],units:{rice:3,ghee:2},value:4250,saving:1060,channel:'pool'},
+ {id:'2T-DEMO-0770',status:'completed',date:'2026-08-04',items:['butter','rice','eggs'],units:{butter:4,rice:6,eggs:5},value:27500,saving:6140,channel:'exclusive'}
 ];
