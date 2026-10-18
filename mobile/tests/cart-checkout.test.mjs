@@ -31,3 +31,16 @@ test('new Cart and Checkout have no effect on locked Home layout',()=>{
  assert.ok(!home.includes('groupDrafts'));
  assert.ok(cart.includes('drafts.map'));
 });
+
+test('Cart badge has a readable breakdown of direct, group and Pool lines',()=>{
+ for(const token of ["Cart badge: ","Group Deal requests · Pending","Pool product lines",
+   "drafts.reduce((n,[,items])=>n+Object.values(items).filter(q=>q>0).length,0)",
+   "= {demoNum(totalBadge)}"]) assert.ok(app.includes(token),token);
+});
+test('Online future payment is visibly disabled and cannot mutate payment mode',()=>{
+ assert.ok(app.includes("disabled={disabled} accessibilityState={{selected:active,disabled}}"));
+ assert.ok(app.includes("Online (future) · Unavailable"));
+ assert.ok(app.includes("false,()=>{},true"));
+ assert.ok(!app.includes("()=>setPayment('online')"));
+ assert.ok(app.includes("Cash on delivery"));
+});
