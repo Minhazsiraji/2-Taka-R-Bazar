@@ -61,3 +61,14 @@ test('Hero cart excludes fresh produce and keeps pantry product names',()=>{
  for(const name of ['RICE','DAL','OIL','TEA','SUGAR'])assert.match(art,new RegExp(name));
  for(const prohibited of ['TOMATO','CARROT','LETTUCE','CABBAGE'])assert.doesNotMatch(art,new RegExp(prohibited));
 });
+
+test('Home keeps approved headings without numbered eyebrow labels or extra demo notice',()=>{
+ const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
+ for(const label of ['01 · COMMUNITY SAVINGS','02 · CURATED FOR YOU','03 · BUY IN A POOL'])assert.ok(!home.includes(label));
+ assert.ok(home.includes("title('',t.groups"));
+ assert.ok(home.includes("title('',t.exclusive"));
+ assert.ok(home.includes("title('',t.pools"));
+ assert.ok(home.includes('<Savings home/>'));
+ assert.ok(app.includes('{!home&&<Text'));
+ assert.ok(home.includes("pill(t.demo,true)"));
+});
