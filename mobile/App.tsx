@@ -494,7 +494,7 @@ function Shop(){
     <View style={styles.between}><Text style={{fontSize:11,color:theme.muted}}>{text('Direct subtotal','সরাসরি পণ্যের মূল্য')}</Text><Text style={{fontSize:19,fontWeight:'900',color:theme.accent}}>{demoMoney(subtotal)}</Text></View>
     <Text style={{fontSize:11,color:theme.muted,marginTop:9}}>{text('Delivery fee is determined after address confirmation.','ঠিকানা নিশ্চিতের পর ডেলিভারি চার্জ নির্ধারিত হবে।')}</Text>
     <Text style={{fontSize:10,color:theme.muted,marginTop:7}}>{text('Pending Group Deal and Pool totals are not payable or included in this amount.','গ্রুপ ডিল ও পুলের অপেক্ষমাণ মূল্য এই মোটে অন্তর্ভুক্ত নয়।')}</Text>
-    <View style={{flexDirection:'row',marginTop:12}}>{button(text('Review direct checkout · Demo','সরাসরি চেকআউট · ডেমো'),()=>setScreen('checkout'),true)}</View>
+    <Pressable accessibilityRole="button" disabled={!direct.length} onPress={()=>setScreen('checkout')} style={{backgroundColor:theme.accent,opacity:direct.length?1:0.38,borderRadius:10,padding:12,marginTop:12,alignItems:'center'}}><Text style={{color:theme.onPrimary,fontSize:12,fontWeight:'900'}}>{text('Review direct checkout · Demo','সরাসরি চেকআউট · ডেমো')} →</Text></Pressable>
     {!direct.length&&<Text style={{fontSize:10,color:theme.muted,marginTop:7}}>{text('Add an Exclusive Product before checkout.','চেকআউটের আগে বিশেষ পণ্য যোগ করুন।')}</Text>}
    </>)}
    <Text style={{fontSize:10,color:theme.muted,marginBottom:12}}>{t.notice} {text('No stock is held and no transaction is created.','কোনো স্টক সংরক্ষণ বা লেনদেন হয় না।')}</Text>
