@@ -1,4 +1,4 @@
-import React,{useEffect,useMemo,useState} from 'react';
+import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {Alert,Image,Linking,Pressable,ScrollView,StyleSheet,Text,TextInput,View,useWindowDimensions} from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {palette,brandV1} from './src/theme';
@@ -10,9 +10,11 @@ import {demoOrders,demoSavings,offers as demoOffers,pools as demoPools,products 
 import {cartLineCount,cartQuantity,cartSubtotal,customerSaving} from './src/domain.mjs';
 import {loadPublicCatalog} from './src/live';
 import {productInfoSections,productMissing} from './src/product-content';
+import {useNativeAuth} from './src/auth/use-native-auth';
+import {NativeSignIn} from './src/auth/native-sign-in';
 
 type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
-type Screen=Tab|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'product'|'group'|'retail'|'pool'|'menu';
+type Screen=Tab|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
@@ -43,12 +45,23 @@ function Shop(){
  const [payment,setPayment]=useState<'cod'|'online'>('cod');
  const [orderFilter,setOrderFilter]=useState<'all'|'active'|'completed'|'cancelled'>('all');
  const [selectedOrderId,setSelectedOrderId]=useState<string|null>(null);
+ const auth=useNativeAuth();
+ const cartOwner=useRef<string|undefined>(undefined);
  const [demo,setDemo]=useState(requestedDemo);
  const [products,setProducts]=useState<Product[]>(demoProducts);
  const [offers,setOffers]=useState<Offer[]>(demoOffers);
  const [pools,setPools]=useState<Pool[]>(demoPools);
  const [busy,setBusy]=useState(false);
  const theme=dark?palette.dark:palette.light;
+ useEffect(()=>{
+  if(!auth.ready)return;
+  const owner=auth.user?.id??'guest';
+  if(cartOwner.current!==undefined&&cartOwner.current!==owner){
+   setCart({});setGroupDrafts({});setPoolDrafts({});setPoolQuantities({});
+   setSelectedOffer(null);setSelectedPool(null);setScreen('account');
+  }
+  cartOwner.current=owner;
+ },[auth.ready,auth.user?.id]);
  const t=copy[lang];
  useEffect(()=>{const tick=setInterval(()=>setSlide(s=>(s+1)%heroMessages.length),9000);return()=>clearInterval(tick)},[]);
  useEffect(()=>{
@@ -539,9 +552,10 @@ function Shop(){
    {panel(<View style={{flexDirection:'row',gap:12,alignItems:'center'}}>
     <View style={{width:44,height:44,borderRadius:22,backgroundColor:theme.soft,justifyContent:'center',alignItems:'center'}}><Ionicons name="person-outline" size={23} color={theme.accent}/></View>
     <View style={{flex:1}}>
-     <Text style={{fontSize:14,fontWeight:'900',color:theme.text}}>{text('Guest · Demo account','অতিথি · ডেমো অ্যাকাউন্ট')}</Text>
+     <Text style={{fontSize:14,fontWeight:'900',color:theme.text}}>{auth.user?text('Signed in · Verified account','লগইন · যাচাইকৃত অ্যাকাউন্ট'):text('Guest · Demo account','অতিথি · ডেমো অ্যাকাউন্ট')}</Text>
      <Text style={{fontSize:11,color:theme.muted,marginTop:3}}>{text('Sample community','নমুনা কমিউনিটি')}: Savar DOHS</Text>
-     <Text style={{fontSize:10,color:theme.muted,marginTop:2}}>{text('Not signed in · No private records shown','লগইন নেই · ব্যক্তিগত রেকর্ড দেখানো হচ্ছে না')}</Text>
+     <Text style={{fontSize:10,color:theme.muted,marginTop:2}}>{auth.user?(auth.user.phone||auth.user.email||text('Verified identity','যাচাইকৃত পরিচয়')):text('Not signed in · No private records shown','লগইন নেই · ব্যক্তিগত রেকর্ড দেখানো হচ্ছে না')}</Text>
+     {auth.user&&<Text style={{fontSize:10,color:theme.muted}}>{text('Orders and Savings remain DEMO','অর্ডার ও সাশ্রয় এখনো ডেমো')}</Text>}
     </View>
    </View>)}
    <View style={[styles.twoCol,{marginTop:3,marginBottom:11}]}>
@@ -568,14 +582,10 @@ function Shop(){
      <Ionicons name={icon as IconName} color={theme.accent} size={19}/><Text style={{fontSize:11,flex:1,fontWeight:'700',color:theme.text}}>{name}</Text><Ionicons name="chevron-forward" color={theme.muted} size={15}/>
     </Pressable>)}
    </>)}
-   <View style={{flexDirection:'row',marginBottom:7}}>{button(lang==='bn'?'ওয়েবসাইটে নিরাপদে লগইন করুন':'Sign in on 2takarbazar.com',()=>{
-     Alert.alert(
-       lang==='bn'?'ওয়েবসাইটে লগইন':'Website sign-in',
-       lang==='bn'?'2TBR-এর আসল লগইন ব্রাউজারে খুলবে। এতে এই ডেমো অ্যাপের লগইন হবে না।':'This opens the existing 2TBR login in your browser. Website sign-in does not authenticate this demo app.',
-       [{text:lang==='bn'?'বাতিল':'Cancel',style:'cancel'},{text:lang==='bn'?'লগইন খুলুন':'Open sign-in',onPress:()=>link('/login?next=%2Faccount')}]
-     );
-   },false)}</View>
-   <Text style={{color:theme.muted,fontSize:10,marginBottom:9}}>{lang==='bn'?'Google অথবা যুক্ত মোবাইল নম্বর ও পাসওয়ার্ড দিয়ে ওয়েবসাইটে লগইন করুন।':'Website supports Google or mobile-number/password login. Native sign-in and secure session handoff are not connected yet.'}</Text>
+   {auth.user?<View style={{flexDirection:'row',marginBottom:9}}>{button(text('Sign out','লগআউট'),()=>Alert.alert(text('Sign out?','লগআউট করবেন?'),text('Account drafts are cleared on sign-out.','লগআউট করলে খসড়া মুছে যাবে।'),[{text:text('Cancel','বাতিল'),style:'cancel'},{text:text('Sign out','লগআউট'),onPress:()=>{void auth.signOut().catch(()=>Alert.alert('Sign out unavailable','Try again when connected.'))}}]),false)}</View>
+    :auth.configured?<View style={{flexDirection:'row',marginBottom:9}}>{button(text('Sign in securely','নিরাপদে লগইন'),()=>setScreen('signIn'),false)}</View>
+    :<View style={{flexDirection:'row',marginBottom:7}}>{button(lang==='bn'?'ওয়েবসাইটে নিরাপদে লগইন করুন':'Sign in on 2takarbazar.com',()=>Alert.alert(lang==='bn'?'ওয়েবসাইটে লগইন':'Website sign-in',lang==='bn'?'ওয়েবসাইটে লগইন করলে ডেমো অ্যাপে লগইন হবে না।':'Website sign-in does not authenticate this demo app.',[{text:lang==='bn'?'বাতিল':'Cancel',style:'cancel'},{text:lang==='bn'?'লগইন খুলুন':'Open sign-in',onPress:()=>link('/login?next=%2Faccount')}]),false)}</View>}
+   <Text style={{color:theme.muted,fontSize:10,marginBottom:9}}>{auth.configured?text('Existing 2TBR account; sample Orders/Savings are still demo data.','বিদ্যমান 2TBR অ্যাকাউন্ট; অর্ডার ও সাশ্রয় এখনো ডেমো।'):text('Website supports Google or mobile-number/password login. Native sign-in requires a configured build.','ওয়েবসাইটে Google বা মোবাইল লগইন আছে। নেটিভ লগইনের জন্য কনফিগার করা বিল্ড প্রয়োজন।')}</Text>
    <Text style={{fontSize:10,color:theme.muted,marginBottom:15}}>{text('Demo profile and savings are not linked to real accounts or financial balances.','ডেমো অ্যাকাউন্ট ও সাশ্রয় আসল গ্রাহক বা ব্যালেন্সের সাথে যুক্ত নয়।')}</Text>
   </>;
  }
@@ -675,6 +685,7 @@ function Shop(){
  case 'cart':return <Cart/>;
  case 'checkout':return <Checkout/>;
  case 'account':return <Account/>;
+ case 'signIn':return <NativeSignIn auth={auth} lang={lang} theme={theme} onSuccess={()=>setScreen('account')}/>;
  case 'orders':return <Orders/>;
  case 'orderDetail':return <OrderDetail/>;
  case 'savings':return <SavingsReport/>;
@@ -705,7 +716,7 @@ function Shop(){
   </View>
   {busy&&<Text style={{textAlign:'center',color:theme.accent,fontSize:11}}>Loading public product catalog…</Text>}
   <ScrollView key={screen} keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingHorizontal:12,paddingTop:4,paddingBottom:screen==='pool'?110:30}}>
-   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='orderDetail'?setScreen('orders'):screen==='checkout'?setScreen('cart'):screen==='orders'||screen==='savings'?setScreen('account'):screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
+   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='orderDetail'?setScreen('orders'):screen==='checkout'?setScreen('cart'):screen==='orders'||screen==='savings'||screen==='signIn'?setScreen('account'):screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
    {body()}
   </ScrollView>
   <View style={[styles.bottom,{backgroundColor:theme.card,borderColor:theme.line}]}>
