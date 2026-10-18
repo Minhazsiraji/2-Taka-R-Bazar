@@ -118,9 +118,8 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
    available:Boolean(priceOffer?.commerce_solo_available),bookable:false,href:(language==='bn'?'/bn':'')+'/p/'+item.slug})
  }
  for(const o of localOffers){
-  if(unique.has(o.product_id))continue
+  if(o.offer_kind!=='SOLO'||unique.has(o.product_id))continue
   unique.add(o.product_id)
-  if(o.offer_kind!=='SOLO')continue
   exclusive.push({id:o.product_id,name:o.product_name,nameBn:o.product_name_bn??o.product_name,
    package:o.package_size,image:o.image_url,price:Number(o.solo_price??o.confirmed_price??0)||null,
    oldPrice:o.reference_price,demo:Boolean(o.is_demo),commerceId:o.commerce_solo_id??null,
