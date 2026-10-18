@@ -229,7 +229,8 @@ try {
   await assertApprovedHome(page)
   assert.equal(await page.getByRole('heading', {name: 'Your community is buying smarter.', exact: true}).count(), 0)
   const dashboards = page.getByRole('link', {name: 'My dashboard', exact: true})
-  assert.deepEqual(await dashboards.evaluateAll(links => links.map(link => link.getAttribute('href'))), ['/account', '/account'])
+  assert.deepEqual(await dashboards.evaluateAll(links => links.map(link => link.getAttribute('href'))), ['/account'])
+  assert.deepEqual(await page.locator('.market-storefront-dock .app-mobile-nav-link').allTextContents(),['Home','Pools','Deals','Exclusive','Cart'])
   for (const width of [320, 360, 393, 640, 768, 1440]) {
     await page.setViewportSize({width, height: 900})
     await assertHeaderGeometry(page, '.market-brand-lockup', '.market-header-actions', width)
