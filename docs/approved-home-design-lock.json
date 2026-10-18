@@ -56,5 +56,26 @@
   "customer_ui_unification": {
     "approved_by": "User, 2026-10-14 all customer pages consistency request",
     "changes": "Storefront header/footer are canonical for customer, My Money, auth, policy, product, community invite and unavailable-page states. Both permanent slogans appear in footer. My Money is available through the shared shopping menu and Account. Language preference is reused across chrome. Staff operations retain their existing frame and permissions. Phone/tablet branding and mobile dock guards remain required."
+  },
+  "unified_home_approval": {
+    "approved_by": "User, 2026-10-18 — FINAL APPROVED SCREENSHOT",
+    "reference": "Approved App Dashboard(1).png",
+    "source_of_truth": "Mobile layout; desktop and tablet are responsive expansions of the same component tree",
+    "required_order": [
+      "header",
+      "search",
+      "community",
+      "hero",
+      "verified_savings",
+      "group_deals",
+      "exclusive_products",
+      "community_pools",
+      "footer",
+      "mobile_dock"
+    ],
+    "savings_data_policy": "Completed + verified payment + historical approved reference + non-refunded units only; no illustrative customer balances.",
+    "release": "Preview qualification only. Production unchanged; relaunch PR #122 remains Draft and unmerged.",
+    "implementation_branch": "feat/approved-unified-home-savings-121",
+    "audit_note": "Existing protected CSS/logo/header/footer hashes remain unchanged. The new approved, scoped app/marketplace-mobile-approved.css defines responsive expansions."
   }
 }
