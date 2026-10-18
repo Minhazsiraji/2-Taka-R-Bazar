@@ -29,6 +29,20 @@ assert.equal(createError, null)
 const id = created.user.id
 const roleResponse = await fetch(endpoint + '/rest/v1/user_roles', {method: 'POST', headers, body: JSON.stringify({user_id: id, role: 'super_admin'})})
 assert.ok(roleResponse.ok)
+async function assertApprovedHome(page){
+ // Auth return paths must land on the actual public shopping homepage, not a retired dashboard.
+ if(await page.evaluate(()=>matchMedia('(max-width: 767px)').matches)){
+  const home=page.locator('.mhome')
+  await home.waitFor({state:'visible'})
+  await home.locator('.mhome-hero h1').waitFor({state:'visible'})
+  assert.match((await home.locator('.mhome-hero').innerText()),/SMART SHOPPING\. REAL SAVINGS!/)
+  assert.deepEqual(await home.locator('.mhome-section-heading h2').allTextContents(),
+    ['Group Deals','Exclusive Products','Community Pools'])
+  assert.equal(await page.locator('.market-legacy-home').isVisible(),false)
+ }else{
+  await assertApprovedHome(page)
+ }
+}
 const browser = await chromium.launch({headless: true})
 try {
   const page = await browser.newPage({viewport: {width: 393, height: 900}})
@@ -184,7 +198,7 @@ try {
   await page.locator('[name="community_id"]').selectOption('00000000-0000-4000-8000-000000000821')
   await page.getByRole('button', {name: 'Finish setup', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/')
-  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
+  await assertApprovedHome(page)
   assert.equal((await rows('profiles', emailFixture.user.id))[0].phone, '8801700000093')
   const tamperedContact = await native.from('profiles').update({phone: '8801700000099'}).eq('id', emailFixture.user.id)
   assert.match(tamperedContact.error?.message || '', /Mobile contact is fixed/)
@@ -208,11 +222,11 @@ try {
   await page.goto('http://127.0.0.1:3000/login', {waitUntil: 'domcontentloaded'})
   await login('01700000094', password)
   await page.waitForURL(url => url.pathname === '/')
-  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
+  await assertApprovedHome(page)
   // Stale signed-in bookmarks must never render the retired Home dashboard.
   await page.goto('http://127.0.0.1:3000/home', {waitUntil: 'domcontentloaded'})
   await page.waitForURL(url => url.pathname === '/')
-  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
+  await assertApprovedHome(page)
   assert.equal(await page.getByRole('heading', {name: 'Your community is buying smarter.', exact: true}).count(), 0)
   const dashboards = page.getByRole('link', {name: 'My dashboard', exact: true})
   assert.deepEqual(await dashboards.evaluateAll(links => links.map(link => link.getAttribute('href'))), ['/account', '/account'])
@@ -625,7 +639,7 @@ try {
   await page.goto('http://127.0.0.1:3000/login?next=%2Fhome', {waitUntil: 'domcontentloaded'})
   await login('01700000094', password)
   await page.waitForURL(url => url.pathname === '/')
-  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
+  await assertApprovedHome(page)
   console.log('Retired Home UAT passed: signed-in bookmark and old login intent reach storefront; My dashboard opens Account.')
   // A returning password member who has not completed setup must still finish it.
   const unfinishedPassword = randomUUID() + 'aA1!'
@@ -641,7 +655,7 @@ try {
   await page.locator('[name="community_id"]').selectOption('00000000-0000-4000-8000-000000000821')
   await page.getByRole('button', {name: 'Finish setup', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/')
-  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
+  await assertApprovedHome(page)
   assert.deepEqual(errors, [])
   console.log('No-SMS Auth UAT passed: password change and login preserve owner identity/roles; old password rejected; native customer signup/referral/onboarding; email-only contact onboarding and mobile linking; phone collision/guest access/invalid OAuth callbacks rejected.')
 } finally {await browser.close()}
