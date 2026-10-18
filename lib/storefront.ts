@@ -29,6 +29,8 @@ export type StorefrontOffer = {
   price_status: 'unlocked'|'awaiting_threshold'|'final'|'pending_final_price'
   commerce_solo_id?: string
   commerce_solo_available?: boolean
+  /** Public checkout-safe available quantity from commerce_catalog; null when not verified. */
+  commerce_available_quantity?: number | null
   commerce_group_id?: string
   commerce_group_phase?: string
   commerce_synthetic?: boolean
