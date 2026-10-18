@@ -83,10 +83,12 @@ function Shop(){
    <Ionicons name={name} size={18} color={theme.text}/>{badge>0&&<View style={styles.badge}><Text style={styles.badgeText}>{badge>99?'99+':badge}</Text></View>}
   </Pressable>;
  const savingTile=(name:string,value:string,icon:IconName,tint:string)=> <Pressable onPress={()=>setScreen('savings')} style={[styles.savingTile,{backgroundColor:dark?theme.field:tint,borderColor:theme.line}]}>
-  <Ionicons name={icon} size={18} color={theme.accent}/><View style={{flex:1}}><Text style={{fontSize:11,color:theme.muted}}>{name}</Text><Text style={{fontSize:17,fontWeight:'900',color:theme.text}}>{value}</Text></View>
+   <Ionicons name={icon} size={16} color={theme.accent}/>
+   <Text numberOfLines={2} style={{fontSize:small?8:9,lineHeight:11,color:theme.muted}}>{name}</Text>
+   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.68} style={{fontSize:small?11:12,fontWeight:'900',color:theme.text,width:'100%'}}>{value}</Text>
  </Pressable>;
  function Savings(){return panel(<><View style={styles.between}><Text style={{fontSize:16,fontWeight:'900',color:theme.text}}>▥  {t.savings}</Text><Pressable onPress={()=>setScreen('savings')}><Text style={{color:theme.accent,fontSize:12}}>{t.viewReport} ›</Text></Pressable></View>
-  <View style={styles.twoCol}>
+  <View style={styles.savingsFour}>
    {savingTile(t.thisMonth,demo?money(demoSavings.thisMonth):'—','calendar-outline','#e2faed')}
    {savingTile(t.lastMonth,demo?money(demoSavings.lastMonth):'—','time-outline','#e8f2fe')}
    {savingTile(t.lifetime,demo?money(demoSavings.lifetime):'—','star-outline','#fff7df')}
@@ -136,10 +138,11 @@ function Shop(){
     {pool.productIds.slice(0,3).map(id=>{const p=byId(id);return p?<View key={id} style={{flex:1}}><ProductPhoto item={p} height={88}/></View>:null})}
    </View>
    <View style={{flex:1,gap:5}}>
-    <View style={styles.between}>{pill(pool.frequency==='weekly'?t.weekly:t.monthly,true)}{pill('ACTIVE')}</View>
+    <View style={styles.between}>{pill(pool.frequency==='weekly'?t.weekly:t.monthly,true)}<View style={{flexDirection:'row',alignItems:'center',gap:3,backgroundColor:dark?'#184f3b':'#d9fbea',paddingVertical:3,paddingHorizontal:6,borderRadius:15}}><View style={{width:6,height:6,borderRadius:4,backgroundColor:'#0caf6a'}}/><Text style={{fontSize:9,fontWeight:'900',color:dark?'#bdfad9':'#087c4b'}}>ACTIVE</Text></View></View>
     <Text style={{fontSize:13,fontWeight:'900',color:theme.text}} numberOfLines={1}>{lang==='bn'?pool.nameBn:pool.name}</Text>
     <Text style={{fontSize:10,color:theme.muted}}>{pool.productIds.length} {t.products} · {pool.participants.toLocaleString('en-US')} {t.members}</Text>
     <View style={{height:5,borderRadius:6,backgroundColor:theme.field}}><View style={{height:5,width:(Math.min(100,100*pool.participants/pool.nextTier)+'%') as `${number}%`,backgroundColor:'#35cdb9',borderRadius:5}}/></View>
+    <View style={{flexDirection:'row',alignItems:'center',gap:5,flexWrap:'wrap'}}><Ionicons name="time-outline" size={12} color={theme.accent}/><Text style={{fontSize:9,fontWeight:'800',color:theme.accent}}>{lang==='bn'?'যোগদান শেষ':'Commit ends in'} {pool.commitDaysLeft||0} {lang==='bn'?'দিনে':'days'}</Text><Text style={{fontSize:9,color:theme.muted}}>· {pool.commitEndsLabel||'TBD'}</Text></View>
     <View style={{flexDirection:'row',alignItems:'center',gap:6}}><Text numberOfLines={1} style={{fontSize:9,color:theme.muted,flex:1}}>{t.next}: {pool.nextTier.toLocaleString('en-US')}</Text><Pressable onPress={()=>selectPool(pool)} style={{backgroundColor:theme.accent,borderRadius:8,paddingVertical:6,paddingHorizontal:8}}><Text style={{fontSize:9,fontWeight:'800',color:dark?'#082d34':'white'}}>Explore Pool →</Text></Pressable></View>
    </View>
   </Pressable>);
@@ -303,8 +306,9 @@ const styles=StyleSheet.create({
  titleRow:{flexDirection:'row',alignItems:'flex-end',justifyContent:'space-between',marginTop:16,marginBottom:8},
  panel:{borderWidth:1,borderRadius:17,padding:10,marginBottom:9,shadowColor:'#18213b',shadowOpacity:.04,shadowRadius:9,elevation:1},
  twoCol:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'space-between'},
- savingTile:{width:'48.6%',minHeight:65,padding:8,borderRadius:12,flexDirection:'row',alignItems:'center',gap:7,borderWidth:1},
- hero:{padding:15,borderRadius:17,marginBottom:1,minHeight:196},
+ savingTile:{width:'23.9%',minHeight:77,paddingHorizontal:5,paddingVertical:7,borderRadius:12,alignItems:'flex-start',justifyContent:'center',gap:2,borderWidth:1},
+ savingsFour:{flexDirection:'row',alignItems:'stretch',justifyContent:'space-between',gap:4},
+ hero:{padding:15,borderRadius:17,marginBottom:1,minHeight:196,overflow:'hidden'},
  heroArrow:{fontSize:24,color:'white',fontWeight:'700'},
  exclusiveCard:{width:'48.6%',borderRadius:15,padding:7,borderWidth:1,marginBottom:2,minHeight:168},
  bottom:{flexDirection:'row',paddingTop:5,borderTopWidth:1,paddingHorizontal:7},

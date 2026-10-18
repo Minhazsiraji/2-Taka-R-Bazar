@@ -1,7 +1,7 @@
 export type Mode='SOLO'|'GROUP_DEAL'|'POOL';
 export type Product={id:string;name:string;nameBn:string;unit:string;image:string;referencePrice:number;category:string};
 export type Offer={id:string;productId:string;mode:Mode;price:number;phase:'ready'|'waiting';groupSize?:3|5|10;joined?:number;exclusive?:boolean;poolId?:string;stock?:number;daysLeft?:number;community:string};
-export type Pool={id:string;name:string;nameBn:string;frequency:'weekly'|'monthly';productIds:string[];participants:number;nextTier:number};
+export type Pool={id:string;name:string;nameBn:string;frequency:'weekly'|'monthly';productIds:string[];participants:number;nextTier:number;commitDaysLeft?:number;commitEndsLabel?:string};
 const photo=(id:string)=>'https://images.unsplash.com/'+id+'?auto=format&fit=crop&w=600&q=85';
 export const products:Product[]=[
  {id:'butter',name:'Premium Butter',nameBn:'প্রিমিয়াম বাটার',unit:'1 kg',image:photo('photo-1550583724-b2692b85b150'),referencePrice:1240,category:'Dairy'},
@@ -22,8 +22,8 @@ export const offers:Offer[]=[
  {id:'pool-ghee',productId:'ghee',mode:'POOL',price:660,phase:'waiting',poolId:'monthly',community:'Savar DOHS'}
 ];
 export const pools:Pool[]=[
- {id:'weekly',name:'Weekly Family Essentials',nameBn:'সাপ্তাহিক পরিবারের বাজার',frequency:'weekly',productIds:['butter','rice','eggs'],participants:875,nextTier:1000},
- {id:'monthly',name:'Monthly Pantry Pool',nameBn:'মাসিক বাজার পুল',frequency:'monthly',productIds:['rice','ghee','butter'],participants:1320,nextTier:1500}
+ {id:'weekly',name:'Weekly Family Essentials',nameBn:'সাপ্তাহিক পরিবারের বাজার',frequency:'weekly',productIds:['butter','rice','eggs'],participants:875,nextTier:1000,commitDaysLeft:5,commitEndsLabel:'23 Oct'},
+ {id:'monthly',name:'Monthly Pantry Pool',nameBn:'মাসিক বাজার পুল',frequency:'monthly',productIds:['rice','ghee','butter'],participants:1320,nextTier:1500,commitDaysLeft:18,commitEndsLabel:'5 Nov'}
 ];
 export const demoSavings={thisMonth:1250,lastMonth:1060,lifetime:8450,community:248620};
 export const demoOrders=[
