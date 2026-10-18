@@ -64,6 +64,8 @@ export async function staffSendPilotServiceUpdate(fd:FormData){
  const {error}=await supabase.rpc('pilot_staff_send_service_update',{
   p_booking_id:id,p_customer_message:note,
  })
+ if(error?.message==='The customer already has this update')
+  redirect('/admin/pilot-bookings?notice='+encodeURIComponent('Instructions already saved and customer notified. No duplicate notification was sent.'))
  if(error)fail('/admin/pilot-bookings',error.message)
  revalidatePath('/admin/pilot-bookings')
  revalidatePath('/pilot-bookings')
