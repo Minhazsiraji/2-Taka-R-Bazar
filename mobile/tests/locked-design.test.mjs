@@ -126,3 +126,22 @@ test('Pool price and date strings honor the Bangla language selector',()=>{
  assert.ok(pool.includes('n(pool.participants)'));
  assert.ok(pool.includes('{endDate()}'));
 });
+
+test('Pool tier cards show selected-product monetary totals, never household counts',()=>{
+ const start=app.indexOf('function PoolDetails()');
+ const end=app.indexOf('function Cart()',start);
+ const pool=app.slice(start,end);
+ for(const token of [
+   'const opening=selected.reduce',
+   'Current Pool total',
+   'Next-tier total',
+   'Starting total',
+   'value:opening',
+   'value:current',
+   'value:next',
+   "units?cash(tier.value):'—'",
+   'Select one or more products above to compare starting, current and next-tier prices.'
+ ])assert.ok(pool.includes(token),'Missing Pool tier price guard: '+token);
+ assert.ok(!pool.includes("index===1?n(pool.participants):n(pool.nextTier)"));
+ assert.ok(pool.includes("new Intl.NumberFormat(lang==='bn'?'bn-BD':'en-US'"));
+});
