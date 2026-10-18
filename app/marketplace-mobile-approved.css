@@ -179,9 +179,16 @@
  body.site-glass-root .market-storefront-dock .app-mobile-nav-link.is-active{border-radius:999px 999px 0 0}
 }
 @media (max-width:355px){
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header>.market-header-inner{
+  width:calc(100% - 12px)!important;column-gap:2px!important}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-lockup{
+  gap:3px!important;max-width:100%!important;overflow:hidden}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-lockup .brand-logo{
+  width:28px!important;min-width:28px!important;max-width:28px!important;
+  height:28px!important;min-height:28px!important;max-height:28px!important}
  body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy small:last-child{
   font-size:6.5px!important}
- body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy strong{font-size:9.5px!important}
+ body.site-glass-root:has(main.public-marketplace-flat) .market-flat-header .market-brand-copy strong{font-size:8.7px!important}
  .mhome-hero{padding-right:39%;min-height:172px}
  .mhome-deal-card{gap:6px;grid-template-columns:minmax(0,42%) minmax(0,58%)}
  .mhome-exclusive-card{padding:4px;gap:4px;grid-template-columns:minmax(0,42%) minmax(0,58%)}
