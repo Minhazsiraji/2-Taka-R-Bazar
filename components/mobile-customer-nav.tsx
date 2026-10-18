@@ -36,7 +36,7 @@ export function MobileCustomerNav({language='en',homeHref='/',storefront=false}:
 
   return <nav className={'app-mobile-nav'+(storefront?' market-storefront-dock':'')} aria-label={chooseText(language,'Mobile customer navigation','মোবাইল কেনাকাটার নেভিগেশন')} lang={language}>
     <div className="app-mobile-nav-inner">
-      {(storefront?storefrontLinks:nav).map(([route,label,bn])=>{
+      {(storefront&&pathname==='/'?storefrontLinks:nav).map(([route,label,bn])=>{
         const href=route==='/home'?homeHref:route
         const active = pathname === href || pathname.startsWith(href + '/')
         return <Link
@@ -45,7 +45,7 @@ export function MobileCustomerNav({language='en',homeHref='/',storefront=false}:
           aria-current={active ? 'page' : undefined}
           className={'app-mobile-nav-link' + (active ? ' is-active' : '')}
         >
-          {storefront&&<DockIcon kind={route==='/'?'home':route==='/pool'?'pool':route==='/group-deals'?'deal':route==='/cart'?'cart':'exclusive'}/>}
+          {storefront&&pathname==='/'&&<DockIcon kind={route==='/'?'home':route==='/pool'?'pool':route==='/group-deals'?'deal':route==='/cart'?'cart':'exclusive'}/>}
           <span>{chooseText(language,label,bn)}</span>
         </Link>
       })}
