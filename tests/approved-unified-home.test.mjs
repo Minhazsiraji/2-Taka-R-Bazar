@@ -19,7 +19,7 @@ test('the mobile master design supplies each visible viewport with the four savi
  assert.match(css,/\.market-legacy-home\{display:none!important\}/)
  assert.match(css,/repeat\(4,minmax\(0,1fr\)\)/)
  assert.match(css,/repeat\(2,minmax\(0,1fr\)\)/)
- assert.match(read('components/mobile-customer-nav.tsx'),/\['\/', 'Home'/)
+ assert.match(read('components/mobile-customer-nav.tsx'),/\['\/',\s*'Home'/)
  assert.match(page,/savings=\{savings\}/)
 })
 
