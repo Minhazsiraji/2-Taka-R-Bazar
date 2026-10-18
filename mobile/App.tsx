@@ -319,6 +319,7 @@ function Shop(){
   const selected=records.filter(r=>r.offer&&(quantities[r.offer.productId]||0)>0);
   const units=selected.reduce((v,r)=>v+(quantities[r.offer!.productId]||0),0);
   const retail=selected.reduce((v,r)=>v+(r.product?.referencePrice||0)*(quantities[r.offer!.productId]||0),0);
+  const opening=selected.reduce((v,r)=>v+(r.offer?.openingPrice??r.offer?.price??0)*(quantities[r.offer!.productId]||0),0);
   const current=selected.reduce((v,r)=>v+(r.offer?.price||0)*(quantities[r.offer!.productId]||0),0);
   const next=selected.reduce((v,r)=>v+(r.offer?.nextTierPrice??r.offer?.price??0)*(quantities[r.offer!.productId]||0),0);
   const progress=Math.min(100,Math.round(100*pool.participants/pool.nextTier));
@@ -370,11 +371,23 @@ function Shop(){
      </View>
     </View>;
    })}
-   {panel(<><Text style={{fontSize:13,fontWeight:'900',color:theme.text,marginBottom:8}}>{label('How Pool prices unlock','পুলের দাম কীভাবে কমে')}</Text>
+   {panel(<>
+    <Text style={{fontSize:13,fontWeight:'900',color:theme.text,marginBottom:8}}>{label('How Pool prices unlock','পুলের দাম কীভাবে কমে')}</Text>
     <View style={{flexDirection:'row',gap:5}}>
-     {[label('Starting','শুরু'),label('Current tier','বর্তমান'),label('Next unlock','পরবর্তী')].map((name,index)=><View key={index} style={{flex:1,minWidth:0,padding:7,borderRadius:10,borderWidth:1,borderColor:index===1?theme.accent:theme.line,backgroundColor:index===1?theme.soft:theme.field}}><Text style={{fontSize:9,color:theme.muted}}>{name}</Text><Text style={{fontSize:11,fontWeight:'900',color:theme.accent,marginTop:6}}>{index===0?label('Opening','শুরুর দাম'):index===1?n(pool.participants):n(pool.nextTier)}</Text></View>)}
+      {[
+        {name:label('Starting total','শুরুর মোট মূল্য'),value:opening},
+        {name:label('Current Pool total','বর্তমান পুল মূল্য'),value:current},
+        {name:label('Next-tier total','পরবর্তী স্তরের মূল্য'),value:next}
+      ].map((tier,index)=><View key={index} style={{flex:1,minWidth:0,paddingVertical:9,paddingHorizontal:5,borderRadius:10,borderWidth:1,borderColor:index===1?theme.accent:theme.line,backgroundColor:index===1?theme.soft:theme.field}}>
+        <Text style={{fontSize:10,lineHeight:14,color:theme.muted}}>{tier.name}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.65} style={{fontSize:14,fontWeight:'900',color:theme.accent,marginTop:6}}>{units?cash(tier.value):'—'}</Text>
+      </View>)}
     </View>
-    <Text style={{fontSize:10,color:theme.muted,marginTop:9}}>{label('Each item has an independent tier price. Final prices require server qualification.','প্রতিটি পণ্যের আলাদা স্তরভিত্তিক দাম; নিশ্চিতকরণ জরুরি।')}</Text>
+    <Text style={{fontSize:11,lineHeight:16,color:theme.muted,marginTop:9}}>
+      {units
+        ?label('Illustrative totals for selected quantities. All final prices require qualification and confirmation.','নির্বাচিত পরিমাণের নমুনা মোট দাম। চূড়ান্ত মূল্য যাচাই ও নিশ্চিতকরণ সাপেক্ষ।')
+        :label('Select one or more products above to compare starting, current and next-tier prices.','শুরুর, বর্তমান ও পরবর্তী স্তরের দাম তুলনা করতে ওপর থেকে এক বা একাধিক পণ্য বেছে নিন।')}
+    </Text>
    </>)}
    {panel(<>
     <View style={styles.between}><Text style={{fontSize:14,fontWeight:'900',color:theme.text}}>{label('Your Pool basket','আপনার পুলের বাজার')}</Text><Text style={{fontSize:10,color:theme.muted}}>{n(selected.length)} {t.products} · {n(units)} {label('units','ইউনিট')}</Text></View>
