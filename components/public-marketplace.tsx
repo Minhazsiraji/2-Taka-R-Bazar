@@ -122,7 +122,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
    language={language} onLanguageChange={setLanguage}/>
   <MobileMarketplaceHome areas={areas} selectedArea={area} onChooseArea={selectArea}
    onDetectArea={useLocation} detectingArea={gpsBusy} offers={offers}
-   products={featured} pools={heroPools} language={language} demoMode={demoMode} search={search}/>
+   products={featured} publishedProducts={publishedProducts} pools={heroPools} language={language} demoMode={demoMode} search={search}/>
   <div className="market-legacy-home">
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">
    <div className="market-location-panel">
