@@ -12,7 +12,7 @@ import {loadPublicCatalog} from './src/live';
 import {productInfoSections,productMissing} from './src/product-content';
 
 type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
-type Screen=Tab|'checkout'|'account'|'orders'|'savings'|'product'|'group'|'retail'|'pool'|'menu';
+type Screen=Tab|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'product'|'group'|'retail'|'pool'|'menu';
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
@@ -41,6 +41,8 @@ function Shop(){
  const [poolDrafts,setPoolDrafts]=useState<Record<string,Record<string,number>>>({});
  const [delivery,setDelivery]=useState<'home'|'pickup'>('home');
  const [payment,setPayment]=useState<'cod'|'online'>('cod');
+ const [orderFilter,setOrderFilter]=useState<'all'|'active'|'completed'|'cancelled'>('all');
+ const [selectedOrderId,setSelectedOrderId]=useState<string|null>(null);
  const [demo,setDemo]=useState(requestedDemo);
  const [products,setProducts]=useState<Product[]>(demoProducts);
  const [offers,setOffers]=useState<Offer[]>(demoOffers);
@@ -521,20 +523,141 @@ function Shop(){
    <View style={{flexDirection:'row'}}>{button(text('Check readiness · Demo only','প্রস্তুতি দেখুন · ডেমো'),notify)}</View>
   </>;
  }
- function Account(){return <>
-  {title('2TBR ACCOUNT',t.account)}{panel(<><Text style={{color:theme.text,fontWeight:'800',fontSize:18}}>Welcome to 2TBR</Text><Text style={{color:theme.muted,marginTop:3}}>Savar DOHS · {demo?'Demo account':'Sign in to view private data'}</Text></>)}
-  <Savings/>
-  {[[t.orders,'receipt-outline','orders'],[t.savings,'stats-chart-outline','savings'],['Saved addresses','location-outline','/account/addresses'],['My Money','wallet-outline','/money'],['Notifications','notifications-outline','/notifications'],['Preferences','settings-outline','/account']].map(([label,icon,destination])=><Pressable key={label} onPress={()=>destination==='orders'||destination==='savings'?setScreen(destination):link(destination)} style={[styles.menuRow,{backgroundColor:theme.card,borderColor:theme.line}]}>
-    <Ionicons name={icon as IconName} size={21} color={theme.accent}/><Text style={{color:theme.text,flex:1,fontWeight:'700'}}>{label}</Text><Ionicons name="chevron-forward" color={theme.muted} size={16}/>
-   </Pressable>)}
-   {panel(<View style={{flexDirection:'row'}}>{button(t.signin,()=>link('/login'),false)}</View>)}
- </>}
- function Orders(){return <>{title('ORDER HISTORY',t.orders)}
-  {demo?demoOrders.map(order=>panel(<><View style={styles.between}><Text style={{color:theme.text,fontWeight:'800'}}>{order.id}</Text>{pill(order.status,true)}</View><Text style={{color:theme.muted,fontSize:11,marginVertical:7}}>{order.date} · {order.items.length} items</Text>
-   <View style={{flexDirection:'row',gap:5}}>{order.items.map(id=>{const p=byId(id);return p?<View key={id} style={{width:64}}><ProductPhoto item={p} height={60}/></View>:null})}</View>
-   <Text style={{color:theme.accent,fontSize:18,fontWeight:'900',marginTop:7}}>{money(order.value)}</Text>
-   <Text style={{color:theme.muted,fontSize:11}}>{order.status==='Completed'?'Illustrative saving '+money(order.saving):'Potential savings are not yet earned.'}</Text></>)):panel(<><Text style={{color:theme.muted,marginBottom:12}}>Native authenticated order history is pending qualification. Your real order records remain available on the website.</Text><View style={{flexDirection:'row'}}>{button('Open my orders',()=>link('/account/orders'))}</View></>)}
- </>}
+
+ function Account(){
+  const fmt=(v:number)=>new Intl.NumberFormat(lang==='bn'?'bn-BD':'en-US',{maximumFractionDigits:0}).format(v);
+  const price=(v:number)=>'৳'+fmt(v);
+  const text=(en:string,bn:string)=>lang==='bn'?bn:en;
+  const active=demoOrders.filter(o=>o.status==='preparing'||o.status==='in_transit').length;
+  const completed=demoOrders.filter(o=>o.status==='completed').length;
+  const goOrder=(id:string)=>{setSelectedOrderId(id);setScreen('orderDetail')};
+  const quick=(name:string,value:string,sub:string,target:Screen)=><Pressable onPress={()=>setScreen(target)} style={{width:'48.5%',minHeight:88,backgroundColor:theme.card,borderColor:theme.line,borderWidth:1,borderRadius:12,padding:11,justifyContent:'space-between'}}>
+   <Text style={{fontSize:11,color:theme.muted}}>{name}</Text><Text style={{fontSize:19,fontWeight:'900',color:theme.accent}}>{value}</Text><Text style={{fontSize:10,color:theme.muted}}>{sub}</Text>
+  </Pressable>;
+  return <>
+   {title('CUSTOMER ACCOUNT',t.account)}
+   {panel(<View style={{flexDirection:'row',gap:12,alignItems:'center'}}>
+    <View style={{width:44,height:44,borderRadius:22,backgroundColor:theme.soft,justifyContent:'center',alignItems:'center'}}><Ionicons name="person-outline" size={23} color={theme.accent}/></View>
+    <View style={{flex:1}}>
+     <Text style={{fontSize:14,fontWeight:'900',color:theme.text}}>{text('Guest · Demo account','অতিথি · ডেমো অ্যাকাউন্ট')}</Text>
+     <Text style={{fontSize:11,color:theme.muted,marginTop:3}}>{text('Sample community','নমুনা কমিউনিটি')}: Savar DOHS</Text>
+     <Text style={{fontSize:10,color:theme.muted,marginTop:2}}>{text('Not signed in · No private records shown','লগইন নেই · ব্যক্তিগত রেকর্ড দেখানো হচ্ছে না')}</Text>
+    </View>
+   </View>)}
+   <View style={[styles.twoCol,{marginTop:3,marginBottom:11}]}>
+    {quick(text('Orders · Demo','অর্ডার · ডেমো'),fmt(demoOrders.length),fmt(active)+' '+text('in progress','চলমান'),'orders')}
+    {quick(text('Lifetime savings · Demo','সর্বমোট সাশ্রয় · ডেমো'),price(demoSavings.lifetime),text('Completed orders only','শুধু সম্পন্ন অর্ডার'),'savings')}
+    {quick(text('Completed · Demo','সম্পন্ন · ডেমো'),fmt(completed),text('Illustrative status','নমুনা অবস্থা'),'orders')}
+    {quick(text('Cart lines','কার্টের লাইন'),fmt(totalBadge),text('Local preview','স্থানীয় প্রিভিউ'),'cart')}
+   </View>
+   {panel(<>
+    <View style={styles.between}><Text style={{fontSize:13,color:theme.text,fontWeight:'900'}}>{text('Recent orders','সাম্প্রতিক অর্ডার')}</Text><Pressable onPress={()=>setScreen('orders')}><Text style={{color:theme.accent,fontSize:11,fontWeight:'800'}}>{t.viewAll} →</Text></Pressable></View>
+    {demoOrders.slice(0,2).map(o=><Pressable key={o.id} onPress={()=>goOrder(o.id)} style={[styles.between,{paddingVertical:11,borderTopWidth:1,borderColor:theme.line,marginTop:7}]}>
+      <View><Text style={{fontSize:11,fontWeight:'800',color:theme.text}}>{o.id}</Text><Text style={{fontSize:10,color:theme.muted}}>{o.date} · DEMO</Text></View>
+      <Text style={{fontSize:10,fontWeight:'800',color:theme.accent}}>{o.status==='completed'?text('Completed','সম্পন্ন'):text('Preparing','প্রস্তুত হচ্ছে')} ›</Text>
+    </Pressable>)}
+   </>)}
+   {panel(<>
+    <View style={styles.between}><Text style={{fontSize:13,color:theme.text,fontWeight:'900'}}>{text('My savings','আমার সাশ্রয়')}</Text><Pressable onPress={()=>setScreen('savings')}><Text style={{color:theme.accent,fontSize:11,fontWeight:'800'}}>{text('Full report','পূর্ণ রিপোর্ট')} →</Text></Pressable></View>
+    <Text style={{color:theme.muted,fontSize:11,marginTop:9}}>{text('This month · demo','এই মাস · ডেমো')}: <Text style={{color:theme.accent,fontWeight:'900'}}>{price(demoSavings.thisMonth)}</Text></Text>
+    <Text style={{color:theme.muted,fontSize:11,marginTop:6}}>{text('Community total · demo','কমিউনিটির মোট · ডেমো')}: <Text style={{color:theme.accent,fontWeight:'900'}}>{price(demoSavings.community)}</Text></Text>
+   </>)}
+   {panel(<>
+    <Text style={{fontSize:13,fontWeight:'900',color:theme.text,marginBottom:8}}>{text('Account services','অ্যাকাউন্ট সেবা')}</Text>
+    {[[t.orders,'receipt-outline','orders'],[t.savings,'stats-chart-outline','savings'],['Saved addresses · Soon','location-outline',''],['My Money · Soon','wallet-outline',''],['Notifications · Soon','notifications-outline',''],['Profile & settings · Soon','settings-outline','']].map(([name,icon,nav])=><Pressable key={name} onPress={()=>nav?setScreen(nav as Screen):notify()} style={{paddingVertical:11,flexDirection:'row',gap:8,borderTopWidth:1,borderColor:theme.line,alignItems:'center'}}>
+     <Ionicons name={icon as IconName} color={theme.accent} size={19}/><Text style={{fontSize:11,flex:1,fontWeight:'700',color:theme.text}}>{name}</Text><Ionicons name="chevron-forward" color={theme.muted} size={15}/>
+    </Pressable>)}
+   </>)}
+   <View style={{flexDirection:'row',marginBottom:9}}>{button(t.signin,()=>link('/login'),false)}</View>
+   <Text style={{fontSize:10,color:theme.muted,marginBottom:15}}>{text('Demo profile and savings are not linked to real accounts or financial balances.','ডেমো অ্যাকাউন্ট ও সাশ্রয় আসল গ্রাহক বা ব্যালেন্সের সাথে যুক্ত নয়।')}</Text>
+  </>;
+ }
+ function Orders(){
+  const fmt=(v:number)=>new Intl.NumberFormat(lang==='bn'?'bn-BD':'en-US').format(v);
+  const price=(v:number)=>'৳'+fmt(v);
+  const text=(en:string,bn:string)=>lang==='bn'?bn:en;
+  const status=(v:string)=>v==='completed'?text('Completed','সম্পন্ন'):v==='preparing'?text('Preparing','প্রস্তুত হচ্ছে'):v==='cancelled'?text('Cancelled','বাতিল'):text('In transit','পথে আছে');
+  const records=demoOrders.filter(o=>orderFilter==='all'||orderFilter==='active'&&['preparing','in_transit'].includes(o.status)||orderFilter===o.status);
+  return <>
+   {title('ORDER HISTORY',t.orders)}
+   <Text style={{fontSize:11,color:theme.muted,marginBottom:10}}>{text('Illustrative history; real order records need authenticated access.','এটি নমুনা ইতিহাস; আসল অর্ডারে লগইন প্রয়োজন।')}</Text>
+   <View style={{flexDirection:'row',gap:5,marginBottom:10}}>
+    {([['all','All','সব'],['active','In progress','চলমান'],['completed','Completed','সম্পন্ন'],['cancelled','Cancelled','বাতিল']] as const).map(([k,en,bn])=><Pressable key={k} onPress={()=>setOrderFilter(k)} style={{flex:1,borderRadius:18,borderWidth:1,borderColor:orderFilter===k?theme.accent:theme.line,backgroundColor:orderFilter===k?theme.soft:theme.card,paddingVertical:8,alignItems:'center'}}>
+      <Text numberOfLines={1} adjustsFontSizeToFit style={{fontSize:10,fontWeight:'800',color:orderFilter===k?theme.accent:theme.text}}>{text(en,bn)}</Text>
+    </Pressable>)}
+   </View>
+   {records.length?records.map(o=>panel(<>
+     <View style={styles.between}><View><Text style={{fontWeight:'900',fontSize:12,color:theme.text}}>{o.id}</Text><Text style={{fontSize:10,color:theme.muted,marginTop:2}}>{o.date} · DEMO</Text></View>{pill(status(o.status),true)}</View>
+     <View style={{flexDirection:'row',gap:5,marginTop:9,marginBottom:7}}>{o.items.slice(0,4).map(id=>{const p=byId(id);return p?<View key={id} style={{width:62}}><ProductPhoto item={p} height={58}/></View>:null})}</View>
+     <View style={styles.between}><Text style={{color:theme.muted,fontSize:11}}>{text('Order total','অর্ডারের মোট')}</Text><Text style={{color:theme.accent,fontWeight:'900'}}>{price(o.value)}</Text></View>
+     <View style={[styles.between,{marginTop:7}]}><Text style={{color:theme.muted,fontSize:11}}>{text('Earned savings','অর্জিত সাশ্রয়')}</Text><Text style={{color:theme.accent,fontWeight:'900'}}>{price(o.status==='completed'?o.saving:0)}</Text></View>
+     <Pressable onPress={()=>{setSelectedOrderId(o.id);setScreen('orderDetail')}} style={{marginTop:11,backgroundColor:theme.accent,borderRadius:10,padding:10,alignItems:'center'}}><Text style={{color:theme.onPrimary,fontWeight:'900',fontSize:11}}>{text('View tracking & details','ট্র্যাকিং ও বিস্তারিত')} →</Text></Pressable>
+   </>)) : panel(<Text style={{color:theme.muted}}>{text('No demo orders for this status.','এই অবস্থায় নমুনা অর্ডার নেই।')}</Text>)}
+   <Text style={{fontSize:10,color:theme.muted,marginBottom:15}}>{text('No real order, invoice, refund or delivery tracking is accessed here.','এখানে আসল অর্ডার, চালান, রিফান্ড বা ডেলিভারি ট্র্যাকিং নেই।')}</Text>
+  </>;
+ }
+ function OrderDetail(){
+  const o=demoOrders.find(x=>x.id===selectedOrderId);
+  const text=(en:string,bn:string)=>lang==='bn'?bn:en;
+  const fmt=(v:number)=>new Intl.NumberFormat(lang==='bn'?'bn-BD':'en-US').format(v);
+  if(!o)return <View>{button(t.orders,()=>setScreen('orders'))}</View>;
+  const stages=[['Order placed','অর্ডার দেওয়া হয়েছে'],['Confirmed','নিশ্চিত হয়েছে'],['Preparing','প্রস্তুত হচ্ছে'],['Out for delivery','ডেলিভারির পথে'],['Completed','সম্পন্ন']] as const;
+  const completedSteps=o.status==='completed'?5:o.status==='preparing'?3:o.status==='in_transit'?4:1;
+  return <>
+   {title('DEMO ORDER TRACKING',o.id)}
+   <Text style={{color:theme.muted,fontSize:11,marginBottom:11}}>{o.date} · {text('Sample order, not live tracking','নমুনা অর্ডার, আসল ট্র্যাকিং নয়')}</Text>
+   {panel(<><View style={styles.between}><Text style={{fontSize:13,fontWeight:'900',color:theme.text}}>{text('Order timeline','অর্ডারের অগ্রগতি')}</Text>{pill(o.status==='completed'?text('Completed','সম্পন্ন'):o.status==='cancelled'?text('Cancelled','বাতিল'):text('In progress','চলমান'),true)}</View>
+    {o.status==='cancelled'?<Text style={{color:theme.muted,marginTop:10,fontSize:11}}>{text('Cancelled example: no savings earned.','বাতিল নমুনায় কোনো সাশ্রয় অর্জিত হয়নি।')}</Text>:stages.map(([en,bn],i)=><View key={en} style={{flexDirection:'row',alignItems:'center',gap:9,paddingTop:13}}>
+       <Ionicons name={i<completedSteps?'checkmark-circle':'ellipse-outline'} size={18} color={i<completedSteps?theme.accent:theme.muted}/>
+       <View style={{flex:1}}><Text style={{color:theme.text,fontWeight:'800',fontSize:11}}>{text(en,bn)}</Text><Text style={{fontSize:9,color:theme.muted,marginTop:2}}>{i<completedSteps?text('Demo stage','ডেমো ধাপ'):text('Not completed','এখনো হয়নি')}</Text></View>
+      </View>)}
+   </>)}
+   {panel(<>
+    <Text style={{fontSize:13,fontWeight:'900',color:theme.text,marginBottom:9}}>{text('Products','পণ্য')}</Text>
+    {o.items.map(id=>{const p=byId(id);return p?<View key={id} style={{flexDirection:'row',gap:9,marginVertical:7,alignItems:'center'}}>
+      <View style={{width:63}}><ProductPhoto item={p} height={61}/></View><View style={{flex:1}}><Text style={{fontSize:12,color:theme.text,fontWeight:'800'}}>{lang==='bn'?p.nameBn:p.name}</Text><Text style={{fontSize:10,color:theme.muted}}>{p.unit} · × {fmt(o.units[id]||1)}</Text></View>
+     </View>:null})}
+    <View style={[styles.between,{borderTopWidth:1,borderColor:theme.line,paddingTop:9}]}><Text style={{fontSize:11,color:theme.muted}}>{text('Illustrative order total','নমুনা অর্ডারের মোট')}</Text><Text style={{fontWeight:'900',color:theme.accent}}>৳{fmt(o.value)}</Text></View>
+    <View style={[styles.between,{marginTop:8}]}><Text style={{fontSize:11,color:theme.muted}}>{text('Eligible completed-order saving','সম্পন্ন অর্ডারের সাশ্রয়')}</Text><Text style={{fontWeight:'900',color:theme.accent}}>৳{fmt(o.status==='completed'?o.saving:0)}</Text></View>
+   </>)}
+   {panel(<>
+    <Text style={{fontSize:13,fontWeight:'900',color:theme.text}}>{text('Delivery & support','ডেলিভারি ও সহায়তা')}</Text>
+    <Text style={{color:theme.muted,fontSize:11,marginTop:8}}>{text('SAMPLE address: Savar DOHS. Real order address, payment, support and proof of delivery require authentication.','ডেমো ঠিকানা: সাভার ডিওএইচএস। আসল ঠিকানা, পেমেন্ট ও ডেলিভারি প্রমাণ দেখতে লগইন প্রয়োজন।')}</Text>
+   </>)}
+   <View style={{flexDirection:'row'}}>{button(text('Back to Orders','অর্ডারসমূহে ফিরুন'),()=>setScreen('orders'))}</View>
+  </>;
+ }
+ function SavingsReport(){
+  const text=(en:string,bn:string)=>lang==='bn'?bn:en;
+  const fmt=(v:number)=>new Intl.NumberFormat(lang==='bn'?'bn-BD':'en-US').format(v);
+  const price=(v:number)=>'৳'+fmt(v);
+  const completed=demoOrders.filter(o=>o.status==='completed');
+  const current=completed.filter(o=>o.date.startsWith('2026-10')).reduce((n,o)=>n+o.saving,0);
+  const previous=completed.filter(o=>o.date.startsWith('2026-09')).reduce((n,o)=>n+o.saving,0);
+  const lifetime=completed.reduce((n,o)=>n+o.saving,0);
+  const tile=(name:string,value:number)=><View style={{width:'48.5%',borderRadius:12,borderWidth:1,borderColor:theme.line,backgroundColor:theme.card,padding:11}}><Text style={{fontSize:11,color:theme.muted}}>{name}</Text><Text style={{fontSize:19,fontWeight:'900',color:theme.accent,marginTop:5}}>{price(value)}</Text></View>;
+  return <>
+   {title('PERSONAL SAVINGS · DEMO',text('Savings report','সাশ্রয়ের রিপোর্ট'))}
+   <View style={[styles.twoCol,{marginBottom:11}]}>{tile(t.thisMonth,current)}{tile(t.lastMonth,previous)}{tile(t.lifetime,lifetime)}{tile(t.communityTotal,demoSavings.community)}</View>
+   {panel(<>
+    <Text style={{fontWeight:'900',fontSize:13,color:theme.text,marginBottom:10}}>{text('Where savings come from','সাশ্রয় কোথা থেকে আসে')}</Text>
+    <View style={styles.between}><Text style={{color:theme.muted,fontSize:11}}>{text('Completed example orders','সম্পন্ন নমুনা অর্ডার')}</Text><Text style={{color:theme.accent,fontWeight:'900'}}>{fmt(completed.length)}</Text></View>
+    <View style={[styles.between,{marginTop:9}]}><Text style={{color:theme.muted,fontSize:11}}>{text('Earned this month · demo','এই মাসের অর্জিত · ডেমো')}</Text><Text style={{color:theme.accent,fontWeight:'900'}}>{price(current)}</Text></View>
+    <View style={[styles.between,{marginTop:9}]}><Text style={{color:theme.muted,fontSize:11}}>{text('Pending/cancelled order savings','অপেক্ষমাণ/বাতিলের সাশ্রয়')}</Text><Text style={{color:theme.accent,fontWeight:'900'}}>{price(0)}</Text></View>
+   </>)}
+   {panel(<>
+    <Text style={{color:theme.text,fontSize:13,fontWeight:'900',marginBottom:9}}>{text('Completed order savings · examples','সম্পন্ন অর্ডারের সাশ্রয় · নমুনা')}</Text>
+    {completed.map(o=><Pressable key={o.id} onPress={()=>{setSelectedOrderId(o.id);setScreen('orderDetail')}} style={[styles.between,{paddingVertical:10,borderTopWidth:1,borderColor:theme.line}]}>
+     <View><Text style={{fontSize:11,color:theme.text,fontWeight:'800'}}>{o.id}</Text><Text style={{fontSize:10,color:theme.muted}}>{o.date}</Text></View><Text style={{fontSize:11,color:theme.accent,fontWeight:'900'}}>{price(o.saving)} ›</Text>
+    </Pressable>)}
+   </>)}
+   {panel(<>
+    <Text style={{color:theme.text,fontWeight:'900',fontSize:13}}>{text('How verified savings work','যাচাইকৃত সাশ্রয় কীভাবে গণনা হয়')}</Text>
+    <Text style={{color:theme.muted,fontSize:11,marginTop:9,lineHeight:17}}>{text('For completed eligible units: (verified retail reference − final selling price) × fulfilled quantity, net of returns and refunds. Pending Group/Pool commitments do not earn savings. This is not a withdrawable balance.','সম্পন্ন যোগ্য পণ্যের ক্ষেত্রে (যাচাইকৃত বাজারদর − চূড়ান্ত বিক্রয়মূল্য) × সরবরাহকৃত পরিমাণ, ফেরত ও রিফান্ড বাদ দিয়ে। অপেক্ষমাণ পুল বা গ্রুপ ডিলে সাশ্রয় হয় না। এটি উত্তোলনযোগ্য নয়।')}</Text>
+   </>)}
+   <Text style={{color:theme.muted,fontSize:10,marginBottom:16}}>{text('Every amount on this screen is illustrative. Community savings is a separate demo aggregate.','এখানকার সব সংখ্যাই নমুনা। কমিউনিটির সাশ্রয়ও আলাদা ডেমো হিসাব।')}</Text>
+  </>;
+ }
  function Menu(){return <>{title('EXPLORE', '2TBR Menu')}{[['My Orders','orders'],['Savings','savings'],['My Account','account'],['Community Pools','pools'],['Group Deals','deals']].map(([text,destination])=><Pressable key={text} onPress={()=>setScreen(destination as Screen)} style={[styles.menuRow,{backgroundColor:theme.card,borderColor:theme.line}]}><Text style={{color:theme.text}}>{text}</Text></Pressable>)}<Footer/></>}
  function body(){
  switch(screen){
@@ -546,7 +669,8 @@ function Shop(){
  case 'checkout':return <Checkout/>;
  case 'account':return <Account/>;
  case 'orders':return <Orders/>;
- case 'savings':return <>{title('VERIFIED REPORT',t.savings)}<Savings/>{panel(<Text style={{color:theme.muted}}>{demo?'All values on this screen are illustrative.':t.notEarned} Verified orders only; this is not a withdrawable cash balance.</Text>)}</>;
+ case 'orderDetail':return <OrderDetail/>;
+ case 'savings':return <SavingsReport/>;
  case 'group':case 'product':return <OfferDetails/>;
  case 'retail':return <RetailDetails/>;
  case 'pool':return <PoolDetails/>;
@@ -574,7 +698,7 @@ function Shop(){
   </View>
   {busy&&<Text style={{textAlign:'center',color:theme.accent,fontSize:11}}>Loading public product catalog…</Text>}
   <ScrollView key={screen} keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingHorizontal:12,paddingTop:4,paddingBottom:screen==='pool'?110:30}}>
-   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
+   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='orderDetail'?setScreen('orders'):screen==='checkout'?setScreen('cart'):screen==='orders'||screen==='savings'?setScreen('account'):screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
    {body()}
   </ScrollView>
   <View style={[styles.bottom,{backgroundColor:theme.card,borderColor:theme.line}]}>
