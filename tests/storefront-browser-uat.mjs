@@ -88,7 +88,9 @@ try{
  for(const width of [320,360,393,640,767,768,790,820,1024,1100,1440,1920]){
   const page=await browser.newPage({viewport:{width,height:900}})
   page.on('pageerror',e=>errors.push(e.message))
-  await page.goto('http://127.0.0.1:3000/',{waitUntil:'networkidle'})
+  await page.goto('http://127.0.0.1:3000/',{waitUntil:'domcontentloaded',timeout:60000})
+  if(width<768)await page.locator('.mhome').waitFor({state:'visible'})
+  else await page.locator('.market-legacy-home').waitFor({state:'visible'})
   await page.getByRole('heading',{name:'Synthetic browser Pool',exact:true}).waitFor()
   if(width===393){
    const toggle=page.locator('.market-flat-header .market-single-language')
@@ -97,12 +99,12 @@ try{
    await toggle.click()
    assert.equal((await toggle.innerText()).trim(),'EN')
    if(width>=768)await assertReviewLayout(page,width) // Desktop reference layout remains locked
-   await page.reload({waitUntil:'networkidle'})
+   await page.reload({waitUntil:'domcontentloaded',timeout:60000})
    assert.equal((await toggle.innerText()).trim(),'EN','BAN choice must survive full reload')
    assert.equal((await page.context().cookies()).some(c=>c.name==='2tbr_storefront_language'&&c.value==='bn'),true)
    await toggle.click()
    assert.equal((await toggle.innerText()).trim(),'BAN')
-   await page.reload({waitUntil:'networkidle'})
+   await page.reload({waitUntil:'domcontentloaded',timeout:60000})
    assert.equal((await toggle.innerText()).trim(),'BAN','EN choice must survive full reload')
   }
   assert.equal(await page.locator('header .market-header-location').count(),0)
