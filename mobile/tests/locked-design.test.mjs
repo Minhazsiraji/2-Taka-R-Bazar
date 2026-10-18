@@ -33,3 +33,31 @@ test('savings and cart cannot silently behave like paid verified orders',()=>{
  assert.match(app,/No real order or savings transaction has been created/);
  assert.match(app,/cartLineCount\(cart\)/);
 });
+
+test('Group Deal card visibly shows a people icon and deadline clock',()=>{
+ assert.match(app,/name="people" size={14} color="#149be7"/);
+ assert.match(app,/name="time-outline" size={14}/);
+ assert.match(app,/Ends in \{offer.daysLeft\} day/);
+});
+test('Exclusive card keeps image-first layout, price and available inventory',()=>{
+ assert.match(app,/function ExclusiveCard/);
+ assert.match(app,/height={128}/);
+ assert.match(app,/offer.stock\|\|0} available/);
+});
+test('Pools show product count, weekly-monthly modes and Explore Pool action',()=>{
+ assert.match(app,/function PoolCard/);
+ assert.match(app,/pool.productIds.length/);
+ assert.match(app,/pool.frequency==='weekly'/);
+ assert.match(app,/Explore Pool →/);
+});
+test('Footer contact details are horizontally split and separate',()=>{
+ assert.match(app,/Contact us/);
+ assert.match(app,/business@2takarbazar.com/);
+ assert.match(app,/support@2takarbazar.com/);
+ assert.match(app,/flexDirection:'row',gap:12,marginTop:4/);
+});
+test('Hero cart excludes fresh produce and keeps pantry product names',()=>{
+ const art=readFileSync(new URL('../src/nonperishable-cart.tsx',import.meta.url),'utf8');
+ for(const name of ['RICE','DAL','OIL','TEA','SUGAR'])assert.match(art,new RegExp(name));
+ for(const prohibited of ['TOMATO','CARROT','LETTUCE','CABBAGE'])assert.doesNotMatch(art,new RegExp(prohibited));
+});
