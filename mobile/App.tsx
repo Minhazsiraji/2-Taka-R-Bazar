@@ -105,7 +105,7 @@ function Shop(){
      <View style={{flexDirection:'row',alignItems:'center',gap:6,flexWrap:'wrap'}}><Text style={{fontSize:21,fontWeight:'900',color:theme.accent}}>{money(offer.price)}</Text><Text style={{fontSize:11,color:theme.muted,textDecorationLine:'line-through'}}>{money(item.referencePrice)}</Text></View>
      <View style={{alignSelf:'flex-start'}}>{pill(t.save+' '+money(customerSaving(item.referencePrice,offer.price)),true)}</View>
      <Text style={{color:theme.muted,fontSize:10}}>{offer.joined||0}/{offer.groupSize||5} joined · {offer.daysLeft} day(s) left</Text>
-     <View style={{height:5,backgroundColor:theme.field,borderRadius:5,overflow:'hidden'}}><View style={{height:5,width:String(ratio)+'%',backgroundColor:'#2ec9b5'}}/></View>
+     <View style={{height:5,backgroundColor:theme.field,borderRadius:5,overflow:'hidden'}}><View style={{height:5,width:(ratio+'%') as `${number}%`,backgroundColor:'#2ec9b5'}}/></View>
      <View style={{flexDirection:'row',gap:5}}>{button(t.details,()=>selectOffer(offer),false,true)}{button(t.join,()=>selectOffer(offer),true,true)}</View>
     </View>
    </View>);
@@ -136,7 +136,7 @@ function Shop(){
     <View style={styles.between}>{pill(pool.frequency==='weekly'?t.weekly:t.monthly,true)}{pill('ACTIVE')}</View>
     <Text style={{fontSize:13,fontWeight:'900',color:theme.text}} numberOfLines={1}>{lang==='bn'?pool.nameBn:pool.name}</Text>
     <Text style={{fontSize:10,color:theme.muted}}>{pool.productIds.length} {t.products} · {pool.participants.toLocaleString('en-US')} {t.members}</Text>
-    <View style={{height:5,borderRadius:6,backgroundColor:theme.field}}><View style={{height:5,width:String(Math.min(100,100*pool.participants/pool.nextTier))+'%',backgroundColor:'#35cdb9',borderRadius:5}}/></View>
+    <View style={{height:5,borderRadius:6,backgroundColor:theme.field}}><View style={{height:5,width:(Math.min(100,100*pool.participants/pool.nextTier)+'%') as `${number}%`,backgroundColor:'#35cdb9',borderRadius:5}}/></View>
     <Text style={{fontSize:10,color:theme.accent,fontWeight:'700'}}>{t.next}: {pool.nextTier.toLocaleString('en-US')}</Text>
    </View>
   </Pressable>);
@@ -153,7 +153,7 @@ function Shop(){
   <View style={{alignSelf:'center',flexDirection:'row',gap:5,marginTop:8}}>{heroMessages.map((_,i)=><Pressable key={i} accessibilityLabel={'Slide '+(i+1)} onPress={()=>setSlide(i)} style={{height:5,width:i===slide?14:5,borderRadius:5,backgroundColor:i===slide?'white':'#8ac8cb'}}/>)}</View>
  </View>;
  function Home(){return <>
-  <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>Savar DOHS⌄</Text></Text>{pill(t.demo,true)}</View>
+  <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>Savar DOHS⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
   <Hero/><View style={{marginTop:10}}><Savings/></View>
   {title('01 · COMMUNITY SAVINGS',t.groups,()=>onTab('deals'))}{group.slice(0,2).map(o=><DealCard key={o.id} offer={o}/>)}
   {title('02 · CURATED FOR YOU',t.exclusive,()=>onTab('exclusive'))}
@@ -175,7 +175,7 @@ function Shop(){
       <View style={styles.between}><Text style={{color:theme.accent,fontSize:27,fontWeight:'900'}}>{money(offer.price)}</Text><Text style={{textDecorationLine:'line-through',color:theme.muted}}>{money(p.referencePrice)}</Text></View>
       <View style={{marginVertical:8,alignSelf:'flex-start'}}>{pill(t.save+' '+money(customerSaving(p.referencePrice,offer.price)),true)}</View>
       {offer.mode==='GROUP_DEAL'&&<><Text style={{color:theme.text,fontWeight:'800',marginBottom:5}}>{offer.joined}/{offer.groupSize} neighbours joined</Text>
-       <View style={{height:8,backgroundColor:theme.field,borderRadius:5}}><View style={{height:8,width:String(Math.min(100,100*(offer.joined||0)/(offer.groupSize||5)))+'%',backgroundColor:theme.accent,borderRadius:5}}/></View>
+       <View style={{height:8,backgroundColor:theme.field,borderRadius:5}}><View style={{height:8,width:(Math.min(100,100*(offer.joined||0)/(offer.groupSize||5))+'%') as `${number}%`,backgroundColor:theme.accent,borderRadius:5}}/></View>
        <Text style={{color:theme.muted,marginVertical:7,fontSize:11}}>Target: {offer.groupSize} people · Ends in {offer.daysLeft} day(s). Confirmation depends on the published deal rules.</Text></>}
       <Text style={{fontSize:12,fontWeight:'900',color:theme.text,marginBottom:5,marginTop:7}}>Same product · Available offers</Text>
       {all.map(o=><Pressable key={o.id} onPress={()=>setSelectedOffer(o)} style={[styles.priceOption,{borderColor:o.id===offer.id?theme.accent:theme.line}]}>
@@ -191,7 +191,7 @@ function Shop(){
    {title(pool.frequency.toUpperCase()+' POOL',lang==='bn'?pool.nameBn:pool.name)}
    {panel(<><Text style={{color:theme.accent,fontWeight:'900'}}>{pool.productIds.length} {t.products} · {pool.participants.toLocaleString('en-US')} {t.members}</Text>
     <Text style={{color:theme.muted,marginTop:6,fontSize:12}}>No cap on people · Next savings milestone: {pool.nextTier.toLocaleString('en-US')} households.</Text>
-    <View style={{height:8,backgroundColor:theme.field,borderRadius:5,marginTop:9}}><View style={{height:8,width:String(Math.min(100,100*pool.participants/pool.nextTier))+'%',backgroundColor:theme.accent,borderRadius:5}}/></View>
+    <View style={{height:8,backgroundColor:theme.field,borderRadius:5,marginTop:9}}><View style={{height:8,width:(Math.min(100,100*pool.participants/pool.nextTier)+'%') as `${number}%`,backgroundColor:theme.accent,borderRadius:5}}/></View>
    </>)}
    {list.map(o=>{const p=byId(o.productId);if(!p)return null;return panel(<View style={{flexDirection:'row',gap:9,alignItems:'center'}}>
     <View style={{width:80}}><ProductPhoto item={p} height={76}/></View>
