@@ -1,6 +1,7 @@
 import React,{useEffect,useMemo,useState} from 'react';
 import {Alert,Image,Linking,Pressable,ScrollView,StyleSheet,Text,TextInput,View,useWindowDimensions} from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import {palette,brandV1} from './src/theme';
 import {NonperishableCart} from './src/nonperishable-cart';
 import {SafeAreaProvider,SafeAreaView} from 'react-native-safe-area-context';
 import {StatusBar} from 'expo-status-bar';
@@ -14,16 +15,13 @@ type Screen=Tab|'account'|'orders'|'savings'|'product'|'group'|'retail'|'pool'|'
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
-const palette={
- light:{background:'#e7e2e8',card:'#f9f7fa',text:'#17213b',muted:'#60708d',line:'#fff',field:'#ffffffb5',accent:'#0b8995',soft:'#d7f5f5'},
- dark:{background:'#090f19',card:'#172233',text:'#f1f5ff',muted:'#a7b4c9',line:'#42516a',field:'#1f2c40',accent:'#35cfcf',soft:'#163f48'}
-};
+// Shared V1 colors are managed in src/theme.ts; do not define screen-specific palettes here.
 const money=(n:number)=>'৳'+Math.round(n).toLocaleString('en-US');
 function ProductPhoto({item,height=134}:{item:Product;height?:number}){
  const [failed,setFailed]=useState(false);
  useEffect(()=>setFailed(false),[item.image]);
- return <View style={{height,backgroundColor:'#f7eac8',borderRadius:13,overflow:'hidden',justifyContent:'center',alignItems:'center'}}>
-  {failed?<Ionicons name="bag-handle-outline" size={46} color="#aa8a48"/>:<Image source={{uri:item.image}} style={{width:'100%',height:'100%'}} resizeMode="cover" onError={()=>setFailed(true)}/>}
+ return <View style={{height,backgroundColor:brandV1.background,borderRadius:13,overflow:'hidden',justifyContent:'center',alignItems:'center'}}>
+  {failed?<Ionicons name="bag-handle-outline" size={46} color={brandV1.primary}/>:<Image source={{uri:item.image}} style={{width:'100%',height:'100%'}} resizeMode="cover" onError={()=>setFailed(true)}/>}
  </View>;
 }
 function Shop(){
@@ -73,9 +71,9 @@ function Shop(){
  const notify=()=>Alert.alert(demo?'Demo preview':'Information','No real order or savings transaction has been created.');
  const link=(path:string)=>{void Linking.openURL(SITE+path)};
  const small=width<385;
- const pill=(label:string,active=false)=><View style={{backgroundColor:active?theme.soft:theme.field,paddingHorizontal:8,paddingVertical:4,borderRadius:16}}><Text style={{fontSize:10,fontWeight:'700',color:active?'#086a74':theme.text}}>{label}</Text></View>;
+ const pill=(label:string,active=false)=><View style={{backgroundColor:active?theme.soft:theme.field,paddingHorizontal:8,paddingVertical:4,borderRadius:16}}><Text style={{fontSize:10,fontWeight:'700',color:active?theme.brandText:theme.text}}>{label}</Text></View>;
  const button=(label:string,action:()=>void,solid=true,compact=false)=><Pressable accessibilityRole="button" onPress={action} style={{backgroundColor:solid?theme.accent:theme.field,borderRadius:10,paddingVertical:compact?8:11,paddingHorizontal:compact?8:13,alignItems:'center',justifyContent:'center',flex:1,borderWidth:solid?0:1,borderColor:theme.line}}>
-  <Text style={{fontSize:compact?11:13,fontWeight:'800',color:solid?(dark?'#082d34':'white'):theme.text}} numberOfLines={1}>{label}</Text>
+  <Text style={{fontSize:compact?11:13,fontWeight:'800',color:solid?theme.onPrimary:theme.text}} numberOfLines={1}>{label}</Text>
  </Pressable>;
  const panel=(child:React.ReactNode)=><View style={[styles.panel,{backgroundColor:theme.card,borderColor:theme.line}]}>{child}</View>;
  const title=(k:string,name:string,action?:()=>void)=><View style={[styles.titleRow,!k&&{marginTop:9,marginBottom:6}]}><View style={{flex:1}}>{!!k&&<Text style={{color:theme.accent,fontWeight:'900',fontSize:10,letterSpacing:1.5}}>{k}</Text>}<Text style={{color:theme.text,fontSize:21,fontWeight:'900',letterSpacing:-.65}}>{name}</Text></View>{action&&<Pressable onPress={action}><Text style={{color:theme.accent,fontWeight:'700',fontSize:12}}>{t.viewAll}  ›</Text></Pressable>}</View>;
@@ -111,7 +109,7 @@ function Shop(){
   <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="people" size={14} color="#149be7"/><Text style={{color:theme.text,fontSize:10,fontWeight:'800'}}>{offer.joined||0}/{offer.groupSize||5}</Text><Text style={{color:theme.muted,fontSize:9}}>joined</Text></View>
   <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="time-outline" size={14} color="#6385b1"/><Text style={{color:theme.muted,fontSize:9}}>Ends in {offer.daysLeft} day{offer.daysLeft===1?'':'s'}</Text></View>
  </View>
-     <View style={{height:5,backgroundColor:theme.field,borderRadius:5,overflow:'hidden'}}><View style={{height:5,width:(ratio+'%') as `${number}%`,backgroundColor:'#2ec9b5'}}/></View>
+     <View style={{height:5,backgroundColor:theme.field,borderRadius:5,overflow:'hidden'}}><View style={{height:5,width:(ratio+'%') as `${number}%`,backgroundColor:theme.highlight}}/></View>
      <View style={{flexDirection:'row',gap:5}}>{button(t.details,()=>selectOffer(offer),false,true)}{button(t.join,()=>selectOffer(offer),true,true)}</View>
     </View>
    </View>);
@@ -141,22 +139,22 @@ function Shop(){
     <View style={styles.between}>{pill(pool.frequency==='weekly'?t.weekly:t.monthly,true)}<View style={{flexDirection:'row',alignItems:'center',gap:3,backgroundColor:dark?'#184f3b':'#d9fbea',paddingVertical:3,paddingHorizontal:6,borderRadius:15}}><View style={{width:6,height:6,borderRadius:4,backgroundColor:'#0caf6a'}}/><Text style={{fontSize:9,fontWeight:'900',color:dark?'#bdfad9':'#087c4b'}}>ACTIVE</Text></View></View>
     <Text style={{fontSize:13,fontWeight:'900',color:theme.text}} numberOfLines={1}>{lang==='bn'?pool.nameBn:pool.name}</Text>
     <Text style={{fontSize:10,color:theme.muted}}>{pool.productIds.length} {t.products} · {pool.participants.toLocaleString('en-US')} {t.members}</Text>
-    <View style={{height:5,borderRadius:6,backgroundColor:theme.field}}><View style={{height:5,width:(Math.min(100,100*pool.participants/pool.nextTier)+'%') as `${number}%`,backgroundColor:'#35cdb9',borderRadius:5}}/></View>
+    <View style={{height:5,borderRadius:6,backgroundColor:theme.field}}><View style={{height:5,width:(Math.min(100,100*pool.participants/pool.nextTier)+'%') as `${number}%`,backgroundColor:theme.highlight,borderRadius:5}}/></View>
     <View style={{flexDirection:'row',alignItems:'center',gap:5,flexWrap:'wrap'}}><Ionicons name="time-outline" size={12} color={theme.accent}/><Text style={{fontSize:9,fontWeight:'800',color:theme.accent}}>{lang==='bn'?'যোগদান শেষ':'Commit ends in'} {pool.commitDaysLeft||0} {lang==='bn'?'দিনে':'days'}</Text><Text style={{fontSize:9,color:theme.muted}}>· {pool.commitEndsLabel||'TBD'}</Text></View>
-    <View style={{flexDirection:'row',alignItems:'center',gap:6}}><Text numberOfLines={1} style={{fontSize:9,color:theme.muted,flex:1}}>{t.next}: {pool.nextTier.toLocaleString('en-US')}</Text><Pressable onPress={()=>selectPool(pool)} style={{backgroundColor:theme.accent,borderRadius:8,paddingVertical:6,paddingHorizontal:8}}><Text style={{fontSize:9,fontWeight:'800',color:dark?'#082d34':'white'}}>Explore Pool →</Text></Pressable></View>
+    <View style={{flexDirection:'row',alignItems:'center',gap:6}}><Text numberOfLines={1} style={{fontSize:9,color:theme.muted,flex:1}}>{t.next}: {pool.nextTier.toLocaleString('en-US')}</Text><Pressable onPress={()=>selectPool(pool)} style={{backgroundColor:theme.accent,borderRadius:8,paddingVertical:6,paddingHorizontal:8}}><Text style={{fontSize:9,fontWeight:'800',color:theme.onPrimary}}>Explore Pool →</Text></Pressable></View>
    </View>
   </Pressable>);
  }
- const Hero=()=><View style={[styles.hero,{backgroundColor:dark?'#063f48':'#087682'}]}><NonperishableCart style={{position:'absolute',right:-4,top:3,width:'53%',height:'98%',opacity:.98}}/>
-  <Text style={{color:'#a5fbef',fontWeight:'800',fontSize:9,letterSpacing:1.2}}>✦ SMART SHOPPING. REAL SAVINGS!</Text>
+ const Hero=()=><View style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}><NonperishableCart style={{position:'absolute',right:-4,top:3,width:'53%',height:'98%',opacity:.98}}/>
+  <Text style={{color:brandV1.accentPale,fontWeight:'800',fontSize:9,letterSpacing:1.2}}>✦ SMART SHOPPING. REAL SAVINGS!</Text>
   <Text style={{fontSize:small?14:15,fontWeight:'900',color:'white',lineHeight:small?16:17,maxWidth:'55%',marginTop:5}}>{heroMessages[slide][lang][0]}</Text>
-  <Text style={{fontSize:small?14:15,fontWeight:'900',color:'#cbffea',lineHeight:small?16:17,maxWidth:'55%',marginTop:2}}>{heroMessages[slide][lang][1]}</Text>
-  <Text style={{color:'#e9fffa',fontSize:small?8.5:9,lineHeight:small?10:11,marginTop:5,maxWidth:'54%'}}>{heroMessages[slide][lang][2]}</Text>
+  <Text style={{fontSize:small?14:15,fontWeight:'900',color:brandV1.accentPale,lineHeight:small?16:17,maxWidth:'55%',marginTop:2}}>{heroMessages[slide][lang][1]}</Text>
+  <Text style={{color:brandV1.white,fontSize:small?8.5:9,lineHeight:small?10:11,marginTop:5,maxWidth:'54%'}}>{heroMessages[slide][lang][2]}</Text>
   <View style={[styles.between,{marginTop:8}]}>
-   <Pressable onPress={()=>onTab('deals')} style={{backgroundColor:'white',paddingVertical:7,paddingHorizontal:10,borderRadius:18}}><Text style={{color:'#086a74',fontWeight:'800',fontSize:9}}>Explore group deals →</Text></Pressable>
+   <Pressable onPress={()=>onTab('deals')} style={{backgroundColor:'white',paddingVertical:7,paddingHorizontal:10,borderRadius:18}}><Text style={{color:brandV1.primary,fontWeight:'800',fontSize:9}}>Explore group deals →</Text></Pressable>
    <View style={{flexDirection:'row',gap:8}}><Pressable onPress={()=>setSlide(v=>(v+3)%4)}><Text style={styles.heroArrow}>‹</Text></Pressable><Pressable onPress={()=>setSlide(v=>(v+1)%4)}><Text style={styles.heroArrow}>›</Text></Pressable></View>
   </View>
-  <View style={{alignSelf:'center',flexDirection:'row',gap:5,marginTop:5}}>{heroMessages.map((_,i)=><Pressable key={i} accessibilityLabel={'Slide '+(i+1)} onPress={()=>setSlide(i)} style={{height:5,width:i===slide?14:5,borderRadius:5,backgroundColor:i===slide?'white':'#8ac8cb'}}/>)}</View>
+  <View style={{alignSelf:'center',flexDirection:'row',gap:5,marginTop:5}}>{heroMessages.map((_,i)=><Pressable key={i} accessibilityLabel={'Slide '+(i+1)} onPress={()=>setSlide(i)} style={{height:5,width:i===slide?14:5,borderRadius:5,backgroundColor:i===slide?'white':brandV1.accent}}/>)}</View>
  </View>;
  function Home(){return <>
   <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>Savar DOHS⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
@@ -382,7 +380,7 @@ const styles=StyleSheet.create({
  badgeText:{color:'white',fontSize:9,fontWeight:'900'},
  search:{marginTop:8,borderRadius:30,paddingHorizontal:12,flexDirection:'row',alignItems:'center',gap:7,borderWidth:1},
  titleRow:{flexDirection:'row',alignItems:'flex-end',justifyContent:'space-between',marginTop:16,marginBottom:8},
- panel:{borderWidth:1,borderRadius:17,padding:10,marginBottom:9,shadowColor:'#18213b',shadowOpacity:.04,shadowRadius:9,elevation:1},
+ panel:{borderWidth:1,borderRadius:17,padding:10,marginBottom:9,shadowColor:brandV1.text,shadowOpacity:.04,shadowRadius:9,elevation:1},
  twoCol:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'space-between'},
  savingTile:{width:'23.9%',minHeight:72,paddingHorizontal:5,paddingVertical:6,borderRadius:12,alignItems:'flex-start',justifyContent:'center',gap:2,borderWidth:1},
  savingsFour:{flexDirection:'row',alignItems:'stretch',justifyContent:'space-between',gap:4},
