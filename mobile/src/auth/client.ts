@@ -1,3 +1,4 @@
+import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 import {createClient,type SupabaseClient} from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
@@ -17,11 +18,56 @@ export function nativeAuthConfigured(){
 }
 export const nativeGoogleConfigured=()=>nativeAuthConfigured()&&process.env.EXPO_PUBLIC_NATIVE_GOOGLE_ENABLED==='true';
 // Persistent sessions and PKCE verifiers are encrypted and device-local.
-const storage={
- getItem:(name:string)=>SecureStore.getItemAsync(name),
- setItem:(name:string,value:string)=>SecureStore.setItemAsync(name,value,{keychainAccessible:SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY}),
- removeItem:(name:string)=>SecureStore.deleteItemAsync(name),
+// Versioned, atomic chunks stay exclusively in encrypted OS storage.
+// Older secure stores may reject sessions longer than ~2 KiB.
+const CHUNK=1400;
+type Manifest={version:1;nonce:string;count:number};
+const options={keychainAccessible:SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY};
+const manifestKey=(key:string)=>key+'-manifest';
+const chunkKey=(key:string,nonce:string,i:number)=>key+'-'+nonce+'-'+i;
+const readManifest=async(key:string):Promise<Manifest|null>=>{
+ const value=await SecureStore.getItemAsync(manifestKey(key));
+ if(!value)return null;
+ try{
+  const item=JSON.parse(value) as Manifest;
+  if(item.version!==1||!Number.isInteger(item.count)||item.count<1||item.count>200||!/^[-a-zA-Z0-9]+$/.test(item.nonce))return null;
+  return item;
+ }catch{return null}
 };
+const cleanChunks=async(key:string,manifest:Manifest)=>{
+ for(let i=0;i<manifest.count;i++)await SecureStore.deleteItemAsync(chunkKey(key,manifest.nonce,i));
+};
+const storage={
+ async getItem(key:string):Promise<string|null>{
+  const meta=await readManifest(key);
+  if(!meta)return null;
+  let joined='';
+  for(let i=0;i<meta.count;i++){
+   const chunk=await SecureStore.getItemAsync(chunkKey(key,meta.nonce,i));
+   if(!chunk)return null; // never restore an incomplete credential
+   joined+=chunk;
+  }
+  try{return decodeURIComponent(joined)}catch{return null}
+ },
+ async setItem(key:string,value:string):Promise<void>{
+  const data=encodeURIComponent(value);
+  const chunks=data.match(/.{1,1400}/g)||[''];
+  if(chunks.length>200)throw new Error('Native session too large');
+  const old=await readManifest(key);
+  const next:Manifest={version:1,nonce:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10),count:chunks.length};
+  try{
+   for(let i=0;i<chunks.length;i++)await SecureStore.setItemAsync(chunkKey(key,next.nonce,i),chunks[i],options);
+   await SecureStore.setItemAsync(manifestKey(key),JSON.stringify(next),options);
+  }catch(err){await cleanChunks(key,next).catch(()=>{});throw err}
+  if(old)await cleanChunks(key,old).catch(()=>{}); // never revoke a successful new session on cleanup failure
+ },
+ async removeItem(key:string):Promise<void>{
+  const old=await readManifest(key);
+  await SecureStore.deleteItemAsync(manifestKey(key));
+  if(old)await cleanChunks(key,old);
+ }
+};
+
 export function nativeClient():SupabaseClient|null{
  if(!nativeAuthConfigured())return null;
  if(!singleton)singleton=createClient(url,key,{
