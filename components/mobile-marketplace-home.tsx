@@ -5,6 +5,7 @@ import {useEffect,useState} from 'react'
 import {setCommerceCartItem} from '@/app/actions/commerce'
 import type {DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
+import type {PublishedCatalogPage} from '@/lib/published-product-catalog'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {formatPrice} from '@/lib/storefront'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
@@ -18,6 +19,7 @@ type Props={
  detectingArea:boolean
  offers:StorefrontOffer[]
  products:ShowcaseProduct[]
+ publishedProducts:PublishedCatalogPage
  pools:DemoFeaturedPool[]
  language:MarketplaceLanguage
  demoMode:boolean
@@ -58,7 +60,7 @@ function SectionHeading({number,eyebrow,title,description,href,viewText}:{
 const money=(n:number|null|undefined)=>n!=null&&Number(n)>0?formatPrice(n):null
 
 export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectArea,detectingArea,
- offers,products,pools,language,demoMode,search}:Props){
+ offers,products,publishedProducts,pools,language,demoMode,search}:Props){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const [slide,setSlide]=useState(0)
  useEffect(()=>{
@@ -73,7 +75,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
  const poolRows=pools.filter(p=>!selectedArea||!p.community_id||p.community_id===selectedArea).slice(0,3)
  const unique=new Set<string>()
  const exclusive: {id:string;name:string;nameBn:string;package:string;image:string|null;price:number|null;
-  oldPrice:number|null;demo:boolean;commerceId:string|null;available:boolean}[]=[]
+  oldPrice:number|null;demo:boolean;commerceId:string|null;available:boolean;href?:string}[]=[]
  const eligible=products.filter(p=>!query||[p.name,p.name_bn,p.brand].some(v=>(v??'').toLowerCase().includes(query)))
  for(const p of eligible){
   if(unique.has(p.product_id))continue
@@ -86,6 +88,17 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
    image:p.image_url??p.gallery_urls?.[0]??null,price,oldPrice:productOffer?.reference_price??null,
    demo:Boolean(p.is_demo||productOffer?.is_demo),commerceId:productOffer?.commerce_solo_id??null,
    available:Boolean(productOffer?.commerce_solo_available)})
+ }
+ for(const item of publishedProducts.items){
+  if(unique.has(item.product_id))continue
+  if(query&&![item.title_en,item.title_bn,item.category].some(v=>v.toLocaleLowerCase().includes(query)))continue
+  unique.add(item.product_id)
+  const priceOffer=localOffers.find(o=>o.product_id===item.product_id&&o.offer_kind==='SOLO')
+   ??localOffers.find(o=>o.product_id===item.product_id)
+  exclusive.push({id:item.product_id,name:item.title_en,nameBn:item.title_bn,
+   package:item.package_size,image:item.image_url,price:Number(priceOffer?.solo_price??priceOffer?.confirmed_price??0)||null,
+   oldPrice:priceOffer?.reference_price??null,demo:false,commerceId:priceOffer?.commerce_solo_id??null,
+   available:Boolean(priceOffer?.commerce_solo_available),href:(language==='bn'?'/bn':'')+'/p/'+item.slug})
  }
  for(const o of localOffers){
   if(unique.has(o.product_id))continue
@@ -173,7 +186,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
     title={t('Exclusive Products','এক্সক্লুসিভ পণ্য')} description={t('Handpicked essentials, great everyday value.','প্রতিদিনের প্রয়োজনীয় পণ্য, ভালো দাম।')}
     href="/products" viewText={t('View all','সব দেখুন')}/>
    {exclusive.length?<div className="mhome-exclusive-grid">{exclusive.slice(0,6).map(p=>{
-    const href=p.demo?'/demo-product/'+p.id:'/products/'+p.id
+    const href=p.href??(p.demo?'/demo-product/'+p.id:'/products/'+p.id)
     const canCart=!p.demo&&Boolean(p.commerceId&&p.available&&selectedArea)
     const saving=p.oldPrice&&p.price&&p.oldPrice>p.price&&!p.demo?p.oldPrice-p.price:null
     return <article className="mhome-exclusive-card" key={p.id}>
