@@ -466,3 +466,27 @@ body.site-glass-root .market-information-footer .market-footer-contact>a{overflo
   height:36px!important;
  }
 }
+
+/* Real browser screenshot review: eliminate a viewport-height background seam,
+   and restore high-contrast links/prices in dark mode without touching shared
+   customer shell colors or the permanent Version 1 brand palette. */
+body.site-glass-root main.public-marketplace-flat:has(.mhome){
+ min-height:100vh!important;
+ background:linear-gradient(180deg,#f7f9fc 0%,#f1f5f9 100%)!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat:has(.mhome){
+ background:#0d1821!important;color:#f2fbff!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome :is(
+ .mhome-view-all,.mhome-exclusive-price strong,.mhome-deal-prices strong,
+ .mhome-eyebrow,.mhome-overline,.mhome-image-empty){
+ color:#89ecf4!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome :is(
+ .mhome-muted,.mhome-savings-note,.mhome-pool-joined,.mhome-progress-caption){
+ color:#bfd6e5!important;
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome :is(
+ .mhome-exclusive-copy h3,.mhome-pool-copy h3,.mhome-deal-copy h3){
+ color:#f6fbff!important;
+}
