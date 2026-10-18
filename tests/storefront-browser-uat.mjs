@@ -129,7 +129,8 @@ try{
   await assertCustomerChrome(page,width)
   assert.equal(await dock.isVisible(),width<768)
   await assertMobileDock(page,width)
-  else await assertUnifiedApprovedHome(page,width)
+  await assertUnifiedApprovedHome(page,width)
+  if([393,820,1440].includes(width))await page.locator('.mhome').screenshot({path:'/tmp/2tbr-approved-unified-home-'+width+'-dark.png'})
   if(width===393){
    await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}))
    await page.screenshot({path:'/tmp/2tbr-header-dock-storefront-footer.png'})
