@@ -12,7 +12,7 @@ import {loadPublicCatalog} from './src/live';
 import {productInfoSections,productMissing} from './src/product-content';
 
 type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
-type Screen=Tab|'account'|'orders'|'savings'|'product'|'group'|'retail'|'pool'|'menu';
+type Screen=Tab|'checkout'|'account'|'orders'|'savings'|'product'|'group'|'retail'|'pool'|'menu';
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
@@ -37,6 +37,10 @@ function Shop(){
  const [slide,setSlide]=useState(0);
  const [query,setQuery]=useState('');
  const [cart,setCart]=useState<Record<string,number>>({});
+ const [groupDrafts,setGroupDrafts]=useState<Record<string,number>>({});
+ const [poolDrafts,setPoolDrafts]=useState<Record<string,Record<string,number>>>({});
+ const [delivery,setDelivery]=useState<'home'|'pickup'>('home');
+ const [payment,setPayment]=useState<'cod'|'online'>('cod');
  const [demo,setDemo]=useState(requestedDemo);
  const [products,setProducts]=useState<Product[]>(demoProducts);
  const [offers,setOffers]=useState<Offer[]>(demoOffers);
@@ -73,6 +77,12 @@ function Shop(){
  });
  const add=(offer:Offer)=>{if(!demo){Alert.alert('Checkout not enabled','Live mobile purchasing requires separate qualification. Continue via the current website.');return}updateCart(offer.id,1)};
  const notify=()=>Alert.alert(demo?'Demo preview':'Information','No real order or savings transaction has been created.');
+ const draftGroup=(o:Offer)=>{if(o.mode!=='GROUP_DEAL')return;setGroupDrafts(old=>({...old,[o.id]:(old[o.id]||0)+1}));setScreen('cart');};
+ const draftPool=(pool:Pool,items:Record<string,number>)=>{const safe=Object.fromEntries(Object.entries(items).filter(([id,q])=>pool.productIds.includes(id)&&Number.isInteger(q)&&q>0&&q<=20));if(!Object.keys(safe).length)return;setPoolDrafts(old=>({...old,[pool.id]:safe}));setScreen('cart');};
+ const demoNum=(n:number)=>new Intl.NumberFormat(lang==='bn'?'bn-BD':'en-US',{maximumFractionDigits:0}).format(n);
+ const demoMoney=(n:number)=>'৳'+demoNum(n);
+ const pendingLines=Object.values(groupDrafts).filter(q=>q>0).length+Object.values(poolDrafts).reduce((sum,item)=>sum+Object.values(item).filter(q=>q>0).length,0);
+ const totalBadge=cartLineCount(cart)+pendingLines;
  const link=(path:string)=>{void Linking.openURL(SITE+path)};
  const small=width<385;
  const pill=(label:string,active=false)=><View style={{backgroundColor:active?theme.soft:theme.field,paddingHorizontal:8,paddingVertical:4,borderRadius:16}}><Text style={{fontSize:10,fontWeight:'700',color:active?theme.brandText:theme.text}}>{label}</Text></View>;
@@ -234,7 +244,7 @@ function Shop(){
       </View>
       <Text style={{color:theme.muted,fontSize:11}}>Qualified buyers and closing rules determine the final price. Below-minimum groups expire without payment.</Text>
     </>)}
-    <View style={{flexDirection:'row',gap:8,marginBottom:10}}>{button('Product Details',()=>setScreen('retail'),false)}{button('Join Deal · Preview',notify)}</View>
+    <View style={{flexDirection:'row',gap:8,marginBottom:10}}>{button('Product Details',()=>setScreen('retail'),false)}{button('Join Deal · Preview',()=>draftGroup(offer))}</View>
     <Text style={{fontSize:10,color:theme.muted,marginBottom:8}}>{t.notice}</Text>
    </>;
  }
@@ -404,26 +414,110 @@ function Shop(){
    </>)}
    <View style={{borderRadius:12,borderWidth:1,borderColor:theme.line,padding:10,marginBottom:8,backgroundColor:theme.card,flexDirection:'row',alignItems:'center',gap:9}}>
     <View><Text style={{fontSize:10,color:theme.muted}}>{n(units)} {label('units selected','টি ইউনিট নির্বাচিত')}</Text><Text style={{fontSize:18,fontWeight:'900',color:theme.accent}}>{cash(current)}</Text></View>
-    <Pressable accessibilityRole="button" disabled={!units} onPress={notify} style={{flex:1,paddingVertical:11,paddingHorizontal:7,borderRadius:10,backgroundColor:theme.accent,opacity:units?1:.35,alignItems:'center'}}><Text style={{fontSize:11,color:theme.onPrimary,fontWeight:'900'}}>{label('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো')} →</Text></Pressable>
+    <Pressable accessibilityRole="button" disabled={!units} onPress={()=>draftPool(pool,quantities)} style={{flex:1,paddingVertical:11,paddingHorizontal:7,borderRadius:10,backgroundColor:theme.accent,opacity:units?1:.35,alignItems:'center'}}><Text style={{fontSize:11,color:theme.onPrimary,fontWeight:'900'}}>{label('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো')} →</Text></Pressable>
    </View>
   </>;
  }
- function Cart(){const rows=Object.entries(cart).filter(([,q])=>q>0);return <>
-  {title('SHOPPING BAG',t.cart)}
-  {rows.length===0?panel(<Text style={{color:theme.muted}}>{t.empty}</Text>):rows.map(([id,q])=>{
-   const offer=offers.find(o=>o.id===id);const p=offer&&byId(offer.productId);if(!offer||!p)return null;
-   return panel(<View style={{flexDirection:'row',gap:9,alignItems:'center'}}><View style={{width:80}}><ProductPhoto item={p} height={76}/></View><View style={{flex:1}}>
-    <Text style={{fontSize:13,fontWeight:'800',color:theme.text}}>{lang==='bn'?p.nameBn:p.name}</Text>
-    <Text style={{color:theme.muted,fontSize:11}}>{money(offer.price)} · {p.unit}</Text>
-    <Text style={{color:theme.accent,fontWeight:'800'}}>{money(offer.price*q)}</Text></View>
-    <View style={{flexDirection:'row',gap:8,alignItems:'center'}}><Pressable onPress={()=>updateCart(id,-1)}><Ionicons name="remove-circle-outline" size={24} color={theme.text}/></Pressable><Text style={{color:theme.text}}>{q}</Text><Pressable onPress={()=>updateCart(id,1)}><Ionicons name="add-circle-outline" size={24} color={theme.accent}/></Pressable></View>
-   </View>);
-  })}
-  {panel(<><Text style={{color:theme.text,fontWeight:'900',fontSize:17}}>{t.cart}: {cartLineCount(cart)} product lines · {cartQuantity(cart)} units</Text>
-   <Text style={{color:theme.accent,fontSize:22,fontWeight:'900',marginVertical:8}}>{money(cartSubtotal(cart,offers))}</Text>
-   <View style={{flexDirection:'row'}}>{button(t.checkout,notify)}</View>
-   <Text style={{color:theme.muted,fontSize:11,marginTop:8}}>{t.notice}</Text></>)}
- </>}
+
+ function Cart(){
+  const direct=Object.entries(cart).filter(([id,q])=>q>0&&offers.some(o=>o.id===id&&o.mode==='SOLO'));
+  const groups=Object.entries(groupDrafts).filter(([id,q])=>q>0&&offers.some(o=>o.id===id&&o.mode==='GROUP_DEAL'));
+  const drafts=Object.entries(poolDrafts).filter(([pid,lines])=>pools.some(p=>p.id===pid)&&Object.values(lines).some(q=>q>0));
+  const subtotal=cartSubtotal(cart,offers);
+  const text=(en:string,bn:string)=>lang==='bn'?bn:en;
+  const header=(en:string,bn:string,count:number)=> <View style={[styles.between,{marginBottom:8}]}>
+    <Text style={{color:theme.text,fontSize:14,fontWeight:'900',flex:1}}>{text(en,bn)}</Text>
+    <Text style={{color:theme.muted,fontSize:10}}>{demoNum(count)}</Text>
+  </View>;
+  const empty=(en:string,bn:string,go:Tab,ctaEn:string,ctaBn:string)=> <View style={{backgroundColor:theme.field,borderRadius:9,padding:9,gap:6}}>
+    <Text style={{color:theme.muted,fontSize:11}}>{text(en,bn)}</Text>
+    <Pressable onPress={()=>onTab(go)}><Text style={{color:theme.accent,fontSize:11,fontWeight:'800'}}>{text(ctaEn,ctaBn)} →</Text></Pressable>
+  </View>;
+  return <>
+   {title('',text('Your cart','আপনার কার্ট'))}
+   <Text style={{color:theme.muted,fontSize:11,marginBottom:10}}>{text('Direct items and pending community-buy drafts, clearly separated.','সরাসরি পণ্য এবং কমিউনিটির অপেক্ষমাণ খসড়া আলাদা।')}</Text>
+   {panel(<>
+    {header('Direct / Exclusive · ready to order','সরাসরি / বিশেষ পণ্য · অর্ডারের জন্য',direct.length)}
+    {direct.length?direct.map(([id,q])=>{
+      const offer=offers.find(o=>o.id===id),p=offer&&byId(offer.productId);if(!offer||!p)return null;
+      return <View key={id} style={{flexDirection:'row',gap:9,paddingVertical:9,borderTopWidth:1,borderColor:theme.line,alignItems:'center'}}>
+       <View style={{width:72}}><ProductPhoto item={p} height={76}/></View>
+       <View style={{flex:1,minWidth:0,gap:4}}>
+        <Text style={{fontSize:12,fontWeight:'900',color:theme.text}}>{lang==='bn'?p.nameBn:p.name}</Text>
+        <Text style={{fontSize:10,color:theme.muted}}>{p.unit} · {demoMoney(offer.price)} / unit</Text>
+        <Text style={{fontSize:13,color:theme.accent,fontWeight:'900'}}>{demoMoney(offer.price*q)}</Text>
+        <View style={{flexDirection:'row',alignItems:'center',gap:9}}>
+         <Pressable onPress={()=>updateCart(id,-1)}><Ionicons name="remove-circle-outline" size={24} color={theme.accent}/></Pressable><Text style={{color:theme.text,fontWeight:'800'}}>{demoNum(q)}</Text><Pressable onPress={()=>updateCart(id,1)}><Ionicons name="add-circle-outline" size={24} color={theme.accent}/></Pressable>
+         <Pressable onPress={()=>setCart(old=>{const next={...old};delete next[id];return next})}><Text style={{fontSize:10,color:theme.muted,textDecorationLine:'underline'}}>{text('Remove','বাদ দিন')}</Text></Pressable>
+        </View>
+       </View>
+      </View>;
+    }):empty('No direct products yet.','সরাসরি পণ্য যোগ হয়নি।','exclusive','Browse Exclusive','বিশেষ পণ্য দেখুন')}
+   </>)}
+   {panel(<>
+    {header('Group Deal requests · pending','গ্রুপ ডিলের অনুরোধ · অপেক্ষমাণ',groups.length)}
+    {groups.length?groups.map(([id,q])=>{
+      const o=offers.find(o=>o.id===id),p=o&&byId(o.productId);if(!o||!p)return null;
+      const price=demoGroupTierPrices(o,p)?.current.price??o.price;
+      return <View key={id} style={{flexDirection:'row',gap:9,paddingTop:8,borderTopWidth:1,borderColor:theme.line}}>
+       <View style={{width:66}}><ProductPhoto item={p} height={69}/></View>
+       <View style={{flex:1,gap:3}}>
+        <Text style={{fontSize:12,fontWeight:'900',color:theme.text}}>{lang==='bn'?p.nameBn:p.name}</Text>
+        <Text style={{fontSize:10,color:theme.muted}}>{demoNum(o.joined||0)}/{demoNum(o.groupSize||5)} {text('joined','যুক্ত')} · {demoNum(o.daysLeft||0)} {text('days left','দিন বাকি')}</Text>
+        <Text style={{fontSize:12,fontWeight:'800',color:theme.accent}}>{demoMoney(price)} · {text('indicative only','শুধু আনুমানিক')}</Text>
+        <Text style={{fontSize:10,color:theme.muted}}>{text('Not payable or confirmed','পরিশোধযোগ্য বা নিশ্চিত নয়')}</Text>
+        <Pressable onPress={()=>setGroupDrafts(old=>{const v={...old};delete v[id];return v})}><Text style={{color:theme.accent,fontSize:10,textDecorationLine:'underline'}}>{text('Remove draft','খসড়া বাদ দিন')}</Text></Pressable>
+       </View>
+      </View>;
+    }):empty('No Group Deal draft.','গ্রুপ ডিলের খসড়া নেই।','deals','Browse Deals','গ্রুপ ডিল দেখুন')}
+   </>)}
+   {panel(<>
+    {header('Community Pool selections · pending','কমিউনিটি পুল নির্বাচন · অপেক্ষমাণ',drafts.length)}
+    {drafts.length?drafts.map(([pid,lines])=>{
+      const pool=pools.find(p=>p.id===pid);if(!pool)return null;
+      const entries=Object.entries(lines).filter(([id,q])=>q>0&&pool.productIds.includes(id));
+      const estimate=entries.reduce((sum,[id,q])=>sum+(offers.find(o=>o.mode==='POOL'&&o.poolId===pid&&o.productId===id)?.price||0)*q,0);
+      return <View key={pid} style={{borderTopWidth:1,borderColor:theme.line,paddingVertical:9,gap:6}}>
+       <Text style={{fontWeight:'900',fontSize:12,color:theme.text}}>{lang==='bn'?pool.nameBn:pool.name}</Text>
+       {entries.map(([id,q])=>{const p=byId(id);return <View key={id} style={styles.between}><Text style={{color:theme.muted,fontSize:11,flex:1}}>{p?(lang==='bn'?p.nameBn:p.name):id} × {demoNum(q)}</Text></View>})}
+       <Text style={{color:theme.accent,fontWeight:'900'}}>{text('Indicative total','আনুমানিক মোট')}: {demoMoney(estimate)}</Text>
+       <Text style={{color:theme.muted,fontSize:10}}>{text('Not included in direct checkout','সরাসরি চেকআউটে অন্তর্ভুক্ত নয়')}</Text>
+       <View style={{flexDirection:'row',gap:14}}>
+         <Pressable onPress={()=>selectPool(pool)}><Text style={{fontSize:11,color:theme.accent,fontWeight:'800'}}>{text('Edit quantities','পরিমাণ বদলান')}</Text></Pressable>
+         <Pressable onPress={()=>setPoolDrafts(old=>{const v={...old};delete v[pid];return v})}><Text style={{fontSize:11,color:theme.muted,textDecorationLine:'underline'}}>{text('Remove draft','খসড়া বাদ দিন')}</Text></Pressable>
+       </View>
+      </View>;
+    }):empty('No Pool draft selected.','কোনো পুল খসড়া নেই।','pools','Browse Pools','পুল দেখুন')}
+   </>)}
+   {panel(<>
+    {header('Cart summary','কার্টের সারসংক্ষেপ',direct.length)}
+    <View style={styles.between}><Text style={{fontSize:11,color:theme.muted}}>{text('Direct subtotal','সরাসরি পণ্যের মূল্য')}</Text><Text style={{fontSize:19,fontWeight:'900',color:theme.accent}}>{demoMoney(subtotal)}</Text></View>
+    <Text style={{fontSize:11,color:theme.muted,marginTop:9}}>{text('Delivery fee is determined after address confirmation.','ঠিকানা নিশ্চিতের পর ডেলিভারি চার্জ নির্ধারিত হবে।')}</Text>
+    <Text style={{fontSize:10,color:theme.muted,marginTop:7}}>{text('Pending Group Deal and Pool totals are not payable or included in this amount.','গ্রুপ ডিল ও পুলের অপেক্ষমাণ মূল্য এই মোটে অন্তর্ভুক্ত নয়।')}</Text>
+    <View style={{flexDirection:'row',marginTop:12}}>{button(text('Review direct checkout · Demo','সরাসরি চেকআউট · ডেমো'),()=>setScreen('checkout'),true)}</View>
+    {!direct.length&&<Text style={{fontSize:10,color:theme.muted,marginTop:7}}>{text('Add an Exclusive Product before checkout.','চেকআউটের আগে বিশেষ পণ্য যোগ করুন।')}</Text>}
+   </>)}
+   <Text style={{fontSize:10,color:theme.muted,marginBottom:12}}>{t.notice} {text('No stock is held and no transaction is created.','কোনো স্টক সংরক্ষণ বা লেনদেন হয় না।')}</Text>
+  </>;
+ }
+ function Checkout(){
+  const direct=Object.entries(cart).filter(([id,q])=>q>0&&offers.some(o=>o.id===id&&o.mode==='SOLO'));
+  const text=(en:string,bn:string)=>lang==='bn'?bn:en;
+  if(!direct.length)return <>{title('',text('Checkout preview','চেকআউট ডেমো'))}
+    {panel(<><Text style={{color:theme.muted,fontSize:12,marginBottom:10}}>{text('Add an Exclusive Product to review checkout.','চেকআউট দেখতে আগে বিশেষ পণ্য যোগ করুন।')}</Text><View style={{flexDirection:'row'}}>{button(t.shop,()=>onTab('exclusive'))}</View></>)}
+   </>;
+  const subtotal=cartSubtotal(cart,offers);
+  const section=(en:string,bn:string,children:React.ReactNode)=>panel(<><Text style={{fontSize:14,fontWeight:'900',color:theme.text,marginBottom:9}}>{text(en,bn)}</Text>{children}</>);
+  const option=(name:string,active:boolean,fn:()=>void)=><Pressable accessibilityRole="button" accessibilityState={{selected:active}} onPress={fn} style={{flex:1,borderRadius:10,borderWidth:1,borderColor:active?theme.accent:theme.line,padding:10,backgroundColor:active?theme.soft:theme.field,alignItems:'center'}}><Text style={{color:theme.text,fontSize:11,fontWeight:active?'900':'600'}}>{name}</Text></Pressable>;
+  return <>{title('',text('Review checkout','চেকআউট পর্যালোচনা'))}
+   <Text style={{fontSize:11,color:theme.accent,marginBottom:10}}>{text('1 · Items → 2 · Delivery → 3 · Review','১ · পণ্য → ২ · ডেলিভারি → ৩ · পর্যালোচনা')}</Text>
+   {section('Direct items','সরাসরি পণ্য',<>{direct.map(([id,q])=>{const o=offers.find(o=>o.id===id),p=o&&byId(o.productId);return o&&p?<View key={id} style={[styles.between,{marginBottom:8}]}><Text style={{color:theme.text,fontSize:11,flex:1}}>{lang==='bn'?p.nameBn:p.name} × {demoNum(q)}</Text><Text style={{color:theme.accent,fontWeight:'800'}}>{demoMoney(o.price*q)}</Text></View>:null})}<View style={styles.between}><Text style={{color:theme.muted}}>{text('Product subtotal','পণ্যের মোট')}</Text><Text style={{fontWeight:'900',color:theme.text}}>{demoMoney(subtotal)}</Text></View></>)}
+   {section('Delivery method','ডেলিভারির পদ্ধতি',<><View style={{flexDirection:'row',gap:8}}>{option(text('Home delivery','বাসায় ডেলিভারি'),delivery==='home',()=>setDelivery('home'))}{option(text('Pickup point','সংগ্রহের স্থান'),delivery==='pickup',()=>setDelivery('pickup'))}</View><Text style={{color:theme.muted,fontSize:11,marginTop:9}}>{delivery==='home'?text('Savar DOHS · SAMPLE address. Account, delivery coverage and fees require confirmation.','সাভার ডিওএইচএস · ডেমো ঠিকানা। ডেলিভারি ও চার্জ নিশ্চিত করা হবে।'):text('Pickup point and opening hours will be confirmed.','সংগ্রহের স্থান ও সময় নিশ্চিত করা হবে।')}</Text></>)}
+   {section('Payment method','পেমেন্ট পদ্ধতি',<><View style={{flexDirection:'row',gap:8}}>{option(text('Cash on delivery','ক্যাশ অন ডেলিভারি'),payment==='cod',()=>setPayment('cod'))}{option(text('Online (future)','অনলাইন (পরে)'),payment==='online',()=>setPayment('online'))}</View><Text style={{color:theme.muted,fontSize:11,marginTop:9}}>{text('No money is collected. COD eligibility and any advance delivery fee require confirmation.','এখানে পেমেন্ট হয় না। ক্যাশ অন ডেলিভারি ও আগাম ডেলিভারি চার্জ নিশ্চিত করা হবে।')}</Text></>)}
+   {section('Estimated checkout summary','আনুমানিক চেকআউট',<><View style={styles.between}><Text style={{color:theme.muted}}>{text('Products','পণ্য')}</Text><Text style={{color:theme.text,fontWeight:'900'}}>{demoMoney(subtotal)}</Text></View><View style={[styles.between,{marginTop:8}]}><Text style={{color:theme.muted}}>{text('Delivery fee','ডেলিভারি চার্জ')}</Text><Text style={{color:theme.text}}>{text('Not yet quoted','নির্ধারিত নয়')}</Text></View><View style={[styles.between,{marginTop:8}]}><Text style={{color:theme.muted}}>{text('Amount payable','পরিশোধযোগ্য মূল্য')}</Text><Text style={{color:theme.accent,fontWeight:'900'}}>{text('Awaiting final quote','চূড়ান্ত দাম বাকি')}</Text></View><Text style={{color:theme.muted,fontSize:10,marginTop:12}}>{text('Group Deals and Pools are excluded until separately qualified. This checkout cannot place an order.','গ্রুপ ডিল ও পুল যোগ হবে না যতক্ষণ না আলাদাভাবে অনুমোদিত হয়। এখানে কোনো অর্ডার দেওয়া যায় না।')}</Text></>)}
+   <View style={{flexDirection:'row'}}>{button(text('Check readiness · Demo only','প্রস্তুতি দেখুন · ডেমো'),notify)}</View>
+  </>;
+ }
  function Account(){return <>
   {title('2TBR ACCOUNT',t.account)}{panel(<><Text style={{color:theme.text,fontWeight:'800',fontSize:18}}>Welcome to 2TBR</Text><Text style={{color:theme.muted,marginTop:3}}>Savar DOHS · {demo?'Demo account':'Sign in to view private data'}</Text></>)}
   <Savings/>
@@ -446,6 +540,7 @@ function Shop(){
  case 'exclusive':return <>{title('CURATED FOR YOU',t.exclusive)}<View style={styles.twoCol}>{solo.map(o=><ExclusiveCard key={o.id} offer={o}/>)}</View></>;
  case 'pools':return <>{title('BUY TOGETHER',t.pools)}{pools.map(p=><PoolCard key={p.id} pool={p}/>)}</>;
  case 'cart':return <Cart/>;
+ case 'checkout':return <Checkout/>;
  case 'account':return <Account/>;
  case 'orders':return <Orders/>;
  case 'savings':return <>{title('VERIFIED REPORT',t.savings)}<Savings/>{panel(<Text style={{color:theme.muted}}>{demo?'All values on this screen are illustrative.':t.notEarned} Verified orders only; this is not a withdrawable cash balance.</Text>)}</>;
@@ -482,7 +577,7 @@ function Shop(){
   <View style={[styles.bottom,{backgroundColor:theme.card,borderColor:theme.line}]}>
    {tabs.map(([tab,icon])=>{const active=screen===tab;const label=tab==='exclusive'?t.shop:t[tab==='pools'?'pool':tab==='deals'?'deals':tab==='cart'?'cart':'home'];
     return <Pressable key={tab} accessibilityRole="tab" accessibilityState={{selected:active}} onPress={()=>onTab(tab)} style={{flex:1,alignItems:'center',gap:2,paddingVertical:6,backgroundColor:active?theme.soft:'transparent',borderRadius:12}}>
-     <View><Ionicons name={icon} size={23} color={active?'#08717d':theme.text}/>{tab==='cart'&&cartLineCount(cart)>0&&<View style={styles.badge}><Text style={styles.badgeText}>{cartLineCount(cart)>99?'99+':cartLineCount(cart)}</Text></View>}</View>
+     <View><Ionicons name={icon} size={23} color={active?'#08717d':theme.text}/>{tab==='cart'&&totalBadge>0&&<View style={styles.badge}><Text style={styles.badgeText}{totalBadge>99?'99+':demoNum(totalBadge)}</Text></View>}</View>
      <Text style={{fontSize:small?9:10,fontWeight:active?'900':'600',color:active?theme.brandText:theme.text}}>{label}</Text>
     </Pressable>
    })}
