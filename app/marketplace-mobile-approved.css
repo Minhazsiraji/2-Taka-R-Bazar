@@ -452,3 +452,17 @@ body.site-glass-root .market-information-footer .market-footer-contact>a{overflo
  body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card{min-height:90px;padding:10px 11px}
 }
+
+/* The previously locked tablet header had a minimum 74px row plus a second
+   search row. Bound the new unified tablet header to the 128px geometry gate. */
+@media(min-width:768px) and (max-width:790px){
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header>.market-header-inner{
+  min-height:0!important;padding:5px 0!important;row-gap:5px!important;
+ }
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-header-search{
+  min-height:38px!important;height:38px!important;
+ }
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header .market-header-search input{
+  height:36px!important;
+ }
+}
