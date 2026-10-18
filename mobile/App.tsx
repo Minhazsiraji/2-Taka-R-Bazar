@@ -87,10 +87,10 @@ function Shop(){
  </Pressable>;
  function Savings({home=false}:{home?:boolean}={}){return panel(<><View style={styles.between}><Text style={{fontSize:16,fontWeight:'900',color:theme.text}}>▥  {t.savings}</Text><Pressable onPress={()=>setScreen('savings')}><Text style={{color:theme.accent,fontSize:12}}>{t.viewReport} ›</Text></Pressable></View>
   <View style={styles.savingsFour}>
-   {savingTile(t.thisMonth,demo?money(demoSavings.thisMonth):'—','calendar-outline','#e2faed')}
-   {savingTile(t.lastMonth,demo?money(demoSavings.lastMonth):'—','time-outline','#e8f2fe')}
-   {savingTile(t.lifetime,demo?money(demoSavings.lifetime):'—','star-outline','#fff7df')}
-   {savingTile(t.communityTotal,demo?money(demoSavings.community):'—','people-outline','#f2e8ff')}
+   {savingTile(t.thisMonth,demo?money(demoSavings.thisMonth):'—','calendar-outline','#E2F9F6')}
+   {savingTile(t.lastMonth,demo?money(demoSavings.lastMonth):'—','time-outline','#EAF6F8')}
+   {savingTile(t.lifetime,demo?money(demoSavings.lifetime):'—','star-outline','#F0FBF8')}
+   {savingTile(t.communityTotal,demo?money(demoSavings.community):'—','people-outline','#E8F7F6')}
   </View>{!home&&<Text style={{color:theme.muted,fontSize:10,marginTop:7}}>{demo?'Illustrative only · Verified savings after eligible completion.':t.notEarned}</Text>}
  </>)}
  function DealCard({offer}:{offer:Offer}){
@@ -366,7 +366,7 @@ function Shop(){
    {tabs.map(([tab,icon])=>{const active=screen===tab;const label=tab==='exclusive'?t.shop:t[tab==='pools'?'pool':tab==='deals'?'deals':tab==='cart'?'cart':'home'];
     return <Pressable key={tab} accessibilityRole="tab" accessibilityState={{selected:active}} onPress={()=>onTab(tab)} style={{flex:1,alignItems:'center',gap:2,paddingVertical:6,backgroundColor:active?theme.soft:'transparent',borderRadius:12}}>
      <View><Ionicons name={icon} size={23} color={active?'#08717d':theme.text}/>{tab==='cart'&&cartLineCount(cart)>0&&<View style={styles.badge}><Text style={styles.badgeText}>{cartLineCount(cart)>99?'99+':cartLineCount(cart)}</Text></View>}</View>
-     <Text style={{fontSize:small?9:10,fontWeight:active?'900':'600',color:active?'#08717d':theme.text}}>{label}</Text>
+     <Text style={{fontSize:small?9:10,fontWeight:active?'900':'600',color:active?theme.brandText:theme.text}}>{label}</Text>
     </Pressable>
    })}
   </View>
