@@ -111,3 +111,18 @@ test('Pool product selections, total and retail navigation are isolated from app
  assert.ok(home.includes('<Hero/>'));
  assert.ok(home.includes('<Savings home/>'));
 });
+
+test('Pool price and date strings honor the Bangla language selector',()=>{
+ const pool=app.slice(app.indexOf('function PoolDetails()'),app.indexOf('function Cart()'));
+ for(const token of [
+   "new Intl.NumberFormat(lang==='bn'?'bn-BD':'en-US'",
+   "new Intl.DateTimeFormat(lang==='bn'?'bn-BD':'en-GB'",
+   "const cash=(v:number)=>'৳'+n(v)",
+   "const unit=(v:string)=>lang==='bn'",
+   "paddingBottom:screen==='pool'?110:30",
+   "fontSize:13,fontWeight:'900',color:theme.text,flex:1"
+ ])assert.ok(app.includes(token),token);
+ assert.ok(pool.includes('cash('));
+ assert.ok(pool.includes('n(pool.participants)'));
+ assert.ok(pool.includes('{endDate()}'));
+});
