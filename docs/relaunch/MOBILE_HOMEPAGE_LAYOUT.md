@@ -23,3 +23,38 @@
 ## Relaunch mapping
 
 This design is the **approved UI shell**, not authorization to turn on the unfinished payment engine. During the clean v2 relaunch, route action links must be rebound to the single new `store_*` order/cart backend; remove historical “pilot booking” links only after that replacement has passed real-order UAT. Do not merge this long-running draft PR as a complete Production relaunch.
+
+## Superseding owner approval — unified responsive homepage, 18 October 2026
+
+The final approved source is `Approved App Dashboard(1).png` from the owner.
+This supersedes the earlier **mobile-only** handling above without changing the
+original logo, official slogans or approved Version 1 color system.
+
+One visible `MobileMarketplaceHome` component supplies phones, tablets and
+desktops. The former `.market-legacy-home` remains hidden as a temporary
+regression fallback until isolated UAT confirms that it can safely be deleted.
+Never turn the old desktop homepage back on as a release workaround.
+
+Required order: compact shared brand/header and search, community selector,
+approved teal grocery carousel, **Your Savings Summary**, Group Deals, Exclusive
+Products, Community Pools, compact footer and fixed 5-icon phone navigation.
+
+Savings source: `store_home_savings()` is read-only, customer-scoped and
+**exists only in the isolated draft relaunch SQL until separately qualified**.
+It checks completed status + verified payment with matching receipt, immutable
+at-purchase reference price and remaining non-refunded quantity. Guest,
+missing-RPC, and no-qualifying-data states must not imply balances from mockups.
+Community aggregation is **unavailable**, not a fabricated 0, until each order
+has verified community attribution and a qualifying production metric.
+
+Phones use 2x2 savings cards and 2-column exclusive cards; tablets/desktops
+show 4 savings cards in one row and adapt product cards 3-4 columns. Responsive
+breakpoints are visual expansions of the same UI, not independent designs.
+
+Full SEO catalog pagination is available on `/products` instead of displaying
+a duplicate legacy catalog inside the approved homepage. Existing product
+details and login/cart controls stay intact.
+
+**Release rule:** Draft PR #122 must not be merged or used for Production
+cutover because storefront v2 ordering, refunds, customer identity migration,
+backup/restore and staff operations are not yet fully qualified.
