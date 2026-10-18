@@ -24,6 +24,7 @@ import './site-mobile-dock.css'
 import './site-customer-shell.css'
 import './site-product-management.css'
 import './marketplace-review-mobile-fix.css'
+import './marketplace-mobile-approved.css'
 import { PwaRegister } from '@/components/pwa-register'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE_EN, SITE_URL } from '@/lib/site'
 
