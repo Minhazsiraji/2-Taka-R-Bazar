@@ -55,3 +55,19 @@ test('unpriced SEO-only products remain read-only and saved login, footer and ca
  assert.match(read('lib/site.ts'),/Smart shopping\. Real savings!/)
  assert.match(read('lib/site.ts'),/একসাথে কিনি, কম দামে পাই!/)
 })
+
+
+test('18 October owner mobile screenshots lock the compact four tile and full width CTA layout',()=>{
+ assert.match(home,/className="mhome-savings-panel"/)
+ assert.match(home,/className="mhome-savings-icon"/)
+ assert.match(home,/title=\{t\('Your savings'/)
+ assert.match(css,/@media\(max-width:767px\)\{\s*body\.site-glass-root main\.public-marketplace-flat \.mhome \.mhome-savings-grid\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)\}/)
+ assert.doesNotMatch(home,/number="0[1-4]" eyebrow=/)
+ assert.match(home,/className="mhome-exclusive-actions"/)
+ assert.match(css,/\.mhome-exclusive-actions[\s\S]*?position:absolute/)
+ assert.match(home,/className="mhome-pool-bottom"/)
+ assert.match(home,/endsLabel\(d\.closes_at\)/)
+ assert.match(home,/endsLabel\(closesAt\)/)
+ assert.match(home,/if\(o\.offer_kind!=='SOLO'\|\|unique\.has\(o\.product_id\)\)continue/)
+ assert.doesNotMatch(home,/\?\?localOffers\.find\(o=>o\.product_id===p\.product_id\)/)
+})
