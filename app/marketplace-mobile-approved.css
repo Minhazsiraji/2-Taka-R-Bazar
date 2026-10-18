@@ -490,3 +490,152 @@ html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome
  .mhome-exclusive-copy h3,.mhome-pool-copy h3,.mhome-deal-copy h3){
  color:#f6fbff!important;
 }
+
+
+/* 2026-10-18 owner markup: match third/fourth screenshots on phones.
+   The approved mobile master expands to tablets/desktop; no fake inventory or savings. */
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-eyebrow{display:none!important}
+body.site-glass-root main.public-marketplace-flat .mhome :is(.mhome-section-heading,.mhome-savings-heading) h2{margin-top:0}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-section{padding-top:14px!important}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-section-heading{margin-bottom:8px}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings{padding-top:9px!important}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-panel{
+ padding:12px 10px 10px;border-radius:17px;
+ background:linear-gradient(140deg,rgba(255,255,255,.9),rgba(250,247,254,.95));
+ border:1px solid rgba(255,255,255,.96);
+ box-shadow:0 8px 18px rgba(33,46,73,.085)
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-heading{margin:0 1px 9px}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-heading h2{font-size:clamp(18px,4.7vw,25px)!important}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-heading .mhome-muted{display:none}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-grid{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card{
+ align-items:flex-start;justify-content:center;min-width:0;min-height:91px;
+ padding:8px 6px;border:1px solid rgba(255,255,255,.92);
+ border-radius:11px;box-shadow:none;overflow:hidden
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card.is-month{background:#e5f8f3}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card.is-previous{background:#e8f4fc}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card.is-lifetime{background:#fff8df}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card.is-community{background:#f1eafb}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-icon{
+ display:block;color:#007f8b;font-size:20px;line-height:1.05;margin-bottom:4px;font-weight:900
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-label{
+ font-size:clamp(9px,2.55vw,12px);font-weight:900;line-height:1.1;white-space:normal
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-value{
+ font-size:clamp(13px,3.45vw,20px);line-height:1.12;margin:5px 0 0;
+ letter-spacing:-.055em;overflow-wrap:anywhere
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-unavailable{
+ font-size:9px;line-height:1.2;color:#5b6682
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-foot{display:none}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-note{
+ position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);
+ white-space:nowrap;margin:0!important;padding:0
+}
+/* One real listing per product, paired image + details and full-width CTA. */
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-card{
+ position:relative;min-height:184px;padding:6px 6px 40px;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:7px
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-image{min-height:130px;max-height:160px;height:100%}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-copy{min-height:130px;gap:2px}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-copy h3{
+ font-size:clamp(11px,2.9vw,15px)!important;max-height:3.5em
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-price strong{
+ font-size:clamp(13px,3.65vw,20px);line-height:1.08
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-availability{
+ display:block;margin-top:auto;font-size:clamp(9px,2.15vw,11px);line-height:1.2;color:#4f7690
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-actions,
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-copy>form,
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-copy>a.mhome-cart-btn{
+ position:absolute;left:6px;right:6px;bottom:6px;min-width:0;margin:0
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-actions form,
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-actions>a{width:100%}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-cart-btn{
+ width:100%;min-height:28px!important;padding:6px 6px;line-height:1.1;
+ border-radius:8px;font-size:clamp(10px,2.6vw,12px)!important
+}
+/* Reference screenshot: compact pool rows with three selected thumbnails,
+   actual household progress, status badge and a separate Explore action. */
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-card{
+ grid-template-columns:minmax(0,33%) minmax(0,67%);min-height:116px;padding:7px;gap:7px
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-photos{height:95px;align-items:stretch}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-photos>a{height:100%;width:33.333%}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-copy{padding:1px 4px 1px 0;gap:2px}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-top span{
+ padding:3px 5px;font-size:clamp(8px,2vw,10px)
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-top .mhome-pool-status{
+ background:#d6f9e9;color:#00836b
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-copy h3{
+ font-size:clamp(12px,3vw,17px)!important;margin-top:1px
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-meta{
+ display:flex;justify-content:space-between;flex-wrap:wrap;gap:1px 6px;
+ color:#54829d;font-size:clamp(9px,2.15vw,12px)
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-bottom{
+ display:flex;align-items:center;gap:6px;margin-top:auto
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-bottom .mhome-progress{
+ flex:1 1 45%;width:auto;max-width:none;height:6px;margin:0
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-bottom .mhome-pool-link{
+ flex:0 0 auto;align-self:center;min-height:26px;margin:0;padding:5px 9px
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-progress-caption .mhome-joined-stat{
+ display:inline-flex;align-items:center;gap:2px
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-clock-icon{font-size:16px;color:#0088cf}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-time-stat{white-space:nowrap;color:#0c7dab}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-color-people{font-size:14px}
+@media(max-width:767px){
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card{min-height:83px;padding:7px 5px}
+}
+@media(max-width:355px){
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-panel{padding:10px 6px}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-grid{gap:4px}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-label{font-size:8px}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-card{gap:4px;padding:5px 5px 38px}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-copy h3{font-size:10px!important}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-card{grid-template-columns:minmax(0,32%) minmax(0,68%);gap:5px}
+}
+@media(min-width:768px){
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-panel{padding:20px}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-grid{gap:13px}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card{min-height:110px;padding:14px}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-value{font-size:clamp(21px,2.6vw,30px)}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-card{min-height:207px;padding:10px 10px 53px}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-copy{min-height:139px}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-actions,
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-copy>form,
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-copy>a.mhome-cart-btn{
+  left:10px;right:10px;bottom:10px
+ }
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-card{min-height:145px}
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-pool-photos{height:118px}
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-panel{
+ background:linear-gradient(135deg,#1b2e40,#233244);border-color:#3d5968
+}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card.is-month{background:#153e44}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card.is-previous{background:#233e50}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card.is-lifetime{background:#493b29}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-card.is-community{background:#3c2a48}
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-icon,
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome .mhome-savings-unavailable,
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome .mhome-exclusive-availability,
+html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat .mhome .mhome-time-stat{color:#91eaf0}
