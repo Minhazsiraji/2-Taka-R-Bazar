@@ -72,3 +72,22 @@ test('Home keeps approved headings without numbered eyebrow labels or extra demo
  assert.ok(app.includes('{!home&&<Text'));
  assert.ok(home.includes("pill(t.demo,true)"));
 });
+
+test('Group Deal detail opens a distinct retail-only product page',()=>{
+ assert.match(app,/function GroupDealDetails/);
+ assert.match(app,/function RetailDetails/);
+ assert.match(app,/Product Details →/);
+ assert.match(app,/onPress=\{\(\)=>setScreen\('retail'\)\}/);
+ assert.match(app,/case 'retail':return <RetailDetails\/>/);
+ assert.match(app,/Retail reference only. Group Deal and Pool tier prices are not displayed/);
+});
+test('Group Deal price tier display is demo-only; Home remains locked',()=>{
+ assert.match(app,/if\(!demo\|\|offer.mode!=='GROUP_DEAL'\)return null/);
+ assert.match(app,/Current qualifying tier · Price not final/);
+ assert.match(app,/Potential saving:/);
+ assert.match(app,/Next tier at/);
+ assert.match(app,/height=\{small\?330:360\}/);
+ const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
+ assert.match(home,/<Hero\/>/);
+ assert.match(home,/<Savings home\/>/);
+});
