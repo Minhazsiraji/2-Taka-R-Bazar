@@ -11,6 +11,7 @@ import {browseCatalogOffers} from '@/lib/catalog-discovery.mjs'
 import {PublicMarketplaceLower} from '@/components/public-marketplace-lower'
 import {CommunityPicker} from '@/components/community-picker'
 import {PublicHeader} from '@/components/public-header'
+import {MobileMarketplaceHome} from '@/components/mobile-marketplace-home'
 import {PublicFooter} from '@/components/public-footer'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
@@ -119,6 +120,10 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   <PublicHeader storefront actionHref={authenticated?'/account':'/login'} actionLabel={authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Sign in','লগইন')}
    searchValue={search} onSearchChange={setSearch}
    language={language} onLanguageChange={setLanguage}/>
+  <MobileMarketplaceHome areas={areas} selectedArea={area} onChooseArea={selectArea}
+   onDetectArea={useLocation} detectingArea={gpsBusy} offers={offers}
+   products={featured} pools={heroPools} language={language} demoMode={demoMode} search={search}/>
+  <div className="market-legacy-home">
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">
    <div className="market-location-panel">
     <div className="market-location-intro"><strong>📍 {t('Find savings near your community','আপনার এলাকায় কম দামের অফার খুঁজুন')}</strong>
@@ -208,6 +213,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   </section>
   <PublishedProductsSection initial={publishedProducts} language={language}/>
   <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={selectArea} language={language} demoMode={demoMode}/>
+  </div>
   <PublicFooter storefront language={language}/>
  </>
 }
