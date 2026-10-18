@@ -13,7 +13,7 @@ test('direct subtotal cannot include pending Group Deal or Pool offers',()=>{
  assert.equal(cartLineCount({solo:2}),1);
 });
 test('customer cart has three clearly separated lanes',()=>{
- for(const token of ['Group Deal requests · pending','Community Pool selections · pending','Direct / Exclusive · ready to order',
+ for(const token of ['Group Deal requests · Pending','Community Pool selections · pending','Direct / Exclusive · ready to order',
   'const [groupDrafts,setGroupDrafts]','const [poolDrafts,setPoolDrafts]',
   'const pendingLines=',"cartSubtotal(cart,offers)",'totalBadge>0'])assert.ok(app.includes(token),token);
 });
