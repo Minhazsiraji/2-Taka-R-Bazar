@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import {requireAdmin} from '@/lib/auth'
 import {AdminShell} from '@/components/admin-shell'
-import {staffUpdatePilotBooking} from '@/app/actions/pilot-booking'
+import {staffUpdatePilotBooking,staffSendPilotServiceUpdate} from '@/app/actions/pilot-booking'
 
 export const dynamic='force-dynamic'
 type Props={searchParams:Promise<{notice?:string;error?:string}>}
@@ -43,7 +43,7 @@ export default async function PilotBookingInbox({searchParams}:Props){
     {b.customer_note&&<p className="mt-1 text-sm"><b>Customer note:</b> {b.customer_note}</p>}
     {b.status==='confirmed'&&<p className="mt-2 rounded-xl border p-3 text-sm">Agreed unit price: ৳{b.confirmed_unit_price} · Delivery: ৳{b.confirmed_delivery_fee} · Total: ৳{Number(b.confirmed_unit_price)*b.quantity+Number(b.confirmed_delivery_fee)}</p>}
     {b.staff_note&&<p className="muted mt-2 text-sm"><b>Last staff note:</b> {b.staff_note}</p>}
-    {!['cancelled'].includes(b.status)&&<form action={staffUpdatePilotBooking} className="mt-4 grid gap-3 rounded-xl border p-3">
+    {!['cancelled','confirmed'].includes(b.status)&&<form action={staffUpdatePilotBooking} className="mt-4 grid gap-3 rounded-xl border p-3">
      <input type="hidden" name="booking_id" value={b.id}/>
      <div className="grid gap-3 sm:grid-cols-2">
       <label className="grid gap-1 text-sm font-bold">Agreed price per unit (৳)
@@ -59,6 +59,23 @@ export default async function PilotBookingInbox({searchParams}:Props){
       <button type="submit" className="btn-secondary" name="status" value="cancelled">Cancel booking</button>
      </div>
     </form>}
+    {b.status==='confirmed'&&<div className="mt-4 grid gap-3 rounded-xl border border-teal-200 p-3">
+      <p className="text-sm font-bold">Confirm pickup point & time / সংগ্রহের স্থান ও সময়</p>
+      <p className="muted text-sm">Send a customer-visible update without changing the agreed price, booking status or Finance records.</p>
+      <form action={staffSendPilotServiceUpdate} className="grid gap-3">
+       <input type="hidden" name="booking_id" value={b.id}/>
+       <label className="grid gap-1 text-sm font-semibold">Pickup location, scheduled time or delivery instructions
+        <textarea required minLength={5} maxLength={500} className="input min-h-24" name="staff_note" defaultValue={b.staff_note??''} placeholder="Example: Collect at the agreed community point tomorrow at 6:00 PM. Please bring your booking reference."/>
+       </label>
+       <button type="submit" className="btn-primary">Save instructions & notify customer</button>
+      </form>
+      <form action={staffUpdatePilotBooking}>
+       <input type="hidden" name="booking_id" value={b.id}/>
+       <input type="hidden" name="status" value="cancelled"/>
+       <input type="hidden" name="staff_note" value="Booking cancelled by staff; please contact support."/>
+       <button type="submit" className="btn-secondary">Cancel confirmed booking</button>
+      </form>
+    </div>}
    </article>)}</div>}
  </div></AdminShell>
 }
