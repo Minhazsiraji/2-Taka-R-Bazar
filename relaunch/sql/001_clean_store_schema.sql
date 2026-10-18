@@ -421,6 +421,10 @@ grant execute on function public.store_is_staff(),public.store_is_super_admin(),
  public.store_mark_payment_collected(uuid,text,text),
  public.store_verify_payment(uuid) to authenticated;
 
+-- Anonymous browsing evaluates a published-row RLS predicate using this
+-- harmless current-session boolean helper; never grants staff access itself.
+grant execute on function public.store_is_staff() to anon;
+
 -- Super Admin bootstrap is deliberately NOT automated: run a controlled,
 -- reviewed INSERT for the existing owner's UUID only in the isolated target.
 -- Example (do not execute verbatim):
