@@ -105,12 +105,12 @@ select is((select production_purchases_enabled from private.commerce_configurati
 -- Customer-facing arrangements can be corrected after confirmation, without
 -- modifying the already agreed price or creating financial transactions.
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000008801',true);
-select throws_like($select public.pilot_staff_send_service_update(
- (select id from pilot_ids),'Pickup at community collection point at 6 PM')$,
+select throws_like($$select public.pilot_staff_send_service_update(
+ (select id from pilot_ids),'Pickup at community collection point at 6 PM')$$,
  '%Admin access required%', 'Customer cannot alter service instructions');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000008803',true);
-select throws_like($select public.pilot_staff_send_service_update(
- (select id from pilot_ids),'')$,
+select throws_like($$select public.pilot_staff_send_service_update(
+ (select id from pilot_ids),'')$$,
  '%between 5 and 500 characters%', 'Empty pickup message rejected');
 select is(public.pilot_staff_send_service_update(
  (select id from pilot_ids),'Collect at community point tomorrow 6 PM'),
@@ -127,8 +127,8 @@ select is((select count(*)::integer from public.pilot_booking_events
 select is((select count(*)::integer from public.notifications
  where kind='pilot_booking' and user_id='00000000-0000-4000-8000-000000008801'
  and href='/pilot-bookings'),2,'Customer gets a second in-app notification');
-select throws_like($select public.pilot_staff_send_service_update(
- (select id from pilot_ids),'Collect at community point tomorrow 6 PM')$,
+select throws_like($$select public.pilot_staff_send_service_update(
+ (select id from pilot_ids),'Collect at community point tomorrow 6 PM')$$,
  '%already has this update%', 'Duplicate service update rejected');
 select is((select count(*)::integer from public.commerce_orders where not is_synthetic),0,
  'Updated customer instructions do not create a Commerce order');
