@@ -51,10 +51,10 @@ function ProductImage({url,title}:{url:string|null|undefined;title:string}){
  return url&&!failed?<img src={url} loading="lazy" alt={title} onError={()=>setFailed(true)}/>:
   <span className="mhome-image-empty" aria-label={title}>2TBR<span>Photo coming soon</span></span>
 }
-function SectionHeading({number,eyebrow,title,description,href,viewText}:{
- number:string;eyebrow:string;title:string;description:string;href:string;viewText:string
+function SectionHeading({number,eyebrow,title,description,href,viewText,savings=false}:{
+ number:string;eyebrow:string;title:string;description:string;href:string;viewText:string;savings?:boolean
 }){
- return <div className="mhome-section-heading">
+ return <div className={savings?'mhome-savings-heading':'mhome-section-heading'}>
   <div><p className="mhome-eyebrow">{number} · {eyebrow}</p><h2>{title}</h2><p className="mhome-muted">{description}</p></div>
   <Link className="mhome-view-all" href={href}>{viewText} <span aria-hidden="true">›</span></Link>
  </div>
@@ -144,7 +144,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
   </section>
 
   <section className="mhome-section mhome-savings" id="mobile-savings" aria-label={t('Your Savings Summary','আপনার সাশ্রয়ের হিসাব')}>
-   <SectionHeading number="01" eyebrow={t('Verified purchase savings','যাচাইকৃত কেনাকাটার সাশ্রয়')}
+   <SectionHeading savings number="01" eyebrow={t('Verified purchase savings','যাচাইকৃত কেনাকাটার সাশ্রয়')}
     title={t('Your Savings Summary','আপনার সাশ্রয়ের হিসাব')}
     description={t('Only completed, paid and eligible orders count.','শুধু সম্পন্ন ও যাচাইকৃত কেনাকাটা গণনা করা হয়।')}
     href="/account/orders" viewText={t('View details','বিস্তারিত দেখুন')}/>
