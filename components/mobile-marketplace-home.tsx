@@ -202,8 +202,8 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
        <input type="hidden" name="offer_id" value={p.commerceId!}/>
        <input type="hidden" name="quantity" value="1"/>
        <button className="mhome-cart-btn" type="submit">🛒 {t('Add to cart','কার্টে যোগ')}</button></form>:
-       <Link className="mhome-cart-btn" href={p.demo?href:'/pilot-book?product='+p.id}>
-        {p.demo?t('Preview product','পণ্য দেখুন'):t('Book product','পণ্য বুক করুন')} <span aria-hidden="true">→</span></Link>}
+       <Link className="mhome-cart-btn" href={p.demo||p.href?href:'/pilot-book?product='+p.id}>
+        {p.demo?t('Preview product','পণ্য দেখুন'):p.href?t('View product details','পণ্যের বিস্তারিত'):t('Book product','পণ্য বুক করুন')} <span aria-hidden="true">→</span></Link>}
      </div>
     </article>})}</div>:
     <div className="mhome-empty">{t('Products will appear as soon as they are published.','পণ্য প্রকাশিত হলে এখানে দেখা যাবে।')}</div>}
