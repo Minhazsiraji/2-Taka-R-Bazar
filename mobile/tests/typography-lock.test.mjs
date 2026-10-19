@@ -59,3 +59,23 @@ test('Home Savings tiles are compact in the existing four-card row only',()=>{
    assert.ok(app.includes('savingTile('+token),token);
  }
 });
+
+test('Approved V2.3 hero is fixed-height and has exactly the bottom carousel controls',()=>{
+ const hero=app.slice(app.indexOf('const Hero=()=>'),app.indexOf('function Home(){'));
+ assert.ok(hero.includes('✦ SMART SHOPPING. REAL SAVINGS!'));
+ assert.ok(hero.includes('numberOfLines={1} adjustsFontSizeToFit'));
+ assert.ok(app.includes('hero:{height:174,minHeight:174,maxHeight:174'));
+ assert.ok(hero.includes('setSlide(v=>(v+3)%4)'));
+ assert.ok(hero.includes('setSlide(v=>(v+1)%4)'));
+ assert.ok(hero.includes("accessibilityLabel={'Slide '+(i+1)}"));
+ assert.ok(hero.includes("position:'absolute',left:13,bottom:30"));
+ assert.ok(hero.includes('onPress={()=>onTab(\'deals\')}'));
+ assert.ok(hero.includes('heroMessages[slide][lang]'));
+ assert.ok(!hero.includes('hero-edge-next'));
+ assert.ok(app.includes('EXPO_PUBLIC_APPROVED_HERO_IMAGE_URL'));
+});
+test('Hero image never silently claims production-parity without an approved HTTPS source',()=>{
+ assert.ok(app.includes("APPROVED_HERO_URL.startsWith('https://')?APPROVED_HERO_URL:null"));
+ assert.ok(app.includes('approvedHeroImage?'));
+ assert.ok(app.includes('<NonperishableCart style='));
+});
