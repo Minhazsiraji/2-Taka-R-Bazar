@@ -188,7 +188,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   const titleMax=small?'62%':'60%';
   return <View style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
    {approvedHeroImage?
-    <Image accessibilityIgnoresInvertColors source={{uri:approvedHeroImage}} resizeMode="cover" style={StyleSheet.absoluteFillObject}/>:
+    <Image accessibilityIgnoresInvertColors source={{uri:approvedHeroImage}} resizeMode="cover" style={{position:'absolute',top:0,right:0,bottom:0,left:0,width:'100%',height:'100%'}}/>:
     <NonperishableCart style={{position:'absolute',right:-3,top:1,width:'51%',height:'97%',opacity:.98}}/>}
    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}
     style={{color:brandV1.accentPale,fontWeight:'600',fontSize:small?8:8.8,letterSpacing:small?.55:.85,marginBottom:4}}>
