@@ -1,6 +1,6 @@
 # 2TBR Expo Account Linking — Required Setup
 
-Status (2026-10-19): **Expo account owner verified from screenshot and account URL as `minhazsiraji`; Expo 2TBR project link and UUID have not yet been supplied**. No Expo project has been created or linked through this PR. No OTA builds or updates have been published.
+Status (2026-10-19): **Expo account owner verified as `minhazsiraji`; no independently verified 2TBR Expo project UUID yet.** Preview dependency and fail-closed setup checks have been prepared in Draft PR #123, but no cloud link, Expo build or OTA update has been performed. Current installed Android APK is not OTA-enabled.
 
 ## What we have done safely
 
@@ -17,7 +17,7 @@ Do **not** share passwords, Expo access tokens or keys in chat.
 ## After the project account/project UUID is known
 
 1. Associate Expo app slug `2tbr-mobile` with the correct owner/project UUID using `eas init` and review the actual project association. No guessed IDs or owner values.
-2. Install the Expo SDK 57-compatible `expo-updates` package with `npx expo install expo-updates`, persist the compatible version in `mobile/package.json`, and use `eas update:configure` to generate `runtimeVersion`, `updates.url` and `extra.eas.projectId`.
+2. `expo-updates` is pinned to Expo SDK 57's `~57.0.22` range, and `runtimeVersion.policy=appVersion` is prepared. Run `npx expo install --check`; use `eas update:configure` to add the actual `updates.url` and `extra.eas.projectId`. Review its diff and confirm it did not introduce a production channel.
 3. Keep preview environment settings **EXPO_PUBLIC_DEMO_MODE=true**, **EXPO_PUBLIC_NATIVE_AUTH_ENABLED=false**, **EXPO_PUBLIC_NATIVE_GOOGLE_ENABLED=false**; never package secret or service-role credentials into EXPO_PUBLIC.
 4. Use the exact app profile in `mobile/eas.json`. EAS Build will produce an OTA-enabled internal Android test binary for a one-time installation. Apple provisioning is a separate iOS gate.
 5. Restrict publishing to manually authorized `2tbr-internal-preview` channel. Do not auto-publish to production or enable checkout. Publishing should use `eas update --channel 2tbr-internal-preview --environment preview --message <reviewed-message>`.
@@ -33,3 +33,36 @@ For laptop without admin permission, put a narrowly scoped Expo token **only in 
 - https://docs.expo.dev/eas-update/deployment/
 - https://docs.expo.dev/accounts/programmatic-access/
 - https://docs.expo.dev/build/internal-distribution/
+
+## Fast, safe activation checklist (from this Draft branch)
+
+Only perform these commands after signing in to Expo as **minhazsiraji** on your own machine or authorized cloud workspace. Start from the repository root:
+
+```bash
+git checkout feat/mobile-expo-locked-home-v1
+cd mobile
+npm install
+npx eas-cli@latest whoami                  # MUST print minhazsiraji
+npx eas-cli@latest init --account minhazsiraji --non-interactive
+npx eas-cli@latest project:info              # confirm owner minhazsiraji, slug 2tbr-mobile
+npx eas-cli@latest update:configure --environment preview
+npx expo install --check
+```
+
+Review the generated `app.json`: `extra.eas.projectId` is the actual **2TBR** UUID and `updates.url` equals `https://u.expo.dev/<same UUID>`. If either points to another Expo project, **stop** and correct the association. Commit only the validated config. Never commit credentials. The existing `velunee` project must not be modified.
+
+For preflight checks, set the three DEMO runner variables explicitly to `true`, `false`, `false` respectively and run `npm run eas:preview:verify`. It must **fail** before linking the real UUID. This is intentional, not a broken mobile app.
+
+After account linking, checks and owner review, create an internal test APK with:
+
+```bash
+npx eas-cli@latest build --platform android --profile 2tbr-internal-preview
+```
+
+Install the resulting APK once on the test Android phone. Changes to JavaScript/styles/assets that match this binary's runtime can then be published **only with owner review** using:
+
+```bash
+npx eas-cli@latest update --channel 2tbr-internal-preview --environment preview --message "Reviewed mobile UI correction"
+```
+
+Before either build or update, rerun all tests and the preview preflight, then record the exact commit SHA, build/update group ID and device UAT results. No automatic publishing, no production channels, no payment/checkout activation. A changed native module, native permissions, SDK or native configuration requires a new install and version increment. EAS Free-plan limits apply. iOS needs separate Apple credentials/signing.

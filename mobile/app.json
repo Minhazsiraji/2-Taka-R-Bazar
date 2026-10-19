@@ -19,6 +19,9 @@
     "plugins": [
       "expo-secure-store"
     ],
-    "owner": "minhazsiraji"
+    "owner": "minhazsiraji",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }
