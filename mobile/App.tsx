@@ -21,6 +21,8 @@ type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
 type Screen=Tab|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
+const APPROVED_HERO_URL=(process.env.EXPO_PUBLIC_APPROVED_HERO_IMAGE_URL||'').trim();
+const approvedHeroImage=APPROVED_HERO_URL.startsWith('https://')?APPROVED_HERO_URL:null;
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
 // Shared V1 colors are managed in src/theme.ts; do not define screen-specific palettes here.
 const money=(n:number)=>'৳'+Math.round(n).toLocaleString('en-US');
@@ -180,17 +182,47 @@ function Shop({fontsReady}:{fontsReady:boolean}){
    </View>
   </Pressable>);
  }
- const Hero=()=><View style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}><NonperishableCart style={{position:'absolute',right:-4,top:3,width:'53%',height:'98%',opacity:.98}}/>
-  <Text style={{color:brandV1.accentPale,fontWeight:'800',fontSize:9,letterSpacing:1.2}}>✦ SMART SHOPPING. REAL SAVINGS!</Text>
-  <Text style={{fontSize:small?14:15,fontWeight:'900',color:'white',lineHeight:small?16:17,maxWidth:'55%',marginTop:5}}>{heroMessages[slide][lang][0]}</Text>
-  <Text style={{fontSize:small?14:15,fontWeight:'900',color:brandV1.accentPale,lineHeight:small?16:17,maxWidth:'55%',marginTop:2}}>{heroMessages[slide][lang][1]}</Text>
-  <Text style={{color:brandV1.white,fontSize:small?8.5:9,lineHeight:small?10:11,marginTop:5,maxWidth:'54%'}}>{heroMessages[slide][lang][2]}</Text>
-  <View style={[styles.between,{marginTop:8}]}>
-   <Pressable onPress={()=>onTab('deals')} style={{backgroundColor:'white',paddingVertical:7,paddingHorizontal:10,borderRadius:18}}><Text style={{color:brandV1.primary,fontWeight:'800',fontSize:9}}>Explore group deals →</Text></Pressable>
-   <View style={{flexDirection:'row',gap:8}}><Pressable onPress={()=>setSlide(v=>(v+3)%4)}><Text style={styles.heroArrow}>‹</Text></Pressable><Pressable onPress={()=>setSlide(v=>(v+1)%4)}><Text style={styles.heroArrow}>›</Text></Pressable></View>
-  </View>
-  <View style={{alignSelf:'center',flexDirection:'row',gap:5,marginTop:5}}>{heroMessages.map((_,i)=><Pressable key={i} accessibilityLabel={'Slide '+(i+1)} onPress={()=>setSlide(i)} style={{height:5,width:i===slide?14:5,borderRadius:5,backgroundColor:i===slide?'white':brandV1.accent}}/>)}</View>
- </View>;
+ const Hero=()=>{
+  const longSlide=slide===0||slide===1;
+  const titleSize=small?(longSlide?12.5:13.2):(longSlide?13.5:14.3);
+  const titleMax=small?'62%':'60%';
+  return <View style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
+   {approvedHeroImage?
+    <Image accessibilityIgnoresInvertColors source={{uri:approvedHeroImage}} resizeMode="cover" style={StyleSheet.absoluteFillObject}/>:
+    <NonperishableCart style={{position:'absolute',right:-3,top:1,width:'51%',height:'97%',opacity:.98}}/>}
+   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}
+    style={{color:brandV1.accentPale,fontWeight:'600',fontSize:small?8:8.8,letterSpacing:small?.55:.85,marginBottom:4}}>
+    ✦ SMART SHOPPING. REAL SAVINGS!
+   </Text>
+   <Text numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.85}
+    style={{fontSize:titleSize,fontWeight:'700',color:brandV1.white,lineHeight:titleSize*1.07,maxWidth:titleMax}}>
+    {heroMessages[slide][lang][0]}
+   </Text>
+   <Text numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.85}
+    style={{fontSize:titleSize,fontWeight:'700',color:brandV1.accentPale,lineHeight:titleSize*1.07,maxWidth:titleMax,marginTop:1}}>
+    {heroMessages[slide][lang][1]}
+   </Text>
+   <Text numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.8}
+    style={{color:brandV1.white,fontSize:small?8.2:8.8,lineHeight:small?9.4:10.2,marginTop:4,maxWidth:small?'59%':'56%'}}>
+    {heroMessages[slide][lang][2]}
+   </Text>
+   <Pressable accessibilityRole="button" accessibilityLabel="Explore group deals" onPress={()=>onTab('deals')}
+    style={{position:'absolute',left:13,bottom:30,backgroundColor:brandV1.white,paddingVertical:7,paddingHorizontal:12,borderRadius:18}}>
+    <Text style={{color:brandV1.primary,fontWeight:'600',fontSize:9}}>{lang==='bn'?'গ্রুপ ডিল দেখুন':'Explore group deals'} →</Text>
+   </Pressable>
+   <View style={{position:'absolute',left:13,bottom:7,flexDirection:'row',alignItems:'center',gap:6}}>
+    <Pressable accessibilityRole="button" accessibilityLabel="Previous hero slide" onPress={()=>setSlide(v=>(v+3)%4)}>
+     <Text style={styles.heroArrow}>‹</Text>
+    </Pressable>
+    {heroMessages.map((_,i)=><Pressable key={i} accessibilityRole="button" accessibilityLabel={'Slide '+(i+1)}
+     accessibilityState={{selected:slide===i}} onPress={()=>setSlide(i)}
+     style={{height:7,width:7,borderRadius:7,backgroundColor:i===slide?brandV1.white:brandV1.accent}}/>)}
+    <Pressable accessibilityRole="button" accessibilityLabel="Next hero slide" onPress={()=>setSlide(v=>(v+1)%4)}>
+     <Text style={styles.heroArrow}>›</Text>
+    </Pressable>
+   </View>
+  </View>;
+ }
  function Home(){return <>
   <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>Savar DOHS⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
   <Hero/><View style={{marginTop:7}}><Savings home/></View>
@@ -754,7 +786,7 @@ const styles=StyleSheet.create({
  twoCol:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'space-between'},
  savingTile:{width:'23.9%',minHeight:54,paddingHorizontal:5,paddingVertical:5,borderRadius:12,alignItems:'stretch',justifyContent:'center',gap:3,borderWidth:1},
  savingsFour:{flexDirection:'row',alignItems:'stretch',justifyContent:'space-between',gap:4},
- hero:{padding:12,borderRadius:17,marginBottom:1,minHeight:181,overflow:'hidden'},
+ hero:{height:174,minHeight:174,maxHeight:174,paddingHorizontal:13,paddingTop:10,paddingBottom:28,borderRadius:17,marginBottom:1,overflow:'hidden',position:'relative'},
  heroArrow:{fontSize:24,color:'white',fontWeight:'700'},
  exclusiveCard:{width:'48.6%',borderRadius:15,padding:7,borderWidth:1,marginBottom:2,minHeight:168},
  bottom:{flexDirection:'row',paddingTop:5,borderTopWidth:1,paddingHorizontal:7},
