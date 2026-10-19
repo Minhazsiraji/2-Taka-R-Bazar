@@ -6,7 +6,6 @@ import {HindSiliguri_400Regular,HindSiliguri_500Medium,HindSiliguri_600SemiBold,
 import {Text,TextInput,TypographyProvider} from './src/typography';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {palette,brandV1} from './src/theme';
-import {NonperishableCart} from './src/nonperishable-cart';
 import {SafeAreaProvider,SafeAreaView} from 'react-native-safe-area-context';
 import {StatusBar} from 'expo-status-bar';
 import {copy,heroMessages,type Language} from './src/content';
@@ -21,8 +20,8 @@ type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
 type Screen=Tab|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
-const APPROVED_HERO_URL=(process.env.EXPO_PUBLIC_APPROVED_HERO_IMAGE_URL||'').trim();
-const approvedHeroImage=APPROVED_HERO_URL.startsWith('https://')?APPROVED_HERO_URL:null;
+// Offline-bundled, owner-uploaded approved art; static require is necessary for Metro assets.
+const approvedHeroImage=require('./assets/Vibrant Grocery Cart on Teal Background.png');
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
 // Shared V1 colors are managed in src/theme.ts; do not define screen-specific palettes here.
 const money=(n:number)=>'৳'+Math.round(n).toLocaleString('en-US');
@@ -187,9 +186,8 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   const titleSize=small?(longSlide?12.5:13.2):(longSlide?13.5:14.3);
   const titleMax=small?'62%':'60%';
   return <View style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
-   {approvedHeroImage?
-    <Image accessibilityIgnoresInvertColors source={{uri:approvedHeroImage}} resizeMode="cover" style={{position:'absolute',top:0,right:0,bottom:0,left:0,width:'100%',height:'100%'}}/>:
-    <NonperishableCart style={{position:'absolute',right:-3,top:1,width:'51%',height:'97%',opacity:.98}}/>}
+   <Image accessibilityIgnoresInvertColors source={approvedHeroImage} resizeMode="cover"
+    style={{position:'absolute',top:0,right:0,bottom:0,left:0,width:'100%',height:'100%'}}/>
    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}
     style={{color:brandV1.accentPale,fontWeight:'600',fontSize:small?8:8.8,letterSpacing:small?.55:.85,marginBottom:4}}>
     ✦ SMART SHOPPING. REAL SAVINGS!

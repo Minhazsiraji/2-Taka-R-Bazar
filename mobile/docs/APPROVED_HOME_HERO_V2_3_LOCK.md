@@ -24,9 +24,10 @@ This replaces all earlier experimental hero versions (V1.7–V2.2) as the sole v
 ## Technical progress
 
 - Browser reference: approved V2.3, self-contained HTML.
-- Expo native structure: compact 174px layout, one-line kicker, responsive text sizing, four dots and bottom arrows wired; supports **optional HTTPS approved image** through `EXPO_PUBLIC_APPROVED_HERO_IMAGE_URL` for development.
-- Native image **is still a pantry-cart SVG fallback** if `EXPO_PUBLIC_APPROVED_HERO_IMAGE_URL` is missing. Do not label this fallback as final visual parity.
-- Before the final Android APK/iOS release, commit and bundle the exact owner PNG, remove reliance on remote image runtime, test at 360/390/412dp, verify EN/BAN and carousel/CTA on device, and confirm the output against the V2.3 browser reference.
+- Expo native structure: compact 174dp layout, one-line kicker, responsive text sizing, four dots and bottom arrows wired.
+- The owner uploaded `mobile/assets/Vibrant Grocery Cart on Teal Background.png` on this feature branch (Git blob `1edd6d4de157f56dc62fb8ea98f4aa59e84b14e7`, 1,801,989 bytes). The PNG is now bundled with a static Metro `require()`; the older SVG illustration and remote URL dependency have been removed from the hero.
+- **Asset comparison caveat:** The owner-uploaded PNG is not byte-identical to the original reference (2,626,675 bytes / Git blob `02bef60145fa955d745ae25a4d427ef5149f4d56`). It may have been optimized; final visual parity still needs screenshots and owner review.
+- Before Android APK/iOS release, test 360/390/412dp, verify EN/BAN and carousel/CTA on actual devices, compare against V2.3 browser reference, and sign off any image recompression difference.
 - Production purchases, auth gates and financial operations remain unchanged and disabled where previously gated.
 
 No merge, release, signing or live deployment is authorized by this design lock.

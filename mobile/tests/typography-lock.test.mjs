@@ -72,10 +72,10 @@ test('Approved V2.3 hero is fixed-height and has exactly the bottom carousel con
  assert.ok(hero.includes('onPress={()=>onTab(\'deals\')}'));
  assert.ok(hero.includes('heroMessages[slide][lang]'));
  assert.ok(!hero.includes('hero-edge-next'));
- assert.ok(app.includes('EXPO_PUBLIC_APPROVED_HERO_IMAGE_URL'));
+ assert.ok(app.includes("require('./assets/Vibrant Grocery Cart on Teal Background.png')"));
 });
-test('Hero image never silently claims production-parity without an approved HTTPS source',()=>{
- assert.ok(app.includes("APPROVED_HERO_URL.startsWith('https://')?APPROVED_HERO_URL:null"));
- assert.ok(app.includes('approvedHeroImage?'));
- assert.ok(app.includes('<NonperishableCart style='));
+test('Approved hero image is bundled locally and has no older illustration or CDN dependency',()=>{
+ assert.ok(app.includes('source={approvedHeroImage} resizeMode="cover"'));
+ assert.ok(!app.includes('EXPO_PUBLIC_APPROVED_HERO_IMAGE_URL'));
+ assert.ok(!app.includes('NonperishableCart'));
 });
