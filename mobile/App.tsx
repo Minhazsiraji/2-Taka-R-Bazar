@@ -23,6 +23,9 @@ type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
 // Offline-bundled, owner-uploaded approved art; static require is necessary for Metro assets.
 const approvedHeroImage=require('./assets/Vibrant Grocery Cart on Teal Background.png');
+// Preserve the full approved 1672 × 941 image at the locked 174dp banner height.
+// `cover` clipped the product bags and cart wheels on 390/412dp Android screens.
+const HERO_ART_WIDTH=174*(1672/941);
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
 // Shared V1 colors are managed in src/theme.ts; do not define screen-specific palettes here.
 const money=(n:number)=>'৳'+Math.round(n).toLocaleString('en-US');
@@ -208,8 +211,8 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   const titleSize=small?(longSlide?12.5:13.2):(longSlide?13.5:14.3);
   const titleMax=small?'62%':'60%';
   return <View style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
-   <Image accessibilityIgnoresInvertColors source={approvedHeroImage} resizeMode="cover"
-    style={{position:'absolute',top:0,right:0,bottom:0,left:0,width:'100%',height:'100%'}}/>
+   <Image accessibilityIgnoresInvertColors source={approvedHeroImage} resizeMode="contain"
+    style={{position:'absolute',top:0,right:0,width:HERO_ART_WIDTH,height:174}}/>
    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}
     style={{color:brandV1.accentPale,fontWeight:'600',fontSize:small?8:8.8,letterSpacing:small?.55:.85,marginBottom:4}}>
     ✦ SMART SHOPPING. REAL SAVINGS!

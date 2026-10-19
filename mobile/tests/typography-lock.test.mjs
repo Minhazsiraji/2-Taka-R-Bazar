@@ -75,7 +75,10 @@ test('Approved V2.3 hero is fixed-height and has exactly the bottom carousel con
  assert.ok(app.includes("require('./assets/Vibrant Grocery Cart on Teal Background.png')"));
 });
 test('Approved hero image is bundled locally and has no older illustration or CDN dependency',()=>{
- assert.ok(app.includes('source={approvedHeroImage} resizeMode="cover"'));
+ assert.ok(app.includes('source={approvedHeroImage} resizeMode="contain"'));
+ assert.ok(app.includes('const HERO_ART_WIDTH=174*(1672/941)'));
+ assert.ok(app.includes("style={{position:'absolute',top:0,right:0,width:HERO_ART_WIDTH,height:174}}"));
+ assert.ok(!app.includes('source={approvedHeroImage} resizeMode="cover"'));
  assert.ok(!app.includes('EXPO_PUBLIC_APPROVED_HERO_IMAGE_URL'));
  assert.ok(!app.includes('NonperishableCart'));
 });
