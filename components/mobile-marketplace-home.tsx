@@ -28,21 +28,25 @@ type Props={
  savings:HomeSavingsSummary
 }
 const heroSlides=[
- {en:'Better prices. Together.',bn:'একসাথে কিনি, কম দামে পাই!',
-  sub:'Shop daily essentials, join neighbours and unlock group savings.',
-  subBn:'নিত্যপ্রয়োজনীয় পণ্য কিনুন, প্রতিবেশীদের সঙ্গে সাশ্রয় করুন.',
+ {en:'Smart people make smart decisions.',bn:'বুদ্ধিমান মানুষ সিদ্ধান্ত নেয় বুঝে।',
+  secondEn:'Buy together, save together.',secondBn:'একসাথে কিনুন, একসাথে সাশ্রয় করুন।',
+  sub:'Invite neighbours and friends. Join a Pool to unlock wholesale prices.',
+  subBn:'প্রতিবেশী ও বন্ধুদের আমন্ত্রণ জানান। একসঙ্গে পুলে যোগ দিন।',
   action:'Explore group deals',actionBn:'গ্রুপ ডিল দেখুন',href:'#mobile-deals'},
- {en:'Everyday essentials, close to home.',bn:'নিজের এলাকায় নিত্যপ্রয়োজনীয় বাজার',
-  sub:'Find products and community offers without signing in first.',
-  subBn:'লগইন ছাড়াই পণ্য ও এলাকার অফার দেখুন.',
+ {en:'A smarter way to shop.',bn:'বাজার করার আরও স্মার্ট উপায়।',
+  secondEn:'A better way to save.',secondBn:'সাশ্রয়ের আরও ভালো সুযোগ।',
+  sub:'Compare prices and unlock better community deals.',
+  subBn:'দাম তুলনা করুন, আর কমিউনিটির সাথে ভালো দামের সুযোগ আনলক করুন।',
   action:'Browse products',actionBn:'পণ্য দেখুন',href:'#mobile-exclusive'},
- {en:'Your community. Your savings.',bn:'আপনার কমিউনিটি, আপনার সাশ্রয়',
-  sub:'Follow local group deals and Pool progress before you join.',
-  subBn:'যোগ দেওয়ার আগে গ্রুপ ডিল ও পুলের অগ্রগতি দেখুন.',
+ {en:'Your neighbours. Your Pool.',bn:'আপনার প্রতিবেশী। আপনার পুল।',
+  secondEn:'Your savings.',secondBn:'সাশ্রয়ের সুযোগও আপনার।',
+  sub:'Bring families together and combine everyday demand.',
+  subBn:'পরিবারগুলোকে এক করুন, নিত্যপণ্যের চাহিদা একসাথে আনুন।',
   action:'View community Pools',actionBn:'কমিউনিটি পুল দেখুন',href:'#mobile-pools'},
- {en:'Smart shopping. Real savings!',bn:'একসাথে কিনি, কম দামে পাই!',
-  sub:'Compare published prices, then choose pickup or delivery.',
-  subBn:'প্রকাশিত দাম মিলিয়ে সংগ্রহ বা ডেলিভারি বেছে নিন.',
+ {en:'Buying together makes',bn:'একসাথে কিনলে',
+  secondEn:'every taka count.',secondBn:'প্রতিটি টাকার মূল্য বাড়ে।',
+  sub:'More households can mean better prices.',
+  subBn:'আরও পরিবার যুক্ত হলে দাম আরও কমতে পারে।',
   action:'Explore products',actionBn:'পণ্য দেখুন',href:'#mobile-exclusive'},
 ] as const
 
@@ -181,17 +185,19 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
    <div className="mhome-hero-copy" aria-live="off">
     <span className="mhome-hero-kicker">✦ SMART SHOPPING. REAL SAVINGS!</span>
     <h1 key={slide}>{t(activeSlide.en,activeSlide.bn)}</h1>
+    <strong className="mhome-hero-second">{t(activeSlide.secondEn,activeSlide.secondBn)}</strong>
     <p>{t(activeSlide.sub,activeSlide.subBn)}</p>
     <a href={activeSlide.href}>{t(activeSlide.action,activeSlide.actionBn)} <span aria-hidden="true">→</span></a>
-   </div>
-   <img className="mhome-hero-art" src="/grocery-hero-glass.svg" alt="" aria-hidden="true"/>
-   <button className="mhome-hero-arrow mhome-prev" type="button" aria-label={t('Previous banner','আগের ব্যানার')}
-    onClick={()=>setSlide(i=>(i+heroSlides.length-1)%heroSlides.length)}>‹</button>
-   <button className="mhome-hero-arrow mhome-next" type="button" aria-label={t('Next banner','পরের ব্যানার')}
-    onClick={()=>setSlide(i=>(i+1)%heroSlides.length)}>›</button>
-   <div className="mhome-dots" aria-label={t('Choose banner','ব্যানার বাছুন')}>
-    {heroSlides.map((_,i)=><button key={i} type="button" aria-current={i===slide?'true':undefined}
-     aria-label={t('Banner ','ব্যানার ')+(i+1)} onClick={()=>setSlide(i)}/>)}
+    <div className="mhome-hero-controls" aria-label={t('Banner controls','ব্যানার নিয়ন্ত্রণ')}>
+     <button className="mhome-hero-arrow mhome-prev" type="button" aria-label={t('Previous banner','আগের ব্যানার')}
+      onClick={()=>setSlide(i=>(i+heroSlides.length-1)%heroSlides.length)}>‹</button>
+     <div className="mhome-dots" aria-label={t('Choose banner','ব্যানার বাছুন')}>
+      {heroSlides.map((_,i)=><button key={i} type="button" aria-current={i===slide?'true':undefined}
+       aria-label={t('Banner ','ব্যানার ')+(i+1)} onClick={()=>setSlide(i)}/>)}
+     </div>
+     <button className="mhome-hero-arrow mhome-next" type="button" aria-label={t('Next banner','পরের ব্যানার')}
+      onClick={()=>setSlide(i=>(i+1)%heroSlides.length)}>›</button>
+    </div>
    </div>
   </section>
 
