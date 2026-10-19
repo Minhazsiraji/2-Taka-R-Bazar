@@ -22,10 +22,11 @@ type PreviewNotice={id:number;enTitle:string;bnTitle:string;enBody:string;bnBody
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
 // Offline-bundled, owner-uploaded approved art; static require is necessary for Metro assets.
-const approvedHeroImage=require('./assets/Vibrant Grocery Cart on Teal Background.png');
-// Preserve the full approved 1672 × 941 image at the locked 174dp banner height.
-// `cover` clipped the product bags and cart wheels on 390/412dp Android screens.
-const HERO_ART_WIDTH=174*(1672/941);
+const approvedHeroImage=require('./assets/2tbr-hero-panorama-v2.jpg');
+// New owner-approved 1920×900 panoramic image at the locked 174dp banner height.
+// Earlier 16:9 artwork cropped with `cover`, while `contain` left a flat side strip.
+// One edge-to-edge image avoids seams and preserves the cart and its wheels.
+// Use stretch so all four cart wheels stay visible at 360–412dp (aspect varies by phone).
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
 // Shared V1 colors are managed in src/theme.ts; do not define screen-specific palettes here.
 const money=(n:number)=>'৳'+Math.round(n).toLocaleString('en-US');
@@ -140,11 +141,11 @@ function Shop({fontsReady}:{fontsReady:boolean}){
    <Ionicons name={name} size={18} color={theme.text}/>{badge>0&&<View style={styles.badge}><Text style={styles.badgeText}>{badge>99?'99+':badge}</Text></View>}
   </Pressable>;
  const savingTile=(name:string,value:string,icon:IconName,tint:string)=> <Pressable onPress={()=>setScreen('savings')} style={[styles.savingTile,{backgroundColor:dark?theme.field:tint,borderColor:theme.line}]}>
-   <View style={{flexDirection:'row',alignItems:'center',gap:3,width:'100%',minWidth:0}}>
+   <View style={{flexDirection:'row',alignItems:'center',justifyContent:'center',gap:3,width:'100%',minWidth:0}}>
     <Ionicons name={icon} size={14} color={theme.accent}/>
-    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={{fontSize:small?8:9,lineHeight:14,color:theme.muted,flexShrink:1}}>{name}</Text>
+    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72} style={{fontSize:small?8:9,lineHeight:14,color:theme.muted,flexShrink:1}}>{name}</Text>
    </View>
-   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{fontSize:small?11:12,fontWeight:'700',color:theme.text,width:'100%'}}>{value}</Text>
+   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72} style={{fontSize:small?12.5:14,fontWeight:'900',color:theme.text,width:'100%',textAlign:'center',marginTop:2}}>{value}</Text>
  </Pressable>;
  function Savings({home=false}:{home?:boolean}={}){return panel(<><View style={styles.between}><Text style={{fontSize:16,fontWeight:'900',color:theme.text}}>▥  {t.savings}</Text><Pressable onPress={()=>setScreen('savings')}><Text style={{color:theme.accent,fontSize:12}}>{t.viewReport} ›</Text></Pressable></View>
   <View style={styles.savingsFour}>
@@ -211,8 +212,8 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   const titleSize=small?(longSlide?12.5:13.2):(longSlide?13.5:14.3);
   const titleMax=small?'62%':'60%';
   return <View style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
-   <Image accessibilityIgnoresInvertColors source={approvedHeroImage} resizeMode="contain"
-    style={{position:'absolute',top:0,right:0,width:HERO_ART_WIDTH,height:174}}/>
+   <Image accessibilityIgnoresInvertColors source={approvedHeroImage} resizeMode="stretch"
+    style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}/>
    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}
     style={{color:brandV1.accentPale,fontWeight:'600',fontSize:small?8:8.8,letterSpacing:small?.55:.85,marginBottom:4}}>
     ✦ SMART SHOPPING. REAL SAVINGS!
@@ -233,7 +234,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     style={{position:'absolute',left:13,bottom:30,backgroundColor:brandV1.white,paddingVertical:7,paddingHorizontal:12,borderRadius:18}}>
     <Text style={{color:brandV1.primary,fontWeight:'600',fontSize:9}}>{lang==='bn'?'গ্রুপ ডিল দেখুন':'Explore group deals'} →</Text>
    </Pressable>
-   <View style={{position:'absolute',left:13,bottom:7,flexDirection:'row',alignItems:'center',gap:6}}>
+   <View style={{position:'absolute',left:13,bottom:5,width:132,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:8}}>
     <Pressable accessibilityRole="button" accessibilityLabel="Previous hero slide" onPress={()=>setSlide(v=>(v+3)%4)}>
      <Text style={styles.heroArrow}>‹</Text>
     </Pressable>
@@ -842,10 +843,10 @@ const styles=StyleSheet.create({
  titleRow:{flexDirection:'row',alignItems:'flex-end',justifyContent:'space-between',marginTop:16,marginBottom:8},
  panel:{borderWidth:1,borderRadius:17,padding:10,marginBottom:9,shadowColor:brandV1.text,shadowOpacity:.04,shadowRadius:9,elevation:1},
  twoCol:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'space-between'},
- savingTile:{width:'23.9%',minHeight:54,paddingHorizontal:5,paddingVertical:5,borderRadius:12,alignItems:'stretch',justifyContent:'center',gap:3,borderWidth:1},
+ savingTile:{width:'23.9%',minHeight:60,paddingHorizontal:4,paddingVertical:6,borderRadius:12,alignItems:'center',justifyContent:'center',gap:4,borderWidth:1},
  savingsFour:{flexDirection:'row',alignItems:'stretch',justifyContent:'space-between',gap:4},
  hero:{height:174,minHeight:174,maxHeight:174,paddingHorizontal:13,paddingTop:10,paddingBottom:28,borderRadius:17,marginBottom:1,overflow:'hidden',position:'relative'},
- heroArrow:{fontSize:24,color:'white',fontWeight:'700'},
+ heroArrow:{fontSize:22,lineHeight:24,color:'white',fontWeight:'700'},
  exclusiveCard:{width:'48.6%',borderRadius:15,padding:7,borderWidth:1,marginBottom:2,minHeight:168},
  bottom:{flexDirection:'row',paddingTop:5,borderTopWidth:1,paddingHorizontal:7},
  priceOption:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',padding:10,borderRadius:9,borderWidth:1,marginTop:5},

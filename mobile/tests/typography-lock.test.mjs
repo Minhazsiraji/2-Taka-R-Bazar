@@ -49,11 +49,13 @@ test('Typography never changes colors, font sizes, geometry, routes, checkout or
 test('Home Savings tiles are compact in the existing four-card row only',()=>{
  const app=readFileSync(new URL('../App.tsx',import.meta.url),'utf8');
  const tile=app.slice(app.indexOf('const savingTile='),app.indexOf('function Savings(',app.indexOf('const savingTile=')));
- assert.ok(tile.includes("flexDirection:'row',alignItems:'center',gap:3,width:'100%'"));
+ assert.ok(tile.includes("flexDirection:'row',alignItems:'center',justifyContent:'center',gap:3,width:'100%'"));
  assert.ok(tile.includes("name}</Text>"));
  assert.ok(tile.includes("value}</Text>"));
  assert.ok(tile.includes("onPress={()=>setScreen('savings')}"));
- assert.ok(app.includes("savingTile:{width:'23.9%',minHeight:54,paddingHorizontal:5,paddingVertical:5"));
+ assert.ok(app.includes("savingTile:{width:'23.9%',minHeight:60,paddingHorizontal:4,paddingVertical:6"));
+ assert.ok(tile.includes("fontSize:small?12.5:14,fontWeight:'900'"));
+ assert.ok(tile.includes("width:'100%',textAlign:'center',marginTop:2"));
  assert.ok(app.includes("savingsFour:{flexDirection:'row',alignItems:'stretch',justifyContent:'space-between',gap:4}"));
  for(const token of ["t.thisMonth","t.lastMonth","t.lifetime","t.communityTotal"]){
    assert.ok(app.includes('savingTile('+token),token);
@@ -70,15 +72,17 @@ test('Approved V2.3 hero is fixed-height and has exactly the bottom carousel con
  assert.ok(hero.includes("accessibilityLabel={'Slide '+(i+1)}"));
  assert.ok(hero.includes("position:'absolute',left:13,bottom:30"));
  assert.ok(hero.includes('onPress={()=>onTab(\'deals\')}'));
+ assert.ok(hero.includes("left:13,bottom:5,width:132,flexDirection:'row',alignItems:'center',justifyContent:'center'"));
  assert.ok(hero.includes('heroMessages[slide][lang]'));
  assert.ok(!hero.includes('hero-edge-next'));
- assert.ok(app.includes("require('./assets/Vibrant Grocery Cart on Teal Background.png')"));
+ assert.ok(app.includes("require('./assets/2tbr-hero-panorama-v2.jpg')"));
+ assert.ok(!app.includes('require(\'./assets/Vibrant Grocery Cart on Teal Background.png\')'));
 });
 test('Approved hero image is bundled locally and has no older illustration or CDN dependency',()=>{
- assert.ok(app.includes('source={approvedHeroImage} resizeMode="contain"'));
- assert.ok(app.includes('const HERO_ART_WIDTH=174*(1672/941)'));
- assert.ok(app.includes("style={{position:'absolute',top:0,right:0,width:HERO_ART_WIDTH,height:174}}"));
- assert.ok(!app.includes('source={approvedHeroImage} resizeMode="cover"'));
+ assert.ok(app.includes('source={approvedHeroImage} resizeMode="stretch"'));
+ assert.ok(app.includes("style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}"));
+ assert.ok(!app.includes('HERO_ART_WIDTH'));
+ assert.ok(!app.includes('source={approvedHeroImage} resizeMode="contain"'));
  assert.ok(!app.includes('EXPO_PUBLIC_APPROVED_HERO_IMAGE_URL'));
  assert.ok(!app.includes('NonperishableCart'));
 });

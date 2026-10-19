@@ -31,3 +31,9 @@ This replaces all earlier experimental hero versions (V1.7–V2.2) as the sole v
 - Production purchases, auth gates and financial operations remain unchanged and disabled where previously gated.
 
 No merge, release, signing or live deployment is authorized by this design lock.
+
+## Approved panoramic hero update (2026-10-19)
+
+The owner explicitly requested using the newly generated wide teal cart artwork in the native mobile app. `mobile/assets/2tbr-hero-panorama-v2.jpg` is the actual asset, generated from the owner-downloaded `Teal Studio Grocery Cart Banner.png` (1832×859, original PNG SHA-256 prefix `291a396cb5b48c969402`) and resized/optimized to 1920×900 JPEG (360,000 bytes, SHA-256 `fd3a8bd7664dfb135e142c0617b5524fe9da9f42daab71298fe649846e842086`). This supersedes **only the native hero background asset reference**, not the approved dynamic hero copy, 174dp height, permanent slogan, controls, buttons or other sections. The earlier source PNG remains retained for rollback.
+
+Native `resizeMode=stretch` keeps the complete panorama and all trolley wheels inside the fixed-height banner at 360/390/412dp without left/right layering seams. The four carousel dots and arrows are centered below the Explore CTA, while all four Savings tile values are centered with slightly larger type. The generated screen mockup is a visual reference only; no text or other screen content is rasterized into the image. Preview and OTA remain demo-only until owner device screenshot review. No release/merge approval.
