@@ -1,0 +1,53 @@
+name: Android Internal Debug APK (non-production)
+on:
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-debug-apk.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: debug-apk-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  assemble-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      CI: '1'
+      EXPO_PUBLIC_DEMO_MODE: 'true'
+      EXPO_PUBLIC_NATIVE_AUTH_ENABLED: 'false'
+      EXPO_PUBLIC_NATIVE_GOOGLE_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install development dependencies
+        run: npm install --no-audit --no-fund
+      - name: Use internal debug-only app identifier
+        run: |
+          node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('app.json','utf8')); p.expo.android={...(p.expo.android||{}),package:'com.twotbr.internalpreview'}; fs.writeFileSync('app.json',JSON.stringify(p,null,2)+'\n');"
+      - name: Generate local Android native project (no release)
+        run: npx expo prebuild --platform android --non-interactive --no-install
+      - name: Assemble Android debug APK
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace
+      - name: Publish internal APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 2tbr-android-inter-v1-font-preview
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
