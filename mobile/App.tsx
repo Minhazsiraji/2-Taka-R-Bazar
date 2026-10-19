@@ -1,5 +1,9 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
-import {Alert,Image,Linking,Pressable,ScrollView,StyleSheet,Text,TextInput,View,useWindowDimensions} from 'react-native';
+import {Alert,Image,Linking,Pressable,ScrollView,StyleSheet,View,useWindowDimensions} from 'react-native';
+import {useFonts} from 'expo-font';
+import {Inter_400Regular,Inter_500Medium,Inter_600SemiBold,Inter_700Bold} from '@expo-google-fonts/inter';
+import {HindSiliguri_400Regular,HindSiliguri_500Medium,HindSiliguri_600SemiBold,HindSiliguri_700Bold} from '@expo-google-fonts/hind-siliguri';
+import {Text,TextInput,TypographyProvider} from './src/typography';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {palette,brandV1} from './src/theme';
 import {NonperishableCart} from './src/nonperishable-cart';
@@ -27,7 +31,7 @@ function ProductPhoto({item,height=134}:{item:Product;height?:number}){
   {failed?<Ionicons name="bag-handle-outline" size={46} color={brandV1.primary}/>:<Image source={{uri:item.image}} style={{width:'100%',height:'100%'}} resizeMode="cover" onError={()=>setFailed(true)}/>}
  </View>;
 }
-function Shop(){
+function Shop({fontsReady}:{fontsReady:boolean}){
  const {width}=useWindowDimensions();
  const [lang,setLang]=useState<Language>('en');
  const [dark,setDark]=useState(false);
@@ -695,7 +699,7 @@ function Shop(){
  case 'menu':return <Menu/>;
  }}
  const tabs:[Tab,IconName][]=[['home','home-outline'],['pools','people-outline'],['deals','pricetag-outline'],['exclusive','basket-outline'],['cart','cart-outline']];
- return <SafeAreaView style={{flex:1,backgroundColor:theme.background}} edges={['top','left','right','bottom']}>
+ return <TypographyProvider language={lang} loaded={fontsReady}><SafeAreaView style={{flex:1,backgroundColor:theme.background}} edges={['top','left','right','bottom']}>
   <StatusBar style={dark?'light':'dark'}/>
   <View style={{paddingHorizontal:12,paddingTop:6,paddingBottom:8,backgroundColor:theme.background,borderBottomWidth:1,borderColor:theme.line}}>
    <View style={{flexDirection:'row',alignItems:'center',gap:4}}>
@@ -727,9 +731,16 @@ function Shop(){
     </Pressable>
    })}
   </View>
- </SafeAreaView>;
+ </SafeAreaView></TypographyProvider>;
 }
-export default function App(){return <SafeAreaProvider><Shop/></SafeAreaProvider>}
+export default function App(){
+ const [loaded,error]=useFonts({
+  Inter_400Regular,Inter_500Medium,Inter_600SemiBold,Inter_700Bold,
+  HindSiliguri_400Regular,HindSiliguri_500Medium,HindSiliguri_600SemiBold,HindSiliguri_700Bold
+ });
+ if(!loaded&&!error)return null;
+ return <SafeAreaProvider><Shop fontsReady={loaded}/></SafeAreaProvider>;
+}
 const styles=StyleSheet.create({
  between:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:6},
  headerIcon:{width:31,height:32,borderRadius:20,borderWidth:1,justifyContent:'center',alignItems:'center',position:'relative'},

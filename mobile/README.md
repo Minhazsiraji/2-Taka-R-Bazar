@@ -55,3 +55,9 @@ Blue people icon + clock in Group Deals, compact matched Exclusive/Pool cards, s
 ## Native sign-in security and test plan
 
 See `mobile/docs/NATIVE_AUTH_SECURITY_REVIEW.md`. Configure EXPO_PUBLIC_NATIVE_AUTH_ENABLED only in isolated development builds using the existing Supabase *publishable* key and URL. Google additionally requires `twotbr://auth/callback` allowed in Supabase Auth Redirect URLs, a linked identity and EXPO_PUBLIC_NATIVE_GOOGLE_ENABLED. The downloaded browser mockup is not a native login test. Never commit `.env` or use a service-role key.
+
+## Approved bilingual typography (Inter + Hind Siliguri)
+
+Global font rules are in `src/typography.tsx`: Inter for English strings, Hind Siliguri for Bangla strings. All React Native customer-facing Text/TextInput components, including the native sign-in screen, use shared wrappers and fonts load once at app startup from bundled Expo Google Fonts packages. Text weights 800 become SemiBold and 900 become Bold, without changing approved sizes, colors, margins, card geometry or behavior. A font-loading failure falls back to the existing OS fonts; no runtime font CDN dependency is introduced.
+
+The HTML design-review preview is a separate browser artifact, not the native binary. That artifact uses Google Fonts CSS when online; this native app bundles the fonts for offline operation. Production website typography and public deployment remain unchanged in this mobile-only PR.

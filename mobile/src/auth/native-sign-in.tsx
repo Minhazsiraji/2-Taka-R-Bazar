@@ -1,5 +1,6 @@
 import React,{useState} from 'react';
-import {Alert,Pressable,Text,TextInput,View} from 'react-native';
+import {Alert,Pressable,View} from 'react-native';
+import {Text,TextInput} from '../typography';
 import type {Language} from '../content';
 import type {AppTheme} from '../theme';
 import {useNativeAuth} from './use-native-auth';
