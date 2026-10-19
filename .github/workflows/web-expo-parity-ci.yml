@@ -1,0 +1,39 @@
+name: Web Expo visual parity — safe UI qualification
+
+on:
+  push:
+    branches:
+      - feat/web-parity-approved-expo-ui-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  visual-parity:
+    name: Unit, design, types, lint and Next build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      CI: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked packages
+        run: npm ci --no-audit --no-fund
+      - name: Check earlier protected design files
+        run: node scripts/check-home-design-lock.mjs
+      - name: Run all application and parity tests
+        run: npm test
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build production-format preview bundle
+        run: npm run build
