@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {useEffect,useState} from 'react'
+import {useEffect,useRef,useState} from 'react'
 import {setCommerceCartItem} from '@/app/actions/commerce'
 import type {DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
@@ -69,6 +69,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
  offers,products,publishedProducts,pools,language,demoMode,search,savings}:Props){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const [slide,setSlide]=useState(0)
+ const areaPickerRef=useRef<HTMLDetailsElement>(null)
  const [clockNow,setClockNow]=useState<number|null>(null)
  const endsLabel=(iso:string)=>{
   const end=new Date(iso).getTime()
@@ -94,7 +95,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
  const query=search.trim().toLocaleLowerCase()
  const localOffers=offers.filter(o=>(!selectedArea||o.community_id===selectedArea)&&(
   !query||[o.product_name,o.product_name_bn,o.brand,o.category,o.offer_title].some(v=>(v??'').toLocaleLowerCase().includes(query))))
- const deals=localOffers.filter(o=>o.offer_kind==='GROUP_DEAL').slice(0,4)
+ const deals=localOffers.filter(o=>o.offer_kind==='GROUP_DEAL').slice(0,6)
  const poolRows=pools.filter(p=>!selectedArea||!p.community_id||p.community_id===selectedArea).slice(0,3)
  // Show genuine checkout-ready SOLO offers first. SEO/showcase entries are read-only
  // fallbacks, never a source of made-up price, savings or inventory.
@@ -174,12 +175,25 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
    </button>
    <label htmlFor="mhome-community">{t('Your community','আপনার এলাকা')}</label>
-   <select id="mhome-community" value={selectedArea} onChange={e=>onChooseArea(e.target.value)}
+   {demoMode&&<span className="mhome-demo-pill">DEMO DATA</span>}
+   <select id="mhome-community" className="mhome-native-area" value={selectedArea} onChange={e=>onChooseArea(e.target.value)}
     aria-label={t('Choose your community','আপনার এলাকা বাছুন')}>
     <option value="">{t('All areas','সব এলাকা')}</option>
     {areas.map(a=><option key={a.community_id} value={a.community_id}>{a.community_name}</option>)}
    </select>
-   {demoMode&&<span className="mhome-demo-pill">DEMO DATA</span>}
+   <details className="mhome-area-picker" ref={areaPickerRef} onKeyDown={e=>{if(e.key==='Escape')areaPickerRef.current?.removeAttribute('open')}}>
+    <summary aria-label={t('Choose your community','আপনার এলাকা বাছুন')}>
+     <span>{areas.find(a=>a.community_id===selectedArea)?.community_name??t('All areas','সব এলাকা')}</span>
+     <span aria-hidden="true">⌄</span>
+    </summary>
+    <div className="mhome-area-menu" role="group" aria-label={t('Available communities','কমিউনিটির তালিকা')}>
+     <button type="button" aria-current={!selectedArea?'true':undefined}
+      onClick={()=>{onChooseArea('');areaPickerRef.current?.removeAttribute('open')}}>{t('All areas','সব এলাকা')}</button>
+     {areas.map(a=><button key={a.community_id} type="button"
+      aria-current={selectedArea===a.community_id?'true':undefined}
+      onClick={()=>{onChooseArea(a.community_id);areaPickerRef.current?.removeAttribute('open')}}>{a.community_name}</button>)}
+    </div>
+   </details>
   </div>
   <section className="mhome-hero" aria-label={t('Featured shopping messages','ফিচারড বার্তা')} role="region" aria-roledescription="carousel">
    <div className="mhome-hero-copy" aria-live="off">
@@ -278,7 +292,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
       <ProductImage url={p.image} title={t(p.name,p.nameBn)}/></Link>
      <div className="mhome-exclusive-copy"><h3><Link href={href}>{t(p.name,p.nameBn)}</Link></h3>
       <p className="mhome-muted">{p.package}</p>
-      <div className="mhome-exclusive-price"><strong>{money(p.price)??t('Price not published','দাম প্রকাশিত হয়নি')}</strong>
+      <div className={'mhome-exclusive-price'+(p.price===null?' is-price-unpublished':'')}><strong>{money(p.price)??t('Price not published','দাম প্রকাশিত হয়নি')}</strong>
        {saving!=null&&<s>{money(p.oldPrice)}</s>}</div>
       {saving!=null&&<span className="mhome-save">{t('Save','সাশ্রয়')} {money(saving)}</span>}
       {p.demo?<span className="mhome-exclusive-availability">{t('DEMO · Not for sale','ডেমো · বিক্রির জন্য নয়')}</span>:
@@ -292,7 +306,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
        <input type="hidden" name="quantity" value="1"/>
        <button className="mhome-cart-btn" type="submit">🛒 {t('Add to cart','কার্টে যোগ')}</button></form>:
        <Link className="mhome-cart-btn" href={p.bookable&&selectedArea?'/pilot-book?product='+p.id:p.price&&p.commerceId&&!selectedArea?'#mhome-community':href}>
-        {p.demo?t('Preview product','পণ্য দেখুন'):p.bookable&&selectedArea?t('Book Product','পণ্য বুক করুন'):p.price&&p.commerceId&&!selectedArea?t('Select community','কমিউনিটি বাছুন'):p.price?t('View Details','বিস্তারিত দেখুন'):t('View Details / Ask for Price','বিস্তারিত / দাম জানতে')} <span aria-hidden="true">→</span></Link>}
+        {p.demo?t('Preview product','পণ্য দেখুন'):p.bookable&&selectedArea?t('Book Product','পণ্য বুক করুন'):p.price&&p.commerceId&&!selectedArea?t('Select community','কমিউনিটি বাছুন'):p.price?t('View Details','বিস্তারিত দেখুন'):t('View details','বিস্তারিত দেখুন')} <span aria-hidden="true">→</span></Link>}
      </div>
     </article>})}</div>:
     <div className="mhome-empty">{t('Products will appear as soon as they are published.','পণ্য প্রকাশিত হলে এখানে দেখা যাবে।')}</div>}

@@ -34,6 +34,7 @@ const approvedMobileNav=[
  {href:'#mobile-pools',label:'Community Pools',bn:'কমিউনিটি পুল'},
  {href:'#mhome-community',label:'Your community',bn:'আপনার এলাকা'},
  {href:'/cart',label:'Cart',bn:'কার্ট'},
+ {href:'/money',label:'My Money',bn:'আমার টাকা'},
  {href:'/account/orders',label:'My Orders',bn:'আমার অর্ডার'},
  {href:'/about',label:'How it works',bn:'যেভাবে কাজ করে'},
 ] as const
@@ -66,6 +67,14 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
      placeholder={t('Search rice, oil, groceries…','চাল, ডাল, তেল, বাজার খুঁজুন…')} autoComplete="off" enterKeyHint="search"/>}
    </div>
    <div className="market-header-actions">
+    <Link href="/cart" className="market-header-quick-link market-header-quick-cart" aria-label={t('Cart','কার্ট')} title={t('Cart','কার্ট')}>
+     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h3l2.5 12h12l2.5-9H6M8 21h.01M18 21h.01"/></svg>
+     <span>{t('Cart','কার্ট')}</span>
+    </Link>
+    <Link href="/money" className="market-header-quick-link market-header-quick-money" aria-label={t('My Money','আমার টাকা')} title={t('My Money','আমার টাকা')}>
+     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2.5" y="6" width="19" height="14" rx="3"/><path d="M3 10h18M16 15h2M6 6V4.5A1.5 1.5 0 0 1 7.5 3H20"/></svg>
+     <span>{t('My Money','আমার টাকা')}</span>
+    </Link>
     <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
      <button type="button" className="market-single-language" onClick={()=>onLanguageChange?.(language==='bn'?'en':'bn')}
       aria-label={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}

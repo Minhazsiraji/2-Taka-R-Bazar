@@ -16,3 +16,13 @@ Review Vercel Preview at phone 320/360/390/412px, tablet 768/820px, and desktop 
 
 ## Baseline reference
 Owner-accepted native PR #123 commit `75c083a83d7e8081d7a1bb5b9749441f708f19ab`, Expo preview group `d6117ac4-4ac7-4f7d-a424-3e4640ce76c2`.
+
+## Owner refinement 2026-10-19 (seven UI changes)
+- Compact desktop first-row header with search, Cart and My Money, responsive compact mobile header with dock preserved.
+- Rounded right-hand area-picker popover on desktop, native touch-friendly select on phone.
+- Four Savings values remain verified/unavailable; panel height reduced without inventing balances.
+- Up to six genuine active Group Deals in a three-card-per-row laptop grid, not six synthetic deals.
+- Four Exclusive products per desktop row in taller app-style cards; unpriced CTA is View details, never Ask for Price.
+- Web applies same Inter / Hind Siliguri type families as Expo with fallbacks.
+- Pools keep 3 genuine pictures, tier/deadline, membership and progress; no fabricated activity.
+- Release requires CI, Vercel Preview and owner device/browser acceptance, Production unchanged.
