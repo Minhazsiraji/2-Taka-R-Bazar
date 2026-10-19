@@ -1,5 +1,5 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
-import {Alert,Image,Linking,Pressable,ScrollView,StyleSheet,View,useWindowDimensions} from 'react-native';
+import {Alert,Image,ImageBackground,Linking,Pressable,ScrollView,StyleSheet,View,useWindowDimensions} from 'react-native';
 import {useFonts} from 'expo-font';
 import {Inter_400Regular,Inter_500Medium,Inter_600SemiBold,Inter_700Bold} from '@expo-google-fonts/inter';
 import {HindSiliguri_400Regular,HindSiliguri_500Medium,HindSiliguri_600SemiBold,HindSiliguri_700Bold} from '@expo-google-fonts/hind-siliguri';
@@ -25,7 +25,8 @@ const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').repla
 const approvedHeroImage=require('./assets/2tbr-hero-panorama-v2.jpg');
 // New owner-approved 1920×900 panoramic image at the locked 174dp banner height.
 // Earlier 16:9 artwork cropped with `cover`, while `contain` left a flat side strip.
-// One edge-to-edge image avoids seams and preserves the cart and its wheels.
+// ImageBackground fills the complete parent box, independent of the hero's
+// text padding (which made an absolute Image with 100% dimensions leave bands).
 // Use stretch so all four cart wheels stay visible at 360–412dp (aspect varies by phone).
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
 // Shared V1 colors are managed in src/theme.ts; do not define screen-specific palettes here.
@@ -211,9 +212,9 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   const longSlide=slide===0||slide===1;
   const titleSize=small?(longSlide?12.5:13.2):(longSlide?13.5:14.3);
   const titleMax=small?'62%':'60%';
-  return <View style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
-   <Image accessibilityIgnoresInvertColors source={approvedHeroImage} resizeMode="stretch"
-    style={{position:'absolute',top:0,left:0,width:'100%',height:'100%'}}/>
+  return <ImageBackground source={approvedHeroImage} resizeMode="stretch"
+   imageStyle={{borderRadius:17}}
+   style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}
     style={{color:brandV1.accentPale,fontWeight:'600',fontSize:small?8:8.8,letterSpacing:small?.55:.85,marginBottom:4}}>
     ✦ SMART SHOPPING. REAL SAVINGS!
@@ -245,7 +246,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
      <Text style={styles.heroArrow}>›</Text>
     </Pressable>
    </View>
-  </View>;
+  </ImageBackground>;
  }
  function Home(){return <>
   <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>Savar DOHS⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
