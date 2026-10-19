@@ -45,3 +45,17 @@ test('Typography never changes colors, font sizes, geometry, routes, checkout or
  assert.ok(app.includes("case 'signIn':return <NativeSignIn"));
  assert.ok(app.includes("case 'checkout':return <Checkout/>"));
 });
+
+test('Home Savings tiles are compact in the existing four-card row only',()=>{
+ const app=readFileSync(new URL('../App.tsx',import.meta.url),'utf8');
+ const tile=app.slice(app.indexOf('const savingTile='),app.indexOf('function Savings(',app.indexOf('const savingTile=')));
+ assert.ok(tile.includes("flexDirection:'row',alignItems:'center',gap:3,width:'100%'"));
+ assert.ok(tile.includes("name}</Text>"));
+ assert.ok(tile.includes("value}</Text>"));
+ assert.ok(tile.includes("onPress={()=>setScreen('savings')}"));
+ assert.ok(app.includes("savingTile:{width:'23.9%',minHeight:54,paddingHorizontal:5,paddingVertical:5"));
+ assert.ok(app.includes("savingsFour:{flexDirection:'row',alignItems:'stretch',justifyContent:'space-between',gap:4}"));
+ for(const token of ["t.thisMonth","t.lastMonth","t.lifetime","t.communityTotal"]){
+   assert.ok(app.includes('savingTile('+token),token);
+ }
+});
