@@ -114,9 +114,11 @@ function Shop({fontsReady}:{fontsReady:boolean}){
    <Ionicons name={name} size={18} color={theme.text}/>{badge>0&&<View style={styles.badge}><Text style={styles.badgeText}>{badge>99?'99+':badge}</Text></View>}
   </Pressable>;
  const savingTile=(name:string,value:string,icon:IconName,tint:string)=> <Pressable onPress={()=>setScreen('savings')} style={[styles.savingTile,{backgroundColor:dark?theme.field:tint,borderColor:theme.line}]}>
-   <Ionicons name={icon} size={16} color={theme.accent}/>
-   <Text numberOfLines={2} style={{fontSize:small?8:9,lineHeight:11,color:theme.muted}}>{name}</Text>
-   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.68} style={{fontSize:small?11:12,fontWeight:'900',color:theme.text,width:'100%'}}>{value}</Text>
+   <View style={{flexDirection:'row',alignItems:'center',gap:3,width:'100%',minWidth:0}}>
+    <Ionicons name={icon} size={14} color={theme.accent}/>
+    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={{fontSize:small?8:9,lineHeight:14,color:theme.muted,flexShrink:1}}>{name}</Text>
+   </View>
+   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{fontSize:small?11:12,fontWeight:'700',color:theme.text,width:'100%'}}>{value}</Text>
  </Pressable>;
  function Savings({home=false}:{home?:boolean}={}){return panel(<><View style={styles.between}><Text style={{fontSize:16,fontWeight:'900',color:theme.text}}>▥  {t.savings}</Text><Pressable onPress={()=>setScreen('savings')}><Text style={{color:theme.accent,fontSize:12}}>{t.viewReport} ›</Text></Pressable></View>
   <View style={styles.savingsFour}>
@@ -750,7 +752,7 @@ const styles=StyleSheet.create({
  titleRow:{flexDirection:'row',alignItems:'flex-end',justifyContent:'space-between',marginTop:16,marginBottom:8},
  panel:{borderWidth:1,borderRadius:17,padding:10,marginBottom:9,shadowColor:brandV1.text,shadowOpacity:.04,shadowRadius:9,elevation:1},
  twoCol:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'space-between'},
- savingTile:{width:'23.9%',minHeight:72,paddingHorizontal:5,paddingVertical:6,borderRadius:12,alignItems:'flex-start',justifyContent:'center',gap:2,borderWidth:1},
+ savingTile:{width:'23.9%',minHeight:54,paddingHorizontal:5,paddingVertical:5,borderRadius:12,alignItems:'stretch',justifyContent:'center',gap:3,borderWidth:1},
  savingsFour:{flexDirection:'row',alignItems:'stretch',justifyContent:'space-between',gap:4},
  hero:{padding:12,borderRadius:17,marginBottom:1,minHeight:181,overflow:'hidden'},
  heroArrow:{fontSize:24,color:'white',fontWeight:'700'},
