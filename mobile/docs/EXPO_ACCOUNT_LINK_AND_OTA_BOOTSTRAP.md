@@ -1,6 +1,6 @@
 # 2TBR Expo Account Linking — Required Setup
 
-Status (2026-10-19): **Expo account owner verified as `minhazsiraji`; no independently verified 2TBR Expo project UUID yet.** Preview dependency and fail-closed setup checks have been prepared in Draft PR #123, but no cloud link, Expo build or OTA update has been performed. Current installed Android APK is not OTA-enabled.
+Status (2026-10-19): **Linked the existing owner-approved `minhazsiraji/2tbr` Expo Cloud project, UUID `ab58cc05-7f1e-42ad-9e7f-9b5b13c91dc4`, via authenticated EAS CLI.** EAS Update setup configured the matching URL `https://u.expo.dev/ab58cc05-7f1e-42ad-9e7f-9b5b13c91dc4`; no other Expo project was touched. No OTA update, signed cloud build, store deployment or live ordering has been authorized or executed at this point. The old standalone APK cannot receive OTA updates.
 
 ## What we have done safely
 
@@ -8,16 +8,16 @@ Status (2026-10-19): **Expo account owner verified as `minhazsiraji`; no indepen
 - Production application config and live website remain unchanged.
 - Current installed Android binary is standalone but **not OTA-enabled**. Do not expect it to receive updates.
 
-## Next user input — no secret
+## Existing Expo project — no duplicate creation
 
-Create a **new** Expo project in the `minhazsiraji` account named `2tbr-mobile` (do not reuse `velunee`), then share its project dashboard URL or the project UUID displayed in the project settings.
+The existing dashboard at `https://expo.dev/accounts/minhazsiraji/projects/2tbr` is linked successfully; the canonical project slug is `2tbr`, **not** `2tbr-mobile`. The confirmed project ID is stored in `mobile/app.json`. Never initialize another project named `2tbr-mobile` or link to `velunee`.
 
 Do **not** share passwords, Expo access tokens or keys in chat.
 
-## After the project account/project UUID is known
+## After the confirmed project link (already completed)
 
-1. Associate Expo app slug `2tbr-mobile` with the correct owner/project UUID using `eas init` and review the actual project association. No guessed IDs or owner values.
-2. `expo-updates` is pinned to Expo SDK 57's `~57.0.22` range, and `runtimeVersion.policy=appVersion` is prepared. Run `npx expo install --check`; use `eas update:configure` to add the actual `updates.url` and `extra.eas.projectId`. Review its diff and confirm it did not introduce a production channel.
+1. The existing `2tbr` project is linked to its real UUID through `eas init --account minhazsiraji --non-interactive`. Review `mobile/app.json` and never create a duplicate project.
+2. `expo-updates` is pinned to Expo SDK 57's `~57.0.22` range. The CLI's `eas update:configure --environment preview --non-interactive` has already generated `updates.url`; `runtimeVersion.policy=appVersion` is set. Run `npx expo install --check` after dependency alignment.
 3. Keep preview environment settings **EXPO_PUBLIC_DEMO_MODE=true**, **EXPO_PUBLIC_NATIVE_AUTH_ENABLED=false**, **EXPO_PUBLIC_NATIVE_GOOGLE_ENABLED=false**; never package secret or service-role credentials into EXPO_PUBLIC.
 4. Use the exact app profile in `mobile/eas.json`. EAS Build will produce an OTA-enabled internal Android test binary for a one-time installation. Apple provisioning is a separate iOS gate.
 5. Restrict publishing to manually authorized `2tbr-internal-preview` channel. Do not auto-publish to production or enable checkout. Publishing should use `eas update --channel 2tbr-internal-preview --environment preview --message <reviewed-message>`.

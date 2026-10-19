@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "2-TAKA-R-BAZAR",
-    "slug": "2tbr-mobile",
+    "slug": "2tbr",
     "scheme": "twotbr",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -14,7 +14,10 @@
       "package": "com.twotbr.internalpreview"
     },
     "extra": {
-      "releaseStage": "development"
+      "releaseStage": "development",
+      "eas": {
+        "projectId": "ab58cc05-7f1e-42ad-9e7f-9b5b13c91dc4"
+      }
     },
     "plugins": [
       "expo-secure-store"
@@ -22,6 +25,9 @@
     "owner": "minhazsiraji",
     "runtimeVersion": {
       "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ab58cc05-7f1e-42ad-9e7f-9b5b13c91dc4"
     }
   }
 }

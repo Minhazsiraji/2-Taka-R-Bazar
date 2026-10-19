@@ -5,8 +5,8 @@ import { checkPreviewConfiguration, DEMO_FLAGS } from '../scripts/eas-preview-pr
 const read = name => JSON.parse(readFileSync(new URL('../' + name, import.meta.url), 'utf8'));
 function fixture() {
   const app=read('app.json'), pkg=read('package.json'), eas=read('eas.json');
-  app.expo.extra={...app.expo.extra,eas:{projectId:'12345678-1234-4234-8234-123456789abc'}};
-  app.expo.updates={url:'https://u.expo.dev/12345678-1234-4234-8234-123456789abc'};
+  app.expo.extra={...app.expo.extra,eas:{projectId:'ab58cc05-7f1e-42ad-9e7f-9b5b13c91dc4'}};
+  app.expo.updates={url:'https://u.expo.dev/ab58cc05-7f1e-42ad-9e7f-9b5b13c91dc4'};
   return {app,pkg,eas};
 }
 test('the isolated EAS profile and explicit DEMO gates accept a valid project link', () => {
@@ -16,6 +16,7 @@ test('the isolated EAS profile and explicit DEMO gates accept a valid project li
 test('wrong Expo account, project URL and native package are blocked', () => {
   const {app,pkg,eas}=fixture();
   app.expo.owner='velunee';
+  app.expo.extra.eas.projectId='00000000-0000-4000-8000-000000000000';
   app.expo.updates.url='https://u.expo.dev/00000000-0000-4000-8000-000000000000';
   app.expo.android.package='com.example.production';
   assert.ok(checkPreviewConfiguration(app,pkg,eas,DEMO_FLAGS).length >= 3);

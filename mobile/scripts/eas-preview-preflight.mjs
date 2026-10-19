@@ -23,11 +23,12 @@ export function checkPreviewConfiguration(app, pkg, eas, environment) {
   const profile = eas?.build?.[PREVIEW_CHANNEL] ?? {};
   const projectId = expo?.extra?.eas?.projectId;
   if (expo.owner !== 'minhazsiraji') errors.push('Expo owner must be minhazsiraji');
-  if (expo.slug !== '2tbr-mobile') errors.push('Expo slug must be 2tbr-mobile, never velunee');
+  if (expo.slug !== '2tbr') errors.push('Expo slug must match the existing minhazsiraji/2tbr project, never velunee');
   if (expo.android?.package !== 'com.twotbr.internalpreview') errors.push('Wrong Android internal-preview package');
   if (expo.runtimeVersion?.policy !== 'appVersion') errors.push('Use appVersion runtime policy; increment version for native changes');
   if (!pkg.dependencies?.['expo-updates']) errors.push('Missing expo-updates dependency');
   if (!UUID.test(projectId ?? '')) errors.push('Expo project is not linked: run eas init --account minhazsiraji');
+  else if (projectId !== 'ab58cc05-7f1e-42ad-9e7f-9b5b13c91dc4') errors.push('Expo project ID must match the verified 2TBR project, not another app');
   else if (expo.updates?.url !== `https://u.expo.dev/${projectId}`) errors.push('EAS updates.url must match the 2TBR Expo project UUID');
   if (profile.channel !== PREVIEW_CHANNEL || profile.distribution !== 'internal' || profile.environment !== 'preview') {
     errors.push('Internal EAS profile/channel/environment must be isolated from production');
