@@ -763,7 +763,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
      </View>}
   </>)}
   <Text style={{color:theme.muted,fontSize:11,marginBottom:15,lineHeight:17}}>
-   {lang==='bn'?'এটি শুধু ডেমো। আসল গ্রাহক, অর্ডার ও ডেলিভারি নোটিফিকেশন এখনো সংযুক্ত নয়।':'Preview only. Real customer, order and delivery notifications are not connected.'}
+   {lang==='bn'?'এটি শুধু ডেমো। আসল গ্রাহক, অর্ডার ও ডেলিভারি নোটিফিকেশন এখনো সংযুক্ত নয়।':'Preview only. No real order or savings transaction has been created. Real customer, order and delivery notifications are not connected.'}
   </Text>
  </>}
  function Menu(){return <>{title('EXPLORE', '2TBR Menu')}{[['My Orders','orders'],['Savings','savings'],['My Account','account'],['Community Pools','pools'],['Group Deals','deals']].map(([text,destination])=><Pressable key={text} onPress={()=>setScreen(destination as Screen)} style={[styles.menuRow,{backgroundColor:theme.card,borderColor:theme.line}]}><Text style={{color:theme.text}}>{text}</Text></Pressable>)}<Footer/></>}
