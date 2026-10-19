@@ -10,13 +10,15 @@
       "supportsTablet": true
     },
     "android": {
-      "edgeToEdgeEnabled": false
+      "edgeToEdgeEnabled": false,
+      "package": "com.twotbr.internalpreview"
     },
     "extra": {
       "releaseStage": "development"
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "owner": "minhazsiraji"
   }
 }
