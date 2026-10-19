@@ -1,6 +1,6 @@
 # 2TBR Expo Account Linking — Required Setup
 
-Status (2026-10-19): **Expo account exists per owner confirmation; actual username/project link has not yet been supplied**. No Expo project has been created or linked through this PR. No OTA builds or updates have been published.
+Status (2026-10-19): **Expo account owner verified from screenshot and account URL as `minhazsiraji`; Expo 2TBR project link and UUID have not yet been supplied**. No Expo project has been created or linked through this PR. No OTA builds or updates have been published.
 
 ## What we have done safely
 
@@ -10,9 +10,7 @@ Status (2026-10-19): **Expo account exists per owner confirmation; actual userna
 
 ## Next user input — no secret
 
-Share either:
-- Expo project dashboard URL (preferred if a project already exists), or
-- Expo account username/profile URL, if no project exists yet.
+Create a **new** Expo project in the `minhazsiraji` account named `2tbr-mobile` (do not reuse `velunee`), then share its project dashboard URL or the project UUID displayed in the project settings.
 
 Do **not** share passwords, Expo access tokens or keys in chat.
 
