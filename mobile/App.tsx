@@ -118,6 +118,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   setScreen('notifications');
  };
  const unreadNotices=notices.filter(item=>!item.read).length;
+ const demoPreviewInfo=()=>Alert.alert(lang==='bn'?'ডেমো প্রিভিউ':'Demo preview',lang==='bn'?'কোনো আসল অর্ডার বা সাশ্রয়ের লেনদেন তৈরি হয়নি।':'No real order or savings transaction has been created.');
  const draftGroup=(o:Offer)=>{if(o.mode!=='GROUP_DEAL')return;setGroupDrafts(old=>({...old,[o.id]:(old[o.id]||0)+1}));setScreen('cart');};
  const draftPool=(pool:Pool,items:Record<string,number>)=>{const safe=Object.fromEntries(Object.entries(items).filter(([id,q])=>pool.productIds.includes(id)&&Number.isInteger(q)&&q>0&&q<=20));if(!Object.keys(safe).length)return;setPoolDrafts(old=>({...old,[pool.id]:safe}));setScreen('cart');};
  const demoNum=(n:number)=>new Intl.NumberFormat(lang==='bn'?'bn-BD':'en-US',{maximumFractionDigits:0}).format(n);
@@ -377,7 +378,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
        <Text style={{color:theme.text,fontSize:12}}>{o.mode==='SOLO'?'Direct / Exclusive':o.mode==='GROUP_DEAL'?String(o.groupSize)+'-person Group Deal':'Community Pool'}</Text>
        <Text style={{color:theme.accent,fontSize:14,fontWeight:'900'}}>{money(o.price)}</Text>
       </Pressable>)}
-      <View style={{flexDirection:'row',gap:8,marginTop:10}}>{button(t.details,()=>link('/products/'+p.id),false)}{button(offer.mode==='SOLO'?t.add:t.join,()=>offer.mode==='SOLO'?add(offer):notify())}</View>
+      <View style={{flexDirection:'row',gap:8,marginTop:10}}>{button(t.details,()=>link('/products/'+p.id),false)}{button(offer.mode==='SOLO'?t.add:t.join,()=>offer.mode==='SOLO'?add(offer):draftGroup(offer))}</View>
       <Text style={{color:theme.muted,fontSize:10,marginTop:8}}>{demo?t.notice:'Native checkout is not enabled. Current website flows remain authoritative.'}</Text>
     </>)}
   </>;
@@ -590,7 +591,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
    {section('Delivery method','ডেলিভারির পদ্ধতি',<><View style={{flexDirection:'row',gap:8}}>{option(text('Home delivery','বাসায় ডেলিভারি'),delivery==='home',()=>setDelivery('home'))}{option(text('Pickup point','সংগ্রহের স্থান'),delivery==='pickup',()=>setDelivery('pickup'))}</View><Text style={{color:theme.muted,fontSize:11,marginTop:9}}>{delivery==='home'?text('Savar DOHS · SAMPLE address. Account, delivery coverage and fees require confirmation.','সাভার ডিওএইচএস · ডেমো ঠিকানা। ডেলিভারি ও চার্জ নিশ্চিত করা হবে।'):text('Pickup point and opening hours will be confirmed.','সংগ্রহের স্থান ও সময় নিশ্চিত করা হবে।')}</Text></>)}
    {section('Payment method','পেমেন্ট পদ্ধতি',<><View style={{flexDirection:'row',gap:8}}>{option(text('Cash on delivery','ক্যাশ অন ডেলিভারি'),payment==='cod',()=>setPayment('cod'))}{option(text('Online (future) · Unavailable','অনলাইন (পরে) · বন্ধ'),false,()=>{},true)}</View><Text style={{color:theme.muted,fontSize:11,marginTop:9}}>{text('No money is collected. COD eligibility and any advance delivery fee require confirmation.','এখানে পেমেন্ট হয় না। ক্যাশ অন ডেলিভারি ও আগাম ডেলিভারি চার্জ নিশ্চিত করা হবে।')}</Text></>)}
    {section('Estimated checkout summary','আনুমানিক চেকআউট',<><View style={styles.between}><Text style={{color:theme.muted}}>{text('Products','পণ্য')}</Text><Text style={{color:theme.text,fontWeight:'900'}}>{demoMoney(subtotal)}</Text></View><View style={[styles.between,{marginTop:8}]}><Text style={{color:theme.muted}}>{text('Delivery fee','ডেলিভারি চার্জ')}</Text><Text style={{color:theme.text}}>{text('Not yet quoted','নির্ধারিত নয়')}</Text></View><View style={[styles.between,{marginTop:8}]}><Text style={{color:theme.muted}}>{text('Amount payable','পরিশোধযোগ্য মূল্য')}</Text><Text style={{color:theme.accent,fontWeight:'900'}}>{text('Awaiting final quote','চূড়ান্ত দাম বাকি')}</Text></View><Text style={{color:theme.muted,fontSize:10,marginTop:12}}>{text('Group Deals and Pools are excluded until separately qualified. This checkout cannot place an order.','গ্রুপ ডিল ও পুল যোগ হবে না যতক্ষণ না আলাদাভাবে অনুমোদিত হয়। এখানে কোনো অর্ডার দেওয়া যায় না।')}</Text></>)}
-   <View style={{flexDirection:'row'}}>{button(text('Check readiness · Demo only','প্রস্তুতি দেখুন · ডেমো'),notify)}</View>
+   <View style={{flexDirection:'row'}}>{button(text('Check readiness · Demo only','প্রস্তুতি দেখুন · ডেমো'),demoPreviewInfo)}</View>
   </>;
  }
 
@@ -635,7 +636,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
    </>)}
    {panel(<>
     <Text style={{fontSize:13,fontWeight:'900',color:theme.text,marginBottom:8}}>{text('Account services','অ্যাকাউন্ট সেবা')}</Text>
-    {[[t.orders,'receipt-outline','orders'],[t.savings,'stats-chart-outline','savings'],['Saved addresses · Soon','location-outline',''],['My Money · Soon','wallet-outline',''],['Notifications · Soon','notifications-outline',''],['Profile & settings · Soon','settings-outline','']].map(([name,icon,nav])=><Pressable key={name} onPress={()=>nav?setScreen(nav as Screen):notify()} style={{paddingVertical:11,flexDirection:'row',gap:8,borderTopWidth:1,borderColor:theme.line,alignItems:'center'}}>
+    {[[t.orders,'receipt-outline','orders'],[t.savings,'stats-chart-outline','savings'],['Saved addresses · Soon','location-outline',''],['My Money · Soon','wallet-outline',''],['Notifications','notifications-outline','notifications'],['Profile & settings · Soon','settings-outline','']].map(([name,icon,nav])=><Pressable key={name} onPress={()=>nav?setScreen(nav as Screen):demoPreviewInfo()} style={{paddingVertical:11,flexDirection:'row',gap:8,borderTopWidth:1,borderColor:theme.line,alignItems:'center'}}>
      <Ionicons name={icon as IconName} color={theme.accent} size={19}/><Text style={{fontSize:11,flex:1,fontWeight:'700',color:theme.text}}>{name}</Text><Ionicons name="chevron-forward" color={theme.muted} size={15}/>
     </Pressable>)}
    </>)}
