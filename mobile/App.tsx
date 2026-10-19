@@ -17,7 +17,8 @@ import {useNativeAuth} from './src/auth/use-native-auth';
 import {NativeSignIn} from './src/auth/native-sign-in';
 
 type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
-type Screen=Tab|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
+type Screen=Tab|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'notifications'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
+type PreviewNotice={id:number;enTitle:string;bnTitle:string;enBody:string;bnBody:string;read:boolean};
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
 // Offline-bundled, owner-uploaded approved art; static require is necessary for Metro assets.
@@ -50,6 +51,8 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const [payment,setPayment]=useState<'cod'|'online'>('cod');
  const [orderFilter,setOrderFilter]=useState<'all'|'active'|'completed'|'cancelled'>('all');
  const [selectedOrderId,setSelectedOrderId]=useState<string|null>(null);
+ const [notices,setNotices]=useState<PreviewNotice[]>([]);
+ const noticeSerial=useRef(0);
  const auth=useNativeAuth();
  const cartOwner=useRef<string|undefined>(undefined);
  const [demo,setDemo]=useState(requestedDemo);
@@ -62,7 +65,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   if(!auth.ready)return;
   const owner=auth.user?.id??'guest';
   if(cartOwner.current!==undefined&&cartOwner.current!==owner){
-   setCart({});setGroupDrafts({});setPoolDrafts({});setPoolQuantities({});
+   setCart({});setGroupDrafts({});setPoolDrafts({});setPoolQuantities({});setNotices([]);
    setSelectedOffer(null);setSelectedPool(null);setScreen('account');
   }
   cartOwner.current=owner;
@@ -95,8 +98,26 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   const current=previous[id]||0;const next=Math.max(0,Math.min(100,current+delta));
   const clone={...previous};if(next)clone[id]=next;else delete clone[id];return clone;
  });
- const add=(offer:Offer)=>{if(!demo){Alert.alert('Checkout not enabled','Live mobile purchasing requires separate qualification. Continue via the current website.');return}updateCart(offer.id,1)};
- const notify=()=>Alert.alert(demo?'Demo preview':'Information','No real order or savings transaction has been created.');
+ const pushDemoNotice=(enTitle:string,bnTitle:string,enBody:string,bnBody:string)=>{
+  const id=++noticeSerial.current;
+  setNotices(old=>[{id,enTitle,bnTitle,enBody,bnBody,read:false},...old].slice(0,20));
+ };
+ const add=(offer:Offer)=>{
+  if(!demo){Alert.alert('Checkout not enabled','Live mobile purchasing requires separate qualification. Continue via the current website.');return}
+  updateCart(offer.id,1);
+  const product=byId(offer.productId);
+  pushDemoNotice(
+   (product?.name||'Product')+' added to demo cart',
+   (product?.nameBn||'পণ্য')+' ডেমো কার্টে যোগ হয়েছে',
+   'Your selection is saved in this local preview. No order or payment was created.',
+   'পণ্যটি এই ডেমো কার্টে যোগ হয়েছে। কোনো অর্ডার বা পেমেন্ট হয়নি।'
+  );
+ };
+ const openNotifications=()=>{
+  setNotices(old=>old.map(item=>item.read?item:{...item,read:true}));
+  setScreen('notifications');
+ };
+ const unreadNotices=notices.filter(item=>!item.read).length;
  const draftGroup=(o:Offer)=>{if(o.mode!=='GROUP_DEAL')return;setGroupDrafts(old=>({...old,[o.id]:(old[o.id]||0)+1}));setScreen('cart');};
  const draftPool=(pool:Pool,items:Record<string,number>)=>{const safe=Object.fromEntries(Object.entries(items).filter(([id,q])=>pool.productIds.includes(id)&&Number.isInteger(q)&&q>0&&q<=20));if(!Object.keys(safe).length)return;setPoolDrafts(old=>({...old,[pool.id]:safe}));setScreen('cart');};
  const demoNum=(n:number)=>new Intl.NumberFormat(lang==='bn'?'bn-BD':'en-US',{maximumFractionDigits:0}).format(n);
@@ -711,6 +732,40 @@ function Shop({fontsReady}:{fontsReady:boolean}){
    <Text style={{color:theme.muted,fontSize:10,marginBottom:16}}>{text('Every amount on this screen is illustrative. Community savings is a separate demo aggregate.','এখানকার সব সংখ্যাই নমুনা। কমিউনিটির সাশ্রয়ও আলাদা ডেমো হিসাব।')}</Text>
   </>;
  }
+ function Notifications(){return <>
+  {title('DEMO NOTIFICATIONS',lang==='bn'?'নোটিফিকেশন':'Notifications')}
+  {panel(<>
+   <View style={[styles.between,{marginBottom:10}]}>
+    <Text style={{fontSize:12,color:theme.text,fontWeight:'700'}}>
+     {lang==='bn'?'শুধু এই অ্যাপের ডেমো আপডেট':'Local demo activity'}
+    </Text>
+    {!!notices.length&&<Pressable accessibilityRole="button" accessibilityLabel="Clear notifications" onPress={()=>setNotices([])}>
+      <Text style={{color:theme.accent,fontWeight:'600',fontSize:11}}>{lang==='bn'?'সব মুছুন':'Clear all'}</Text>
+    </Pressable>}
+   </View>
+   {notices.length?notices.map((notice,i)=><View key={notice.id} style={{paddingVertical:12,borderTopWidth:i?1:0,borderColor:theme.line}}>
+      <View style={{flexDirection:'row',gap:9,alignItems:'flex-start'}}>
+       <Ionicons name="cart-outline" size={19} color={theme.accent}/>
+       <View style={{flex:1,gap:5}}>
+        <Text style={{fontSize:12,color:theme.text,fontWeight:'700'}}>{lang==='bn'?notice.bnTitle:notice.enTitle}</Text>
+        <Text style={{fontSize:11,color:theme.muted,lineHeight:16}}>{lang==='bn'?notice.bnBody:notice.enBody}</Text>
+       </View>
+      </View>
+      <Pressable accessibilityRole="button" onPress={()=>onTab('cart')} style={{alignSelf:'flex-end',marginTop:7}}>
+       <Text style={{fontSize:11,color:theme.accent,fontWeight:'600'}}>{lang==='bn'?'কার্ট দেখুন →':'View cart →'}</Text>
+      </Pressable>
+     </View>):<View style={{paddingVertical:14,alignItems:'center',gap:7}}>
+      <Ionicons name="notifications-outline" size={29} color={theme.accent}/>
+      <Text style={{color:theme.text,fontWeight:'600',fontSize:12}}>{lang==='bn'?'কোনো নতুন আপডেট নেই':'No notifications yet'}</Text>
+      <Text style={{color:theme.muted,textAlign:'center',fontSize:11,lineHeight:16}}>
+       {lang==='bn'?'বিশেষ পণ্য ডেমো কার্টে যোগ করলে এখানে আপডেট দেখাবে।':'Add an Exclusive Product to your demo cart to see a local update here.'}
+      </Text>
+     </View>}
+  </>)}
+  <Text style={{color:theme.muted,fontSize:11,marginBottom:15,lineHeight:17}}>
+   {lang==='bn'?'এটি শুধু ডেমো। আসল গ্রাহক, অর্ডার ও ডেলিভারি নোটিফিকেশন এখনো সংযুক্ত নয়।':'Preview only. Real customer, order and delivery notifications are not connected.'}
+  </Text>
+ </>}
  function Menu(){return <>{title('EXPLORE', '2TBR Menu')}{[['My Orders','orders'],['Savings','savings'],['My Account','account'],['Community Pools','pools'],['Group Deals','deals']].map(([text,destination])=><Pressable key={text} onPress={()=>setScreen(destination as Screen)} style={[styles.menuRow,{backgroundColor:theme.card,borderColor:theme.line}]}><Text style={{color:theme.text}}>{text}</Text></Pressable>)}<Footer/></>}
  function body(){
  switch(screen){
@@ -725,13 +780,14 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  case 'orders':return <Orders/>;
  case 'orderDetail':return <OrderDetail/>;
  case 'savings':return <SavingsReport/>;
+ case 'notifications':return <Notifications/>;
  case 'group':case 'product':return <OfferDetails/>;
  case 'retail':return <RetailDetails/>;
  case 'pool':return <PoolDetails/>;
  case 'menu':return <Menu/>;
  }}
  const tabs:[Tab,IconName][]=[['home','home-outline'],['pools','people-outline'],['deals','pricetag-outline'],['exclusive','basket-outline'],['cart','cart-outline']];
- return <TypographyProvider language={lang} loaded={fontsReady}><SafeAreaView style={{flex:1,backgroundColor:theme.background}} edges={['top','left','right','bottom']}>
+ return <TypographyProvider language={lang} loaded={fontsReady}><SafeAreaView style={{flex:1,backgroundColor:theme.background}} edges={['top','bottom']}>
   <StatusBar style={dark?'light':'dark'}/>
   <View style={{paddingHorizontal:12,paddingTop:6,paddingBottom:8,backgroundColor:theme.background,borderBottomWidth:1,borderColor:theme.line}}>
    <View style={{flexDirection:'row',alignItems:'center',gap:4}}>
@@ -742,7 +798,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     </Pressable>
     <Pressable accessibilityRole="button" onPress={()=>setLang(v=>v==='en'?'bn':'en')} style={[styles.headerIcon,{borderColor:theme.line,backgroundColor:theme.field}]}><Text style={{fontSize:10,fontWeight:'900',color:theme.text}}>{lang==='en'?'BAN':'EN'}</Text></Pressable>
     {headerAction(dark?'sunny-outline':'moon-outline',()=>setDark(v=>!v))}
-    {headerAction('notifications-outline',()=>demo?notify():link('/notifications'),demo?1:0)}
+    {headerAction('notifications-outline',openNotifications,unreadNotices)}
     {headerAction('person-outline',()=>setScreen('account'))}
     {headerAction('menu-outline',()=>setScreen('menu'))}
    </View>
@@ -752,7 +808,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   </View>
   {busy&&<Text style={{textAlign:'center',color:theme.accent,fontSize:11}}>Loading public product catalog…</Text>}
   <ScrollView key={screen} keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingHorizontal:12,paddingTop:4,paddingBottom:screen==='pool'?110:30}}>
-   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='orderDetail'?setScreen('orders'):screen==='checkout'?setScreen('cart'):screen==='orders'||screen==='savings'||screen==='signIn'?setScreen('account'):screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
+   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='orderDetail'?setScreen('orders'):screen==='checkout'?setScreen('cart'):screen==='orders'||screen==='savings'||screen==='signIn'?setScreen('account'):screen==='notifications'?onTab('home'):screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
    {body()}
   </ScrollView>
   <View style={[styles.bottom,{backgroundColor:theme.card,borderColor:theme.line}]}>

@@ -10,7 +10,7 @@
       "supportsTablet": true
     },
     "android": {
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": false
     },
     "extra": {
       "releaseStage": "development"
