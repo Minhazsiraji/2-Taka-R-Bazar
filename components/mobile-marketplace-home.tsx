@@ -261,7 +261,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
       <span className="mhome-overline">{d.is_demo?t('Demo preview','ডেমো প্রিভিউ'):ended?t('Ended','শেষ হয়েছে'):confirmed?t('Price unlocked','দাম আনলক হয়েছে'):t('Pending unlock','আনলকের অপেক্ষায়')}</span>
       <h3>{t(d.product_name,d.product_name_bn??d.product_name)}</h3>
       <p className="mhome-muted">{d.package_size} · {areas.find(a=>a.community_id===d.community_id)?.community_name??''}</p>
-      <div className="mhome-deal-prices">
+      <div className={'mhome-deal-prices'+(!price?' is-price-pending':'')}>
        <strong>{price??t('Price pending','দাম আসছে')}</strong>
        {saved!=null&&confirmed&&!d.is_demo&&!d.commerce_synthetic&&<s>{money(d.reference_price)}</s>}
       </div>

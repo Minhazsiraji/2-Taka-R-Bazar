@@ -51,6 +51,7 @@ try{
     const brand=header.querySelector('.market-brand-lockup').getBoundingClientRect()
     const actions=header.querySelector('.market-header-actions').getBoundingClientRect()
     return {width:innerWidth,scroll:document.documentElement.scrollWidth,bg:getComputedStyle(shell).backgroundColor,
+     homeBg:document.querySelector('.mhome')?getComputedStyle(document.querySelector('.mhome')).backgroundColor:null,
      headerHeight:header.getBoundingClientRect().height,overlap:brand.right>actions.left+1,
      fonts:document.fonts.check('14px Inter'),bengaliFont:document.fonts.check('14px \"Hind Siliguri\"','বাংলা'),language:header.lang,
      navCount:[...document.querySelectorAll('nav.app-mobile-nav')].filter(n=>getComputedStyle(n).display!=='none').length,
@@ -77,6 +78,7 @@ try{
     assert.equal(await page.locator('input[name="password"]').count(),1)
    }
    if(route==='/'){
+    assert.equal(geometry.homeBg,'rgba(0, 0, 0, 0)','Home background must match the shared shell')
     assert.equal(await page.locator('.public-login-join').count(),0)
     if(width>=1024){
      assert.equal(await page.locator('.mhome-exclusive-grid').evaluate(n=>getComputedStyle(n).gridTemplateColumns.split(' ').length),4)
@@ -93,6 +95,17 @@ try{
     assert.equal(await page.locator('.public-account-panel a[href="/money"]').count(),0)
     await page.locator('.public-account-trigger').press('Escape')
     assert.equal(await page.locator('.public-account-menu').getAttribute('open'),null)
+    if(width<768){
+     await page.locator('#mhome-community').selectOption({index:1})
+     assert.notEqual(await page.locator('#mhome-community').evaluate(n=>n.value), '')
+     await page.locator('#mhome-community').selectOption('')
+    }else{
+     await page.locator('.mhome-area-picker summary').click()
+     await page.locator('.mhome-area-menu button').nth(1).click()
+     assert.equal(await page.locator('.mhome-area-picker').getAttribute('open'),null)
+     await page.locator('.mhome-area-picker summary').click()
+     await page.locator('.mhome-area-menu button').first().click()
+    }
    }
    if([320,390,820,1440].includes(width)&&['/','/login','/products','/privacy'].includes(route)){
     await page.screenshot({path:`${out}/${route==='/'?'home':route.slice(1)}-${width}-${theme}-${language}.png`,fullPage:true})
@@ -105,6 +118,15 @@ try{
   await page.getByRole('button',{name:language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন',exact:true}).click()
   await page.waitForLoadState('networkidle')
   assert.equal(await page.locator('header.market-flat-header').getAttribute('lang'),language==='bn'?'en':'bn')
+  if(width===320&&theme==='light'&&language==='en'){
+   await page.goto(`http://127.0.0.1:${port}/login`,{waitUntil:'networkidle'})
+   await page.locator('#market-header-product-search').fill('rice')
+   await page.locator('#market-header-product-search').press('Enter')
+   await page.waitForURL('**/?q=rice',{waitUntil:'networkidle'})
+   assert.equal(await page.locator('#market-header-product-search').evaluate(n=>n.value),'rice')
+   const repeated=await page.goto(`http://127.0.0.1:${port}/?q=rice&q=oil`,{waitUntil:'networkidle'})
+   assert.equal(repeated.status(),200,'Repeated query parameters must not crash Home')
+  }
   await context.close()
  }
  await writeFile(`${out}/results.json`,JSON.stringify({checks:results.length,results},null,2))

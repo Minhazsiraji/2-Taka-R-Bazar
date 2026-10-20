@@ -134,7 +134,7 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-product-actions{display:grid!important;grid-template-columns:1fr;gap:8px}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-product-actions>span{border:0!important;padding:0!important;color:var(--public-muted)!important;background:transparent!important}
 /* Card content: compact savings, two product actions, readable participation. */
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome{--mhome-ink:var(--public-ink);--mhome-muted:var(--public-muted);--mhome-accent:var(--public-accent);color:var(--public-ink)!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome{background:transparent!important;--mhome-ink:var(--public-ink);--mhome-muted:var(--public-muted);--mhome-accent:var(--public-accent);color:var(--public-ink)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-muted,.mhome-savings-note,.mhome-exclusive-availability,.mhome-pool-meta){color:var(--public-muted)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-deal-copy h3,.mhome-exclusive-copy h3,.mhome-pool-copy h3,.mhome-section-heading h2,.mhome-savings-heading h2){color:var(--public-ink)!important;line-height:1.4!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-area-picker summary,.mhome-area-menu,.mhome-native-area){background:var(--public-card)!important;color:var(--public-ink)!important;border-color:var(--public-line)!important}
@@ -249,3 +249,5 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 /* Legacy v4 assigns a font to every element; override those descendants explicitly. */
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat *:not(code):not(pre):not(kbd):not(samp){font-family:var(--app-font)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat [lang="bn"]{--app-font:'Hind Siliguri','Inter',system-ui,sans-serif}
+
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-prices.is-price-pending strong{font-size:16px!important;line-height:1.4!important}
