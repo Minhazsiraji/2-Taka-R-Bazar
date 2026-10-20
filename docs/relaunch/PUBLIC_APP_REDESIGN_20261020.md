@@ -24,6 +24,17 @@ Preview-only approval gate: hosted Vercel must be READY at the final branch comm
 
 No schema, Auth records, RLS, orders, inventory, financial calculations, permissions or backend code changed. No new paid service, merge to main or Production release authorized.
 
-## Separate mobile follow-up (after website qualification)
+## Final owner refinements — Pasted text(2).txt
 
-Owner also requested the existing Expo dock closer to the bottom safe-area edge, with stronger frosted glass. This must be implemented on a separate mobile branch from PR #123, with mobile checks and an internal Expo OTA update only. It must preserve the approved five destinations, exact hero/logo, and current Expo project/channel/runtime. No native files belong in this web PR. Do not claim an OTA has shipped until its update ID and channel have been verified.
+- One glass search frame with bare SVG search/submit icons. Both Enter and arrow retain the existing submit handlers.
+- Public header actions enlarged about 11–13%: 40px desktop, 34px tablet, 31px phone. DOM/focus order is Cart, language, theme, notifications, Account, Menu (Cart stays in the existing dock on phones).
+- Community row spans the same content edge as the hero; the trigger stays at its far-right boundary. Existing location, area selection/persistence and keyboard controls are unchanged.
+- Reusable alpha glass/input/menu surfaces, thin white rim, static inner reflection and restrained shadow in the canonical public CSS. White rims have a fine contrasting shadow on light pages. Card blur stays off; only dropdowns use 8px blur. Primary teal controls and neutral photo surfaces stay readable.
+- Join action shortened to “Join Deal →” / “ডিলে যোগ দিন →”, nowrap. Existing links and all unavailable/demo/closed restrictions are retained.
+- Approved logo, slogans, hero geometry/content, compact Savings, responsive grids and public mobile dock preserved. All other design-lock hashes remain intact; only the explicitly approved header and canonical public CSS hashes are updated.
+
+Regression qualification covers rendered header/focus order, restricted vs joinable deals, bare search icon surfaces, alpha panels/white rims, selector alignment, header control bounds, one-line bilingual join labels, search through Enter/arrow, and the existing responsive/route/theme/language checks. No real account login, cart mutation, order or payment is performed.
+
+## Native app scope
+
+The owner now confirms the Expo Android dock is acceptable. No native dock change, Expo OTA or mobile file change belongs to this web task. This supersedes the earlier separate-dock follow-up note.

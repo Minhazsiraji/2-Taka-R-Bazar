@@ -273,7 +273,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
         aria-label={t('Group participation','গ্রুপ অংশগ্রহণ')} aria-valuenow={Math.min(d.buyer_count,d.next_threshold!)}
         aria-valuemin={0} aria-valuemax={d.next_threshold!}><span style={{width:percent+'%'}}/></div>}
       <div className="mhome-deal-actions"><Link href={path}>{t('View details','বিস্তারিত')}</Link>
-       {joinable?<Link href="/group-deals">{t('Join Group Deal','গ্রুপ ডিলে যোগ দিন')} <span aria-hidden="true">→</span></Link>:
+       {joinable?<Link className="mhome-join-deal" href="/group-deals">{t('Join Deal','ডিলে যোগ দিন')} <span aria-hidden="true">→</span></Link>:
         <span className="mhome-action-unavailable" aria-disabled="true">{d.is_demo?t('Preview only','শুধু প্রিভিউ'):ended?t('Deal ended','ডিল শেষ'):t('Joining unavailable','যোগদান চালু হয়নি')}</span>}
       </div>
      </div>

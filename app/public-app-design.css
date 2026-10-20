@@ -15,7 +15,14 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
  --public-bg:#F4F1F6; --public-card:#FFFFFF; --public-ink:#17233B;
  --public-muted:#5B6980; --public-line:#E3DFE8; --public-field:#F8F6FA;
  --public-accent:#007F83; --public-on-accent:#FFFFFF; --public-soft:#DFF8F6;
- --public-radius:18px; --public-shadow:0 2px 8px rgb(23 35 59 / 4%);
+ /* Glass uses alpha surfaces and static highlights, with blur reserved for menus.
+    The fine outer shadow keeps the white rim visible on the light page. */
+ --public-glass:rgb(255 255 255 / 54%); --public-input-glass:rgb(255 255 255 / 36%);
+ --public-menu-glass:rgb(249 248 252 / 96%); --public-rim:rgb(255 255 255 / 88%);
+ --public-reflection:rgb(255 255 255 / 75%);
+ --public-radius:18px; --public-shadow:0 2px 8px rgb(23 35 59 / 5%);
+ --public-glass-shadow:inset 0 1px 0 var(--public-reflection),0 0 0 .5px rgb(23 35 59 / 12%),var(--public-shadow);
+ --public-button-fill:linear-gradient(180deg,rgb(255 255 255 / 12%),transparent),var(--public-accent);
  --app-font:'Inter','Hind Siliguri',system-ui,-apple-system,'Segoe UI',sans-serif;
  --mhome-ink:var(--public-ink); --mhome-muted:var(--public-muted); --mhome-accent:var(--public-accent);
  background:var(--public-bg)!important; color:var(--public-ink)!important;
@@ -26,6 +33,10 @@ html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat.public
  --public-bg:#0D1424; --public-card:#17233B; --public-ink:#F4F1F6;
  --public-muted:#BEC9D9; --public-line:#37465C; --public-field:#23324A;
  --public-accent:#2CD6CE; --public-on-accent:#17233B; --public-soft:#164C50;
+ --public-glass:rgb(23 35 59 / 62%); --public-input-glass:rgb(35 50 74 / 46%);
+ --public-menu-glass:rgb(23 35 59 / 96%); --public-rim:rgb(255 255 255 / 64%);
+ --public-reflection:rgb(255 255 255 / 32%);
+ --public-shadow:0 2px 8px rgb(0 0 0 / 12%);
 }
 body.site-glass-root:has(main.public-marketplace-flat){background:#F4F1F6!important}
 html[data-theme="dark"] body.site-glass-root:has(main.public-marketplace-flat){background:#0D1424!important}
@@ -34,25 +45,25 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(h1,h2,h3,strong,b,.font-black,.font-extrabold){font-weight:700!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.muted,.text-slate-400,.text-slate-500,.text-slate-600,.text-slate-700){color:var(--public-muted)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.text-black,.text-slate-900,.text-slate-950){color:var(--public-ink)!important}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.card,.cx-glass-card,.cx-glass-subcard,.market-product-card,.mhome-savings-panel,.mhome-deal-card,.mhome-exclusive-card,.mhome-pool-card,section.bg-white,section.rounded-3xl,section.rounded-2xl){
- background:var(--public-card)!important; color:var(--public-ink)!important;
- border:1px solid var(--public-line)!important; border-radius:var(--public-radius)!important;
- box-shadow:inset 0 1px 0 rgb(255 255 255 / 10%),var(--public-shadow)!important;
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.card,.glass-panel,.cx-glass-card,.cx-glass-subcard,.market-product-card,.mhome-empty,.mhome-savings-panel,.mhome-deal-card,.mhome-exclusive-card,.mhome-pool-card,section.bg-white,section.rounded-3xl,section.rounded-2xl){
+ background:var(--public-glass)!important; color:var(--public-ink)!important;
+ border:1px solid var(--public-rim)!important; border-radius:var(--public-radius)!important;
+ box-shadow:var(--public-glass-shadow)!important;
  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
 }
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.card,.cx-glass-card,.cx-glass-subcard)::before{display:none!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.card,.glass-panel,.cx-glass-card,.cx-glass-subcard)::before{display:none!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.input,input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),select,textarea){
- background:var(--public-field)!important;color:var(--public-ink)!important;
- border-color:var(--public-line)!important;box-shadow:none!important;border-radius:12px;
+ background:var(--public-input-glass)!important;color:var(--public-ink)!important;
+ border-color:var(--public-rim)!important;box-shadow:var(--public-glass-shadow)!important;border-radius:12px;
 }
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(input,textarea)::placeholder{color:var(--public-muted)!important;opacity:1}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.btn-primary,.mhome-cart-btn,.mhome-pool-link){
- background:var(--public-accent)!important;color:var(--public-on-accent)!important;
- border:1px solid transparent!important;border-radius:999px!important;box-shadow:none!important;
+ background:var(--public-button-fill)!important;color:var(--public-on-accent)!important;
+ border:1px solid var(--public-rim)!important;border-radius:999px!important;box-shadow:var(--public-glass-shadow)!important;
 }
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.btn-secondary,.mhome-details-btn){
- background:var(--public-card)!important;color:var(--public-accent)!important;
- border:1px solid var(--public-line)!important;border-radius:999px!important;box-shadow:none!important;
+ background:var(--public-glass)!important;color:var(--public-accent)!important;
+ border:1px solid var(--public-rim)!important;border-radius:999px!important;box-shadow:var(--public-glass-shadow)!important;
 }
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(button,a,input,select,summary):focus-visible{outline:2px solid var(--public-accent)!important;outline-offset:3px}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(button:disabled,[aria-disabled="true"]){opacity:.55;cursor:not-allowed}
@@ -60,9 +71,9 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .public-glass-header.market-flat-header{
  position:relative!important;top:auto!important;z-index:40!important;isolation:initial;
  width:100%!important;max-width:none!important;margin:0!important;padding:0 16px!important;
- background:var(--public-bg)!important;color:var(--public-ink)!important;
- border:0!important;border-bottom:1px solid var(--public-line)!important;
- border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;
+ background:var(--public-glass)!important;color:var(--public-ink)!important;
+ border:0!important;border-bottom:1px solid var(--public-rim)!important;
+ border-radius:0!important;box-shadow:var(--public-glass-shadow)!important;backdrop-filter:none!important;
 }
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header::before,body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header::after{display:none!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header>.market-header-inner{
@@ -82,26 +93,39 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
  display:flex!important;grid-column:2!important;grid-row:1!important;align-items:center;gap:7px;
  width:100%!important;max-width:400px!important;min-height:38px!important;height:38px!important;
  margin:0!important;padding:0 10px!important;border-radius:999px!important;
- border:1px solid var(--public-line)!important;background:var(--public-card)!important;box-shadow:none!important;
+ border:1px solid var(--public-rim)!important;background:var(--public-glass)!important;box-shadow:var(--public-glass-shadow)!important;
 }
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search input{
  width:100%;height:34px!important;min-height:0!important;padding:0!important;border:0!important;
  border-radius:0!important;background:transparent!important;font-size:12px!important;
 }
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .public-search-submit{background:transparent;color:var(--public-accent);border:0;min-width:24px;cursor:pointer}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search :is(.market-search-icon,.public-search-submit){
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ flex:0 0 28px!important;width:28px!important;height:34px!important;min-width:28px!important;min-height:0!important;
+ padding:0!important;margin:0!important;background:transparent!important;color:var(--public-accent)!important;
+ border:0!important;border-radius:0!important;box-shadow:none!important;filter:none!important;
+}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search :is(.market-search-icon,.public-search-submit)::before,body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search :is(.market-search-icon,.public-search-submit)::after{display:none!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search svg{width:18px!important;height:18px!important;flex:none}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search input{min-width:0!important;box-shadow:none!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .public-search-submit{cursor:pointer}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .theme-toggle-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;font-size:20px;line-height:1}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-header-actions :is(a,button,summary):hover{background:var(--public-soft)!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-header-actions :is(a,button,summary):active{box-shadow:inset 0 1px 3px rgb(23 35 59 / 16%)!important}
+
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-actions{
  display:flex!important;grid-column:3!important;grid-row:1!important;align-items:center;justify-content:flex-end;
  flex-wrap:nowrap!important;gap:6px!important;width:auto!important;margin:0!important;
 }
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header :is(.market-header-quick-link,.public-account-trigger,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button,.market-single-language){
- display:flex!important;align-items:center!important;justify-content:center!important;flex:0 0 36px!important;
- width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;
- max-width:36px!important;padding:0!important;border:1px solid var(--public-line)!important;
- border-radius:50%!important;color:var(--public-ink)!important;background:var(--public-card)!important;
- box-shadow:none!important;font-size:16px!important;cursor:pointer;
+ display:flex!important;align-items:center!important;justify-content:center!important;flex:0 0 40px!important;
+ width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;
+ max-width:40px!important;padding:0!important;border:1px solid var(--public-rim)!important;
+ border-radius:50%!important;color:var(--public-ink)!important;background:var(--public-glass)!important;
+ box-shadow:var(--public-glass-shadow)!important;font-size:16px!important;cursor:pointer;
 }
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-single-language{font-size:10px!important;font-weight:600!important}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header :is(.market-header-quick-link svg,.public-account-trigger svg,.customer-notification-bell svg){width:18px!important;height:18px!important;max-width:18px!important;flex:0 0 18px}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header :is(.market-header-quick-link svg,.public-account-trigger svg,.customer-notification-bell svg,.market-mobile-menu-button svg){width:20px!important;height:20px!important;max-width:20px!important;flex:0 0 20px}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header :is(.theme-toggle-label,.market-header-quick-link>span){display:none!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-language-toggle{display:block!important;border:0!important;padding:0!important;background:transparent!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .public-account-menu{position:relative;flex:0 0 auto}
@@ -111,8 +135,8 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.public-account-panel,.market-mobile-nav-panel){
  position:absolute!important;top:calc(100% + 8px)!important;right:0!important;left:auto!important;
  display:grid;gap:2px;width:230px;max-width:calc(100vw - 24px);padding:8px!important;margin:0!important;
- border:1px solid var(--public-line)!important;border-radius:16px!important;
- background:var(--public-card)!important;color:var(--public-ink)!important;box-shadow:0 8px 28px rgb(0 0 0 / 12%)!important;z-index:70;
+ border:1px solid var(--public-rim)!important;border-radius:16px!important;
+ background:var(--public-menu-glass)!important;color:var(--public-ink)!important;box-shadow:var(--public-glass-shadow),0 8px 28px rgb(0 0 0 / 12%)!important;backdrop-filter:blur(8px);z-index:70;
 }
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-mobile-nav-panel{right:16px!important;top:calc(100% - 2px)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.public-account-panel a,.public-account-panel button,.market-mobile-nav-panel a){
@@ -126,21 +150,35 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .auth-page-content{width:100%;padding-top:38px;padding-bottom:28px;flex:1}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .auth-page-content .card{padding:24px!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .customer-page-content{flex:1}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-band{background:transparent!important;border-color:var(--public-line)!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-band{background:transparent!important;border-color:var(--public-rim)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat #published-products>.market-content{padding:10px 0 24px!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-products-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-product-card{padding:12px!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-product-title{font-size:16px!important;line-height:1.45!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-product-actions{display:grid!important;grid-template-columns:1fr;gap:8px}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-product-actions>span{border:0!important;padding:0!important;color:var(--public-muted)!important;background:transparent!important}
+/* Community trigger shares the hero's full content boundary. */
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-strip{width:100%!important;max-width:none!important;margin-inline:0!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-area-picker,.mhome-native-area){margin-left:auto!important;flex:0 1 auto!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-picker{width:280px;max-width:42%}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-native-area{text-overflow:ellipsis;overflow:hidden}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-area-picker summary,.mhome-area-menu,.mhome-native-area){border:1px solid var(--public-rim)!important;box-shadow:var(--public-glass-shadow)!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-menu{background:var(--public-menu-glass)!important;backdrop-filter:blur(8px)}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-menu button[aria-current="true"],body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-menu button:hover{background:var(--public-soft)!important;color:var(--public-accent)!important}
+/* Inset hero rim preserves the locked artwork, dimensions and text/CTA positions. */
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-hero{box-shadow:inset 0 0 0 1px var(--public-rim),inset 0 2px 0 var(--public-reflection),var(--public-shadow)!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.market-footer-brand,.market-footer-information>nav,.market-footer-contact){background:var(--public-glass)!important;box-shadow:inset 0 0 0 1px var(--public-rim),var(--public-glass-shadow)!important;border-radius:14px;padding:12px!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(section,article,div,details).border:is(.rounded-xl,.rounded-2xl,.rounded-3xl):not(.error):not(.success){background:var(--public-glass)!important;border-color:var(--public-rim)!important;box-shadow:var(--public-glass-shadow)!important}
+/* Product photography retains a neutral backing inside its glass frame. */
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.market-product-media,.mhome-deal-visual,.mhome-exclusive-image,.mhome-pool-photos),body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat article :is(div,section).border:has(>img){background:var(--public-field)!important}
 /* Card content: compact savings, two product actions, readable participation. */
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome{background:transparent!important;--mhome-ink:var(--public-ink);--mhome-muted:var(--public-muted);--mhome-accent:var(--public-accent);color:var(--public-ink)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-muted,.mhome-savings-note,.mhome-exclusive-availability,.mhome-pool-meta){color:var(--public-muted)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-deal-copy h3,.mhome-exclusive-copy h3,.mhome-pool-copy h3,.mhome-section-heading h2,.mhome-savings-heading h2){color:var(--public-ink)!important;line-height:1.4!important}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-area-picker summary,.mhome-area-menu,.mhome-native-area){background:var(--public-card)!important;color:var(--public-ink)!important;border-color:var(--public-line)!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-area-picker summary,.mhome-native-area){background:var(--public-glass)!important;color:var(--public-ink)!important;border-color:var(--public-rim)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-menu button{color:var(--public-ink)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-savings-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-savings-card{min-height:64px!important;padding:7px!important;gap:2px!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--public-line)!important;border-radius:12px!important;background:var(--public-field)!important;color:var(--public-ink)!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-savings-card{min-height:64px!important;padding:7px!important;gap:2px!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--public-rim)!important;border-radius:12px!important;background:var(--public-input-glass)!important;color:var(--public-ink)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-savings-value{font-size:22px!important;line-height:1.2!important;color:var(--public-ink)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-savings-label{font-size:11px!important;color:var(--public-muted)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-savings-note{font-size:11px!important;line-height:1.4;margin:7px 0 0!important}
@@ -155,21 +193,24 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-exclusive-image img,.mhome-deal-visual img,.mhome-pool-photos img){object-fit:contain!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-exclusive-price{display:flex!important;flex-wrap:wrap;gap:5px;align-items:baseline}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-deal-prices strong,.mhome-exclusive-price strong){color:var(--public-ink)!important}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-actions{display:grid!important;grid-template-columns:1fr 1fr!important;align-items:stretch;gap:6px!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-actions{display:grid!important;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)!important;align-items:stretch;gap:6px!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-deal-actions a,.mhome-action-unavailable){display:flex!important;align-items:center;justify-content:center;white-space:normal!important;text-align:center;min-height:38px;padding:6px!important;border-radius:999px!important;font-size:12px!important;line-height:1.4!important}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-actions a:first-child{background:var(--public-card)!important;color:var(--public-accent)!important;border:1px solid var(--public-line)!important}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-actions a:nth-child(2){background:var(--public-accent)!important;color:var(--public-on-accent)!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-actions a:first-child{background:var(--public-glass)!important;color:var(--public-accent)!important;border:1px solid var(--public-rim)!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-actions a:nth-child(2){background:var(--public-button-fill)!important;color:var(--public-on-accent)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-action-unavailable{background:var(--public-field);color:var(--public-muted);border:1px solid var(--public-line)}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-save{color:var(--public-accent)!important;background:var(--public-soft)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-pool-copy h3{white-space:normal!important;display:block!important;-webkit-line-clamp:unset!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-pool-meta{flex-wrap:wrap;gap:6px!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-pool-bottom{flex-wrap:wrap;gap:10px!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-pool-link{margin-left:auto;min-height:38px;white-space:normal!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-actions .mhome-join-deal{white-space:nowrap!important;gap:4px!important;padding:6px 8px!important;border:1px solid var(--public-rim)!important;box-shadow:var(--public-glass-shadow)!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-actions .mhome-join-deal span{flex:none}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-savings-card,.mhome-card-pill,.mhome-save,.mhome-action-unavailable){border:1px solid var(--public-rim)!important;box-shadow:var(--public-glass-shadow)!important}
 /* Same compact footer and five-destination, edge-mounted glass dock everywhere. */
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-information-footer{
- background:var(--public-bg)!important;color:var(--public-muted)!important;border:0!important;
- border-top:1px solid var(--public-line)!important;margin-top:auto!important;padding:24px 16px 16px!important;
- box-shadow:none!important;border-radius:0!important;
+ background:var(--public-glass)!important;color:var(--public-muted)!important;border:0!important;
+ border-top:1px solid var(--public-rim)!important;margin-top:auto!important;padding:24px 16px 16px!important;
+ box-shadow:var(--public-glass-shadow)!important;border-radius:0!important;
 }
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-information-footer :is(h2,strong){color:var(--public-ink)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-footer-information{padding:0!important;gap:24px!important;max-width:1440px}
@@ -193,7 +234,7 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-brand-copy small{font-size:9px!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .brand-logo{width:38px!important;height:38px!important;min-width:38px!important;max-width:38px!important;min-height:38px!important;max-height:38px!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-actions{gap:4px!important}
- body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header :is(.market-header-quick-link,.public-account-trigger,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button,.market-single-language){width:30px!important;height:32px!important;min-width:30px!important;max-width:30px!important;min-height:32px!important;flex-basis:30px!important}
+ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header :is(.market-header-quick-link,.public-account-trigger,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button,.market-single-language){width:34px!important;height:36px!important;min-width:34px!important;max-width:34px!important;min-height:36px!important;flex-basis:34px!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-products-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 }
 @media(max-width:767px){
@@ -206,10 +247,10 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .brand-logo{width:30px!important;height:36px!important;min-width:30px!important;max-width:30px!important;min-height:36px!important;max-height:36px!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-brand-copy strong{font-size:10px!important;line-height:1.3!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-brand-copy small{font-size:7.5px!important;line-height:1.5!important;letter-spacing:0!important}
- body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header :is(.market-header-quick-link,.public-account-trigger,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button,.market-single-language){width:28px!important;height:32px!important;min-width:28px!important;max-width:28px!important;min-height:32px!important;flex-basis:28px!important}
- body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header :is(.market-header-quick-link svg,.public-account-trigger svg,.customer-notification-bell svg){width:16px!important;height:16px!important;flex-basis:16px}
+ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header :is(.market-header-quick-link,.public-account-trigger,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button,.market-single-language){width:31px!important;height:36px!important;min-width:31px!important;max-width:31px!important;min-height:36px!important;flex-basis:31px!important}
+ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header :is(.market-header-quick-link svg,.public-account-trigger svg,.customer-notification-bell svg,.market-mobile-menu-button svg){width:18px!important;height:18px!important;max-width:18px!important;flex-basis:18px}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-quick-cart{display:none!important}
- body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .public-account-panel{right:-116px!important}
+ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .public-account-panel{right:-34px!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .app-mobile-nav{display:block!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-footer-information{display:grid!important;grid-template-columns:1fr 1fr!important;gap:18px 12px!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-footer-brand{grid-column:1/-1}

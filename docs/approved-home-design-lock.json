@@ -11,7 +11,7 @@
     "app/marketplace-story.css": "c2a36662a999814ce542b718930c8b8c3996840f778871a69bf28b62e9c7be1b",
     "app/marketplace-unified.css": "8654c2e5c47343e4a058ec97066aa139db068192bd84c166d4300b6d4fd60def",
     "components/animated-hero-messages.tsx": "7787d408afa61296ea499bacff02f6e7c06212cc41ed49e7b9a1b5f9b378f2cc",
-    "components/public-header.tsx": "f3898ca779bb3d000e8f9e5064ec01bb0b4772be66ca0a0e9837fd89cadd17c2",
+    "components/public-header.tsx": "9853d4eb713e6941cef55f29e827ceb3fb1b0742eadf8a9906e5720bba330ef3",
     "components/storefront-footer.tsx": "afea1bd5d1bd28090e2be2724f9ebcb9686b711bb1054ba0d8d52c267dbd4c1a",
     "lib/hero-messages.ts": "1d9d0f793ce30114647b0ad66c3196ceedd3698ce71da273b2cf8a7b270ff89a",
     "app/site-header-mobile.css": "49c50d83fe0647bb63c173c579c932cc93d069f78b6d094d9aa74314c735c8b6",
@@ -23,7 +23,7 @@
     "app/site-customer-shell.css": "9797fceb995adf79cac0a0ea05355ac63393039cb60e083c63d2cccb534aefa9",
     "components/customer-footer.tsx": "6897dc663122b6bca66fb0e211b4c529b7427099c2dd67439a098d28e69ead79",
     "components/theme-toggle.tsx": "ad784cdfdeca0c299a3317b99acb95e9966bd399f1772568f3d8182062c7229a",
-    "app/public-app-design.css": "fdfc3879adfb45e2dc9d6a2f20ec9fd86e4fb2e19308837410b1a110217f37fa"
+    "app/public-app-design.css": "963dfd54120fb53be08a3c2418d4a8910d165ba60f704ab2ff6d2d19a70dc16f"
   },
   "navigation_change": {
     "source": "Issue #64, approved functional navigation",
@@ -91,5 +91,11 @@
     "protected": "Existing hero art and geometry retained. Staff dock, Admin, Finance, Treasury, auth handlers, transaction rules and database files unchanged.",
     "release": "Draft PR #127, Preview only; owner acceptance required before merge or Production.",
     "fonts": "Self-hosted Inter Latin and Hind Siliguri Bengali 400/500/600/700 (Fontsource 5.3.0; OFL licenses included). No CSP changes."
+  },
+  "public_glass_refinements_20261020": {
+    "approved_by": "Owner-supplied WEB UI FINAL REFINEMENT HANDOFF, Pasted text(2).txt, 20 October 2026",
+    "scope": "Public glass/rim tokens, unified search, 10–15% larger reordered actions, far-right community selector, short bilingual Join Deal label; same hero, savings geometry, fonts and mobile dock.",
+    "protected": "No Expo/native files or OTA. No Admin, Finance, Treasury, auth, catalog/cart rules, routes or database changes. All other protected file hashes retained.",
+    "release": "Draft PR #127, isolated Vercel Preview only. No main merge or Production release."
   }
 }

@@ -23,7 +23,7 @@ test('pending deal never presents upcoming price as a confirmed selling price or
  assert.ok(html.includes('Price unlock pending'))
  assert.ok(!html.includes('1,075'))
  assert.ok(!html.includes('Save ৳'))
- assert.ok(html.includes('Join Group Deal'))
+ assert.ok(html.includes('Join Deal'))
 })
 test('unlocked authoritative deal shows both prices and verified difference',()=>{
  const html=render({offers:[{...offer,confirmed_price:1075,price_status:'unlocked'}]})
@@ -54,8 +54,8 @@ test('only eligible priced in-stock SOLO offers render a cart form, alongside pr
 })
 const {PublicHeader}=await loadSource('components/public-header.tsx',{
  'next/link':Link,'next/navigation':{usePathname:()=>'/login'},'@/app/actions/auth':{signOut:()=>{}},
- '@/components/brand-logo':{BrandLogo:()=>null},'@/components/notification-bell':{NotificationBell:()=>null},
- '@/components/header-action-icon':{HeaderActionIcon:()=>null},'@/components/theme-toggle':{ThemeToggle:()=>null},
+ '@/components/brand-logo':{BrandLogo:()=>null},'@/components/notification-bell':{NotificationBell:()=>React.createElement('a',{className:'customer-notification-bell',href:'/notifications'},'Notifications')},
+ '@/components/header-action-icon':{HeaderActionIcon:()=>null},'@/components/theme-toggle':{ThemeToggle:()=>React.createElement('button',{className:'theme-toggle'},'Theme')},
  '@/lib/site':{SITE_TAGLINE_EN:'Smart shopping. Real savings!',SITE_TAGLINE_BN:'একসাথে কিনি, কম দামে পাই!'},
  '@/lib/storefront-language':{chooseText},
 })
@@ -70,4 +70,25 @@ test('guest and member Account menus have appropriate destinations; login has no
  assert.ok(member.includes('href="/account/savings"'))
  assert.ok(member.includes('Sign out'))
  assert.ok(!member.includes('market-header-quick-money'))
+})
+
+test('public header DOM and keyboard order is Cart, language, theme, notifications, Account, Menu',()=>{
+ const html=renderToStaticMarkup(React.createElement(PublicHeader,{storefront:true,authenticated:true}))
+ const controls=['market-header-quick-cart','market-language-toggle','class="theme-toggle"','class="customer-notification-bell"','class="public-account-menu"','class="market-mobile-menu-button"']
+ const positions=controls.map(control=>html.indexOf(control))
+ assert.ok(positions.every(position=>position>=0))
+ assert.deepEqual([...positions].sort((a,b)=>a-b),positions)
+ assert.match(html,/<\/details><button type="button" class="market-mobile-menu-button"/)
+})
+test('join uses short bilingual copy while restricted deals retain their disabled state',()=>{
+ const en=render({offers:[offer]})
+ const bn=render({offers:[offer],language:'bn'})
+ assert.match(en,/href="\/group-deals" class="mhome-join-deal">Join Deal /)
+ assert.match(bn,/href="\/group-deals" class="mhome-join-deal">ডিলে যোগ দিন /)
+ assert.ok(!en.includes('Join Group Deal'))
+ for(const restricted of [{is_demo:true},{commerce_synthetic:true},{commerce_group_id:'closed',commerce_group_phase:'closed'}]){
+  const html=render({offers:[{...offer,...restricted}]})
+  assert.ok(!html.includes('mhome-join-deal'))
+  assert.ok(html.includes('aria-disabled="true"'))
+ }
 })

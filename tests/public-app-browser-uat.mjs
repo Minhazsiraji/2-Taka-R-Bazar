@@ -40,7 +40,7 @@ try{
   },{theme,language})
   await context.addCookies([{name:'2tbr_storefront_language',value:language,url:`http://127.0.0.1:${port}`}])
   const page=await context.newPage()
-  for(const route of (process.env.UAT_DEBUG?['/']:['/','/login','/signup','/products','/about','/faq','/privacy','/terms','/return-policy','/refund-policy','/cart','/group-deals','/pool','/account','/money'])){
+  for(const route of (process.env.UAT_DEBUG?['/']:['/','/login','/signup','/products','/about','/faq','/privacy','/terms','/return-policy','/refund-policy','/cart','/group-deals','/pool','/account','/account/savings','/money'])){
    const response=await page.goto(`http://127.0.0.1:${port}${route}`,{waitUntil:'networkidle'})
    assert.ok(response?.status()<400,`${route} returned ${response?.status()}`)
    await page.locator('.market-header-search input').waitFor()
@@ -50,7 +50,17 @@ try{
     const header=document.querySelector('header.market-flat-header')
     const brand=header.querySelector('.market-brand-lockup').getBoundingClientRect()
     const actions=header.querySelector('.market-header-actions').getBoundingClientRect()
-    return {width:innerWidth,scroll:document.documentElement.scrollWidth,bg:getComputedStyle(shell).backgroundColor,
+    const visible=n=>getComputedStyle(n).display!=='none'
+    const actionNodes=[...header.querySelectorAll('.market-header-actions > *')].filter(visible)
+    const actionOrder=actionNodes.map(n=>n.classList.contains('market-header-quick-cart')?'cart':n.classList.contains('market-language-toggle')?'language':n.classList.contains('theme-toggle')?'theme':n.classList.contains('customer-notification-bell')?'notifications':n.classList.contains('public-account-menu')?'account':'menu')
+    const controlBounds=actionNodes.map(n=>(n.matches('details')?n.querySelector('summary'):n.matches('.market-language-toggle')?n.querySelector('button'):n).getBoundingClientRect()).map(r=>({left:r.left,right:r.right,top:r.top,width:r.width,height:r.height}))
+    const searchPieces=[...header.querySelectorAll('.market-search-icon,.public-search-submit')].map(n=>{const c=getComputedStyle(n);return {background:c.backgroundColor,image:c.backgroundImage,border:c.borderWidth,shadow:c.boxShadow}})
+    const surfaceNodes=[...shell.querySelectorAll('.card,.glass-panel,.market-product-card,.mhome-savings-panel,.mhome-savings-card,.mhome-deal-card,.mhome-exclusive-card,.mhome-pool-card')]
+    const surfaces=surfaceNodes.map(n=>{const c=getComputedStyle(n);return {class:n.className,bg:c.backgroundColor,border:c.borderTopColor,width:c.borderTopWidth,shadow:c.boxShadow}})
+    const picker=shell.querySelector(innerWidth<768?'.mhome-native-area':'.mhome-area-picker')
+    const hero=shell.querySelector('.mhome-hero')
+    const joinButtons=[...shell.querySelectorAll('.mhome-join-deal')].map(n=>{const r=n.getBoundingClientRect();const range=document.createRange();range.selectNodeContents(n);const c=getComputedStyle(n);return {text:n.textContent.trim(),nowrap:c.whiteSpace,width:r.width,contentWidth:n.scrollWidth,clientWidth:n.clientWidth,rects:[...range.getClientRects()].map(r=>({top:r.top,bottom:r.bottom})),color:c.color}})
+    return {actionOrder,controlBounds,searchPieces,surfaces,joinButtons,pickerRight:picker?.getBoundingClientRect().right,heroRight:hero?.getBoundingClientRect().right,width:innerWidth,scroll:document.documentElement.scrollWidth,bg:getComputedStyle(shell).backgroundColor,
      homeBg:document.querySelector('.mhome')?getComputedStyle(document.querySelector('.mhome')).backgroundColor:null,
      headerHeight:header.getBoundingClientRect().height,overlap:brand.right>actions.left+1,
      fonts:document.fonts.check('14px Inter'),bengaliFont:document.fonts.check('14px \"Hind Siliguri\"','বাংলা'),language:header.lang,
@@ -68,6 +78,25 @@ try{
    assert.deepEqual(geometry.wrongBengaliFont,[],'Bengali copy must use the approved fallback')
    assert.equal(geometry.fonts,true,'Self-hosted Inter failed to load')
    assert.equal(geometry.bengaliFont,true,'Self-hosted Hind Siliguri failed to load')
+   assert.deepEqual(geometry.actionOrder,width<768?['language','theme','notifications','account','menu']:['cart','language','theme','notifications','account','menu'])
+   const expectedSize=width<768?31:width<1024?34:40
+   for(const [i,control] of geometry.controlBounds.entries()){
+    assert.ok(Math.abs(control.width-expectedSize)<1,`Header width mismatch: ${JSON.stringify(control)}`)
+    assert.ok(Math.abs(control.top-geometry.controlBounds[0].top)<1,'Controls are not vertically aligned')
+    if(i)assert.ok(control.left>=geometry.controlBounds[i-1].right,'Header controls overlap')
+   }
+   for(const part of geometry.searchPieces){
+    assert.equal(part.background,'rgba(0, 0, 0, 0)','Search icon/arrow has a separate background')
+    assert.equal(part.image,'none')
+    assert.equal(part.border,'0px')
+    assert.equal(part.shadow,'none')
+   }
+   for(const surface of geometry.surfaces){
+    assert.match(surface.bg,/rgba\(.+, 0\.[0-9]+\)/,`Surface is opaque: ${JSON.stringify(surface)}`)
+    assert.match(surface.border,/rgba?\(255, 255, 255/,'Glossy white rim is missing')
+    assert.equal(surface.width,'1px')
+    assert.notEqual(surface.shadow,'none')
+   }
    assert.equal(geometry.secondNav,false)
    assert.equal(geometry.navCount,width<768?1:0)
    if(width<768)assert.ok(Math.abs(geometry.dockBottom-950)<2,'Dock is not anchored at viewport bottom')
@@ -78,6 +107,13 @@ try{
     assert.equal(await page.locator('input[name="password"]').count(),1)
    }
    if(route==='/'){
+    assert.ok(Math.abs(geometry.pickerRight-geometry.heroRight)<2,`Community selector is not at the hero right edge: ${JSON.stringify(geometry)}`)
+    for(const button of geometry.joinButtons){
+     assert.equal(button.text,language==='bn'?'ডিলে যোগ দিন →':'Join Deal →')
+     assert.equal(button.nowrap,'nowrap')
+     assert.ok(button.contentWidth<=button.clientWidth+1,`Join button clips: ${JSON.stringify(button)}`)
+     assert.ok(Math.max(...button.rects.map(r=>r.top))-Math.min(...button.rects.map(r=>r.top))<8,'Join label wraps')
+    }
     assert.equal(geometry.homeBg,'rgba(0, 0, 0, 0)','Home background must match the shared shell')
     assert.equal(await page.locator('.public-login-join').count(),0)
     if(width>=1024){
@@ -121,9 +157,13 @@ try{
   if(width===320&&theme==='light'&&language==='en'){
    await page.goto(`http://127.0.0.1:${port}/login`,{waitUntil:'networkidle'})
    await page.locator('#market-header-product-search').fill('rice')
-   await page.locator('#market-header-product-search').press('Enter')
+   await page.locator('.public-search-submit').click()
    await page.waitForURL('**/?q=rice',{waitUntil:'networkidle'})
    assert.equal(await page.locator('#market-header-product-search').evaluate(n=>n.value),'rice')
+   await page.goto(`http://127.0.0.1:${port}/login`,{waitUntil:'networkidle'})
+   await page.locator('#market-header-product-search').fill('oil')
+   await page.locator('#market-header-product-search').press('Enter')
+   await page.waitForURL('**/?q=oil',{waitUntil:'networkidle'})
    const repeated=await page.goto(`http://127.0.0.1:${port}/?q=rice&q=oil`,{waitUntil:'networkidle'})
    assert.equal(repeated.status(),200,'Repeated query parameters must not crash Home')
   }

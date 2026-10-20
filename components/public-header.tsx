@@ -59,17 +59,24 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
    </Link>
    <form className="market-header-search" action="/" role="search" onSubmit={onSearchChange?e=>{e.preventDefault();document.getElementById('mobile-deals')?.scrollIntoView({behavior:'smooth',block:'start'})}:undefined}>
     <label htmlFor="market-header-product-search" className="sr-only">{t('Search groceries and products','পণ্য ও বাজার খুঁজুন')}</label>
-    <span aria-hidden="true" className="market-search-icon">⌕</span>
+    <span aria-hidden="true" className="market-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></span>
     <input id="market-header-product-search" name="q" type="search"
      {...(onSearchChange?{value:searchValue,onChange:(e:React.ChangeEvent<HTMLInputElement>)=>onSearchChange(e.target.value)}:{defaultValue:''})}
      placeholder={t('Search rice, oil, groceries…','চাল, ডাল, তেল, বাজার খুঁজুন…')} autoComplete="off" enterKeyHint="search"/>
-    <button className="public-search-submit" type="submit" aria-label={t('Search','খুঁজুন')}>→</button>
+    <button className="public-search-submit" type="submit" aria-label={t('Search','খুঁজুন')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>
    </form>
    <div className="market-header-actions">
     <Link href="/cart" className="market-header-quick-link market-header-quick-cart" aria-label={t('Cart','কার্ট')} title={t('Cart','কার্ট')}>
      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h3l2.5 12h12l2.5-9H6M8 21h.01M18 21h.01"/></svg>
      <span>{t('Cart','কার্ট')}</span>
     </Link>
+    <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
+     <button type="button" className="market-single-language" onClick={()=>onLanguageChange?.(language==='bn'?'en':'bn')}
+      aria-label={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}
+      title={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}>{language==='bn'?'EN':'BAN'}</button>
+    </div>
+    <ThemeToggle/>
+    <NotificationBell/>
     <details className="public-account-menu" ref={accountRef} onKeyDown={e=>{if(e.key==='Escape')accountRef.current?.removeAttribute('open')}}>
      <summary className="public-account-trigger" aria-label={t('Account menu','অ্যাকাউন্ট মেনু')} title={t('Account','অ্যাকাউন্ট')}><HeaderActionIcon kind="profile"/></summary>
      <nav className="public-account-panel" aria-label={t('Account navigation','অ্যাকাউন্ট নেভিগেশন')}>
@@ -86,16 +93,9 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
       </>}
      </nav>
     </details>
-    <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
-     <button type="button" className="market-single-language" onClick={()=>onLanguageChange?.(language==='bn'?'en':'bn')}
-      aria-label={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}
-      title={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}>{language==='bn'?'EN':'BAN'}</button>
-    </div>
-    <ThemeToggle/>
-    <NotificationBell/>
     <button type="button" className="market-mobile-menu-button" aria-expanded={menuOpen} aria-controls="market-mobile-navigation"
      aria-label={menuOpen?t('Close menu','মেনু বন্ধ করুন'):t('Open menu','মেনু খুলুন')}
-     onClick={()=>setMenuOpen(open=>!open)}><span aria-hidden="true">{menuOpen?'✕':'☰'}</span></button>
+     onClick={()=>setMenuOpen(open=>!open)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d={menuOpen?'m6 6 12 12M6 18 18 6':'M4 6h16M4 12h16M4 18h16'}/></svg></button>
    </div>
   </div>
   {pathname==='/login'&&<Link href="/signup" className="public-login-join">{t('Join the pool','পুলে যোগ দিন')}</Link>}
