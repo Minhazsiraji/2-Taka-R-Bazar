@@ -106,7 +106,7 @@ try:
     for label in labels:
         assert bounds(nav_node(scrolled, label)) == nav[label], 'Dock shifted while scrolling'
     shot('scrolled')
-    tap(find(scrolled, 'Cart'))
+    tap(nav_node(scrolled, 'Cart'))
     time.sleep(1)
     find(ui(), 'No direct products yet.')
     shot('cart')
