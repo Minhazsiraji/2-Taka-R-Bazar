@@ -18,10 +18,11 @@ def adb(*args):
 def ui():
     adb('shell', 'uiautomator', 'dump', '/sdcard/window.xml')
     raw = adb('shell', 'cat', '/sdcard/window.xml')
+    (OUT/'window.xml').write_bytes(raw)
     return ET.fromstring(raw)
 
 def matches(node, label):
-    return any(value == label or value.endswith(' '+label) for value in [node.get('content-desc', ''), node.get('text', '')])
+    return any(value.strip() == label or value.split()[-1:] == [label] for value in [node.get('content-desc', ''), node.get('text', '')])
 
 def find(root, label):
     return next(n for n in root.iter('node') if matches(n, label))

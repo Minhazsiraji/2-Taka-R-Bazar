@@ -54,7 +54,11 @@ jobs:
         run: |
           chmod +x android/gradlew
           cd android
-          ./gradlew :app:assembleRelease --no-daemon --stacktrace
+          # SDK 57 exceeds the template's 512 MB class-metadata limit.
+          # Compile Kotlin in this same JVM to avoid competing daemon heaps.
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace --max-workers=2 \
+            '-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1536m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8' \
+            -Pkotlin.compiler.execution.strategy=in-process
       - name: Verify APK contains packaged JavaScript and demo app only
         run: |
           APK=android/app/build/outputs/apk/release/app-release.apk
