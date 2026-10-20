@@ -68,7 +68,7 @@ test('text fades at the same playback boundaries and remains readable on failure
  assert.ok(tree.root.findByType('Animated.View').props.style.opacity.value<.1);
  await act(()=>video.props.onFailure());
  assert.equal(tree.root.findByType('Animated.View').props.style.opacity.value,1);
- await act(()=>video.props.onTime(0,8));
+ await act(()=>{video.props.onTime(0,8);video.props.onLoop()});
  await act(()=>tree.root.findByProps({accessibilityLabel:'Slide 3'}).props.onPress());
  assert.equal(tree.root.findByType('Animated.View').props.style.opacity.value,1);
  await act(()=>tree.unmount());

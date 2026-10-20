@@ -29,7 +29,7 @@ export function MotionHero({lang,dark,small,frameStyle,onExplore}:{
  const select=(next:number)=>{if(!failed.current)setOpacity(0);setSlide((next+heroMessages.length)%heroMessages.length);setRestartKey(v=>v+1)};
  return <ImageBackground source={approvedHeroImage} resizeMode="stretch" imageStyle={{borderRadius:17}}
   style={[frameStyle,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
-  <HeroVideo restartKey={restartKey} onLoop={()=>{setOpacity(0);setSlide(v=>(v+1)%heroMessages.length)}}
+  <HeroVideo restartKey={restartKey} onLoop={()=>{if(failed.current)return;setOpacity(0);setSlide(v=>(v+1)%heroMessages.length)}}
    onTime={(time,duration)=>{if(!failed.current)setOpacity(heroTextOpacity(time,duration))}}
    onFailure={()=>{failed.current=true;setOpacity(1)}}/>
   <View pointerEvents="none" style={StyleSheet.absoluteFill}>
