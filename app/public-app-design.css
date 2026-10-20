@@ -45,7 +45,7 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(h1,h2,h3,strong,b,.font-black,.font-extrabold){font-weight:700!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.muted,.text-slate-400,.text-slate-500,.text-slate-600,.text-slate-700){color:var(--public-muted)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.text-black,.text-slate-900,.text-slate-950){color:var(--public-ink)!important}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.card,.glass-panel,.cx-glass-card,.cx-glass-subcard,.market-product-card,.mhome-empty,.mhome-savings-panel,.mhome-deal-card,.mhome-exclusive-card,.mhome-pool-card,section.bg-white,section.rounded-3xl,section.rounded-2xl){
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.card,.table-wrap,.glass-panel,.glass-subpanel,.cx-glass-card,.cx-glass-subcard,.market-product-card,.mhome-empty,.mhome-savings-panel,.mhome-deal-card,.mhome-exclusive-card,.mhome-pool-card,section.bg-white,section.rounded-3xl,section.rounded-2xl){
  background:var(--public-glass)!important; color:var(--public-ink)!important;
  border:1px solid var(--public-rim)!important; border-radius:var(--public-radius)!important;
  box-shadow:var(--public-glass-shadow)!important;

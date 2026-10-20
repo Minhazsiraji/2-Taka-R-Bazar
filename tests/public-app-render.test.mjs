@@ -1,3 +1,5 @@
+import {readFileSync} from 'node:fs'
+import {createHash} from 'node:crypto'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import React from 'react'
@@ -91,4 +93,11 @@ test('join uses short bilingual copy while restricted deals retain their disable
   assert.ok(!html.includes('mhome-join-deal'))
   assert.ok(html.includes('aria-disabled="true"'))
  }
+})
+
+test('legacy theme declarations remain identical for protected non-public interfaces',()=>{
+ const source18=readFileSync('app/site-theme.css','utf8').replaceAll('main:not(.public-marketplace-flat) ','main ')
+ assert.equal(createHash('sha256').update(source18).digest('hex'),'c108bf52a5a48f27523e46216570ded73e94760bc1564f70d7a657ea9b32e7fa')
+ const source30=readFileSync('app/site-theme-surface-fix.css','utf8').replaceAll('main:not(.public-marketplace-flat) ','main ')
+ assert.equal(createHash('sha256').update(source30).digest('hex'),'9b1c95bfab066299354875c602e12556556322a2fb73eafa9b7c1b88235aa6fe')
 })

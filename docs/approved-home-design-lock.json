@@ -23,7 +23,7 @@
     "app/site-customer-shell.css": "9797fceb995adf79cac0a0ea05355ac63393039cb60e083c63d2cccb534aefa9",
     "components/customer-footer.tsx": "6897dc663122b6bca66fb0e211b4c529b7427099c2dd67439a098d28e69ead79",
     "components/theme-toggle.tsx": "ad784cdfdeca0c299a3317b99acb95e9966bd399f1772568f3d8182062c7229a",
-    "app/public-app-design.css": "963dfd54120fb53be08a3c2418d4a8910d165ba60f704ab2ff6d2d19a70dc16f"
+    "app/public-app-design.css": "b41bf4774a1a009399c5304fb71986751aac2b8b16b961730e764f9b4861db16"
   },
   "navigation_change": {
     "source": "Issue #64, approved functional navigation",
@@ -96,6 +96,7 @@
     "approved_by": "Owner-supplied WEB UI FINAL REFINEMENT HANDOFF, Pasted text(2).txt, 20 October 2026",
     "scope": "Public glass/rim tokens, unified search, 10–15% larger reordered actions, far-right community selector, short bilingual Join Deal label; same hero, savings geometry, fonts and mobile dock.",
     "protected": "No Expo/native files or OTA. No Admin, Finance, Treasury, auth, catalog/cart rules, routes or database changes. All other protected file hashes retained.",
-    "release": "Draft PR #127, isolated Vercel Preview only. No main merge or Production release."
+    "release": "Draft PR #127, isolated Vercel Preview only. No main merge or Production release.",
+    "legacy_theme": "Only high-specificity rounded-panel selectors in site-theme.css and site-theme-surface-fix.css exclude the public shell. All declarations are unchanged and protected by normalized SHA-256 regression checks."
   }
 }

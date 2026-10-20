@@ -93,7 +93,7 @@ try{
    }
    for(const surface of geometry.surfaces){
     assert.match(surface.bg,/rgba\(.+, 0\.[0-9]+\)/,`Surface is opaque: ${JSON.stringify(surface)}`)
-    assert.match(surface.border,/rgba?\(255, 255, 255/,'Glossy white rim is missing')
+    assert.match(surface.border,/rgba?\(255, 255, 255/,`Glossy white rim is missing: ${route}/${width}/${theme}/${language} ${JSON.stringify(surface)}`)
     assert.equal(surface.width,'1px')
     assert.notEqual(surface.shadow,'none')
    }
@@ -114,6 +114,22 @@ try{
      assert.ok(button.contentWidth<=button.clientWidth+1,`Join button clips: ${JSON.stringify(button)}`)
      assert.ok(Math.max(...button.rects.map(r=>r.top))-Math.min(...button.rects.map(r=>r.top))<8,'Join label wraps')
     }
+    // Local-only layout probe: eligibility is independently covered by rendered tests.
+    // Measure the short join label in a real card's allocated action width, then
+    // restore its original restricted control before interactions or screenshots.
+    const joinProbe=await page.locator('.mhome-deal-actions').first().evaluate((actions,label)=>{
+     const original=actions.children[1]
+     const probe=document.createElement('a');probe.className='mhome-join-deal';probe.href='#'
+     const arrow=document.createElement('span');arrow.textContent='→';arrow.setAttribute('aria-hidden','true')
+     probe.append(document.createTextNode(label+' '),arrow)
+     original.replaceWith(probe)
+     const css=getComputedStyle(probe)
+     const measured={nowrap:css.whiteSpace,scroll:probe.scrollWidth,client:probe.clientWidth}
+     probe.replaceWith(original)
+     return measured
+    },language==='bn'?'ডিলে যোগ দিন':'Join Deal')
+    assert.equal(joinProbe.nowrap,'nowrap')
+    assert.ok(joinProbe.scroll<=joinProbe.client+1,`Short join label clips at ${width}/${theme}/${language}: ${JSON.stringify(joinProbe)}`)
     assert.equal(geometry.homeBg,'rgba(0, 0, 0, 0)','Home background must match the shared shell')
     assert.equal(await page.locator('.public-login-join').count(),0)
     if(width>=1024){
