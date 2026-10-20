@@ -20,11 +20,14 @@ def ui():
     raw = adb('shell', 'cat', '/sdcard/window.xml')
     return ET.fromstring(raw)
 
+def matches(node, label):
+    return any(value == label or value.endswith(' '+label) for value in [node.get('content-desc', ''), node.get('text', '')])
+
 def find(root, label):
-    return next(n for n in root.iter('node') if n.get('content-desc') == label or n.get('text') == label)
+    return next(n for n in root.iter('node') if matches(n, label))
 
 def nav_node(root, label):
-    return [n for n in root.iter('node') if n.get('content-desc') == label or n.get('text') == label][-1]
+    return [n for n in root.iter('node') if matches(n, label)][-1]
 
 def bounds(node):
     return tuple(map(int, re.findall(r'\d+', node.get('bounds'))))
@@ -64,14 +67,18 @@ try:
     first = shot('light-initial')
     # Only sample the right-hand media, avoiding carousel text/controls.
     crop = (int(first.width*.65), int(top+15*density), first.width-int(24*density), int(bottom-15*density))
-    time.sleep(2)
-    second = shot('light-motion')
-    assert motion(first, second, crop) > .3, 'Hero is static or video did not autoplay'
-    time.sleep(8.5)
-    after_loop = shot('light-after-loop')
-    time.sleep(2)
-    after_loop_motion = shot('light-after-loop-motion')
-    assert motion(after_loop, after_loop_motion, crop) > .3, 'Video stopped after its 8-second duration'
+    # The source deliberately holds still for part of each cycle. Sample a full
+    # cycle instead of assuming any pair of frames must differ.
+    def cycle_motion(prefix):
+        frames = []
+        for index in range(9):
+            frames.append(shot(f'{prefix}-{index}'))
+            time.sleep(1)
+        return max(motion(frames[0], frame, crop) for frame in frames[1:])
+    initial_motion = cycle_motion('light-first-cycle')
+    assert initial_motion > .3, 'Hero is static or video did not autoplay'
+    repeated_motion = cycle_motion('light-repeated-cycle')
+    assert repeated_motion > .3, 'Video stopped after its 8-second duration'
 
     light_root = ui()
     labels = ['Home', 'Pools', 'Deals', 'Exclusive', 'Cart']
@@ -102,6 +109,7 @@ try:
     time.sleep(1)
     find(ui(), 'No direct products yet.')
     shot('cart')
-    (OUT/'result.json').write_text(json.dumps({'passed':True, 'hero_height_dp':174, 'density':density, 'cta_bounds':cta, 'navigation_bounds':nav, 'motion_before_loop':motion(first,second,crop), 'motion_after_loop':motion(after_loop,after_loop_motion,crop)}, indent=2))
+    (OUT/'result.json').write_text(json.dumps({'passed':True, 'hero_height_dp':174, 'density':density, 'cta_bounds':cta, 'navigation_bounds':nav, 'motion_before_loop':initial_motion, 'motion_after_loop':repeated_motion}, indent=2))
 finally:
     (OUT/'logcat.txt').write_bytes(adb('logcat', '-d'))
+    (OUT/'gfxinfo.txt').write_bytes(adb('shell', 'dumpsys', 'gfxinfo', APP, 'framestats'))
