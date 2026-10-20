@@ -59,8 +59,10 @@ try{
     const surfaces=surfaceNodes.map(n=>{const c=getComputedStyle(n);return {class:n.className,bg:c.backgroundColor,border:c.borderTopColor,width:c.borderTopWidth,shadow:c.boxShadow}})
     const picker=shell.querySelector(innerWidth<768?'.mhome-native-area':'.mhome-area-picker')
     const hero=shell.querySelector('.mhome-hero')
+    const bodySample=shell.querySelector('.auth-page-content .card > p,section.rounded-2xl p')
+    const bodyTextColor=bodySample?getComputedStyle(bodySample).color:null
     const joinButtons=[...shell.querySelectorAll('.mhome-join-deal')].map(n=>{const r=n.getBoundingClientRect();const range=document.createRange();range.selectNodeContents(n);const c=getComputedStyle(n);return {text:n.textContent.trim(),nowrap:c.whiteSpace,width:r.width,contentWidth:n.scrollWidth,clientWidth:n.clientWidth,rects:[...range.getClientRects()].map(r=>({top:r.top,bottom:r.bottom})),color:c.color}})
-    return {actionOrder,controlBounds,searchPieces,surfaces,joinButtons,pickerRight:picker?.getBoundingClientRect().right,heroRight:hero?.getBoundingClientRect().right,width:innerWidth,scroll:document.documentElement.scrollWidth,bg:getComputedStyle(shell).backgroundColor,
+    return {bodyTextColor,actionOrder,controlBounds,searchPieces,surfaces,joinButtons,pickerRight:picker?.getBoundingClientRect().right,heroRight:hero?.getBoundingClientRect().right,width:innerWidth,scroll:document.documentElement.scrollWidth,bg:getComputedStyle(shell).backgroundColor,
      homeBg:document.querySelector('.mhome')?getComputedStyle(document.querySelector('.mhome')).backgroundColor:null,
      headerHeight:header.getBoundingClientRect().height,overlap:brand.right>actions.left+1,
      fonts:document.fonts.check('14px Inter'),bengaliFont:document.fonts.check('14px \"Hind Siliguri\"','বাংলা'),language:header.lang,
@@ -97,6 +99,7 @@ try{
     assert.equal(surface.width,'1px')
     assert.notEqual(surface.shadow,'none')
    }
+   if(geometry.bodyTextColor)assert.equal(geometry.bodyTextColor,theme==='dark'?'rgb(190, 201, 217)':'rgb(91, 105, 128)',`Public body text must follow the readable theme palette: ${route}/${width}/${theme}`)
    assert.equal(geometry.secondNav,false)
    assert.equal(geometry.navCount,width<768?1:0)
    if(width<768)assert.ok(Math.abs(geometry.dockBottom-950)<2,'Dock is not anchored at viewport bottom')
