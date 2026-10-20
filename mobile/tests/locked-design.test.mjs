@@ -20,7 +20,8 @@ test('approved homepage content order preserved',()=>{
  assert.ok(positions.every((p,i)=>i===0||p>positions[i-1]),JSON.stringify(positions));
 });
 test('hero uses original four website message pairs and permanent slogans',()=>{
- assert.match(app,/setSlide\(s=>\(s\+1\)%heroMessages.length\),9000/);
+ assert.doesNotMatch(app,/setInterval.*setSlide/);
+ assert.match(readFileSync(new URL('../src/motion-hero.tsx',import.meta.url),'utf8'),/onLoop=\{\(\)=>setSlide\(v=>\(v\+1\)%heroMessages.length\)\}/);
  assert.match(copy,/Smart people make smart decisions/);
  assert.match(copy,/A smarter way to shop/);
  assert.match(copy,/Your neighbours. Your Pool/);

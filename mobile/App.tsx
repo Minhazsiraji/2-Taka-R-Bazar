@@ -1,15 +1,15 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
-import {Alert,Image,ImageBackground,Linking,Pressable,ScrollView,StyleSheet,View,useWindowDimensions} from 'react-native';
+import {Alert,Image,Linking,Pressable,ScrollView,StyleSheet,View,useWindowDimensions} from 'react-native';
 import {useFonts} from 'expo-font';
 import {Inter_400Regular,Inter_500Medium,Inter_600SemiBold,Inter_700Bold} from '@expo-google-fonts/inter';
 import {HindSiliguri_400Regular,HindSiliguri_500Medium,HindSiliguri_600SemiBold,HindSiliguri_700Bold} from '@expo-google-fonts/hind-siliguri';
 import {Text,TextInput,TypographyProvider} from './src/typography';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import {palette,brandV1} from './src/theme';
+import {palette,brandV1,gloss} from './src/theme';
 import {SafeAreaProvider,SafeAreaView} from 'react-native-safe-area-context';
 import {StatusBar} from 'expo-status-bar';
-import {HeroVideo} from './src/hero-video';
-import {copy,heroMessages,type Language} from './src/content';
+import {MotionHero} from './src/motion-hero';
+import {copy,type Language} from './src/content';
 import {demoOrders,demoSavings,offers as demoOffers,pools as demoPools,products as demoProducts,type Offer,type Pool,type Product} from './src/data';
 import {cartLineCount,cartQuantity,cartSubtotal,customerSaving} from './src/domain.mjs';
 import {loadPublicCatalog} from './src/live';
@@ -22,17 +22,13 @@ type Screen=Tab|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'notificat
 type PreviewNotice={id:number;enTitle:string;bnTitle:string;enBody:string;bnBody:string;read:boolean};
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
-// Offline-bundled, owner-uploaded approved art; static require is necessary for Metro assets.
-const approvedHeroImage=require('./assets/2tbr-hero-panorama-v2.jpg');
-// Retain the approved static art beneath the video for loading/error fallback.
-// The ImageBackground and all hero geometry remain unchanged.
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
 // Shared V1 colors are managed in src/theme.ts; do not define screen-specific palettes here.
 const money=(n:number)=>'৳'+Math.round(n).toLocaleString('en-US');
 function ProductPhoto({item,height=134}:{item:Product;height?:number}){
  const [failed,setFailed]=useState(false);
  useEffect(()=>setFailed(false),[item.image]);
- return <View style={{height,backgroundColor:brandV1.background,borderRadius:13,overflow:'hidden',justifyContent:'center',alignItems:'center'}}>
+ return <View style={{height,backgroundColor:brandV1.background,borderRadius:13,...gloss.rim,overflow:'hidden',justifyContent:'center',alignItems:'center'}}>
   {failed?<Ionicons name="bag-handle-outline" size={46} color={brandV1.primary}/>:<Image source={{uri:item.image}} style={{width:'100%',height:'100%'}} resizeMode="cover" onError={()=>setFailed(true)}/>}
  </View>;
 }
@@ -45,7 +41,6 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const [selectedPool,setSelectedPool]=useState<Pool|null>(null);
  const [poolQuantities,setPoolQuantities]=useState<Record<string,Record<string,number>>>({});
  const [productInfoOpen,setProductInfoOpen]=useState<Record<string,boolean>>({});
- const [slide,setSlide]=useState(0);
  const [query,setQuery]=useState('');
  const [cart,setCart]=useState<Record<string,number>>({});
  const [groupDrafts,setGroupDrafts]=useState<Record<string,number>>({});
@@ -74,7 +69,6 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   cartOwner.current=owner;
  },[auth.ready,auth.user?.id]);
  const t=copy[lang];
- useEffect(()=>{const tick=setInterval(()=>setSlide(s=>(s+1)%heroMessages.length),9000);return()=>clearInterval(tick)},[]);
  useEffect(()=>{
   if(requestedDemo)return;
   let alive=true;
@@ -130,16 +124,16 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const totalBadge=cartLineCount(cart)+pendingLines;
  const link=(path:string)=>{void Linking.openURL(SITE+path)};
  const small=width<385;
- const pill=(label:string,active=false)=><View style={{backgroundColor:active?theme.soft:theme.field,paddingHorizontal:8,paddingVertical:4,borderRadius:16}}><Text style={{fontSize:10,fontWeight:'700',color:active?theme.brandText:theme.text}}>{label}</Text></View>;
- const button=(label:string,action:()=>void,solid=true,compact=false)=><Pressable accessibilityRole="button" onPress={action} style={{backgroundColor:solid?theme.accent:theme.field,borderRadius:10,paddingVertical:compact?8:11,paddingHorizontal:compact?8:13,alignItems:'center',justifyContent:'center',flex:1,borderWidth:solid?0:1,borderColor:theme.line}}>
+ const pill=(label:string,active=false)=><View style={{...gloss.rim,backgroundColor:active?theme.soft:theme.field,paddingHorizontal:8,paddingVertical:4,borderRadius:16}}><Text style={{fontSize:10,fontWeight:'700',color:active?theme.brandText:theme.text}}>{label}</Text></View>;
+ const button=(label:string,action:()=>void,solid=true,compact=false)=><Pressable accessibilityRole="button" onPress={action} style={{backgroundColor:solid?theme.accent:theme.field,borderRadius:10,paddingVertical:compact?8:11,paddingHorizontal:compact?8:13,alignItems:'center',justifyContent:'center',flex:1,borderWidth:solid?0:1,...gloss.rim}}>
   <Text style={{fontSize:compact?11:13,fontWeight:'800',color:solid?theme.onPrimary:theme.text}} numberOfLines={1}>{label}</Text>
  </Pressable>;
- const panel=(child:React.ReactNode)=><View style={[styles.panel,{backgroundColor:theme.card,borderColor:theme.line}]}>{child}</View>;
+ const panel=(child:React.ReactNode)=><View style={[styles.panel,{backgroundColor:theme.card,borderColor:gloss.edge}]}>{child}</View>;
  const title=(k:string,name:string,action?:()=>void)=><View style={[styles.titleRow,!k&&{marginTop:9,marginBottom:6}]}><View style={{flex:1}}>{!!k&&<Text style={{color:theme.accent,fontWeight:'900',fontSize:10,letterSpacing:1.5}}>{k}</Text>}<Text style={{color:theme.text,fontSize:21,fontWeight:'900',letterSpacing:-.65}}>{name}</Text></View>{action&&<Pressable onPress={action}><Text style={{color:theme.accent,fontWeight:'700',fontSize:12}}>{t.viewAll}  ›</Text></Pressable>}</View>;
- const headerAction=(name:IconName,fn:()=>void,badge=0)=><Pressable accessibilityRole="button" accessibilityLabel={name} onPress={fn} style={[styles.headerIcon,{borderColor:theme.line,backgroundColor:theme.field}]}>
+ const headerAction=(name:IconName,fn:()=>void,badge=0)=><Pressable accessibilityRole="button" accessibilityLabel={name} onPress={fn} style={[styles.headerIcon,{borderColor:gloss.edge,backgroundColor:theme.field}]}>
    <Ionicons name={name} size={18} color={theme.text}/>{badge>0&&<View style={styles.badge}><Text style={styles.badgeText}>{badge>99?'99+':badge}</Text></View>}
   </Pressable>;
- const savingTile=(name:string,value:string,icon:IconName,tint:string)=> <Pressable onPress={()=>setScreen('savings')} style={[styles.savingTile,{backgroundColor:dark?theme.field:tint,borderColor:theme.line}]}>
+ const savingTile=(name:string,value:string,icon:IconName,tint:string)=> <Pressable onPress={()=>setScreen('savings')} style={[styles.savingTile,{backgroundColor:dark?theme.field:tint,borderColor:gloss.edge}]}>
    <View style={{flexDirection:'row',alignItems:'center',justifyContent:'center',gap:3,width:'100%',minWidth:0}}>
     <Ionicons name={icon} size={14} color={theme.accent}/>
     <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.72} style={{fontSize:small?8:9,lineHeight:14,color:theme.muted,flexShrink:1}}>{name}</Text>
@@ -170,14 +164,14 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="people" size={14} color="#149be7"/><Text style={{color:theme.text,fontSize:10,fontWeight:'800'}}>{offer.joined||0}/{offer.groupSize||5}</Text><Text style={{color:theme.muted,fontSize:9}}>joined</Text></View>
   <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="time-outline" size={14} color="#6385b1"/><Text style={{color:theme.muted,fontSize:9}}>Ends in {offer.daysLeft} day{offer.daysLeft===1?'':'s'}</Text></View>
  </View>
-     <View style={{height:5,backgroundColor:theme.field,borderRadius:5,overflow:'hidden'}}><View style={{height:5,width:(ratio+'%') as `${number}%`,backgroundColor:theme.highlight}}/></View>
+     <View style={{height:5,...gloss.rim,backgroundColor:theme.field,borderRadius:5,overflow:'hidden'}}><View style={{height:5,width:(ratio+'%') as `${number}%`,backgroundColor:theme.highlight}}/></View>
      <View style={{flexDirection:'row',gap:5}}>{button(t.details,()=>selectOffer(offer),false,true)}{button(t.join,()=>selectOffer(offer),true,true)}</View>
     </View>
    </View>);
  }
  function ExclusiveCard({offer}:{offer:Offer}){
   const item=byId(offer.productId);if(!item)return null;
-  return <View style={[styles.exclusiveCard,{backgroundColor:theme.card,borderColor:theme.line}]}>
+  return <View style={[styles.exclusiveCard,{backgroundColor:theme.card,borderColor:gloss.edge}]}>
    <View style={{flexDirection:'row',gap:6,flex:1}}>
     <Pressable onPress={()=>selectOffer(offer)} style={{width:'49%'}}><ProductPhoto item={item} height={128}/></Pressable>
     <View style={{flex:1,justifyContent:'space-around'}}>
@@ -197,56 +191,16 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     {pool.productIds.slice(0,3).map(id=>{const p=byId(id);return p?<View key={id} style={{flex:1}}><ProductPhoto item={p} height={88}/></View>:null})}
    </View>
    <View style={{flex:1,gap:5}}>
-    <View style={styles.between}>{pill(pool.frequency==='weekly'?t.weekly:t.monthly,true)}<View style={{flexDirection:'row',alignItems:'center',gap:3,backgroundColor:dark?'#184f3b':'#d9fbea',paddingVertical:3,paddingHorizontal:6,borderRadius:15}}><View style={{width:6,height:6,borderRadius:4,backgroundColor:'#0caf6a'}}/><Text style={{fontSize:9,fontWeight:'900',color:dark?'#bdfad9':'#087c4b'}}>ACTIVE</Text></View></View>
+    <View style={styles.between}>{pill(pool.frequency==='weekly'?t.weekly:t.monthly,true)}<View style={{flexDirection:'row',alignItems:'center',gap:3,backgroundColor:dark?'#184f3b':'#d9fbea',...gloss.rim,paddingVertical:3,paddingHorizontal:6,borderRadius:15}}><View style={{width:6,height:6,borderRadius:4,backgroundColor:'#0caf6a'}}/><Text style={{fontSize:9,fontWeight:'900',color:dark?'#bdfad9':'#087c4b'}}>ACTIVE</Text></View></View>
     <Text style={{fontSize:13,fontWeight:'900',color:theme.text}} numberOfLines={1}>{lang==='bn'?pool.nameBn:pool.name}</Text>
     <Text style={{fontSize:10,color:theme.muted}}>{pool.productIds.length} {t.products} · {pool.participants.toLocaleString('en-US')} {t.members}</Text>
-    <View style={{height:5,borderRadius:6,backgroundColor:theme.field}}><View style={{height:5,width:(Math.min(100,100*pool.participants/pool.nextTier)+'%') as `${number}%`,backgroundColor:theme.highlight,borderRadius:5}}/></View>
+    <View style={{height:5,...gloss.rim,borderRadius:6,backgroundColor:theme.field}}><View style={{height:5,width:(Math.min(100,100*pool.participants/pool.nextTier)+'%') as `${number}%`,backgroundColor:theme.highlight,borderRadius:5}}/></View>
     <View style={{flexDirection:'row',alignItems:'center',gap:5,flexWrap:'wrap'}}><Ionicons name="time-outline" size={12} color={theme.accent}/><Text style={{fontSize:9,fontWeight:'800',color:theme.accent}}>{lang==='bn'?'যোগদান শেষ':'Commit ends in'} {pool.commitDaysLeft||0} {lang==='bn'?'দিনে':'days'}</Text><Text style={{fontSize:9,color:theme.muted}}>· {pool.commitEndsLabel||'TBD'}</Text></View>
-    <View style={{flexDirection:'row',alignItems:'center',gap:6}}><Text numberOfLines={1} style={{fontSize:9,color:theme.muted,flex:1}}>{t.next}: {pool.nextTier.toLocaleString('en-US')}</Text><Pressable onPress={()=>selectPool(pool)} style={{backgroundColor:theme.accent,borderRadius:8,paddingVertical:6,paddingHorizontal:8}}><Text style={{fontSize:9,fontWeight:'800',color:theme.onPrimary}}>Explore Pool →</Text></Pressable></View>
+    <View style={{flexDirection:'row',alignItems:'center',gap:6}}><Text numberOfLines={1} style={{fontSize:9,color:theme.muted,flex:1}}>{t.next}: {pool.nextTier.toLocaleString('en-US')}</Text><Pressable onPress={()=>selectPool(pool)} style={{backgroundColor:theme.accent,...gloss.rim,borderRadius:8,paddingVertical:6,paddingHorizontal:8}}><Text style={{fontSize:9,fontWeight:'800',color:theme.onPrimary}}>Explore Pool →</Text></Pressable></View>
    </View>
   </Pressable>);
  }
- const Hero=()=>{
-  const longSlide=slide===0||slide===1;
-  const titleSize=small?(longSlide?12.5:13.2):(longSlide?13.5:14.3);
-  const titleMax=small?'62%':'60%';
-  return <ImageBackground source={approvedHeroImage} resizeMode="stretch"
-   imageStyle={{borderRadius:17}}
-   style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
-   <HeroVideo/>
-   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}
-    style={{color:brandV1.accentPale,fontWeight:'600',fontSize:small?8:8.8,letterSpacing:small?.55:.85,marginBottom:4}}>
-    ✦ SMART SHOPPING. REAL SAVINGS!
-   </Text>
-   <Text numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.85}
-    style={{fontSize:titleSize,fontWeight:'700',color:brandV1.white,lineHeight:titleSize*1.07,maxWidth:titleMax}}>
-    {heroMessages[slide][lang][0]}
-   </Text>
-   <Text numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.85}
-    style={{fontSize:titleSize,fontWeight:'700',color:brandV1.accentPale,lineHeight:titleSize*1.07,maxWidth:titleMax,marginTop:1}}>
-    {heroMessages[slide][lang][1]}
-   </Text>
-   <Text numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.8}
-    style={{color:brandV1.white,fontSize:small?8.2:8.8,lineHeight:small?9.4:10.2,marginTop:4,maxWidth:small?'59%':'56%'}}>
-    {heroMessages[slide][lang][2]}
-   </Text>
-   <Pressable accessibilityRole="button" accessibilityLabel="Explore group deals" onPress={()=>onTab('deals')}
-    style={{position:'absolute',left:13,bottom:30,backgroundColor:brandV1.white,paddingVertical:7,paddingHorizontal:12,borderRadius:18}}>
-    <Text style={{color:brandV1.primary,fontWeight:'600',fontSize:9}}>{lang==='bn'?'গ্রুপ ডিল দেখুন':'Explore group deals'} →</Text>
-   </Pressable>
-   <View style={{position:'absolute',left:13,bottom:5,width:132,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:8}}>
-    <Pressable accessibilityRole="button" accessibilityLabel="Previous hero slide" onPress={()=>setSlide(v=>(v+3)%4)}>
-     <Text style={styles.heroArrow}>‹</Text>
-    </Pressable>
-    {heroMessages.map((_,i)=><Pressable key={i} accessibilityRole="button" accessibilityLabel={'Slide '+(i+1)}
-     accessibilityState={{selected:slide===i}} onPress={()=>setSlide(i)}
-     style={{height:7,width:7,borderRadius:7,backgroundColor:i===slide?brandV1.white:brandV1.accent}}/>)}
-    <Pressable accessibilityRole="button" accessibilityLabel="Next hero slide" onPress={()=>setSlide(v=>(v+1)%4)}>
-     <Text style={styles.heroArrow}>›</Text>
-    </Pressable>
-   </View>
-  </ImageBackground>;
- }
+ const Hero=()=><MotionHero lang={lang} dark={dark} small={small} frameStyle={styles.hero} onExplore={()=>onTab('deals')}/>;
  function Home(){return <>
   <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>Savar DOHS⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
   {Hero()}<View style={{marginTop:7}}><Savings home/></View>
@@ -256,7 +210,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   {title('',t.pools,()=>onTab('pools'))}{pools.map(p=><PoolCard key={p.id} pool={p}/>)}
   <Footer/>
  </>}
- function Footer(){return <View style={{paddingVertical:16,marginTop:12,borderTopWidth:1,borderColor:theme.line}}>
+ function Footer(){return <View style={{paddingVertical:16,marginTop:12,borderTopWidth:1,borderColor:gloss.edge}}>
   <Text style={{fontSize:13,fontWeight:'900',color:theme.text}}>2-TAKA-R-BAZAR</Text><Text style={{fontSize:11,color:theme.muted}}>Smart shopping. Real savings!</Text><Text style={{fontSize:11,color:theme.muted}}>একসাথে কিনি, কম দামে পাই!</Text>
   <View style={{flexDirection:'row',gap:12,marginTop:8}}>
     <View style={{flex:1}}><Text style={{color:theme.text,fontSize:10,fontWeight:'900'}}>Explore & get help</Text><Text style={{color:theme.muted,fontSize:9,marginTop:3}}>About 2TBR · FAQ · How it works · Pickup & delivery · Communities</Text></View>
@@ -795,20 +749,20 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const tabs:[Tab,IconName][]=[['home','home-outline'],['pools','people-outline'],['deals','pricetag-outline'],['exclusive','basket-outline'],['cart','cart-outline']];
  return <TypographyProvider language={lang} loaded={fontsReady}><SafeAreaView style={{flex:1,backgroundColor:theme.background}} edges={['top','bottom']}>
   <StatusBar style={dark?'light':'dark'}/>
-  <View style={{paddingHorizontal:12,paddingTop:6,paddingBottom:8,backgroundColor:theme.background,borderBottomWidth:1,borderColor:theme.line}}>
+  <View style={{paddingHorizontal:12,paddingTop:6,paddingBottom:8,backgroundColor:theme.background,borderBottomWidth:1,borderColor:gloss.edge}}>
    <View style={{flexDirection:'row',alignItems:'center',gap:4}}>
     <Pressable accessibilityLabel="Home" onPress={()=>onTab('home')}><Image source={require('./assets/brand-mark-transparent.png')} style={{width:small?32:36,height:36,tintColor:dark?'#FFFFFF':undefined}} resizeMode="contain"/></Pressable>
     <Pressable onPress={()=>onTab('home')} style={{flex:1,minWidth:72}}><Text style={{fontSize:small?11:13,fontWeight:'900',color:theme.text}} numberOfLines={1}>2-TAKA-R-BAZAR</Text>
-     <Text style={{fontSize:small?8:9,color:theme.muted}} numberOfLines={1}>Smart shopping. Real savings!</Text>
-     <Text style={{fontSize:small?8:9,color:theme.muted}} numberOfLines={1}>একসাথে কিনি, কম দামে পাই!</Text>
+     <Text style={{fontSize:small?8:9,color:dark?gloss.slogan.dark:gloss.slogan.light}} numberOfLines={1}>Smart shopping. Real savings!</Text>
+     <Text style={{fontSize:small?8:9,color:dark?gloss.slogan.dark:gloss.slogan.light}} numberOfLines={1}>একসাথে কিনি, কম দামে পাই!</Text>
     </Pressable>
-    <Pressable accessibilityRole="button" onPress={()=>setLang(v=>v==='en'?'bn':'en')} style={[styles.headerIcon,{borderColor:theme.line,backgroundColor:theme.field}]}><Text style={{fontSize:10,fontWeight:'900',color:theme.text}}>{lang==='en'?'BAN':'EN'}</Text></Pressable>
+    <Pressable accessibilityRole="button" onPress={()=>setLang(v=>v==='en'?'bn':'en')} style={[styles.headerIcon,{borderColor:gloss.edge,backgroundColor:theme.field}]}><Text style={{fontSize:10,fontWeight:'900',color:theme.text}}>{lang==='en'?'BAN':'EN'}</Text></Pressable>
     {headerAction(dark?'sunny-outline':'moon-outline',()=>setDark(v=>!v))}
     {headerAction('notifications-outline',openNotifications,unreadNotices)}
     {headerAction('person-outline',()=>setScreen('account'))}
     {headerAction('menu-outline',()=>setScreen('menu'))}
    </View>
-   <View style={[styles.search,{backgroundColor:theme.field,borderColor:theme.line}]}><Ionicons name="search-outline" size={17} color={theme.accent}/>
+   <View style={[styles.search,{backgroundColor:theme.field,borderColor:gloss.edge}]}><Ionicons name="search-outline" size={17} color={theme.accent}/>
     <TextInput accessibilityLabel={t.search} placeholder={t.search} placeholderTextColor={theme.muted} value={query} onChangeText={setQuery} style={{flex:1,fontSize:12,color:theme.text,paddingVertical:5}} returnKeyType="search"/>
    </View>
   </View>
@@ -837,18 +791,17 @@ export default function App(){
 }
 const styles=StyleSheet.create({
  between:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:6},
- headerIcon:{width:31,height:32,borderRadius:20,borderWidth:1,justifyContent:'center',alignItems:'center',position:'relative'},
+ headerIcon:{...gloss.rim,width:31,height:32,borderRadius:20,borderWidth:1,justifyContent:'center',alignItems:'center',position:'relative'},
  badge:{position:'absolute',right:-8,top:-8,minWidth:17,height:17,borderRadius:10,backgroundColor:'#ed3035',paddingHorizontal:3,justifyContent:'center',alignItems:'center'},
  badgeText:{color:'white',fontSize:9,fontWeight:'900'},
- search:{marginTop:8,borderRadius:30,paddingHorizontal:12,flexDirection:'row',alignItems:'center',gap:7,borderWidth:1},
+ search:{...gloss.rim,marginTop:8,borderRadius:30,paddingHorizontal:12,flexDirection:'row',alignItems:'center',gap:7,borderWidth:1},
  titleRow:{flexDirection:'row',alignItems:'flex-end',justifyContent:'space-between',marginTop:16,marginBottom:8},
- panel:{borderWidth:1,borderRadius:17,padding:10,marginBottom:9,shadowColor:brandV1.text,shadowOpacity:.04,shadowRadius:9,elevation:1},
+ panel:{...gloss.rim,borderWidth:1,borderRadius:17,padding:10,marginBottom:9,shadowColor:brandV1.text,shadowOpacity:.04,shadowRadius:9,elevation:1},
  twoCol:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'space-between'},
- savingTile:{width:'23.9%',minHeight:60,paddingHorizontal:4,paddingVertical:6,borderRadius:12,alignItems:'center',justifyContent:'center',gap:4,borderWidth:1},
+ savingTile:{...gloss.rim,width:'23.9%',minHeight:60,paddingHorizontal:4,paddingVertical:6,borderRadius:12,alignItems:'center',justifyContent:'center',gap:4,borderWidth:1},
  savingsFour:{flexDirection:'row',alignItems:'stretch',justifyContent:'space-between',gap:4},
  hero:{height:174,minHeight:174,maxHeight:174,paddingHorizontal:13,paddingTop:10,paddingBottom:28,borderRadius:17,marginBottom:1,overflow:'hidden',position:'relative'},
- heroArrow:{fontSize:22,lineHeight:24,color:'white',fontWeight:'700'},
- exclusiveCard:{width:'48.6%',borderRadius:15,padding:7,borderWidth:1,marginBottom:2,minHeight:168},
+ exclusiveCard:{...gloss.rim,width:'48.6%',borderRadius:15,padding:7,borderWidth:1,marginBottom:2,minHeight:168},
  bottom:{flexDirection:'row',paddingTop:5,borderTopWidth:1,paddingHorizontal:7},
  priceOption:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',padding:10,borderRadius:9,borderWidth:1,marginTop:5},
  menuRow:{borderWidth:1,padding:14,borderRadius:12,flexDirection:'row',alignItems:'center',gap:10,marginTop:6}

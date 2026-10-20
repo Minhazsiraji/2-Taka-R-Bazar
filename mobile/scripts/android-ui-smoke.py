@@ -45,6 +45,24 @@ def shot(name):
 def motion(a, b, box):
     return sum(ImageStat.Stat(ImageChops.difference(a.crop(box), b.crop(box))).mean)/3
 
+def verify_center(root):
+    c = bounds(find(root, 'Explore group deals'))
+    left = bounds(find(root, 'Previous hero slide'))
+    right = bounds(find(root, 'Next hero slide'))
+    assert abs((left[0]+right[2])/2-(c[0]+c[2])/2) <= 2, 'Controls not centered under CTA'
+    return c
+
+def selected_slide(root):
+    return next(i for i in range(1,5) if find(root,'Slide '+str(i)).get('selected')=='true')
+
+def verify_text_clear(root, top, cta):
+    # All carousel copy must finish before the fixed CTA, in both languages.
+    for node in root.iter('node'):
+        if not node.get('text','').strip(): continue
+        x1,y1,x2,y2 = bounds(node)
+        if y1 > top+10*density and y1 < cta[1] and x1 > 20*density:
+            assert y2 <= cta[1]-2, 'Hero text overlaps CTA: '+node.get('text','')
+
 try:
     adb('install', '-r', 'android/app/build/outputs/apk/release/app-release.apk')
     adb('logcat', '-c')
@@ -62,7 +80,7 @@ try:
         raise AssertionError('Home did not become ready on Android')
 
     density = int(re.findall(rb'\d+', adb('shell', 'wm', 'density'))[-1])/160
-    cta = bounds(find(root, 'Explore group deals'))
+    cta = verify_center(root)
     bottom = cta[3]+30*density
     top = bottom-174*density
     first = shot('light-initial')
@@ -87,7 +105,7 @@ try:
     tap(find(light_root, 'moon-outline'))
     time.sleep(2)
     dark_root = ui()
-    assert bounds(find(dark_root, 'Explore group deals')) == cta, 'Hero CTA moved in dark mode'
+    assert verify_center(dark_root) == cta, 'Hero CTA moved in dark mode'
     assert {label: bounds(nav_node(dark_root, label)) for label in labels} == nav, 'Dock moved in dark mode'
     dark = shot('dark')
     # Header Home is the official logo's accessibility node.
@@ -96,7 +114,34 @@ try:
     white = sum(1 for r,g,b in logo.getdata() if min(r,g,b)>225)
     assert white > logo.width*logo.height*.05, 'Dark logo is not visibly white'
     assert ImageStat.Stat(ImageChops.difference(first.crop(logo_box), logo)).mean != [0,0,0]
-    tap(find(dark_root, 'sunny-outline'))
+    # Explicit selections restart a complete cart cycle, then native loop completion advances once.
+    tap(find(dark_root,'Slide 4'))
+    time.sleep(.6)
+    assert selected_slide(ui()) == 4, 'Manual slide selection failed'
+    time.sleep(6.5)
+    assert selected_slide(ui()) == 1, 'Text did not advance with the eight-second video loop'
+    # Review every unchanged message in light/dark and both languages.
+    for theme_name in ['dark','light']:
+        if theme_name=='light':
+            tap(find(ui(),'sunny-outline'))
+            time.sleep(.5)
+        for language in ['en','bn']:
+            if language=='bn':
+                tap(find(ui(),'BAN'))
+                time.sleep(.5)
+            for index in range(1,5):
+                tap(find(ui(),'Slide '+str(index)))
+                time.sleep(.5)
+                current=ui()
+                current_cta=verify_center(current)
+                verify_text_clear(current,top,current_cta)
+                shot(f'hero-{theme_name}-{language}-{index}')
+            if language=='bn':
+                tap(find(ui(),'EN'))
+                time.sleep(.5)
+    # The light mode was restored by the loop above.
+    dark_root=ui()
+
     time.sleep(1)
     shot('light-restored')
     # Scroll down and back: dock remains reachable, video still animates.
@@ -110,7 +155,23 @@ try:
     time.sleep(1)
     find(ui(), 'No direct products yet.')
     shot('cart')
-    (OUT/'result.json').write_text(json.dumps({'passed':True, 'hero_height_dp':174, 'density':density, 'cta_bounds':cta, 'navigation_bounds':nav, 'motion_before_loop':initial_motion, 'motion_after_loop':repeated_motion}, indent=2))
+    tap(nav_node(ui(),'Home'))
+    adb('shell','wm','size',f'{round(360*density)}x{round(760*density)}')
+    time.sleep(2)
+    for language in ['en','bn']:
+        if language=='bn':
+            tap(find(ui(),'BAN'))
+            time.sleep(.5)
+        for index in range(1,5):
+            tap(find(ui(),'Slide '+str(index)))
+            time.sleep(.5)
+            current=ui()
+            current_cta=verify_center(current)
+            compact_top=current_cta[3]+30*density-174*density
+            verify_text_clear(current,compact_top,current_cta)
+            shot(f'compact-{language}-{index}')
+    (OUT/'result.json').write_text(json.dumps({'passed':True, 'hero_height_dp':174, 'density':density, 'cta_bounds':cta, 'navigation_bounds':nav, 'motion_before_loop':initial_motion, 'motion_after_loop':repeated_motion,'controls_centered':True,'video_driven_slide_advance':True,'languages':['en','bn'],'widths_dp':[first.width/density,360]}, indent=2))
 finally:
+    adb('shell','wm','size','reset')
     (OUT/'logcat.txt').write_bytes(adb('logcat', '-d'))
     (OUT/'gfxinfo.txt').write_bytes(adb('shell', 'dumpsys', 'gfxinfo', APP, 'framestats'))

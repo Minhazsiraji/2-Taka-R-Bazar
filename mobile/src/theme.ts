@@ -45,3 +45,13 @@ export const palette={
 } as const;
 
 export type AppTheme=typeof palette.light|typeof palette.dark;
+
+// Static, layout-neutral white highlights; no blur views or animated shadows.
+export const gloss={
+ edge:'rgba(255,255,255,0.9)',
+ rim:{borderColor:'rgba(255,255,255,0.9)',borderTopColor:'#FFFFFF',
+  boxShadow:'0 0 0 0.5px rgba(255,255,255,0.42), 0 1px 3px rgba(23,35,59,0.1)'},
+ glass:{backgroundColor:'rgba(0,65,70,0.2)',
+  boxShadow:'inset 0 1px 2px rgba(255,255,255,0.32), 0 0 3px rgba(255,255,255,0.16)'},
+ slogan:{light:brandV1.primary,dark:brandV1.accent}
+} as const;

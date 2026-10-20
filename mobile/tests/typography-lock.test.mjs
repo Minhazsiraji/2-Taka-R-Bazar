@@ -53,7 +53,7 @@ test('Home Savings tiles are compact in the existing four-card row only',()=>{
  assert.ok(tile.includes("name}</Text>"));
  assert.ok(tile.includes("value}</Text>"));
  assert.ok(tile.includes("onPress={()=>setScreen('savings')}"));
- assert.ok(app.includes("savingTile:{width:'23.9%',minHeight:60,paddingHorizontal:4,paddingVertical:6"));
+ assert.ok(app.includes("savingTile:{...gloss.rim,width:'23.9%',minHeight:60,paddingHorizontal:4,paddingVertical:6"));
  assert.ok(tile.includes("fontSize:small?12.5:14,fontWeight:'900'"));
  assert.ok(tile.includes("width:'100%',textAlign:'center',marginTop:2"));
  assert.ok(app.includes("savingsFour:{flexDirection:'row',alignItems:'stretch',justifyContent:'space-between',gap:4}"));
@@ -63,26 +63,26 @@ test('Home Savings tiles are compact in the existing four-card row only',()=>{
 });
 
 test('Approved V2.3 hero is fixed-height and has exactly the bottom carousel controls',()=>{
- const hero=app.slice(app.indexOf('const Hero=()=>'),app.indexOf('function Home(){'));
+ const hero=readFileSync(new URL('../src/motion-hero.tsx',import.meta.url),'utf8');
  assert.ok(hero.includes('✦ SMART SHOPPING. REAL SAVINGS!'));
  assert.ok(hero.includes('numberOfLines={1} adjustsFontSizeToFit'));
  assert.ok(app.includes('hero:{height:174,minHeight:174,maxHeight:174'));
- assert.ok(hero.includes('setSlide(v=>(v+3)%4)'));
- assert.ok(hero.includes('setSlide(v=>(v+1)%4)'));
+ assert.ok(hero.includes('select(slide-1)'));
+ assert.ok(hero.includes('select(slide+1)'));
  assert.ok(hero.includes("accessibilityLabel={'Slide '+(i+1)}"));
  assert.ok(hero.includes("position:'absolute',left:13,bottom:30"));
- assert.ok(hero.includes('onPress={()=>onTab(\'deals\')}'));
- assert.ok(hero.includes("left:13,bottom:5,width:132,flexDirection:'row',alignItems:'center',justifyContent:'center'"));
+ assert.ok(hero.includes('onPress={onExplore}'));
+ assert.ok(hero.includes("left:13+(ctaWidth-132)/2,bottom:5,width:132,flexDirection:'row',alignItems:'center',justifyContent:'center'"));
  assert.ok(hero.includes('heroMessages[slide][lang]'));
  assert.ok(!hero.includes('hero-edge-next'));
- assert.ok(app.includes("require('./assets/2tbr-hero-panorama-v2.jpg')"));
+ assert.ok(hero.includes("require('../assets/2tbr-hero-panorama-v2.jpg')"));
  assert.ok(!app.includes('require(\'./assets/Vibrant Grocery Cart on Teal Background.png\')'));
 });
 test('Approved hero image is bundled locally and has no older illustration or CDN dependency',()=>{
- const hero=app.slice(app.indexOf('const Hero=()=>'),app.indexOf('function Home(){'));
+ const hero=readFileSync(new URL('../src/motion-hero.tsx',import.meta.url),'utf8');
  assert.ok(hero.includes('<ImageBackground source={approvedHeroImage} resizeMode="stretch"'));
  assert.ok(hero.includes('imageStyle={{borderRadius:17}}'));
- assert.ok(hero.includes('style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}'));
+ assert.ok(hero.includes('style={[frameStyle,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}'));
  assert.ok(hero.includes('</ImageBackground>'));
  assert.ok(!hero.includes("width:'100%',height:'100%'"),'do not size hero image to padded content dimensions');
  assert.ok(!hero.includes("source={approvedHeroImage} resizeMode=\"contain\""));

@@ -13,7 +13,7 @@ const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.Comm
 
 function harness(initialStatus='readyToPlay'){
  const listeners=new Map();let stateListener;let removed=0;let setups=0;
- const player={status:initialStatus,plays:0,pauses:0,
+ const player={status:initialStatus,plays:0,pauses:0,currentTime:0,duration:8,
   play(){this.plays++},pause(){this.pauses++},
   addListener(name,fn){listeners.set(name,fn);return {remove(){removed++;listeners.delete(name)}}}
  };
@@ -50,7 +50,7 @@ test('hero autoplays silently, loops, has no chrome, reveals only after a frame,
  assert.equal(h.setups,1);assert.equal(h.player.plays,1);
  await act(()=>h.state('background'));assert.equal(h.player.pauses,1);
  await act(()=>h.state('active'));assert.equal(h.player.plays,2);
- await act(()=>tree.unmount());assert.equal(h.removed,2);
+ await act(()=>tree.unmount());assert.equal(h.removed,4);
 });
 
 test('a failed video disappears immediately so the existing ImageBackground remains visible',async()=>{
@@ -66,4 +66,22 @@ test('an error before listener registration also preserves static fallback',asyn
  await act(()=>{tree=create(React.createElement(h.Component))});
  assert.equal(tree.toJSON(),null);
  await act(()=>tree.unmount());
+});
+
+
+test('slides follow native video completion, not wall-clock time; manual selections seek the existing player',async()=>{
+ const h=harness();let tree;let loops=0;const times=[];let errors=0;
+ const props={restartKey:0,onLoop:()=>loops++,onTime:(...args)=>times.push(args),onFailure:()=>errors++};
+ await act(()=>{tree=create(React.createElement(h.Component,props))});
+ assert.equal(h.player.timeUpdateEventInterval,.1);
+ await act(()=>h.listeners.get('timeUpdate')({currentTime:4}));
+ assert.deepEqual(times,[[4,8]]);assert.equal(loops,0);
+ await act(()=>h.listeners.get('playToEnd')());assert.equal(loops,1);
+ h.player.currentTime=6;
+ await act(()=>tree.update(React.createElement(h.Component,{...props,restartKey:1})));
+ assert.equal(h.player.currentTime,0);assert.deepEqual(times.at(-1),[0,8]);
+ assert.equal(h.setups,1);assert.equal(loops,1);
+ await act(()=>h.state('background'));assert.equal(loops,1);
+ await act(()=>h.listeners.get('statusChange')({status:'error'}));assert.equal(errors,1);
+ await act(()=>tree.unmount());assert.equal(h.removed,4);
 });
