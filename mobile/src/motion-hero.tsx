@@ -29,7 +29,7 @@ export function MotionHero({lang,dark,small,frameStyle,onExplore}:{
    onFailure={()=>{failed.current=true;opacity.setValue(1)}}/>
   <View pointerEvents="none" style={StyleSheet.absoluteFill}>
    <Svg width="100%" height="100%"><Defs><LinearGradient id="textSafe" x1="0" y1="0" x2="0" y2="1">
-    <Stop offset="0" stopColor="#003B40" stopOpacity=".34"/><Stop offset=".68" stopColor="#003B40" stopOpacity=".15"/><Stop offset="1" stopColor="#003B40" stopOpacity="0"/>
+    <Stop offset="0" stopColor="#003B40" stopOpacity=".34"/><Stop offset="68%" stopColor="#003B40" stopOpacity=".15"/><Stop offset="1" stopColor="#003B40" stopOpacity="0"/>
    </LinearGradient></Defs><Rect width="100%" height="100%" fill="url(#textSafe)"/></Svg>
   </View>
   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={.75}
