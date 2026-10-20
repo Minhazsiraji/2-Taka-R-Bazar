@@ -124,7 +124,7 @@ try{
      probe.append(document.createTextNode(label+' '),arrow)
      original.replaceWith(probe)
      const css=getComputedStyle(probe)
-     const measured={nowrap:css.whiteSpace,scroll:probe.scrollWidth,client:probe.clientWidth}
+     const measured={nowrap:css.whiteSpace,scroll:probe.scrollWidth,client:probe.clientWidth,font:css.fontSize,padding:css.padding,grid:getComputedStyle(actions).gridTemplateColumns}
      probe.replaceWith(original)
      return measured
     },language==='bn'?'ডিলে যোগ দিন':'Join Deal')

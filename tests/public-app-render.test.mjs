@@ -101,3 +101,11 @@ test('legacy theme declarations remain identical for protected non-public interf
  const source30=readFileSync('app/site-theme-surface-fix.css','utf8').replaceAll('main:not(.public-marketplace-flat) ','main ')
  assert.equal(createHash('sha256').update(source30).digest('hex'),'9b1c95bfab066299354875c602e12556556322a2fb73eafa9b7c1b88235aa6fe')
 })
+
+test('gloss highlight retains AA contrast for normal-size white primary labels',()=>{
+ const css=readFileSync('app/public-app-design.css','utf8')
+ const alpha=Number(css.match(/--public-button-fill:linear-gradient\(180deg,rgb\(255 255 255 \/ ([\d.]+)%\)/)[1])/100
+ const linear=n=>(n/=255)<=.04045?n/12.92:((n+.055)/1.055)**2.4
+ const luminance=[0,127,131].map(n=>255*alpha+n*(1-alpha)).reduce((v,n,i)=>v+linear(n)*[.2126,.7152,.0722][i],0)
+ assert.ok(1.05/(luminance+.05)>=4.5,'The glossy highlight must not wash out white primary text')
+})
