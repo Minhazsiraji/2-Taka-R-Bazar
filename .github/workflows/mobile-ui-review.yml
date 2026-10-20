@@ -54,7 +54,7 @@ jobs:
           python3 -m pip install Pillow
       - uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 29
           arch: x86_64
           profile: pixel_2
           disable-animations: true
@@ -63,7 +63,7 @@ jobs:
           script: |
             adb root
             adb wait-for-device
-            adb shell setprop debug.stagefright.ccodec 2
+            adb shell setprop debug.stagefright.ccodec 0
             adb shell killall mediaserver
             sleep 2
             adb shell getprop debug.stagefright.ccodec
