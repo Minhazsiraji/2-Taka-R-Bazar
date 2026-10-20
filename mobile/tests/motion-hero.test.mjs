@@ -16,7 +16,7 @@ function load(code,mocks){
 }
 const messages=load(contents('content.ts'),{}).heroMessages;
 const theme=load(contents('theme.ts'),{});
-const native={Animated:{Value:class {constructor(value){this.value=value}setValue(value){this.value=value}},View:'Animated.View'},
+const native={Animated:{Value:class {constructor(value){this.value=value;this.updates=0}setValue(value){this.value=value;this.updates++}},View:'Animated.View'},
  ImageBackground:'ImageBackground',Pressable:'Pressable',View:'View',StyleSheet:{create:v=>v,absoluteFill:{position:'absolute',left:0,top:0,right:0,bottom:0}}};
 const {MotionHero,heroTextOpacity}=load(contents('motion-hero.tsx'),{
  'react-native':native,'react-native-svg':{__esModule:true,default:'Svg',Defs:'Defs',LinearGradient:'LinearGradient',Rect:'Rect',Stop:'Stop'},
@@ -62,6 +62,8 @@ test('text fades at the same playback boundaries and remains readable on failure
  let tree;
  await act(()=>{tree=create(React.createElement(MotionHero,{lang:'en',dark:false,small:true,onExplore(){}}))});
  const video=tree.root.findByType('HeroVideo');
+ await act(()=>{video.props.onTime(2,8);video.props.onTime(4,8);video.props.onTime(6,8)});
+ assert.equal(tree.root.findByType('Animated.View').props.style.opacity.updates,0,'Steady frames must not update native opacity');
  await act(()=>video.props.onTime(7.99,8));
  assert.ok(tree.root.findByType('Animated.View').props.style.opacity.value<.1);
  await act(()=>video.props.onFailure());

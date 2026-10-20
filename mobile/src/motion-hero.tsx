@@ -20,13 +20,18 @@ export function MotionHero({lang,dark,small,frameStyle,onExplore}:{
  const [ctaWidth,setCtaWidth]=useState(123);
  const opacity=useRef(new Animated.Value(1)).current;
  const failed=useRef(false);
+ const lastOpacity=useRef(1);
+ const setOpacity=(value:number)=>{
+  if(lastOpacity.current===value)return;
+  lastOpacity.current=value;opacity.setValue(value);
+ };
  const titleSize=small?14:15;
- const select=(next:number)=>{if(!failed.current)opacity.setValue(0);setSlide((next+heroMessages.length)%heroMessages.length);setRestartKey(v=>v+1)};
+ const select=(next:number)=>{if(!failed.current)setOpacity(0);setSlide((next+heroMessages.length)%heroMessages.length);setRestartKey(v=>v+1)};
  return <ImageBackground source={approvedHeroImage} resizeMode="stretch" imageStyle={{borderRadius:17}}
   style={[frameStyle,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
-  <HeroVideo restartKey={restartKey} onLoop={()=>{opacity.setValue(0);setSlide(v=>(v+1)%heroMessages.length)}}
-   onTime={(time,duration)=>{if(!failed.current)opacity.setValue(heroTextOpacity(time,duration))}}
-   onFailure={()=>{failed.current=true;opacity.setValue(1)}}/>
+  <HeroVideo restartKey={restartKey} onLoop={()=>{setOpacity(0);setSlide(v=>(v+1)%heroMessages.length)}}
+   onTime={(time,duration)=>{if(!failed.current)setOpacity(heroTextOpacity(time,duration))}}
+   onFailure={()=>{failed.current=true;setOpacity(1)}}/>
   <View pointerEvents="none" style={StyleSheet.absoluteFill}>
    <Svg width="100%" height="100%"><Defs><LinearGradient id="textSafe" x1="0" y1="0" x2="0" y2="1">
     <Stop offset="0" stopColor="#003B40" stopOpacity=".34"/><Stop offset="68%" stopColor="#003B40" stopOpacity=".15"/><Stop offset="1" stopColor="#003B40" stopOpacity="0"/>
