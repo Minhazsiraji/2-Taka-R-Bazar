@@ -52,7 +52,7 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
 }
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.card,.glass-panel,.cx-glass-card,.cx-glass-subcard)::before{display:none!important}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.input,input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),select,textarea){
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.input,input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="search"]),select,textarea){
  background:var(--public-input-glass)!important;color:var(--public-ink)!important;
  border-color:var(--public-rim)!important;box-shadow:var(--public-glass-shadow)!important;border-radius:12px;
 }

@@ -54,7 +54,7 @@ try{
     const actionNodes=[...header.querySelectorAll('.market-header-actions > *')].filter(visible)
     const actionOrder=actionNodes.map(n=>n.classList.contains('market-header-quick-cart')?'cart':n.classList.contains('market-language-toggle')?'language':n.classList.contains('theme-toggle')?'theme':n.classList.contains('customer-notification-bell')?'notifications':n.classList.contains('public-account-menu')?'account':'menu')
     const controlBounds=actionNodes.map(n=>(n.matches('details')?n.querySelector('summary'):n.matches('.market-language-toggle')?n.querySelector('button'):n).getBoundingClientRect()).map(r=>({left:r.left,right:r.right,top:r.top,width:r.width,height:r.height}))
-    const searchPieces=[...header.querySelectorAll('.market-search-icon,.public-search-submit')].map(n=>{const c=getComputedStyle(n);return {background:c.backgroundColor,image:c.backgroundImage,border:c.borderWidth,shadow:c.boxShadow}})
+    const searchPieces=[...header.querySelectorAll('.market-search-icon,.public-search-submit,#market-header-product-search')].map(n=>{const c=getComputedStyle(n);return {background:c.backgroundColor,image:c.backgroundImage,border:c.borderWidth,shadow:c.boxShadow}})
     const surfaceNodes=[...shell.querySelectorAll('.card,.glass-panel,.market-product-card,.mhome-savings-panel,.mhome-savings-card,.mhome-deal-card,.mhome-exclusive-card,.mhome-pool-card')]
     const surfaces=surfaceNodes.map(n=>{const c=getComputedStyle(n);return {class:n.className,bg:c.backgroundColor,border:c.borderTopColor,width:c.borderTopWidth,shadow:c.boxShadow}})
     const picker=shell.querySelector(innerWidth<768?'.mhome-native-area':'.mhome-area-picker')
