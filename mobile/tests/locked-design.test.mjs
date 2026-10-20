@@ -14,7 +14,7 @@ test('approved navigation: account only in header, five bottom tabs',()=>{
 });
 test('approved homepage content order preserved',()=>{
  const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
- const keys=['<Hero/>','<Savings home/>',"t.groups","t.exclusive","t.pools"];
+ const keys=['{Hero()}','<Savings home/>',"t.groups","t.exclusive","t.pools"];
  const positions=keys.map(key=>home.indexOf(key));
  assert.ok(positions.every(p=>p>=0),JSON.stringify(positions));
  assert.ok(positions.every((p,i)=>i===0||p>positions[i-1]),JSON.stringify(positions));
@@ -88,7 +88,7 @@ test('Group Deal price tier display is demo-only; Home remains locked',()=>{
  assert.match(app,/Next tier at/);
  assert.match(app,/height=\{small\?330:360\}/);
  const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
- assert.match(home,/<Hero\/>/);
+ assert.match(home,/\{Hero\(\)\}/);
  assert.match(home,/<Savings home\/>/);
 });
 
@@ -108,7 +108,7 @@ test('Pool product selections, total and retail navigation are isolated from app
  assert.ok(app.includes("disabled={!units} onPress={()=>draftPool(pool,quantities)}"));
  assert.ok(app.includes("offer.mode==='POOL'&&selectedPool?'pool'"));
  const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
- assert.ok(home.includes('<Hero/>'));
+ assert.ok(home.includes('{Hero()}'));
  assert.ok(home.includes('<Savings home/>'));
 });
 

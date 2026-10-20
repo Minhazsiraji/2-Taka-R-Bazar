@@ -33,7 +33,7 @@ test('Order tracking does not assert real commerce or earned savings from waitin
 });
 test('Locked Home remains unchanged in navigation and layout',()=>{
  const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
- for(const token of ["<Hero/>","<Savings home/>","title('',t.groups","title('',t.exclusive","title('',t.pools"])
+ for(const token of ["{Hero()}","<Savings home/>","title('',t.groups","title('',t.exclusive","title('',t.pools"])
  assert.ok(home.includes(token),token);
  assert.ok(!home.includes('OrderDetail'));
 });

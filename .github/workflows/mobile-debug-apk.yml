@@ -69,3 +69,28 @@ jobs:
           path: mobile/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
+      - name: Enable KVM for Android UI verification
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install screenshot verification dependency
+        run: python3 -m pip install Pillow
+      - name: Verify mobile hero and themes on Android
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          working-directory: mobile
+          script: python3 scripts/android-ui-smoke.py
+      - name: Publish Android UI verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 2tbr-android-ui-verification
+          path: mobile/android-ui-evidence/
+          if-no-files-found: warn
+          retention-days: 7

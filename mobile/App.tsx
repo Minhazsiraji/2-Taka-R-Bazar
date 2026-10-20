@@ -8,6 +8,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import {palette,brandV1} from './src/theme';
 import {SafeAreaProvider,SafeAreaView} from 'react-native-safe-area-context';
 import {StatusBar} from 'expo-status-bar';
+import {HeroVideo} from './src/hero-video';
 import {copy,heroMessages,type Language} from './src/content';
 import {demoOrders,demoSavings,offers as demoOffers,pools as demoPools,products as demoProducts,type Offer,type Pool,type Product} from './src/data';
 import {cartLineCount,cartQuantity,cartSubtotal,customerSaving} from './src/domain.mjs';
@@ -23,11 +24,8 @@ type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
 // Offline-bundled, owner-uploaded approved art; static require is necessary for Metro assets.
 const approvedHeroImage=require('./assets/2tbr-hero-panorama-v2.jpg');
-// New owner-approved 1920×900 panoramic image at the locked 174dp banner height.
-// Earlier 16:9 artwork cropped with `cover`, while `contain` left a flat side strip.
-// ImageBackground fills the complete parent box, independent of the hero's
-// text padding (which made an absolute Image with 100% dimensions leave bands).
-// Use stretch so all four cart wheels stay visible at 360–412dp (aspect varies by phone).
+// Retain the approved static art beneath the video for loading/error fallback.
+// The ImageBackground and all hero geometry remain unchanged.
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
 // Shared V1 colors are managed in src/theme.ts; do not define screen-specific palettes here.
 const money=(n:number)=>'৳'+Math.round(n).toLocaleString('en-US');
@@ -215,6 +213,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   return <ImageBackground source={approvedHeroImage} resizeMode="stretch"
    imageStyle={{borderRadius:17}}
    style={[styles.hero,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
+   <HeroVideo/>
    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}
     style={{color:brandV1.accentPale,fontWeight:'600',fontSize:small?8:8.8,letterSpacing:small?.55:.85,marginBottom:4}}>
     ✦ SMART SHOPPING. REAL SAVINGS!
@@ -250,7 +249,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  }
  function Home(){return <>
   <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>Savar DOHS⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
-  <Hero/><View style={{marginTop:7}}><Savings home/></View>
+  {Hero()}<View style={{marginTop:7}}><Savings home/></View>
   {title('',t.groups,()=>onTab('deals'))}{group.slice(0,2).map(o=><DealCard key={o.id} offer={o}/>)}
   {title('',t.exclusive,()=>onTab('exclusive'))}
   <View style={styles.twoCol}>{solo.slice(0,4).map(o=><ExclusiveCard key={o.id} offer={o}/>)}</View>
@@ -775,7 +774,8 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  function Menu(){return <>{title('EXPLORE', '2TBR Menu')}{[['My Orders','orders'],['Savings','savings'],['My Account','account'],['Community Pools','pools'],['Group Deals','deals']].map(([text,destination])=><Pressable key={text} onPress={()=>setScreen(destination as Screen)} style={[styles.menuRow,{backgroundColor:theme.card,borderColor:theme.line}]}><Text style={{color:theme.text}}>{text}</Text></Pressable>)}<Footer/></>}
  function body(){
  switch(screen){
- case 'home':return <Home/>;
+ // Render these hook-free helpers directly so theme/slide changes do not remount the video.
+ case 'home':return Home();
  case 'deals':return <>{title('GROUP SHOPPING',t.groups)}{group.map(o=><DealCard key={o.id} offer={o}/>)}</>;
  case 'exclusive':return <>{title('CURATED FOR YOU',t.exclusive)}<View style={styles.twoCol}>{solo.map(o=><ExclusiveCard key={o.id} offer={o}/>)}</View></>;
  case 'pools':return <>{title('BUY TOGETHER',t.pools)}{pools.map(p=><PoolCard key={p.id} pool={p}/>)}</>;
@@ -797,7 +797,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   <StatusBar style={dark?'light':'dark'}/>
   <View style={{paddingHorizontal:12,paddingTop:6,paddingBottom:8,backgroundColor:theme.background,borderBottomWidth:1,borderColor:theme.line}}>
    <View style={{flexDirection:'row',alignItems:'center',gap:4}}>
-    <Pressable accessibilityLabel="Home" onPress={()=>onTab('home')}><Image source={{uri:SITE+'/brand-mark-transparent.png'}} style={{width:small?32:36,height:36}} resizeMode="contain"/></Pressable>
+    <Pressable accessibilityLabel="Home" onPress={()=>onTab('home')}><Image source={require('./assets/brand-mark-transparent.png')} style={{width:small?32:36,height:36,tintColor:dark?'#FFFFFF':undefined}} resizeMode="contain"/></Pressable>
     <Pressable onPress={()=>onTab('home')} style={{flex:1,minWidth:72}}><Text style={{fontSize:small?11:13,fontWeight:'900',color:theme.text}} numberOfLines={1}>2-TAKA-R-BAZAR</Text>
      <Text style={{fontSize:small?8:9,color:theme.muted}} numberOfLines={1}>Smart shopping. Real savings!</Text>
      <Text style={{fontSize:small?8:9,color:theme.muted}} numberOfLines={1}>একসাথে কিনি, কম দামে পাই!</Text>

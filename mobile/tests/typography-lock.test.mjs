@@ -41,7 +41,7 @@ test('Typography never changes colors, font sizes, geometry, routes, checkout or
  for(const color of ["primary:'#007F83'","accent:'#2CD6CE'","text:'#17233B'","background:'#F4F1F6'"])
   assert.ok(theme.includes(color),color);
  const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
- for(const key of ['<Hero/>','<Savings home/>', "title('',t.groups", "title('',t.exclusive", "title('',t.pools"]) assert.ok(home.includes(key),key);
+ for(const key of ['{Hero()}','<Savings home/>', "title('',t.groups", "title('',t.exclusive", "title('',t.pools"]) assert.ok(home.includes(key),key);
  assert.ok(app.includes("case 'signIn':return <NativeSignIn"));
  assert.ok(app.includes("case 'checkout':return <Checkout/>"));
 });
