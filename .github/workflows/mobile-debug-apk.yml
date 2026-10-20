@@ -87,9 +87,16 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -no-snapshot -gpu software -feature -Vulkan -noaudio -no-boot-anim -camera-back none
           working-directory: mobile
-          script: python3 scripts/android-ui-smoke.py
+          script: |
+            adb root
+            adb wait-for-device
+            adb shell setprop debug.stagefright.ccodec 2
+            adb shell killall mediaserver
+            sleep 2
+            adb shell getprop debug.stagefright.ccodec
+            python3 scripts/android-ui-smoke.py
       - name: Publish Android UI verification evidence
         if: always()
         uses: actions/upload-artifact@v4
