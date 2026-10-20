@@ -16,10 +16,19 @@ def adb(*args):
     return subprocess.check_output(['adb', *args])
 
 def ui():
-    adb('shell', 'uiautomator', 'dump', '/sdcard/window.xml')
-    raw = adb('shell', 'cat', '/sdcard/window.xml')
-    (OUT/'window.xml').write_bytes(raw)
-    return ET.fromstring(raw)
+    # The automation bridge can briefly report no root while a fresh APK starts.
+    last_error = None
+    for _ in range(5):
+        try:
+            adb('shell', 'uiautomator', 'dump', '/sdcard/window.xml')
+            raw = adb('shell', 'cat', '/sdcard/window.xml')
+            root = ET.fromstring(raw)
+            (OUT/'window.xml').write_bytes(raw)
+            return root
+        except (subprocess.CalledProcessError, ET.ParseError) as error:
+            last_error = error
+            time.sleep(1)
+    raise last_error
 
 def matches(node, label):
     return any(value.strip() == label or value.split()[-1:] == [label] for value in [node.get('content-desc', ''), node.get('text', '')])
@@ -74,7 +83,7 @@ try:
             root = ui()
             find(root, 'Explore group deals')
             break
-        except (StopIteration, ET.ParseError):
+        except (StopIteration, ET.ParseError, subprocess.CalledProcessError):
             continue
     else:
         raise AssertionError('Home did not become ready on Android')
@@ -183,6 +192,7 @@ try:
             shot(f'compact-{language}-{index}')
     (OUT/'result.json').write_text(json.dumps({'passed':True, 'hero_height_dp':174, 'density':density, 'cta_bounds':cta, 'navigation_bounds':nav, 'motion_before_loop':initial_motion, 'motion_after_loop':repeated_motion,'controls_centered':True,'video_driven_slide_advance':True,'languages':['en','bn'],'widths_dp':[first.width/density,360]}, indent=2))
 finally:
+    shot('last-state')
     adb('shell','wm','size','reset')
     (OUT/'logcat.txt').write_bytes(adb('logcat', '-d'))
     (OUT/'gfxinfo.txt').write_bytes(adb('shell', 'dumpsys', 'gfxinfo', APP, 'framestats'))
