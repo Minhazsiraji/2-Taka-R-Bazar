@@ -251,3 +251,9 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat [lang="bn"]{--app-font:'Hind Siliguri','Inter',system-ui,sans-serif}
 
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-prices.is-price-pending strong{font-size:16px!important;line-height:1.4!important}
+
+/* Laptop parity begins at 1024px, before the retired 1150/1180px thresholds. */
+@media(min-width:1024px){
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-list{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-exclusive-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}

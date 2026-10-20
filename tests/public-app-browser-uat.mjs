@@ -32,7 +32,7 @@ try{
  }
  browser=await chromium.launch({headless:true,args:['--no-sandbox']})
  const widths=process.env.UAT_WIDTHS?process.env.UAT_WIDTHS.split(',').map(Number):[320,360,390,412,768,820,1024,1280,1440,1920]
- for(const width of widths)for(const theme of (process.env.UAT_DEBUG?['dark']:['light','dark']))for(const language of (process.env.UAT_DEBUG?['bn']:['en','bn'])){
+ async function checkWidth(width){for(const theme of (process.env.UAT_DEBUG?['dark']:['light','dark']))for(const language of (process.env.UAT_DEBUG?['bn']:['en','bn'])){
   const context=await browser.newContext({viewport:{width,height:950},reducedMotion:'reduce',serviceWorkers:'block'})
   await context.addInitScript(({theme,language})=>{
    localStorage.setItem('2taka-theme',theme)
@@ -129,6 +129,10 @@ try{
   }
   await context.close()
  }
+ console.log(`PASS width ${width}: all themes, languages and public routes`)
+ }
+ const pending=[...widths]
+ await Promise.all(Array.from({length:Math.min(3,widths.length)},async()=>{while(pending.length){const width=pending.shift();await checkWidth(width)}}))
  await writeFile(`${out}/results.json`,JSON.stringify({checks:results.length,results},null,2))
  console.log(`PASS: ${results.length} public route/width/theme/language combinations plus search, hero, guest Account, theme and language interactions.`)
 }finally{
