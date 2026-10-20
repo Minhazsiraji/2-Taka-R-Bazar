@@ -263,6 +263,9 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-pool-status{white-space:normal!important}
 }
 @media(max-width:350px){
+ /* Give the short primary label more of the existing action row, not a wider card. */
+ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-actions:has(.mhome-join-deal){grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr)!important}
+ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-actions:has(.mhome-join-deal) a:first-child{padding:6px 4px!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-brand-copy strong{font-size:9px!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-brand-copy small{font-size:6.5px!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-actions{gap:2px!important}
