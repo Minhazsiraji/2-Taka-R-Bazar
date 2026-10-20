@@ -26,7 +26,7 @@ test('checkout cannot transact or claim a final price',()=>{
 });
 test('new Cart and Checkout have no effect on locked Home layout',()=>{
  const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
- for(const token of ['<Hero/>','<Savings home/>',"title('',t.groups","title('',t.exclusive","title('',t.pools"])assert.ok(home.includes(token));
+ for(const token of ['{Hero()}','<Savings home/>',"title('',t.groups","title('',t.exclusive","title('',t.pools"])assert.ok(home.includes(token));
  const cart=app.slice(app.indexOf('function Cart()'),app.indexOf('function Account()'));
  assert.ok(!home.includes('groupDrafts'));
  assert.ok(cart.includes('drafts.map'));

@@ -54,7 +54,11 @@ jobs:
         run: |
           chmod +x android/gradlew
           cd android
-          ./gradlew :app:assembleRelease --no-daemon --stacktrace
+          # SDK 57 exceeds the template's 512 MB class-metadata limit.
+          # Compile Kotlin in this same JVM to avoid competing daemon heaps.
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace --max-workers=2 \
+            '-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1536m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8' \
+            -Pkotlin.compiler.execution.strategy=in-process
       - name: Verify APK contains packaged JavaScript and demo app only
         run: |
           APK=android/app/build/outputs/apk/release/app-release.apk
@@ -68,4 +72,36 @@ jobs:
           name: 2tbr-android-standalone-offline-preview
           path: mobile/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
+          retention-days: 7
+      - name: Enable KVM for Android UI verification
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Install screenshot verification dependency
+        run: python3 -m pip install Pillow
+      - name: Verify mobile hero and themes on Android
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -no-snapshot -gpu software -feature -Vulkan -noaudio -no-boot-anim -camera-back none
+          working-directory: mobile
+          script: |
+            adb root
+            adb wait-for-device
+            adb shell setprop debug.stagefright.ccodec 0
+            adb shell killall mediaserver
+            sleep 2
+            adb shell getprop debug.stagefright.ccodec
+            python3 scripts/android-ui-smoke.py
+      - name: Publish Android UI verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: 2tbr-android-ui-verification
+          path: mobile/android-ui-evidence/
+          if-no-files-found: warn
           retention-days: 7

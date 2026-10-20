@@ -53,6 +53,6 @@ test('Account state isolates drafts between users and never exposes live orders'
  assert.ok(form.includes('auth.signInPhone(phone,password)'));
  assert.ok(form.includes('auth.googleEnabled'));
  const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
- assert.ok(home.includes('<Hero/>'));
+ assert.ok(home.includes('{Hero()}'));
  assert.ok(home.includes('<Savings home/>'));
 });

@@ -3,7 +3,7 @@
     "name": "2-TAKA-R-BAZAR",
     "slug": "2tbr",
     "scheme": "twotbr",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -20,7 +20,8 @@
       }
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-video"
     ],
     "owner": "minhazsiraji",
     "runtimeVersion": {
