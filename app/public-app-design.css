@@ -102,7 +102,7 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search{
  display:flex!important;grid-column:2!important;grid-row:1!important;align-items:center;gap:7px;
  width:100%!important;max-width:400px!important;min-height:38px!important;height:38px!important;
- margin:0!important;padding:0 10px!important;border-radius:999px!important;
+ margin:0!important;padding:0 10px!important;border-radius:999px!important;transition:none!important;
  border:1px solid var(--public-rim)!important;background:var(--public-glass)!important;box-shadow:var(--public-glass-shadow)!important;
 }
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search input{
@@ -176,7 +176,7 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-picker{display:block!important;width:280px;max-width:42%;min-width:0}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-native-area{display:none!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-menu{left:auto!important;right:0!important;width:min(280px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:min(280px,45dvh);overscroll-behavior:contain}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-menu button{min-height:44px;overflow-wrap:anywhere}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-menu button{min-height:44px;overflow-wrap:anywhere;border:0!important;box-shadow:none!important;background:transparent!important;border-radius:9px!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-native-area{text-overflow:ellipsis;overflow:hidden}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-area-picker summary,.mhome-area-menu,.mhome-native-area){border:1px solid var(--public-rim)!important;box-shadow:var(--public-glass-shadow)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-menu{background:var(--public-menu-glass)!important;backdrop-filter:blur(8px)}

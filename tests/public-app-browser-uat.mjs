@@ -179,10 +179,10 @@ try{
     assert.equal(await page.locator('.public-account-menu').getAttribute('open'),null)
     assert.equal(await page.locator('#mhome-community').isVisible(),false,'Use the contained picker instead of an overflowing OS menu')
     await page.locator('.mhome-area-picker summary').click()
-    const areaMenu=await page.locator('.mhome-area-menu').evaluate(n=>{const r=n.getBoundingClientRect();const h=document.querySelector('.mhome-hero').getBoundingClientRect();return {left:r.left,right:r.right,heroLeft:h.left,heroRight:h.right,bottom:r.bottom,viewport:innerHeight,items:[...n.querySelectorAll('button')].map(b=>({height:b.getBoundingClientRect().height,scroll:b.scrollWidth,client:b.clientWidth}))}})
+    const areaMenu=await page.locator('.mhome-area-menu').evaluate(n=>{const r=n.getBoundingClientRect();const h=document.querySelector('.mhome-hero').getBoundingClientRect();return {left:r.left,right:r.right,heroLeft:h.left,heroRight:h.right,bottom:r.bottom,viewport:innerHeight,items:[...n.querySelectorAll('button')].map(b=>({height:b.getBoundingClientRect().height,scroll:b.scrollWidth,client:b.clientWidth,shadow:getComputedStyle(b).boxShadow,border:getComputedStyle(b).borderWidth}))}})
     assert.ok(areaMenu.left>=areaMenu.heroLeft-1&&areaMenu.right<=areaMenu.heroRight+1,`Area menu escapes its content frame: ${JSON.stringify(areaMenu)}`)
     assert.ok(areaMenu.bottom<=areaMenu.viewport,'Area menu extends below the viewport')
-    for(const item of areaMenu.items){assert.ok(item.height>=44);assert.ok(item.scroll<=item.client+1,'Area name overflows')}
+    for(const item of areaMenu.items){assert.ok(item.height>=44);assert.ok(item.scroll<=item.client+1,'Area name overflows');assert.equal(item.shadow,'none');assert.equal(item.border,'0px')}
     if([320,390,820,1440].includes(width))await page.screenshot({path:`${out}/area-open-${width}-${theme}-${language}.png`})
     await page.locator('.mhome-area-menu button').nth(1).click()
     assert.equal(await page.locator('.mhome-area-picker').getAttribute('open'),null)
