@@ -151,7 +151,18 @@ try:
     for label in labels:
         assert bounds(nav_node(scrolled, label)) == nav[label], 'Dock shifted while scrolling'
     shot('scrolled')
-    tap(nav_node(scrolled, 'Cart'))
+    # Capture the remaining approved homepage sections in each theme for rim review.
+    for theme_name in ['light','dark']:
+        if theme_name=='dark':
+            tap(find(ui(),'moon-outline'))
+            time.sleep(.5)
+            adb('shell','input','swipe',str(first.width//2),'400',str(first.width//2),'1800','250')
+        for index in range(4):
+            adb('shell','input','swipe',str(first.width//2),str(int(first.height*.75)),str(first.width//2),str(int(first.height*.3)),'350')
+            time.sleep(.6)
+            shot(f'homepage-{theme_name}-{index}')
+    tap(find(ui(),'sunny-outline'))
+    tap(nav_node(ui(), 'Cart'))
     time.sleep(1)
     find(ui(), 'No direct products yet.')
     shot('cart')

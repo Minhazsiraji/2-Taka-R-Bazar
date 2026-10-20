@@ -21,7 +21,7 @@ test('approved homepage content order preserved',()=>{
 });
 test('hero uses original four website message pairs and permanent slogans',()=>{
  assert.doesNotMatch(app,/setInterval.*setSlide/);
- assert.match(readFileSync(new URL('../src/motion-hero.tsx',import.meta.url),'utf8'),/onLoop=\{\(\)=>setSlide\(v=>\(v\+1\)%heroMessages.length\)\}/);
+ assert.match(readFileSync(new URL('../src/motion-hero.tsx',import.meta.url),'utf8'),/setSlide\(v=>\(v\+1\)%heroMessages.length\)/);
  assert.match(copy,/Smart people make smart decisions/);
  assert.match(copy,/A smarter way to shop/);
  assert.match(copy,/Your neighbours. Your Pool/);

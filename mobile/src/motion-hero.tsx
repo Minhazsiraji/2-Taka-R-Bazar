@@ -19,13 +19,14 @@ export function MotionHero({lang,dark,small,frameStyle,onExplore}:{
  const [restartKey,setRestartKey]=useState(0);
  const [ctaWidth,setCtaWidth]=useState(123);
  const opacity=useRef(new Animated.Value(1)).current;
+ const failed=useRef(false);
  const titleSize=small?14:15;
- const select=(next:number)=>{setSlide((next+heroMessages.length)%heroMessages.length);setRestartKey(v=>v+1)};
+ const select=(next:number)=>{if(!failed.current)opacity.setValue(0);setSlide((next+heroMessages.length)%heroMessages.length);setRestartKey(v=>v+1)};
  return <ImageBackground source={approvedHeroImage} resizeMode="stretch" imageStyle={{borderRadius:17}}
   style={[frameStyle,{backgroundColor:dark?palette.dark.hero:palette.light.hero}]}>
-  <HeroVideo restartKey={restartKey} onLoop={()=>setSlide(v=>(v+1)%heroMessages.length)}
-   onTime={(time,duration)=>opacity.setValue(heroTextOpacity(time,duration))}
-   onFailure={()=>opacity.setValue(1)}/>
+  <HeroVideo restartKey={restartKey} onLoop={()=>{opacity.setValue(0);setSlide(v=>(v+1)%heroMessages.length)}}
+   onTime={(time,duration)=>{if(!failed.current)opacity.setValue(heroTextOpacity(time,duration))}}
+   onFailure={()=>{failed.current=true;opacity.setValue(1)}}/>
   <View pointerEvents="none" style={StyleSheet.absoluteFill}>
    <Svg width="100%" height="100%"><Defs><LinearGradient id="textSafe" x1="0" y1="0" x2="0" y2="1">
     <Stop offset="0" stopColor="#003B40" stopOpacity=".34"/><Stop offset=".68" stopColor="#003B40" stopOpacity=".15"/><Stop offset="1" stopColor="#003B40" stopOpacity="0"/>
@@ -37,17 +38,17 @@ export function MotionHero({lang,dark,small,frameStyle,onExplore}:{
   </Text>
   <Animated.View style={{opacity,maxWidth:'94%'}}>
    <Text numberOfLines={2} adjustsFontSizeToFit minimumFontScale={.9}
-    style={{fontSize:titleSize,fontWeight:'700',color:brandV1.white,lineHeight:titleSize*1.1}}>{heroMessages[slide][lang][0]}</Text>
+    style={{...gloss.heroInk,fontSize:titleSize,fontWeight:'700',color:brandV1.white,lineHeight:titleSize*1.1}}>{heroMessages[slide][lang][0]}</Text>
    <Text numberOfLines={2} adjustsFontSizeToFit minimumFontScale={.9}
-    style={{fontSize:titleSize,fontWeight:'700',color:brandV1.accentPale,lineHeight:titleSize*1.1,marginTop:1}}>{heroMessages[slide][lang][1]}</Text>
+    style={{...gloss.heroInk,fontSize:titleSize,fontWeight:'700',color:brandV1.accentPale,lineHeight:titleSize*1.1,marginTop:1}}>{heroMessages[slide][lang][1]}</Text>
    <Text numberOfLines={2} adjustsFontSizeToFit minimumFontScale={.9}
-    style={{color:brandV1.white,fontSize:small?9:9.6,lineHeight:small?10.8:11.5,marginTop:4,maxWidth:'96%'}}>{heroMessages[slide][lang][2]}</Text>
+    style={{...gloss.heroInk,color:brandV1.white,fontSize:small?9:9.6,lineHeight:small?10.8:11.5,marginTop:4,maxWidth:'96%'}}>{heroMessages[slide][lang][2]}</Text>
   </Animated.View>
   <Pressable accessibilityRole="button" accessibilityLabel="Explore group deals" onPress={onExplore}
    onLayout={event=>setCtaWidth(event.nativeEvent.layout.width)}
    style={[gloss.glass,{position:'absolute',left:13,bottom:30,paddingVertical:7,paddingHorizontal:12,borderRadius:18}]}>
    <View pointerEvents="none" style={[StyleSheet.absoluteFill,{borderRadius:18,borderWidth:1,borderColor:gloss.edge,borderTopWidth:1.25}]}/>
-   <Text style={{color:brandV1.white,fontWeight:'600',fontSize:9}}>{lang==='bn'?'গ্রুপ ডিল দেখুন':'Explore group deals'} →</Text>
+   <Text style={{...gloss.heroInk,color:brandV1.white,fontWeight:'600',fontSize:9}}>{lang==='bn'?'গ্রুপ ডিল দেখুন':'Explore group deals'} →</Text>
   </Pressable>
   <View testID="hero-controls" style={{position:'absolute',left:13+(ctaWidth-132)/2,bottom:5,width:132,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:8}}>
    <Pressable accessibilityRole="button" accessibilityLabel="Previous hero slide" onPress={()=>select(slide-1)}><Text style={styles.arrow}>‹</Text></Pressable>
