@@ -57,12 +57,14 @@ try{
     const searchPieces=[...header.querySelectorAll('.market-search-icon,.public-search-submit,#market-header-product-search')].map(n=>{const c=getComputedStyle(n);return {background:c.backgroundColor,image:c.backgroundImage,border:c.borderWidth,shadow:c.boxShadow}})
     const surfaceNodes=[...shell.querySelectorAll('.card,.glass-panel,.market-product-card,.mhome-savings-panel,.mhome-savings-card,.mhome-deal-card,.mhome-exclusive-card,.mhome-pool-card')]
     const surfaces=surfaceNodes.map(n=>{const c=getComputedStyle(n);return {class:n.className,bg:c.backgroundColor,border:c.borderTopColor,width:c.borderTopWidth,shadow:c.boxShadow}})
+    const rimNodes=[...shell.querySelectorAll('.market-flat-header,.market-header-search,.market-header-quick-link,.public-account-trigger,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button,.market-single-language,.mhome-geo-button,.mhome-area-picker summary,.mhome-native-area,.mhome-hero,.mhome-hero-copy>a,.mhome-hero-arrow,.mhome-card-pill,.mhome-pool-status,.btn-primary,.btn-secondary,.mhome-details-btn,.mhome-join-deal,.market-information-footer,.market-footer-brand,.market-footer-information>nav,.market-footer-contact')].filter(n=>n.getClientRects().length)
+    const rims=rimNodes.map(n=>({class:n.className,shadow:getComputedStyle(n).boxShadow}))
     const picker=shell.querySelector(innerWidth<768?'.mhome-native-area':'.mhome-area-picker')
     const hero=shell.querySelector('.mhome-hero')
     const bodySample=shell.querySelector('.auth-page-content .card > p,section.rounded-2xl p')
     const bodyTextColor=bodySample?getComputedStyle(bodySample).color:null
     const joinButtons=[...shell.querySelectorAll('.mhome-join-deal')].map(n=>{const r=n.getBoundingClientRect();const range=document.createRange();range.selectNodeContents(n);const c=getComputedStyle(n);return {text:n.textContent.trim(),nowrap:c.whiteSpace,width:r.width,contentWidth:n.scrollWidth,clientWidth:n.clientWidth,rects:[...range.getClientRects()].map(r=>({top:r.top,bottom:r.bottom})),color:c.color}})
-    return {bodyTextColor,actionOrder,controlBounds,searchPieces,surfaces,joinButtons,pickerRight:picker?.getBoundingClientRect().right,heroRight:hero?.getBoundingClientRect().right,width:innerWidth,scroll:document.documentElement.scrollWidth,bg:getComputedStyle(shell).backgroundColor,
+    return {bodyTextColor,actionOrder,controlBounds,searchPieces,surfaces,rims,joinButtons,pickerRight:picker?.getBoundingClientRect().right,heroRight:hero?.getBoundingClientRect().right,width:innerWidth,scroll:document.documentElement.scrollWidth,bg:getComputedStyle(shell).backgroundColor,
      homeBg:document.querySelector('.mhome')?getComputedStyle(document.querySelector('.mhome')).backgroundColor:null,
      headerHeight:header.getBoundingClientRect().height,overlap:brand.right>actions.left+1,
      fonts:document.fonts.check('14px Inter'),bengaliFont:document.fonts.check('14px \"Hind Siliguri\"','বাংলা'),language:header.lang,
@@ -98,6 +100,12 @@ try{
     assert.match(surface.border,/rgba?\(255, 255, 255/,`Glossy white rim is missing: ${route}/${width}/${theme}/${language} ${JSON.stringify(surface)}`)
     assert.equal(surface.width,'1px')
     assert.notEqual(surface.shadow,'none')
+    assert.ok(Number(surface.border.match(/[\d.]+(?=\)$)/)?.[0])>=(theme==='dark'?.85:.97),'White rim must remain bright in both themes')
+   }
+   for(const rim of geometry.rims){
+    assert.match(rim.shadow,/rgba\(255, 255, 255, /,`Missing white edge highlight: ${JSON.stringify(rim)}`)
+    assert.match(rim.shadow,/inset/,`Missing inner reflection: ${JSON.stringify(rim)}`)
+    assert.match(rim.shadow,/0px 0px 5px 0px/,`Missing restrained rim halo: ${JSON.stringify(rim)}`)
    }
    if(geometry.bodyTextColor)assert.equal(geometry.bodyTextColor,theme==='dark'?'rgb(190, 201, 217)':'rgb(91, 105, 128)',`Public body text must follow the readable theme palette: ${route}/${width}/${theme}`)
    assert.equal(geometry.secondNav,false)

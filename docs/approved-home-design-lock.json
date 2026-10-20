@@ -23,7 +23,7 @@
     "app/site-customer-shell.css": "9797fceb995adf79cac0a0ea05355ac63393039cb60e083c63d2cccb534aefa9",
     "components/customer-footer.tsx": "6897dc663122b6bca66fb0e211b4c529b7427099c2dd67439a098d28e69ead79",
     "components/theme-toggle.tsx": "ad784cdfdeca0c299a3317b99acb95e9966bd399f1772568f3d8182062c7229a",
-    "app/public-app-design.css": "fd2ed1d5048ed5716412e7a10154c351583bdacc575877b03b45977889f3b06f"
+    "app/public-app-design.css": "2ef4c3dee6d341a6d932b2f5d659982d81fb334b0d832c0ca07eb4130ae3e6db"
   },
   "navigation_change": {
     "source": "Issue #64, approved functional navigation",
@@ -98,5 +98,11 @@
     "protected": "No Expo/native files or OTA. No Admin, Finance, Treasury, auth, catalog/cart rules, routes or database changes. All other protected file hashes retained.",
     "release": "Draft PR #127, isolated Vercel Preview only. No main merge or Production release.",
     "legacy_theme": "Only high-specificity rounded-panel selectors in site-theme.css and site-theme-surface-fix.css exclude the public shell. All declarations are unchanged and protected by normalized SHA-256 regression checks."
+  },
+  "public_glossy_rim_final_20261020": {
+    "approved_by": "User, 20 October 2026 — Final remaining correction, typed public website rim-only handoff",
+    "scope": "Stronger shared white rim, directional inset reflection, narrow soft halo and contrast keyline across existing public glass surfaces. Inset-only shine for existing hero/community/footer controls preserves geometry. No fill, typography, layout, content or functional changes.",
+    "protected": "All other protected hashes retained. No backend, auth handlers, mobile app, staff interfaces or Production changes.",
+    "release": "Draft PR #127 and isolated Vercel Preview only."
   }
 }
