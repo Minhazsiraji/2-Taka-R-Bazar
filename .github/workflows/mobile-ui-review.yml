@@ -1,0 +1,70 @@
+name: Android UI review of identical-source APK
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/mobile-ui-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Find an APK built from identical mobile runtime sources
+        id: apk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=2tbr-android-standalone-offline-preview&per_page=100" > /tmp/mobile-artifacts.json
+          python3 - <<'PY' > /tmp/mobile-apk-candidates.txt
+          import json,os
+          branch=os.environ.get('GITHUB_HEAD_REF') or os.environ['GITHUB_REF_NAME']
+          for artifact in json.load(open('/tmp/mobile-artifacts.json'))['artifacts']:
+              run=artifact['workflow_run']
+              if not artifact['expired'] and run['head_branch']==branch:
+                  print(run['id'],run['head_sha'])
+          PY
+          while read -r artifact_run artifact_sha; do
+            if git cat-file -e "$artifact_sha^{commit}" 2>/dev/null && \
+              git diff --quiet "$artifact_sha" HEAD -- mobile/App.tsx mobile/src mobile/assets mobile/app.json mobile/package.json mobile/package-lock.json mobile/eas.json mobile/tsconfig.json; then
+              echo "run_id=$artifact_run" >> "$GITHUB_OUTPUT"
+              echo "source_sha=$artifact_sha" >> "$GITHUB_OUTPUT"
+              echo "Testing APK runtime sources from $artifact_sha, identical to current PR."
+              exit 0
+            fi
+          done < /tmp/mobile-apk-candidates.txt
+          echo 'No identical-source APK available; run the Android APK build first.'
+          exit 1
+      - uses: actions/download-artifact@v4
+        with:
+          name: 2tbr-android-standalone-offline-preview
+          path: mobile/android/app/build/outputs/apk/release
+          run-id: ${{ steps.apk.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Enable emulator acceleration and screenshot verification
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          python3 -m pip install Pillow
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: -no-window -no-snapshot -gpu software -feature -Vulkan -noaudio -no-boot-anim -camera-back none
+          working-directory: mobile
+          script: python3 scripts/android-ui-smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: 2tbr-android-ui-review
+          path: mobile/android-ui-evidence/
+          if-no-files-found: warn
+          retention-days: 7
