@@ -5,9 +5,10 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
 const home=read('components/mobile-marketplace-home.tsx')
 const header=read('components/public-header.tsx')
 const css=read('app/marketplace-expo-parity.css')
-test('compact native-style website header keeps real Cart, My Money and search',()=>{
+test('compact native-style header keeps Cart, My Money under Account and search',()=>{
  assert.match(header,/className="market-header-quick-link market-header-quick-cart"/)
- assert.match(header,/href="\/money" className="market-header-quick-link market-header-quick-money"/)
+ assert.match(header,/className="public-account-panel"[\s\S]*href="\/money"/)
+ assert.doesNotMatch(header,/market-header-quick-money/)
  assert.match(header,/market-header-search/)
  assert.match(css,/@media\(min-width:1100px\)/)
  assert.match(css,/grid-template-columns:minmax\(195px,1fr\) minmax\(230px,400px\) auto!important/)

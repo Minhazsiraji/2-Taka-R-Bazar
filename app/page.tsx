@@ -19,8 +19,8 @@ export const metadata:Metadata={
  alternates:{canonical:SITE_URL},
 }
 
-export default async function Page({searchParams}:{searchParams:Promise<{area?:string}>}){
- const [{area:requestedArea},cookieStore]=await Promise.all([searchParams,cookies()])
+export default async function Page({searchParams}:{searchParams:Promise<{area?:string;q?:string}>}){
+ const [{area:requestedArea,q},cookieStore]=await Promise.all([searchParams,cookies()])
  const storedLanguage=cookieStore.get(STOREFRONT_LANGUAGE_COOKIE)?.value
  const initialLanguage=languageFromPreference(storedLanguage)
  const supabase=await createClient()
@@ -59,6 +59,6 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
   {/* English is the first-visit default. A previously selected BN/EN cookie wins on reload. */}
-  <PublicMarketplace initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} publishedProducts={publishedProducts} savings={savings} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
+  <PublicMarketplace initialSearch={q?.slice(0,200)??''} initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} publishedProducts={publishedProducts} savings={savings} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
  </main>
 }

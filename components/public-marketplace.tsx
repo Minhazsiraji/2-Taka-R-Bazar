@@ -25,11 +25,11 @@ import {AnimatedHeroMessages} from '@/components/animated-hero-messages'
 import {getCommunityDemoFeaturedPools,type DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
-export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],publishedProducts={items:[],hasMore:false,nextOffset:0},demoMode=false,pools=[],initialArea='',initialLanguage='en',hasLanguageCookie=false,savings}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];publishedProducts?:PublishedCatalogPage;demoMode?:boolean;pools?:DemoFeaturedPool[];initialArea?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean;savings:HomeSavingsSummary}){
+export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],publishedProducts={items:[],hasMore:false,nextOffset:0},demoMode=false,pools=[],initialArea='',initialSearch='',initialLanguage='en',hasLanguageCookie=false,savings}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];publishedProducts?:PublishedCatalogPage;demoMode?:boolean;pools?:DemoFeaturedPool[];initialArea?:string;initialSearch?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean;savings:HomeSavingsSummary}){
  const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const [area,setArea]=useState(()=>areas.some(a=>a.community_id===initialArea)?initialArea:'')
- const [search,setSearch]=useState('')
+ const [search,setSearch]=useState(initialSearch)
  const [gpsBusy,setGpsBusy]=useState(false)
  const [gpsMessage,setGpsMessage]=useState('')
  const [locationState,setLocationState]=useState<'pending'|'matched'|'nearby'|'denied'|'unavailable'|'failed'|'manual'>('pending')
@@ -118,7 +118,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
  t('Browse freely. Detect your area only when you want.','লোকেশন ছাড়াই বাজার দেখুন। চাইলে এলাকা খুঁজুন।')
 
  return <>
-  <PublicHeader storefront actionHref={authenticated?'/account':'/login'} actionLabel={authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Sign in','লগইন')}
+  <PublicHeader storefront authenticated={authenticated} actionHref={authenticated?'/account':'/login'} actionLabel={authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Sign in','লগইন')}
    searchValue={search} onSearchChange={setSearch}
    language={language} onLanguageChange={setLanguage}/>
   <MobileMarketplaceHome areas={areas} selectedArea={area} onChooseArea={selectArea}

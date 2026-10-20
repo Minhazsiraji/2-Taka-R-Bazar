@@ -136,9 +136,9 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
    image:feature?.image_url??feature?.gallery_urls?.[0]??published?.image_url??o.image_url,
    price:validPrice,oldPrice:validPrice&&Number.isFinite(old)&&old>validPrice?old:null,
    stock:verifiedStock,
-   demo:Boolean(o.is_demo||feature?.is_demo),
+   demo:Boolean(o.is_demo||feature?.is_demo||o.commerce_synthetic),
    commerceId:o.commerce_solo_id??null,available:Boolean(o.commerce_solo_available),
-   bookable:Boolean(validPrice&&!o.commerce_solo_id&&!o.is_demo),
+   bookable:Boolean(validPrice&&!o.commerce_solo_id&&!o.is_demo&&!o.commerce_synthetic),
    href:published?(language==='bn'?'/bn':'')+'/p/'+published.slug:undefined
   })
   unique.add(o.product_id)
@@ -169,7 +169,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
  const visibleExclusive=(pricedExclusive.length?pricedExclusive:exclusive).slice(0,6)
  const activeSlide=heroSlides[slide]
  return <div className="mhome" lang={language} aria-label={t('2TBR marketplace homepage','২টিবিআর বাজার হোম')}>
-  <div className="mhome-area-strip">
+  <div className="mhome-area-strip" id="your-community">
    <button className="mhome-geo-button" type="button" onClick={onDetectArea} disabled={detectingArea}
     aria-label={t('Detect nearby community','কাছের কমিউনিটি খুঁজুন')} title={t('Detect location','লোকেশন খুঁজুন')}>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
@@ -218,7 +218,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
   <section className="mhome-section mhome-savings" id="mobile-savings" aria-label={t('Your Savings Summary','আপনার সাশ্রয়ের হিসাব')}>
    <div className="mhome-savings-panel">
    <SectionHeading savings title={t('Your savings','আপনার সাশ্রয়')} description=""
-    href="/account/orders" viewText={t('View details','বিস্তারিত দেখুন')}/>
+    href="/account/savings" viewText={t('View details','বিস্তারিত দেখুন')}/>
    <div className="mhome-savings-grid">
     {([
      ['month',t('This Month','এই মাস'),savings.verified?savings.thisMonth:null],
@@ -244,26 +244,28 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
     title={t('Group Deals','গ্রুপ ডিল')} description={t('The more neighbours join, the better the price.','যত বেশি প্রতিবেশী, তত ভালো দাম।')}
     href="/group-deals" viewText={t('View all','সব দেখুন')}/>
    {deals.length?<div className="mhome-deal-list">{deals.map(d=>{
-    const price=money(d.confirmed_price??d.upcoming_price)
+    const confirmed=d.commerce_group_id?d.commerce_group_phase==='ready':d.price_status==='unlocked'||d.price_status==='final'
+    const price=confirmed?money(d.confirmed_price):null
+    const ended=Boolean(clockNow&&d.closes_at&&new Date(d.closes_at).getTime()<=clockNow)
+    const joinable=!d.is_demo&&!d.commerce_synthetic&&!ended&&(!d.commerce_group_id||['forming','ready'].includes(d.commerce_group_phase??''))
     const saved=d.reference_price&&d.confirmed_price&&d.reference_price>d.confirmed_price
      ?d.reference_price-d.confirmed_price:null
     const percent=d.next_threshold?Math.min(100,Math.round(d.buyer_count/d.next_threshold*100)):null
     const path=d.is_demo?'/demo-product/'+d.product_id:'/shop/'+d.product_id+'?area='+d.community_id
-    const confirmed=d.price_status==='unlocked'||d.price_status==='final'
     return <article className="mhome-deal-card" key={d.offer_id+'-'+d.product_id}>
      <Link href={path} className="mhome-deal-visual" aria-label={t('View ','দেখুন: ')+d.product_name}>
       <ProductImage url={d.image_url} title={t(d.product_name,d.product_name_bn??d.product_name)}/>
       <span className="mhome-card-pill">{d.is_demo?'DEMO':t('GROUP DEAL','গ্রুপ ডিল')}</span>
      </Link>
      <div className="mhome-deal-copy">
-      <span className="mhome-overline">{t('BUY TOGETHER · SAVE MORE','একসাথে কিনি · সাশ্রয় করি')}</span>
+      <span className="mhome-overline">{d.is_demo?t('Demo preview','ডেমো প্রিভিউ'):ended?t('Ended','শেষ হয়েছে'):confirmed?t('Price unlocked','দাম আনলক হয়েছে'):t('Pending unlock','আনলকের অপেক্ষায়')}</span>
       <h3>{t(d.product_name,d.product_name_bn??d.product_name)}</h3>
       <p className="mhome-muted">{d.package_size} · {areas.find(a=>a.community_id===d.community_id)?.community_name??''}</p>
       <div className="mhome-deal-prices">
        <strong>{price??t('Price pending','দাম আসছে')}</strong>
-       {saved!=null&&confirmed&&!d.is_demo&&<s>{money(d.reference_price)}</s>}
+       {saved!=null&&confirmed&&!d.is_demo&&!d.commerce_synthetic&&<s>{money(d.reference_price)}</s>}
       </div>
-      {saved!=null&&confirmed&&!d.is_demo&&<span className="mhome-save">Save {money(saved)}</span>}
+      {saved!=null&&confirmed&&!d.is_demo&&!d.commerce_synthetic&&<span className="mhome-save">{t('Save','সাশ্রয়')} {money(saved)}</span>}
       {!confirmed&&<span className="mhome-save">{t('Price unlock pending','দাম আনলকের অপেক্ষায়')}</span>}
       <div className="mhome-progress-caption"><span className="mhome-joined-stat"><span className="mhome-color-people" aria-hidden="true">👥</span> {d.buyer_count}{d.next_threshold?'/'+d.next_threshold:''} {t('joined','যোগ দিয়েছেন')}</span>
        {d.closes_at&&<span className="mhome-time-stat"><span className="mhome-clock-icon" aria-hidden="true">◷</span> {endsLabel(d.closes_at)}</span>}</div>
@@ -271,7 +273,8 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
         aria-label={t('Group participation','গ্রুপ অংশগ্রহণ')} aria-valuenow={Math.min(d.buyer_count,d.next_threshold!)}
         aria-valuemin={0} aria-valuemax={d.next_threshold!}><span style={{width:percent+'%'}}/></div>}
       <div className="mhome-deal-actions"><Link href={path}>{t('View details','বিস্তারিত')}</Link>
-       <Link href={d.is_demo?path:d.commerce_group_id?'/group-deals':path}>{d.is_demo?t('Preview deal','ডেমো দেখুন'):d.commerce_group_id?t('Join Group Deal','গ্রুপ ডিলে যোগ দিন'):t('View Group Deal','গ্রুপ ডিল দেখুন')} <span aria-hidden="true">→</span></Link>
+       {joinable?<Link href="/group-deals">{t('Join Group Deal','গ্রুপ ডিলে যোগ দিন')} <span aria-hidden="true">→</span></Link>:
+        <span className="mhome-action-unavailable" aria-disabled="true">{d.is_demo?t('Preview only','শুধু প্রিভিউ'):ended?t('Deal ended','ডিল শেষ'):t('Joining unavailable','যোগদান চালু হয়নি')}</span>}
       </div>
      </div>
     </article>})}</div>:
@@ -285,7 +288,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
     href="/products" viewText={t('View all','সব দেখুন')}/>
    {visibleExclusive.length?<div className="mhome-exclusive-grid">{visibleExclusive.map(p=>{
     const href=p.href??(p.demo?'/demo-product/'+p.id:'/products/'+p.id)
-    const canCart=!p.demo&&Boolean(p.commerceId&&p.available&&selectedArea&&p.price)
+    const canCart=!p.demo&&p.stock!==0&&Boolean(p.commerceId&&p.available&&selectedArea&&p.price)
     const saving=p.oldPrice&&p.price&&p.oldPrice>p.price&&!p.demo?p.oldPrice-p.price:null
     return <article className="mhome-exclusive-card" key={p.id}>
      <Link href={href} className="mhome-exclusive-image" aria-label={t('View ','দেখুন: ')+t(p.name,p.nameBn)}>
@@ -301,12 +304,16 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
        <span className="mhome-exclusive-availability">{t('View product information','পণ্যের তথ্য দেখুন')}</span>}
      </div>
      <div className="mhome-exclusive-actions">
+      <Link className="mhome-details-btn" href={href}>{t('View details','বিস্তারিত দেখুন')}</Link>
       {canCart?<form action={setCommerceCartItem}>
        <input type="hidden" name="offer_id" value={p.commerceId!}/>
        <input type="hidden" name="quantity" value="1"/>
        <button className="mhome-cart-btn" type="submit">🛒 {t('Add to cart','কার্টে যোগ')}</button></form>:
-       <Link className="mhome-cart-btn" href={p.bookable&&selectedArea?'/pilot-book?product='+p.id:p.price&&p.commerceId&&!selectedArea?'#mhome-community':href}>
-        {p.demo?t('Preview product','পণ্য দেখুন'):p.bookable&&selectedArea?t('Book Product','পণ্য বুক করুন'):p.price&&p.commerceId&&!selectedArea?t('Select community','কমিউনিটি বাছুন'):p.price?t('View Details','বিস্তারিত দেখুন'):t('View details','বিস্তারিত দেখুন')} <span aria-hidden="true">→</span></Link>}
+       <button className="mhome-cart-btn" type="button" disabled aria-disabled="true">
+        {p.stock===0?t('Out of stock','স্টক শেষ'):t('Add to cart','কার্টে যোগ')}</button>}
+      {p.bookable&&selectedArea&&<Link className="mhome-book-link" href={'/pilot-book?product='+p.id}>{t('Book Product','পণ্য বুক করুন')} →</Link>}
+      {p.price&&p.commerceId&&!selectedArea&&<a className="mhome-book-link" href="#your-community">{t('Select community to buy','কিনতে কমিউনিটি বাছুন')} →</a>}
+
      </div>
     </article>})}</div>:
     <div className="mhome-empty">{t('Products will appear as soon as they are published.','পণ্য প্রকাশিত হলে এখানে দেখা যাবে।')}</div>}
@@ -318,14 +325,18 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
     description={t('Join a weekly, monthly or special community pool.','সাপ্তাহিক, মাসিক বা বিশেষ পুলে অংশ নিন।')}
     href="/pool" viewText={t('View all','সব দেখুন')}/>
    {poolRows.length?<div className="mhome-pool-list">{poolRows.map(p=>{
-    const target=Math.max(1,p.minHouseholds)
-    const progress=Math.round(Math.min(1,p.sampleHouseholds/target)*100)
+    const target=Number.isSafeInteger(p.minHouseholds)&&p.minHouseholds>0?p.minHouseholds:null
+    const progress=target?Math.round(Math.min(1,p.sampleHouseholds/target)*100):null
     const nextTier=p.livePricing?.householdsNeeded&&p.livePricing.householdsNeeded>0
      ?p.sampleHouseholds+p.livePricing.householdsNeeded:null
     const chosen=(p.featuredProductIds.slice(0,3).map(id=>p.bundle.find(b=>b.offer.product_id===id)?.offer).filter(Boolean) as StorefrontOffer[])
     const photoOffers=chosen.length?chosen:p.bundle.slice(0,3).map(b=>b.offer)
     const deadlines=p.bundle.map(b=>b.offer.closes_at)
     const closesAt=deadlines.length>0&&deadlines.every(d=>d!==null&&d===deadlines[0])?deadlines[0]:null
+    const expired=Boolean(clockNow&&closesAt&&new Date(closesAt).getTime()<=clockNow)
+    const pending=p.bundle.some(b=>!['unlocked','final'].includes(b.offer.price_status))
+    const tierSaving=!p.isDemo&&p.livePricing?.currentPrice!=null&&p.livePricing.nextPrice!=null&&p.livePricing.currentPrice>p.livePricing.nextPrice
+     ?p.livePricing.currentPrice-p.livePricing.nextPrice:null
     return <article className="mhome-pool-card" key={p.id??p.slug}>
      <div className="mhome-pool-photos">
       {photoOffers.map(o=>
@@ -334,17 +345,19 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
       {!photoOffers.length&&<ProductImage url={p.image} title={t(p.title.en,p.title.bn)}/>}
      </div>
      <div className="mhome-pool-copy"><div className="mhome-pool-top"><span className="mhome-pool-kind">{t(p.slug.toUpperCase()+' POOL',p.slug==='weekly'?'সাপ্তাহিক পুল':p.slug==='monthly'?'মাসিক পুল':'বিশেষ পুল')}</span>
-      <span className="mhome-pool-status">{p.isDemo?'DEMO':t('● ACTIVE','● সক্রিয়')}</span></div>
+      <span className="mhome-pool-status">{p.isDemo?'DEMO':expired?t('Ended','শেষ হয়েছে'):pending?t('Pending','অপেক্ষমাণ'):t('● ACTIVE','● সক্রিয়')}</span></div>
       <h3>{t(p.title.en,p.title.bn)}</h3>
-      <p className="mhome-muted mhome-pool-description">{p.bundle.length} {t('products','পণ্য')} · {t(p.subtitle.en,p.subtitle.bn)}</p>
+      <p className="mhome-muted mhome-pool-description">{p.bundle.length} {t('products','পণ্য')} · {areas.find(a=>a.community_id===p.community_id)?.community_name??t(p.subtitle.en,p.subtitle.bn)}</p>
       <p className="mhome-pool-joined"><span aria-hidden="true">👥</span> {p.sampleHouseholds.toLocaleString('en-BD')} {t('households joined','পরিবার যোগ দিয়েছে')}</p>
-      <div className="mhome-pool-meta"><span>{nextTier?t('Next tier','পরবর্তী ধাপ'):t('Minimum','ন্যূনতম')}: {(nextTier??target).toLocaleString('en-BD')}</span>
+      <div className="mhome-pool-meta"><span>{target?t('Minimum','ন্যূনতম')+': '+target.toLocaleString('en-BD'):t('Target not published','লক্ষ্য প্রকাশিত হয়নি')}</span>
+       {nextTier&&<span>{t('Next tier','পরবর্তী ধাপ')}: {nextTier.toLocaleString('en-BD')}</span>}
+       {tierSaving!=null&&<span className="mhome-save">{t('Next saving','পরবর্তী সাশ্রয়')}: {money(tierSaving)}</span>}
        {closesAt?<span className="mhome-time-stat"><span aria-hidden="true">◷</span> {endsLabel(closesAt)}</span>:
         <span className="mhome-time-unset">{t('Schedule pending','সময়সূচি আসছে')}</span>}</div>
       <div className="mhome-pool-bottom">
-       <div className="mhome-progress" role="progressbar" aria-label={t('Household progress','অংশগ্রহণের অগ্রগতি')}
+       {target!==null&&<div className="mhome-progress" role="progressbar" aria-label={t('Household progress','অংশগ্রহণের অগ্রগতি')}
         aria-valuenow={Math.min(p.sampleHouseholds,target)} aria-valuemin={0} aria-valuemax={target}>
-        <span style={{width:progress+'%'}}/></div>
+        <span style={{width:progress+'%'}}/></div>}
        <Link className="mhome-pool-link" href={p.isDemo?'/demo-pool/'+p.slug:'/pool#pool-'+p.id}>{t('Explore Pool','পুল দেখুন')} <span aria-hidden="true">→</span></Link>
       </div>
      </div>

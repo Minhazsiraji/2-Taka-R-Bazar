@@ -1,0 +1,73 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import React from 'react'
+import {renderToStaticMarkup} from 'react-dom/server'
+import {loadSource} from './helpers/load-tsx.mjs'
+const Link=({href,children,...props})=>React.createElement('a',{href,...props},children)
+const chooseText=(language,en,bn)=>language==='bn'?bn:en
+const formatPrice=n=>n>0?'৳'+Number(n).toLocaleString('en-BD'):'Price pending'
+const {MobileMarketplaceHome}=await loadSource('components/mobile-marketplace-home.tsx',{
+ 'next/link':Link,'@/app/actions/commerce':{setCommerceCartItem:()=>{}},
+ '@/lib/storefront':{formatPrice},'@/lib/storefront-language':{chooseText},
+})
+const base={areas:[],selectedArea:'area',onChooseArea:()=>{},onDetectArea:()=>{},detectingArea:false,
+ offers:[],products:[],publishedProducts:{items:[],hasMore:false,nextOffset:0},pools:[],language:'en',demoMode:false,search:'',
+ savings:{verified:false,thisMonth:null,previousMonth:null,lifetime:null,community:null}}
+const offer={offer_id:'deal',offer_kind:'GROUP_DEAL',community_id:'area',product_id:'product',product_name:'Real rice',
+ package_size:'5 kg',reference_price:1240,confirmed_price:null,upcoming_price:1075,price_status:'awaiting_threshold',
+ buyer_count:2,next_threshold:10,closes_at:null,image_url:null}
+const render=props=>renderToStaticMarkup(React.createElement(MobileMarketplaceHome,{...base,...props}))
+test('pending deal never presents upcoming price as a confirmed selling price or a saving',()=>{
+ const html=render({offers:[offer]})
+ assert.ok(html.includes('Price pending'))
+ assert.ok(html.includes('Price unlock pending'))
+ assert.ok(!html.includes('1,075'))
+ assert.ok(!html.includes('Save ৳'))
+ assert.ok(html.includes('Join Group Deal'))
+})
+test('unlocked authoritative deal shows both prices and verified difference',()=>{
+ const html=render({offers:[{...offer,confirmed_price:1075,price_status:'unlocked'}]})
+ assert.ok(html.includes('৳1,075'))
+ assert.ok(html.includes('<s>৳1,240</s>'))
+ assert.ok(html.includes('৳165'))
+})
+test('synthetic deal does not claim verified saving or expose an active join',()=>{
+ const html=render({offers:[{...offer,confirmed_price:1075,price_status:'unlocked',commerce_synthetic:true,commerce_group_id:'id',commerce_group_phase:'ready'}]})
+ assert.ok(!html.includes('<s>৳1,240</s>'))
+ assert.ok(html.includes('Joining unavailable'))
+})
+test('unknown Pool minimum remains unavailable instead of a fabricated target of one',()=>{
+ const html=render({pools:[{id:'pool',slug:'weekly',title:{en:'Weekly pool',bn:'পুল'},subtitle:{en:'Area',bn:'এলাকা'},
+ featuredProductIds:[],bundle:[],minHouseholds:null,sampleHouseholds:0,isDemo:false,image:null}]})
+ assert.ok(html.includes('Target not published'))
+ assert.ok(!html.includes('aria-valuemax="1"'))
+})
+test('only eligible priced in-stock SOLO offers render a cart form, alongside product details',()=>{
+ const solo={...offer,offer_kind:'SOLO',solo_price:100,commerce_solo_id:'solo',commerce_solo_available:true,commerce_available_quantity:2}
+ const ready=render({offers:[solo]})
+ assert.ok(ready.includes('name="offer_id" value="solo"'))
+ assert.ok(ready.includes('mhome-details-btn'))
+ for(const variant of [{solo_price:null,confirmed_price:null},{commerce_available_quantity:0},{commerce_synthetic:true},{commerce_solo_available:false}]){
+  const html=render({offers:[{...solo,...variant}]})
+  assert.ok(!html.includes('name="offer_id" value="solo"'))
+ }
+})
+const {PublicHeader}=await loadSource('components/public-header.tsx',{
+ 'next/link':Link,'next/navigation':{usePathname:()=>'/login'},'@/app/actions/auth':{signOut:()=>{}},
+ '@/components/brand-logo':{BrandLogo:()=>null},'@/components/notification-bell':{NotificationBell:()=>null},
+ '@/components/header-action-icon':{HeaderActionIcon:()=>null},'@/components/theme-toggle':{ThemeToggle:()=>null},
+ '@/lib/site':{SITE_TAGLINE_EN:'Smart shopping. Real savings!',SITE_TAGLINE_BN:'একসাথে কিনি, কম দামে পাই!'},
+ '@/lib/storefront-language':{chooseText},
+})
+test('guest and member Account menus have appropriate destinations; login has no secondary nav',()=>{
+ const guest=renderToStaticMarkup(React.createElement(PublicHeader,{storefront:true,authenticated:false}))
+ assert.ok(guest.includes('Join the pool'))
+ assert.ok(guest.includes('href="/login"'))
+ assert.ok(!guest.includes('href="/money"'))
+ assert.ok(!guest.includes('market-desktop-nav'))
+ const member=renderToStaticMarkup(React.createElement(PublicHeader,{storefront:true,authenticated:true}))
+ assert.ok(member.includes('href="/money"'))
+ assert.ok(member.includes('href="/account/savings"'))
+ assert.ok(member.includes('Sign out'))
+ assert.ok(!member.includes('market-header-quick-money'))
+})

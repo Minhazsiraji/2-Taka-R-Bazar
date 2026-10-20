@@ -47,7 +47,7 @@ test('product cards show bilingual detail links, true photo and price-pending, b
  assert.match(section,/href=\{href\}/)
  assert.match(section,/item\.title_en,item\.title_bn/)
  assert.match(section,/item\.alt_en,item\.alt_bn/)
- assert.match(section,/Price pending','মূল্য শীঘ্রই'/)
+ assert.match(section,/Price not published','দাম প্রকাশিত হয়নি'/)
  assert.match(section,/View Details','বিস্তারিত দেখুন'/)
  assert.match(section,/Show more products','আরও পণ্য দেখুন'/)
  assert.match(section,/lg:grid-cols-3/)

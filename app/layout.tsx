@@ -26,6 +26,7 @@ import './site-product-management.css'
 import './marketplace-review-mobile-fix.css'
 import './marketplace-mobile-approved.css'
 import './marketplace-expo-parity.css'
+import './public-app-design.css'
 import { PwaRegister } from '@/components/pwa-register'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE_EN, SITE_URL } from '@/lib/site'
 
@@ -78,7 +79,7 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: 'default' },
 }
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1 }
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="en" suppressHydrationWarning>
