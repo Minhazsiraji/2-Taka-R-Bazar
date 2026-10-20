@@ -13,18 +13,17 @@
    Hero geometry/art remain locked in marketplace-expo-parity.css. */
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat {
  --public-bg:#F4F1F6; --public-card:#FFFFFF; --public-ink:#17233B;
- --public-muted:#5B6980; --public-line:#E3DFE8; --public-field:#F8F6FA;
+ --public-muted:#5B6980; --public-line:rgb(255 255 255 / 98%); --public-field:#F8F6FA;
  --public-accent:#007F83; --public-on-accent:#FFFFFF; --public-soft:#DFF8F6;
- /* Static edge reflections keep glass crisp without extra blur or paint layers.
-    A fine contrast keyline separates the white rim from pale backgrounds. */
- --public-glass:rgb(255 255 255 / 54%); --public-input-glass:rgb(255 255 255 / 36%);
+ /* The reference uses a lightly tinted pane behind a crisp white edge.
+    Keep that separation instead of washing white borders into a white fill. */
+ --public-glass:rgb(23 35 59 / 4%); --public-input-glass:rgb(255 255 255 / 12%);
  --public-menu-glass:rgb(249 248 252 / 96%); --public-rim:rgb(255 255 255 / 98%);
  --public-reflection:rgb(255 255 255 / 96%);
  --public-rim-side:rgb(255 255 255 / 60%);
- --public-rim-keyline:rgb(23 35 59 / 18%);
  --public-rim-halo:rgb(255 255 255 / 54%);
  --public-radius:18px; --public-shadow:0 2px 8px rgb(23 35 59 / 5%);
- --public-glass-shadow:inset 0 1px 1px var(--public-reflection),inset 1px 0 0 var(--public-rim-side),inset 0 -1px 0 rgb(23 35 59 / 6%),0 0 0 .5px var(--public-rim-keyline),0 0 5px var(--public-rim-halo),var(--public-shadow);
+ --public-glass-shadow:inset 0 1px 1px var(--public-reflection),inset 1px 0 0 var(--public-rim-side),inset 0 -1px 0 rgb(255 255 255 / 18%),0 0 0 .5px var(--public-rim),0 0 5px var(--public-rim-halo),var(--public-shadow);
  --public-frame-shadow:inset 0 0 0 1px var(--public-rim),var(--public-glass-shadow);
  --public-button-fill:linear-gradient(180deg,rgb(255 255 255 / 2%),transparent),var(--public-accent);
  /* Bridge legacy paragraph/heading styles to the public palette. */
@@ -39,13 +38,12 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 }
 html[data-theme="dark"] body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat {
  --public-bg:#0D1424; --public-card:#17233B; --public-ink:#F4F1F6;
- --public-muted:#BEC9D9; --public-line:#37465C; --public-field:#23324A;
+ --public-muted:#BEC9D9; --public-line:rgb(255 255 255 / 86%); --public-field:#23324A;
  --public-accent:#2CD6CE; --public-on-accent:#17233B; --public-soft:#164C50;
  --public-glass:rgb(23 35 59 / 62%); --public-input-glass:rgb(35 50 74 / 46%);
  --public-menu-glass:rgb(23 35 59 / 96%); --public-rim:rgb(255 255 255 / 86%);
  --public-reflection:rgb(255 255 255 / 72%);
  --public-rim-side:rgb(255 255 255 / 30%);
- --public-rim-keyline:rgb(0 0 0 / 24%);
  --public-rim-halo:rgb(255 255 255 / 16%);
  --public-shadow:0 2px 8px rgb(0 0 0 / 12%);
 }
@@ -62,6 +60,7 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
  box-shadow:var(--public-glass-shadow)!important;
  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
 }
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.border,.border-t,.border-b,.border-l,.border-r,hr){border-color:var(--public-rim)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.card,.glass-panel,.cx-glass-card,.cx-glass-subcard)::before{display:none!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat :is(.input,input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="search"]),select,textarea){
  background:var(--public-input-glass)!important;color:var(--public-ink)!important;
@@ -119,6 +118,9 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search :is(.market-search-icon,.public-search-submit)::before,body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search :is(.market-search-icon,.public-search-submit)::after{display:none!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search svg{width:18px!important;height:18px!important;flex:none}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search input{min-width:0!important;box-shadow:none!important}
+/* One focus boundary on the whole pill; never a rectangle inside the search. */
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search:focus-within{outline:1px solid var(--public-rim)!important;outline-offset:2px!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .market-header-search :is(input,.public-search-submit):is(:focus,:focus-visible){outline:none!important;box-shadow:none!important;border:0!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .public-search-submit{cursor:pointer}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header .theme-toggle-icon{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;font-size:20px;line-height:1}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-header-actions :is(a,button,summary):hover{background:var(--public-soft)!important}
@@ -171,7 +173,10 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 /* Community trigger shares the hero's full content boundary. */
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-strip{width:100%!important;max-width:none!important;margin-inline:0!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-area-picker,.mhome-native-area){margin-left:auto!important;flex:0 1 auto!important}
-body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-picker{width:280px;max-width:42%}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-picker{display:block!important;width:280px;max-width:42%;min-width:0}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-native-area{display:none!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-menu{left:auto!important;right:0!important;width:min(280px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:min(280px,45dvh);overscroll-behavior:contain}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-menu button{min-height:44px;overflow-wrap:anywhere}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-native-area{text-overflow:ellipsis;overflow:hidden}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome :is(.mhome-area-picker summary,.mhome-area-menu,.mhome-native-area){border:1px solid var(--public-rim)!important;box-shadow:var(--public-glass-shadow)!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-menu{background:var(--public-menu-glass)!important;backdrop-filter:blur(8px)}
@@ -253,6 +258,10 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-products-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 }
 @media(max-width:767px){
+ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-picker{width:42%;max-width:48%;flex:0 1 42%!important}
+ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-picker summary{height:34px;min-height:34px;padding:6px 10px;font-size:12px;line-height:20px}
+ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-picker summary>span:first-child{min-width:0;flex:1}
+ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-area-picker summary>span:last-child{flex:none}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .public-glass-header.market-flat-header{padding:0 10px!important}
  body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .market-flat-header>.market-header-inner{grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto 38px!important;min-height:0!important;gap:8px 5px!important;padding:8px 0!important}

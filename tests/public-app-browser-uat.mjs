@@ -56,10 +56,15 @@ try{
     const controlBounds=actionNodes.map(n=>(n.matches('details')?n.querySelector('summary'):n.matches('.market-language-toggle')?n.querySelector('button'):n).getBoundingClientRect()).map(r=>({left:r.left,right:r.right,top:r.top,width:r.width,height:r.height}))
     const searchPieces=[...header.querySelectorAll('.market-search-icon,.public-search-submit,#market-header-product-search')].map(n=>{const c=getComputedStyle(n);return {background:c.backgroundColor,image:c.backgroundImage,border:c.borderWidth,shadow:c.boxShadow}})
     const surfaceNodes=[...shell.querySelectorAll('.card,.glass-panel,.market-product-card,.mhome-savings-panel,.mhome-savings-card,.mhome-deal-card,.mhome-exclusive-card,.mhome-pool-card')]
-    const surfaces=surfaceNodes.map(n=>{const c=getComputedStyle(n);return {class:n.className,bg:c.backgroundColor,border:c.borderTopColor,width:c.borderTopWidth,shadow:c.boxShadow}})
+    const surfaces=surfaceNodes.map(n=>{
+     const c=getComputedStyle(n)
+     const layers=[];for(let p=n;p;p=p.parentElement)layers.push(getComputedStyle(p).backgroundColor)
+     const fill=layers.reverse().reduce((below,color)=>{const parts=color.match(/[\d.]+/g)?.map(Number);if(!parts)return below;const alpha=parts[3]??1;return below.map((v,i)=>parts[i]*alpha+v*(1-alpha))},[255,255,255])
+     return {class:n.className,bg:c.backgroundColor,border:c.borderTopColor,width:c.borderTopWidth,shadow:c.boxShadow,rimSeparation:Math.min(...fill.map(v=>255-v))}
+    })
     const rimNodes=[...shell.querySelectorAll('.market-flat-header,.market-header-search,.market-header-quick-link,.public-account-trigger,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button,.market-single-language,.mhome-geo-button,.mhome-area-picker summary,.mhome-native-area,.mhome-hero,.mhome-hero-copy>a,.mhome-card-pill,.mhome-pool-status,.btn-primary,.btn-secondary,.mhome-details-btn,.mhome-deal-actions>a:first-child,.mhome-join-deal,.border.rounded-full,form.border.rounded-xl,.market-information-footer,.market-footer-brand,.market-footer-information>nav,.market-footer-contact')].filter(n=>n.getClientRects().length)
     const rims=rimNodes.map(n=>({class:n.className,shadow:getComputedStyle(n).boxShadow}))
-    const picker=shell.querySelector(innerWidth<768?'.mhome-native-area':'.mhome-area-picker')
+    const picker=shell.querySelector('.mhome-area-picker')
     const hero=shell.querySelector('.mhome-hero')
     const bodySample=shell.querySelector('.auth-page-content .card > p,section.rounded-2xl p')
     const bodyTextColor=bodySample?getComputedStyle(bodySample).color:null
@@ -101,6 +106,7 @@ try{
     assert.equal(surface.width,'1px')
     assert.notEqual(surface.shadow,'none')
     assert.ok(Number(surface.border.match(/[\d.]+(?=\)$)/)?.[0])>=(theme==='dark'?.85:.97),'White rim must remain bright in both themes')
+    if(theme==='light')assert.ok(surface.rimSeparation>=12,`White edge is washed into the pane: ${JSON.stringify(surface)}`)
    }
    for(const rim of geometry.rims){
     assert.match(rim.shadow,/rgba\(255, 255, 255, /,`Missing white edge highlight: ${JSON.stringify(rim)}`)
@@ -119,6 +125,19 @@ try{
    }
    if(route==='/'){
     assert.ok(Math.abs(geometry.pickerRight-geometry.heroRight)<2,`Community selector is not at the hero right edge: ${JSON.stringify(geometry)}`)
+    await page.locator('#market-header-product-search').click()
+    const focusedSearch=await page.locator('.market-header-search').evaluate(form=>{
+     const input=form.querySelector('input');const c=getComputedStyle(input);const frame=getComputedStyle(form)
+     return {outline:c.outlineStyle,border:c.borderWidth,shadow:c.boxShadow,frameOutline:frame.outlineColor,frameWidth:frame.outlineWidth}
+    })
+    assert.equal(focusedSearch.outline,'none','Focused search must not gain an inner rectangle')
+    assert.equal(focusedSearch.border,'0px')
+    assert.equal(focusedSearch.shadow,'none')
+    assert.match(focusedSearch.frameOutline,/rgba?\(255, 255, 255/,'Search focus must use the white outer frame')
+    assert.equal(focusedSearch.frameWidth,'1px')
+    if([320,390,820,1440].includes(width))await page.screenshot({path:`${out}/search-focused-${width}-${theme}-${language}.png`})
+    await page.locator('#market-header-product-search').press('Tab')
+    assert.equal(await page.locator('.public-search-submit').evaluate(n=>n===document.activeElement),true,'Submit remains keyboard accessible')
     for(const button of geometry.joinButtons){
      assert.equal(button.text,language==='bn'?'ডিলে যোগ দিন →':'Join Deal →')
      assert.equal(button.nowrap,'nowrap')
@@ -158,17 +177,21 @@ try{
     assert.equal(await page.locator('.public-account-panel a[href="/money"]').count(),0)
     await page.locator('.public-account-trigger').press('Escape')
     assert.equal(await page.locator('.public-account-menu').getAttribute('open'),null)
-    if(width<768){
-     await page.locator('#mhome-community').selectOption({index:1})
-     assert.notEqual(await page.locator('#mhome-community').evaluate(n=>n.value), '')
-     await page.locator('#mhome-community').selectOption('')
-    }else{
-     await page.locator('.mhome-area-picker summary').click()
-     await page.locator('.mhome-area-menu button').nth(1).click()
-     assert.equal(await page.locator('.mhome-area-picker').getAttribute('open'),null)
-     await page.locator('.mhome-area-picker summary').click()
-     await page.locator('.mhome-area-menu button').first().click()
-    }
+    assert.equal(await page.locator('#mhome-community').isVisible(),false,'Use the contained picker instead of an overflowing OS menu')
+    await page.locator('.mhome-area-picker summary').click()
+    const areaMenu=await page.locator('.mhome-area-menu').evaluate(n=>{const r=n.getBoundingClientRect();const h=document.querySelector('.mhome-hero').getBoundingClientRect();return {left:r.left,right:r.right,heroLeft:h.left,heroRight:h.right,bottom:r.bottom,viewport:innerHeight,items:[...n.querySelectorAll('button')].map(b=>({height:b.getBoundingClientRect().height,scroll:b.scrollWidth,client:b.clientWidth}))}})
+    assert.ok(areaMenu.left>=areaMenu.heroLeft-1&&areaMenu.right<=areaMenu.heroRight+1,`Area menu escapes its content frame: ${JSON.stringify(areaMenu)}`)
+    assert.ok(areaMenu.bottom<=areaMenu.viewport,'Area menu extends below the viewport')
+    for(const item of areaMenu.items){assert.ok(item.height>=44);assert.ok(item.scroll<=item.client+1,'Area name overflows')}
+    if([320,390,820,1440].includes(width))await page.screenshot({path:`${out}/area-open-${width}-${theme}-${language}.png`})
+    await page.locator('.mhome-area-menu button').nth(1).click()
+    assert.equal(await page.locator('.mhome-area-picker').getAttribute('open'),null)
+    assert.notEqual(await page.locator('#mhome-community').evaluate(n=>n.value),'')
+    await page.locator('.mhome-area-picker summary').click()
+    await page.locator('.mhome-area-menu button').first().click()
+    await page.locator('.mhome-area-picker summary').click()
+    await page.locator('.mhome-area-picker summary').press('Escape')
+    assert.equal(await page.locator('.mhome-area-picker').getAttribute('open'),null)
    }
    if([320,390,820,1440].includes(width)&&['/','/login','/products','/privacy'].includes(route)){
     await page.screenshot({path:`${out}/${route==='/'?'home':route.slice(1)}-${width}-${theme}-${language}.png`,fullPage:true})
