@@ -62,14 +62,16 @@ try{
      const fill=layers.reverse().reduce((below,color)=>{const parts=color.match(/[\d.]+/g)?.map(Number);if(!parts)return below;const alpha=parts[3]??1;return below.map((v,i)=>parts[i]*alpha+v*(1-alpha))},[255,255,255])
      return {class:n.className,bg:c.backgroundColor,border:c.borderTopColor,width:c.borderTopWidth,shadow:c.boxShadow,rimSeparation:Math.min(...fill.map(v=>255-v))}
     })
-    const rimNodes=[...shell.querySelectorAll('.market-flat-header,.market-header-search,.market-header-quick-link,.public-account-trigger,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button,.market-single-language,.mhome-geo-button,.mhome-area-picker summary,.mhome-native-area,.mhome-hero,.mhome-hero-copy>a,.mhome-card-pill,.mhome-pool-status,.btn-primary,.btn-secondary,.mhome-details-btn,.mhome-deal-actions>a:first-child,.mhome-join-deal,.border.rounded-full,form.border.rounded-xl,.market-information-footer,.market-footer-brand,.market-footer-information>nav,.market-footer-contact')].filter(n=>n.getClientRects().length)
+    const rimNodes=[...shell.querySelectorAll('.market-flat-header,.market-header-search,.market-header-quick-link,.public-account-trigger,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button,.market-single-language,.mhome-geo-button,.mhome-area-picker summary,.mhome-native-area,.mhome-hero,.mhome-hero-copy>a,.mhome-card-pill,.mhome-pool-status,.btn-primary,.btn-secondary,.mhome-details-btn,.mhome-deal-actions>a:first-child,.mhome-join-deal,.border.rounded-full,form.border.rounded-xl')].filter(n=>n.getClientRects().length)
     const rims=rimNodes.map(n=>({class:n.className,shadow:getComputedStyle(n).boxShadow}))
+    const footerPanels=[...shell.querySelectorAll('.market-footer-brand,.market-footer-information>nav,.market-footer-contact')].map(n=>{const c=getComputedStyle(n);return {bg:c.backgroundColor,image:c.backgroundImage,border:c.borderWidth,shadow:c.boxShadow}})
+    const poolActions=[...shell.querySelectorAll('.mhome-pool-link')].map(n=>{const r=n.getBoundingClientRect();const p=n.parentElement.getBoundingClientRect();return {left:r.left,right:r.right,parentLeft:p.left,parentRight:p.right,width:r.width,scroll:n.scrollWidth,client:n.clientWidth}})
     const picker=shell.querySelector('.mhome-area-picker')
     const hero=shell.querySelector('.mhome-hero')
     const bodySample=shell.querySelector('.auth-page-content .card > p,section.rounded-2xl p')
     const bodyTextColor=bodySample?getComputedStyle(bodySample).color:null
     const joinButtons=[...shell.querySelectorAll('.mhome-join-deal')].map(n=>{const r=n.getBoundingClientRect();const range=document.createRange();range.selectNodeContents(n);const c=getComputedStyle(n);return {text:n.textContent.trim(),nowrap:c.whiteSpace,width:r.width,contentWidth:n.scrollWidth,clientWidth:n.clientWidth,rects:[...range.getClientRects()].map(r=>({top:r.top,bottom:r.bottom})),color:c.color}})
-    return {bodyTextColor,actionOrder,controlBounds,searchPieces,surfaces,rims,joinButtons,pickerRight:picker?.getBoundingClientRect().right,heroRight:hero?.getBoundingClientRect().right,width:innerWidth,scroll:document.documentElement.scrollWidth,bg:getComputedStyle(shell).backgroundColor,
+    return {bodyTextColor,actionOrder,controlBounds,searchPieces,surfaces,rims,joinButtons,footerPanels,poolActions,pickerRight:picker?.getBoundingClientRect().right,heroRight:hero?.getBoundingClientRect().right,width:innerWidth,scroll:document.documentElement.scrollWidth,bg:getComputedStyle(shell).backgroundColor,
      homeBg:document.querySelector('.mhome')?getComputedStyle(document.querySelector('.mhome')).backgroundColor:null,
      headerHeight:header.getBoundingClientRect().height,overlap:brand.right>actions.left+1,
      fonts:document.fonts.check('14px Inter'),bengaliFont:document.fonts.check('14px \"Hind Siliguri\"','বাংলা'),language:header.lang,
@@ -113,6 +115,9 @@ try{
     assert.match(rim.shadow,/inset/,`Missing inner reflection: ${JSON.stringify(rim)}`)
     assert.match(rim.shadow,/0px 0px 5px 0px/,`Missing restrained rim halo: ${JSON.stringify(rim)}`)
    }
+   assert.equal(geometry.footerPanels.length,4,'Keep all four footer information groups')
+   for(const panel of geometry.footerPanels){assert.equal(panel.bg,'rgba(0, 0, 0, 0)');assert.equal(panel.image,'none');assert.equal(panel.border,'0px');assert.equal(panel.shadow,'none')}
+   for(const action of geometry.poolActions){assert.ok(Math.abs(action.left-action.parentLeft)<1&&Math.abs(action.right-action.parentRight)<1,`Pool action must fill its content column: ${JSON.stringify(action)}`);assert.ok(action.scroll<=action.client+1,'Pool action label clips')}
    if(geometry.bodyTextColor)assert.equal(geometry.bodyTextColor,theme==='dark'?'rgb(190, 201, 217)':'rgb(91, 105, 128)',`Public body text must follow the readable theme palette: ${route}/${width}/${theme}`)
    assert.equal(geometry.secondNav,false)
    assert.equal(geometry.navCount,width<768?1:0)
@@ -195,6 +200,10 @@ try{
    }
    if([320,390,820,1440].includes(width)&&['/','/login','/products','/privacy'].includes(route)){
     await page.screenshot({path:`${out}/${route==='/'?'home':route.slice(1)}-${width}-${theme}-${language}.png`,fullPage:true})
+   }
+   if(route==='/'&&[320,390,820,1440].includes(width)){
+    await page.locator('.market-information-footer').scrollIntoViewIfNeeded()
+    await page.screenshot({path:`${out}/footer-pool-${width}-${theme}-${language}.png`})
    }
    results.push({route,width,theme,language,...geometry})
   }

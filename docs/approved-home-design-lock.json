@@ -23,7 +23,7 @@
     "app/site-customer-shell.css": "9797fceb995adf79cac0a0ea05355ac63393039cb60e083c63d2cccb534aefa9",
     "components/customer-footer.tsx": "6897dc663122b6bca66fb0e211b4c529b7427099c2dd67439a098d28e69ead79",
     "components/theme-toggle.tsx": "ad784cdfdeca0c299a3317b99acb95e9966bd399f1772568f3d8182062c7229a",
-    "app/public-app-design.css": "f8c656b5b5815fdfc3849116ed7ff7206163e3e3a7b6e081f022215d00e82bf7"
+    "app/public-app-design.css": "ed3c1a51d45d6ba1659a94df9dc071aceab83fc1ff8bd137defac131e55a7e29"
   },
   "navigation_change": {
     "source": "Issue #64, approved functional navigation",
@@ -109,6 +109,12 @@
     "approved_by": "User, 20 October 2026 — four supplied screenshots and request to correct all three remaining issues",
     "scope": "Match the live reference with translucent tinted light panes and uninterrupted white borders/dividers. Remove inner teal search focus outlines while retaining one outer white focus boundary. Reuse the existing contained community picker at phone widths so options wrap and stay inside the content frame.",
     "protected": "No component markup, handlers, content, hero geometry, navigation structure, backend, mobile app or Production changes. Other protected hashes retained.",
+    "release": "Draft PR #127 and isolated Vercel Preview only."
+  },
+  "plain_footer_full_pool_action_20261020": {
+    "approved_by": "User, 20 October 2026 — marked image(20261020-172143).png",
+    "scope": "Remove footer group card fills/rims/shadows while retaining every word, link, group and responsive grid. Stretch the Pool action across the content column, with any existing progress bar above it.",
+    "protected": "No markup, content, route, handler, commerce logic, backend, mobile app or Production changes.",
     "release": "Draft PR #127 and isolated Vercel Preview only."
   }
 }
