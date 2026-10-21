@@ -98,11 +98,12 @@ export default async function EasyBusiness({searchParams}:{searchParams:Promise<
     {products.slice(0,30).map(p=>{
      const vendorIds=linkedVendors.get(p.id)
      const vendorNames=suppliers.filter(s=>vendorIds?.has(s.id)).map(s=>s.business_name)
+     const requiresVendor=p.source_type==='SUPPLIER_POOL'
      const hasVendor=vendorNames.length>0
      return <article key={p.id} className="rounded-xl border border-slate-200 bg-white/60 p-3">
       <b className="block truncate">{p.name}</b>
       <p className="muted text-xs">{p.package_size} · Active master · {publishedIds.has(p.id)?'SEO published':'SEO optional / later'}</p>
-      <p className="mt-2 text-xs">{hasVendor?'Vendor linked: '+vendorNames.join(', '):'Vendor not linked · on-demand supply not verified'}</p>
+      <p className="mt-2 text-xs">{requiresVendor?(hasVendor?'Vendor linked: '+vendorNames.join(', '):'Vendor not linked · on-demand supply not verified'):'2TBR direct-stock category · reconcile own inventory separately'}</p>
       <p className="muted mt-1 text-xs">No customer price or guaranteed quantity is implied. Confirm vendor supply before publishing any offer.</p>
      </article>
     })}
