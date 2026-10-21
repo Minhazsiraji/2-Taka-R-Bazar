@@ -42,5 +42,6 @@ export async function loadLivePublishedPool(id:string):Promise<DemoFeaturedPool|
  const found=publishedLivePools(data as DemoFeaturedPool[]).find(p=>p.id===id)
  if(!found)return null
  const offerLines=found.bundle.filter(l=>l.offer&&!l.offer.is_demo&&!l.offer.commerce_synthetic)
+  .map(line=>({...line,offer:{...line.offer,image_url:line.offer.image_url&&publicShowcaseImageUrl(line.offer.image_url)?line.offer.image_url:null}}))
  return {...found,bundle:offerLines}
 }
