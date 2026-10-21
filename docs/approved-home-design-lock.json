@@ -12,7 +12,7 @@
     "app/marketplace-unified.css": "8654c2e5c47343e4a058ec97066aa139db068192bd84c166d4300b6d4fd60def",
     "components/animated-hero-messages.tsx": "7787d408afa61296ea499bacff02f6e7c06212cc41ed49e7b9a1b5f9b378f2cc",
     "components/public-header.tsx": "9853d4eb713e6941cef55f29e827ceb3fb1b0742eadf8a9906e5720bba330ef3",
-    "components/storefront-footer.tsx": "afea1bd5d1bd28090e2be2724f9ebcb9686b711bb1054ba0d8d52c267dbd4c1a",
+    "components/storefront-footer.tsx": "0d71227fc9629396028a860332acbf47257067c1d9904b5ef62a59226902f0c5",
     "lib/hero-messages.ts": "1d9d0f793ce30114647b0ad66c3196ceedd3698ce71da273b2cf8a7b270ff89a",
     "app/site-header-mobile.css": "49c50d83fe0647bb63c173c579c932cc93d069f78b6d094d9aa74314c735c8b6",
     "components/public-footer.tsx": "cf79680dad5efac51a11c7976de6a2793fa3b70022d04575a297eed70bfb5029",
@@ -116,5 +116,10 @@
     "scope": "Remove footer group card fills/rims/shadows while retaining every word, link, group and responsive grid. Stretch the Pool action across the content column, with any existing progress bar above it.",
     "protected": "No markup, content, route, handler, commerce logic, backend, mobile app or Production changes.",
     "release": "Draft PR #127 and isolated Vercel Preview only."
+  },
+  "footer_navigation_restoration_20261021": {
+    "reason": "Restore working nonduplicated footer destinations after approved PR127 diverged",
+    "source": "prior main a6ae635490bbabdb5c923e240b0a5d62d4e0e99b",
+    "scope": "Destination-only correction; same text, branding, contact sections, and layout"
   }
 }
