@@ -105,7 +105,7 @@ export default async function EasyBusiness({searchParams}:{searchParams:Promise<
       <p className="mt-2 text-xs">{hasVendor?'Vendor linked: '+vendorNames.join(', '):'Vendor not linked · on-demand supply not verified'}</p>
       <p className="muted mt-1 text-xs">No customer price or guaranteed quantity is implied. Confirm vendor supply before publishing any offer.</p>
      </article>
-    )})}
+    })}
    </div>
    {!products.length&&<p className="notice mt-3">No active products yet. Use Quick Product Upload to create a new master first.</p>}
    {products.length>0&&!products.every(p=>linkedVendors.get(p.id)?.size)&&<p className="notice mt-3">Some products need a supplier link. Open Group Deals → Supplier catalog → Link supplier to product. For vendor-held goods, do not enter fictitious 2TBR stock.</p>}
