@@ -53,6 +53,10 @@ test('vendor prices require a valid public record and never create a fake commer
  assert.equal(details.source.offers.length,0)
  assert.equal(details.offers[0].empty,true)
  assert.equal(details.product.oldPrice,null)
+ const withGroup=view.approvedProductView({...product,offers:[{offer_id:'group',offer_kind:'GROUP_DEAL',product_id:product.id,price_status:'unlocked',confirmed_price:100}]})
+ assert.equal(withGroup.product.price,120,'A different Group Deal price cannot replace the vendor listing price')
+ assert.equal(withGroup.offers.find(o=>o.kind==='solo').empty,true)
+ assert.equal(withGroup.offers.find(o=>o.kind==='solo').price,120)
 })
 test('live detail components delegate to the locked templates rather than alternative layouts',()=>{
  assert.match(readFileSync('components/live-approved-product-details.tsx','utf8'),/<HomePreviewProductDetails/)

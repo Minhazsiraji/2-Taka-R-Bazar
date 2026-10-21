@@ -49,7 +49,10 @@ export function approvedProductView(source:PublicLiveProduct,offerId?:string):Ap
  const solo=source.offers.find(o=>o.offer_kind==='SOLO'),group=source.offers.find(o=>o.offer_id===offerId&&o.offer_kind==='GROUP_DEAL')??source.offers.find(o=>o.offer_kind==='GROUP_DEAL')
  const product:ApprovedProduct={id:source.id,name:source.name,nameBn:source.nameBn,unit:source.unit,photo:'',image:source.image,price:solo?confirmedOfferPrice(solo):source.listingPrice??null,oldPrice:source.retail,stock:stock(solo)}
  const offers:ApprovedOffer[]=source.offers.map(o=>({id:o.offer_id,label:o.offer_kind==='SOLO'?'Direct / Exclusive':o.offer_kind==='GROUP_DEAL'?'Group Deal':'Community Pool',labelBn:o.offer_kind==='SOLO'?'সরাসরি / এক্সক্লুসিভ':o.offer_kind==='GROUP_DEAL'?'গ্রুপ ডিল':'কমিউনিটি পুল',price:confirmedOfferPrice(o),kind:o.offer_kind==='SOLO'?'solo':o.offer_kind==='GROUP_DEAL'?'deal':'pool'}))
- if(!offers.length)offers.push({id:'solo',label:'Direct / Exclusive',labelBn:'সরাসরি / এক্সক্লুসিভ',price:product.price,kind:'solo',empty:true})
+ if(!offers.some(o=>o.kind==='solo')){
+  const slot=offers.findIndex(o=>o.kind==='pool')
+  offers.splice(slot<0?offers.length:slot,0,{id:'solo',label:'Direct / Exclusive',labelBn:'সরাসরি / এক্সক্লুসিভ',price:product.price,kind:'solo',empty:true})
+ }
  const specs=source.seo?.specs??{}
  const spec=(keys:string[])=>keys.map(k=>specs[k]).find(v=>typeof v==='string'&&v.trim())??''
  const fieldKeys:Record<string,string[]>={
