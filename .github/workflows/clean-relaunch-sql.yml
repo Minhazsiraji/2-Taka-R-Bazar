@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - rebuild/clean-storefront-pilot-v2
+      - feat/approved-unified-home-savings-121
     paths:
       - 'relaunch/sql/**'
       - 'relaunch/tests/**'
@@ -35,7 +36,7 @@ jobs:
           exit 1
       - name: Apply fresh schema and exercise customer/admin checkout
         run: |
-          cat relaunch/tests/auth_stub.sql relaunch/sql/001_clean_store_schema.sql relaunch/tests/schema_smoke.sql \
+          cat relaunch/tests/auth_stub.sql relaunch/sql/001_clean_store_schema.sql relaunch/sql/002_home_savings.sql relaunch/tests/schema_smoke.sql relaunch/tests/savings_smoke.sql \
             | docker exec -i 2tbr-relaunch-postgres psql -U postgres -d postgres -v ON_ERROR_STOP=1
       - name: Shut down disposable database
         if: always()

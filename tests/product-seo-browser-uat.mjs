@@ -97,13 +97,10 @@ try{
  for(const excluded of ineligible)assert.equal(await mobileCatalog.getByText(excluded.slug).count(),0,
   'Unapproved, inactive and demo products absent from mobile grid')
  await page.setViewportSize({width:1024,height:900})
+ await page.goto(base+'/products',{waitUntil:'domcontentloaded'})
  const section=page.locator('#published-products')
  await section.getByRole('heading',{name:'All Products'}).waitFor()
- assert.equal(await page.evaluate(()=>{
-  const special=document.querySelector('#exclusive-products')
-  const products=document.querySelector('#published-products')
-  return Boolean(special&&products&&(special.compareDocumentPosition(products)&Node.DOCUMENT_POSITION_FOLLOWING))
- }),true,'All Products must appear directly after Special/Exclusive Products')
+ assert.equal(new URL(page.url()).pathname,'/products','SEO catalogue has its own explicit View all route')
  assert.equal(await section.locator('[data-testid="published-product-card"]').count(),12,'First catalog page contains 12 eligible records')
  assert.equal(await section.getByRole('link',{name:/View Details/}).count(),12,'Every product has a public details link')
  assert.equal(await section.getByText('Price pending',{exact:true}).count(),12)
@@ -122,12 +119,13 @@ try{
  assert.equal(await section.getByText('মূল্য শীঘ্রই',{exact:true}).count(),14)
  assert.match(await firstLink.getAttribute('href')??'',/^\/bn\/p\/(?:catalog-uat|seo-uat)/)
  await page.setViewportSize({width:390,height:844})
+ await page.goto(base+'/',{waitUntil:'domcontentloaded'})
  await mobileCatalog.getByRole('heading',{name:'এক্সক্লুসিভ পণ্য'}).waitFor()
  await page.screenshot({path:'/tmp/2tbr-product-seo-catalog-bn-mobile.png',fullPage:true})
  await toggle.click()
  for(const width of [320,393,768,1024,1440]){
   await page.setViewportSize({width,height:900})
-  await page.locator(width<768?'#mobile-exclusive':'#published-products').scrollIntoViewIfNeeded()
+  await page.locator('#mobile-exclusive').scrollIntoViewIfNeeded()
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,
    'No catalog horizontal overflow at '+width)
  }
@@ -140,7 +138,7 @@ try{
  await insert('product_seo_content',{product_id:future.id,slug:future.slug,
   title_en:'Newly published catalog item',title_bn:'নতুন প্রকাশিত ক্যাটালগ পণ্য',
   alt_en:'True uploaded test fixture image',alt_bn:'পরীক্ষার ছবি',status:'published'})
- await page.reload({waitUntil:'domcontentloaded'})
+ await page.goto(base+'/products',{waitUntil:'domcontentloaded'})
  assert.equal(await page.locator('#published-products').getByText('Newly published catalog item').count(),1,
   'Future published products automatically appear after refresh')
  console.log('Issue 99 published catalog: EN/BN, genuine image URL, no purchase, 12+ paging, ineligible isolation, future publish and responsive widths PASS.')

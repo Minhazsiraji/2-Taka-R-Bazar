@@ -4,12 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {chooseText,type MarketplaceLanguage} from '@/lib/storefront-language'
 
-const nav = [
-  ['/home', 'Home','হোম'],
-  ['/pool', 'Pools','পুল'],
-  ['/group-deals', 'Deals','ডিল'],
-  ['/cart', 'Cart','কার্ট'],
-  ['/account', 'Account','অ্যাকাউন্ট'],
+const staffLinks=[
+ ['/home','Home','হোম'],['/pool','Pools','পুল'],['/group-deals','Deals','ডিল'],['/cart','Cart','কার্ট'],['/account','Account','অ্যাকাউন্ট'],
 ] as const
 
 const storefrontLinks=[
@@ -36,16 +32,16 @@ export function MobileCustomerNav({language='en',homeHref='/',storefront=false}:
 
   return <nav className={'app-mobile-nav'+(storefront?' market-storefront-dock':'')} aria-label={chooseText(language,'Mobile customer navigation','মোবাইল কেনাকাটার নেভিগেশন')} lang={language}>
     <div className="app-mobile-nav-inner">
-      {(storefront&&pathname==='/'?storefrontLinks:nav).map(([route,label,bn])=>{
+      {(storefront?storefrontLinks:staffLinks).map(([route,label,bn])=>{
         const href=route==='/home'?homeHref:route
-        const active = pathname === href || pathname.startsWith(href + '/')
+        const active = route.includes('#')?pathname==='/products':pathname===href|| (href!=='/'&&pathname.startsWith(href+'/'))
         return <Link
           key={href}
           href={href}
           aria-current={active ? 'page' : undefined}
           className={'app-mobile-nav-link' + (active ? ' is-active' : '')}
         >
-          {storefront&&pathname==='/'&&<DockIcon kind={route==='/'?'home':route==='/pool'?'pool':route==='/group-deals'?'deal':route==='/cart'?'cart':'exclusive'}/>}
+          {storefront&&<DockIcon kind={route==='/'?'home':route==='/pool'?'pool':route==='/group-deals'?'deal':route==='/cart'?'cart':'exclusive'}/>}
           <span>{chooseText(language,label,bn)}</span>
         </Link>
       })}
