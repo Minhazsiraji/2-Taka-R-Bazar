@@ -7,7 +7,7 @@ import {previewProducts,previewDeals,previewPools,previewPhoto,previewMoney as m
 import './home-card-preview.css'
 
 type Product=typeof previewProducts[number]
-type Selection={kind:'deal'|'pool';id:string}|null
+type Selection={kind:'deal';id:string}|null
 type Props={section:'deals'|'exclusive'|'pools';language:MarketplaceLanguage;search:string}
 function Photo({product}:{product:Product}){
  const [failed,setFailed]=useState(false)
@@ -22,10 +22,9 @@ function Progress({value,max,label}:{value:number;max:number;label:string}){
 function PreviewDialog({selection,language,onClose}:{selection:NonNullable<Selection>;language:MarketplaceLanguage;onClose:()=>void}){
  const ref=useRef<HTMLDialogElement>(null)
  const bn=language==='bn'
- const pool=selection.kind==='pool'?previewPools.find(p=>p.id===selection.id):undefined
- const product=selection.kind!=='pool'?previewProducts.find(p=>p.id===selection.id):undefined
+ const product=previewProducts.find(p=>p.id===selection.id)
  const deal=selection.kind==='deal'?previewDeals.find(p=>p.id===selection.id):undefined
- const title=pool?(bn?pool.nameBn:pool.name):product?(bn?product.nameBn:product.name):''
+ const title=product?(bn?product.nameBn:product.name):''
  useEffect(()=>{
   const dialog=ref.current
   dialog?.showModal()
@@ -41,13 +40,7 @@ function PreviewDialog({selection,language,onClose}:{selection:NonNullable<Selec
     <p>{bn?'সাশ্রয়':'Save'} {money(product.oldPrice-(deal?.price??product.price))}</p>
     {deal?<p>{deal.joined}/{deal.target} joined · Ends in {deal.days} days</p>:
      <p>{bn?'স্টকে আছে '+product.stock:'In stock · '+product.stock+' available'}</p>}</>}
-   {pool&&<><div className="app-card-preview-dialog-strip">{pool.products.map(id=>{
-    const p=previewProducts.find(item=>item.id===id)!
-    return <Photo key={id} product={p}/>
-   })}</div><p>3 products · {pool.joined.toLocaleString('en-BD')} households joined</p>
-    <Progress value={pool.joined} max={pool.target} label={bn?'অংশগ্রহণের অগ্রগতি':'Household progress'}/>
-    <p>Commit ends in {pool.days} days · {pool.date}</p>
-    <p>{bn?'পরবর্তী সাশ্রয় টিয়ার':'Next savings tier'}: {pool.target.toLocaleString('en-BD')}</p></>}
+
    <p>{bn?'এটি শুধু ভিজুয়াল প্রিভিউ। কোনো বাস্তব অর্ডার বা যোগদানের অনুরোধ তৈরি হয় না।':'Visual preview only. No real order or participation request is created.'}</p>
   </div>
  </dialog>
@@ -114,7 +107,7 @@ export function PreviewHomeCards({section,language,search}:Props){
      <Progress value={pool.joined} max={pool.target} label={bn?'অংশগ্রহণের অগ্রগতি':'Household progress'}/>
      <p className="app-card-preview-deadline">◷ Commit ends in {pool.days} days · {pool.date}</p>
      <div className="app-card-preview-pool-bottom"><span className="app-card-preview-next">{bn?'পরবর্তী সাশ্রয় টিয়ার':'Next savings tier'}: {pool.target.toLocaleString('en-BD')}</span>
-      <button type="button" className="app-card-preview-primary mhome-pool-link" onClick={()=>setSelection({kind:'pool',id:pool.id})}>Explore Pool →</button></div>
+      <Link href={'/demo-pool/'+pool.id+'?source=home'} className="app-card-preview-primary mhome-pool-link">{bn?'পুল দেখুন':'Explore Pool'} →</Link></div>
     </div>
    </article>)}
   </div>
