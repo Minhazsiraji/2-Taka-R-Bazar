@@ -7,7 +7,7 @@ export type ApprovedDeal={id:string;offerId?:string;price:number|null;reference?
 export type ApprovedPool={id:string;label:string;labelBn:string;name:string;nameBn:string;products:readonly string[];joined:number;target:number;days:number|null;date:string;closesAt?:string|null;empty?:boolean;productCount?:number}
 export type ApprovedHomeView={products:ApprovedProduct[];lookup:ApprovedProduct[];deals:ApprovedDeal[];pools:ApprovedPool[]}
 export type ApprovedOffer={id:string;label:string;labelBn:string;price:number|null;kind:'solo'|'deal'|'pool';poolId?:string;empty?:boolean}
-export type ApprovedProductView={product:ApprovedProduct;deal?:ApprovedDeal;offers:ApprovedOffer[];group:{tiers:{minimum:number;price:number|null}[];current:{minimum:number;price:number|null};next:{minimum:number;price:number|null}|null}|null;source:PublicLiveProduct;community:string;fields:Record<string,{en:string;bn:string}>}
+export type ApprovedProductView={product:ApprovedProduct;deal?:ApprovedDeal;offers:ApprovedOffer[];group:{tiers:{minimum:number;price:number|null;current?:boolean}[];current:{minimum:number;price:number|null};next:{minimum:number;price:number|null}|null}|null;source:PublicLiveProduct;community:string;fields:Record<string,{en:string;bn:string}>}
 export type ApprovedPoolLine={product:ApprovedProduct;tiers:{opening:number|null;current:number|null;next:number|null}}
 const blank='\u00a0'
 export const emptyProduct=(id:string):ApprovedProduct=>({id,name:blank,nameBn:blank,unit:blank,photo:'',image:null,price:null,oldPrice:null,stock:null,empty:true})
@@ -65,7 +65,7 @@ export function approvedProductView(source:PublicLiveProduct,offerId?:string):Ap
  fields['Verified answer']={en:source.seo?.faqs?.[0]?.answer_en??'',bn:source.seo?.faqs?.[0]?.answer_bn??''}
  fields['Available areas']={en:[...new Set(source.offers.map(o=>o.offer_title).filter(Boolean))].join(', '),bn:[...new Set(source.offers.map(o=>o.offer_title).filter(Boolean))].join(', ')}
  return {product,offers,source,fields,community:solo?.offer_title??group?.offer_title??'',deal:group?{id:product.id,offerId:group.offer_id,price:confirmedOfferPrice(group),joined:group.buyer_count??0,target:group.next_threshold??0,days:remaining(group.closes_at)}:undefined,
-  group:group?{tiers:[{minimum:1,price:null},{minimum:Math.max(1,group.buyer_count),price:confirmedOfferPrice(group)},{minimum:group.next_threshold??0,price:validMoney(group.upcoming_price)}],current:{minimum:Math.max(1,group.buyer_count),price:confirmedOfferPrice(group)},next:group.next_threshold?{minimum:group.next_threshold,price:validMoney(group.upcoming_price)}:null}:null}
+  group:group?{tiers:[{minimum:0,price:null},{minimum:0,price:confirmedOfferPrice(group),current:true},{minimum:group.next_threshold??0,price:validMoney(group.upcoming_price)}],current:{minimum:0,price:confirmedOfferPrice(group)},next:group.next_threshold?{minimum:group.next_threshold,price:validMoney(group.upcoming_price)}:null}:null}
 }
 export function approvedPoolView(source:PublicLivePool):{pool:ApprovedPool;lines:ApprovedPoolLine[]}{
  const rows=source.bundle.filter(l=>l.offer&&!l.offer.is_demo&&!l.offer.commerce_synthetic)
@@ -74,5 +74,5 @@ export function approvedPoolView(source:PublicLivePool):{pool:ApprovedPool;lines
  const ids=source.featuredProductIds.filter(id=>lines.some(l=>l.product.id===id)).slice(0,3)
  if(!ids.length)ids.push(...lines.slice(0,3).map(l=>l.product.id))
  while(ids.length<3)ids.push('empty-pool-photo-'+source.id+'-'+ids.length)
- return {pool:{id:source.id??'',label:source.slug==='weekly'?'Weekly Pool':source.slug==='monthly'?'Monthly Pool':'Special Pool',labelBn:source.slug==='weekly'?'মার্কেটিং পুল':source.slug==='monthly'?'মাসিক পুল':'বিশেষ পুল',name:source.title.en??blank,nameBn:source.title.bn??source.title.en??blank,products:ids,joined:source.sampleHouseholds??0,target:source.minHouseholds??0,days:remaining(date),closesAt:date,date:date?new Date(date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):blank,productCount:rows.length},lines}
+ return {pool:{id:source.id??'',label:source.slug==='weekly'?'Weekly Pool':source.slug==='monthly'?'Monthly Pool':'Special Pool',labelBn:source.slug==='weekly'?'মার্কেটিং পুল':source.slug==='monthly'?'মাসিক পুল':'বিশেষ পুল',name:source.title.en??blank,nameBn:source.title.bn??source.title.en??blank,products:ids,joined:source.sampleHouseholds??0,target:source.livePricing?.upcoming??0,days:remaining(date),closesAt:date,date:date?new Date(date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):blank,productCount:rows.length},lines}
 }

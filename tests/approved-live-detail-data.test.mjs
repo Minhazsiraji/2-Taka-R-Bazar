@@ -106,6 +106,7 @@ test('published client detail pages show the correct sections and no real writes
    product,kind,initialLanguage:'en',hasLanguageCookie:true}))
   assert.ok(html.includes(product.name))
   assert.ok(html.includes('href="/preview-live/product/'+id))
+  if(kind==='deal')assert.ok(html.includes('&amp;offer='+waiting.offer_id),'Keep the selected deal when opening product information')
   if(kind==='retail')for(const section of ['SEO','AEO','GEO','RICE-101','Published factual text'])assert.ok(html.includes(section))
  }
  const {LiveApprovedPoolDetails}=await loadSource('components/live-approved-pool-details.tsx',opts)

@@ -39,17 +39,18 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
  const n=(num:number)=>new Intl.NumberFormat(bn?'bn-BD':'en-US').format(num)
  const title=t(product.name,product.nameBn)
  const group=view?view.group:deal?previewGroupPriceTiers(product.id):null
+ const isCurrentTier=(tier:{minimum:number;current?:boolean})=>view?Boolean(tier.current):group?.current.minimum===tier.minimum
  const offers:ApprovedOffer[]=view?.offers??previewAvailableOffers(product.id)
  const selected=offers.find(o=>o.id===chosen)??offers.find(o=>o.kind==='solo')??offers[0]
  const price=selected?.price??product.price
  const productPath=view?'/preview-live/product/':'/demo-product/'
  const poolPath=view?'/preview-live/pool/':'/demo-pool/'
  const origin=from==='pool'&&poolId?poolPath+poolId+'?source=home':
-  from==='deal'||deal?productPath+product.id+'?kind=deal':
+  from==='deal'||deal?productPath+product.id+'?kind=deal'+(view?.deal?.offerId?'&offer='+view.deal.offerId:''):
   from==='exclusive'?productPath+product.id:
   view?productPath+product.id:'/#mobile-exclusive'
  const retailHref=productPath+product.id+'?kind=retail&from='+(deal?'deal':from==='pool'?'pool':'exclusive')+
-  (poolId?'&pool='+poolId:'')
+  (poolId?'&pool='+poolId:'')+(view&&deal?.offerId?'&offer='+deal.offerId:'')
  const back=retail?origin:deal?'/#mobile-deals':'/#mobile-exclusive'
  const heading=retail?t('PRODUCT INFORMATION','পণ্যের তথ্য'):
   deal?'GROUP DEAL':t('PRODUCT DETAILS','পণ্যের বিস্তারিত')
@@ -78,10 +79,10 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
      {group&&<DemoPanel>
       <h2>{t('Group Deal price tiers','গ্রুপ ডিলের দামের ধাপ')}</h2>
       <div className="native-preview-tier-grid">
-       {group.tiers.map(tier=><div key={tier.minimum} className={'native-preview-tier '+(group.current.minimum===tier.minimum?'is-current':'')}>
-        <small>{tier.minimum===1?t('Starting','শুরুর দাম'):n(tier.minimum)+' '+t('people','জন')}</small>
+       {group.tiers.map(tier=><div key={tier.minimum} className={'native-preview-tier '+(isCurrentTier(tier)?'is-current':'')}>
+        <small data-empty={view&&tier.minimum===0||undefined}>{tier.minimum===1?t('Starting','শুরুর দাম'):n(tier.minimum)+' '+t('people','জন')}</small>
         <strong data-empty={tier.price===null||undefined}>{money(tier.price)}</strong>
-        <span>{group.current.minimum===tier.minimum?t('Current tier','বর্তমান স্তর'):tier.minimum>deal.joined?t('Not yet unlocked','এখনো আনলক হয়নি'):t('Unlocked','আনলক হয়েছে')}</span>
+        <span>{isCurrentTier(tier)?t('Current tier','বর্তমান স্তর'):tier.minimum>deal.joined?t('Not yet unlocked','এখনো আনলক হয়নি'):t('Unlocked','আনলক হয়েছে')}</span>
        </div>)}
       </div>
       <p className="native-preview-hint">{t('Demo price tiers only. Server-authoritative prices required before checkout.','এগুলো নমুনা দাম। চেকআউটের আগে সার্ভার-যাচাইকৃত মূল্য প্রয়োজন।')}</p>
