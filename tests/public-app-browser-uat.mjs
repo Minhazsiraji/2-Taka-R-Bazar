@@ -41,7 +41,7 @@ try{
   await context.addCookies([{name:'2tbr_storefront_language',value:language,url:`http://127.0.0.1:${port}`}])
   await context.route('https://images.unsplash.com/**',route=>route.abort()) // Exercise local placeholders deterministically.
   const page=await context.newPage()
-  for(const route of (process.env.UAT_DEBUG?['/']:['/','/login','/signup','/products','/about','/faq','/privacy','/terms','/return-policy','/refund-policy','/cart','/group-deals','/pool','/account','/account/savings','/money'])){
+  for(const route of (process.env.UAT_DEBUG?['/']:['/','/login','/signup','/products','/about','/faq','/privacy','/terms','/return-policy','/refund-policy','/cart','/group-deals','/pool','/account','/account/savings','/money','/demo-product/butter','/demo-product/ghee','/demo-product/rice','/demo-product/eggs','/demo-product/rice?kind=deal','/demo-product/butter?kind=deal','/demo-product/00000000-0000-4000-8000-000000000101'])){
    const response=await page.goto(`http://127.0.0.1:${port}${route}`,{waitUntil:'networkidle'})
    assert.ok(response?.status()<400,`${route} returned ${response?.status()}`)
    await page.locator('.market-header-search input').waitFor()
@@ -182,21 +182,35 @@ try{
     assert.equal(await page.locator('[data-preview-cards="pools"] article').count(),2)
     const rice=page.locator('[data-preview-cards="deals"] article').first()
     for(const text of ['৳135','৳165','৳30','4/5 joined','Ends in 2 days'])assert.ok((await rice.innerText()).includes(text),text)
-    assert.equal(await rice.locator('button').count(),2)
+    assert.equal(await rice.locator('.app-card-preview-actions > :is(a,button)').count(),2)
     assert.equal(await rice.locator('[role="progressbar"]').getAttribute('aria-valuenow'),'4')
     for(const [index,price,old,stock] of [[0,'৳1,160','৳1,240','32'],[1,'৳680','৳780','20'],[2,'৳145','৳165','45'],[3,'৳145','৳165','24']]){
      const card=page.locator('[data-preview-cards="exclusive"] article').nth(index)
      for(const text of [price,old,stock])assert.ok((await card.innerText()).includes(text),text)
-     assert.equal(await card.locator('button').count(),2,'Exactly two Exclusive buttons')
+     assert.equal(await card.locator('.app-card-preview-actions > :is(a,button)').count(),2,'Exactly two Exclusive actions')
      assert.equal(await card.locator('form').count(),0,'Demo cannot submit a real cart action')
     }
     for(const card of await page.locator('[data-preview-cards="pools"] article').all()){
      assert.equal(await card.locator('img').count(),3)
      assert.ok((await card.innerText()).includes('ACTIVE'))
+     const photos=await card.evaluate(card=>{
+      const box=card.querySelector('.app-card-preview-pool-photos').getBoundingClientRect()
+      const copy=card.querySelector('.app-card-preview-copy').getBoundingClientRect()
+      return {top:box.top,bottom:box.bottom,height:box.height,copyTop:copy.top,copyBottom:copy.bottom,frames:[...card.querySelectorAll('.app-card-preview-pool-photos>div')].map(frame=>{
+       const r=frame.getBoundingClientRect();const image=frame.querySelector('img');const i=image.getBoundingClientRect()
+       return {top:r.top,bottom:r.bottom,height:r.height,imageHeight:i.height,fit:getComputedStyle(image).objectFit,fallback:image.classList.contains('app-card-preview-placeholder')}
+      })}
+     })
+     assert.ok(Math.abs(photos.top-photos.copyTop)<1&&Math.abs(photos.bottom-photos.copyBottom)<1,'Pool photos must fill the full content height: '+JSON.stringify(photos))
+     for(const frame of photos.frames){
+      assert.ok(Math.abs(frame.height-photos.height)<1,'Each Pool thumbnail must fill the image strip height')
+      assert.ok(Math.abs(frame.imageHeight-(frame.height-2))<2,'Pool image must fill its bordered frame')
+      assert.equal(frame.fit,frame.fallback?'contain':'cover','Pool images preserve proportions')
+     }
     }
     const cardBoxes=await page.locator('[data-preview-cards] article').evaluateAll(nodes=>nodes.map(card=>{
      const r=card.getBoundingClientRect()
-     return {width:r.width,scroll:card.scrollWidth,client:card.clientWidth,children:[...card.querySelectorAll('.app-card-preview-copy,.app-card-preview-actions,button')].map(n=>{const b=n.getBoundingClientRect();return {left:b.left-r.left,right:b.right-r.left,scroll:n.scrollWidth,client:n.clientWidth}})}
+     return {width:r.width,scroll:card.scrollWidth,client:card.clientWidth,children:[...card.querySelectorAll('.app-card-preview-copy,.app-card-preview-actions,button,.app-card-preview-actions>a')].map(n=>{const b=n.getBoundingClientRect();return {left:b.left-r.left,right:b.right-r.left,scroll:n.scrollWidth,client:n.clientWidth}})}
     }))
     for(const box of cardBoxes){assert.ok(box.scroll<=box.client+1,'Preview card overflows');for(const child of box.children){assert.ok(child.left>=-1&&child.right<=box.width+1,'Preview control escapes card');assert.ok(child.scroll<=child.client+1,'Preview copy/button clips')}}
     if([320,390,820,1440].includes(width)){
@@ -206,14 +220,24 @@ try{
      const mutations=[]
      const watch=request=>{if(!['GET','HEAD','OPTIONS'].includes(request.method()))mutations.push(request.method()+' '+request.url())}
      page.on('request',watch)
-     await page.locator('[data-preview-cards="exclusive"] article').first().locator('button').first().click()
-     await page.getByRole('dialog').waitFor()
-     assert.ok((await page.getByRole('dialog').innerText()).includes('৳1,160'))
-     await page.getByRole('dialog').getByRole('button').click()
-     await page.locator('[data-preview-cards="exclusive"] article').first().locator('button').nth(1).click()
+     for(const [index,id,price] of [[0,'butter','৳1,160'],[1,'ghee','৳680'],[2,'rice','৳145'],[3,'eggs','৳145']]){
+      await page.locator('[data-preview-cards="exclusive"] article').nth(index).getByRole('link').click()
+      await page.waitForURL('**/demo-product/'+id,{waitUntil:'networkidle'})
+      assert.equal(await page.getByRole('dialog').count(),0,'Details must navigate rather than open a popup')
+      assert.ok((await page.locator('.home-preview-product-price').innerText()).includes(price))
+      await page.goBack({waitUntil:'networkidle'})
+      await page.locator('[data-preview-cards="exclusive"]').waitFor()
+     }
+     await rice.getByRole('link').click()
+     await page.waitForURL('**/demo-product/rice?kind=deal',{waitUntil:'networkidle'})
+     assert.equal(await page.getByRole('dialog').count(),0)
+     assert.ok((await page.locator('.home-preview-product-price').innerText()).includes('৳135'))
+     await page.getByRole('link',{name:language==='bn'?'← বাজারে ফিরুন':'← Back to shopping',exact:true}).click()
+     await page.locator('[data-preview-cards="exclusive"]').waitFor()
+     await page.locator('[data-preview-cards="exclusive"] article').first().getByRole('button').click()
      await page.locator('.app-card-preview-notice[role="status"]').waitFor()
      assert.ok((await page.locator('.app-card-preview-notice[role="status"]').innerText()).includes(language==='bn'?'ডেমো':'preview'))
-     await rice.locator('button').nth(1).click()
+     await rice.getByRole('button').click()
      await page.getByRole('dialog').waitFor()
      await page.getByRole('dialog').press('Escape')
      await page.locator('[data-preview-cards="pools"] article').first().locator('button').click()
@@ -248,6 +272,17 @@ try{
     await page.locator('.mhome-area-picker summary').click()
     await page.locator('.mhome-area-picker summary').press('Escape')
     assert.equal(await page.locator('.mhome-area-picker').getAttribute('open'),null)
+   }
+   if(route.startsWith('/demo-product/')&&!route.includes('00000000')){
+    const id=route.split('/').pop().split('?')[0]
+    const expected={butter:{name:'Premium Butter',bn:'প্রিমিয়াম বাটার',price:'৳1,160'},ghee:{name:'Pure Cow Ghee',bn:'খাঁটি গরুর ঘি',price:'৳680'},rice:{name:'Chinigura Rice',bn:'চিনিগুড়া চাল',price:'৳145'},eggs:{name:'Farm Fresh Eggs',bn:'তাজা ডিম',price:'৳145'}}[id]
+    assert.equal(await page.getByRole('heading',{level:1}).innerText(),language==='bn'?expected.bn:expected.name)
+    assert.ok((await page.locator('.home-preview-product-price').innerText()).includes(route.includes('kind=deal')?(id==='rice'?'৳135':'৳1,075'):expected.price))
+    assert.equal(await page.getByRole('dialog').count(),0)
+    const image=page.locator('.market-demo-detail-image img')
+    await image.waitFor()
+    await page.waitForFunction(()=>document.querySelector('.market-demo-detail-image img')?.getAttribute('src')==='/preview-app-product-placeholder.svg')
+    if([320,390,820,1440].includes(width)&&['/demo-product/butter','/demo-product/rice?kind=deal'].includes(route))await page.screenshot({path:`${out}/product-detail-${id}${route.includes('?')?'-deal':''}-${width}-${theme}-${language}.png`,fullPage:true})
    }
    if([320,390,820,1440].includes(width)&&['/','/login','/products','/privacy'].includes(route)){
     await page.screenshot({path:`${out}/${route==='/'?'home':route.slice(1)}-${width}-${theme}-${language}.png`,fullPage:true})

@@ -1,12 +1,13 @@
 'use client'
 
 import {useEffect,useRef,useState} from 'react'
+import Link from 'next/link'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {previewProducts,previewDeals,previewPools,previewPhoto,previewMoney as money} from '@/lib/home-card-preview-fixtures'
 import './home-card-preview.css'
 
 type Product=typeof previewProducts[number]
-type Selection={kind:'product'|'deal'|'pool';id:string}|null
+type Selection={kind:'deal'|'pool';id:string}|null
 type Props={section:'deals'|'exclusive'|'pools';language:MarketplaceLanguage;search:string}
 function Photo({product}:{product:Product}){
  const [failed,setFailed]=useState(false)
@@ -60,7 +61,6 @@ export function PreviewHomeCards({section,language,search}:Props){
  const query=search.trim().toLocaleLowerCase()
  const matches=(p:Product)=>!query||[p.name,p.nameBn,p.unit].some(s=>s.toLocaleLowerCase().includes(query))
  useEffect(()=>{if(!notice)return;const timer=setTimeout(()=>setNotice(''),4500);return()=>clearTimeout(timer)},[notice])
- const details=(id:string)=>setSelection({kind:'product',id})
  const demoLabel=<span className="app-card-preview-demo">{bn?'ডেমো':'DEMO'}</span>
  let cards
  if(section==='deals'){
@@ -78,7 +78,7 @@ export function PreviewHomeCards({section,language,search}:Props){
       <span className="app-card-preview-save">{bn?'সাশ্রয়':'Save'} {money(p.oldPrice-d.price)}</span>
       <div className="app-card-preview-deal-stats"><span>👥 {d.joined}/{d.target} joined</span><span>◷ Ends in {d.days} {d.days===1?'day':'days'}</span></div>
       <Progress value={d.joined} max={d.target} label={bn?'গ্রুপ অংশগ্রহণ':'Group participation'}/>
-      <div className="app-card-preview-actions"><button type="button" onClick={()=>setSelection({kind:'deal',id:d.id})}>{bn?'বিস্তারিত':'View details'}</button>
+      <div className="app-card-preview-actions"><Link href={'/demo-product/'+d.id+'?kind=deal'}>{bn?'বিস্তারিত':'View details'}</Link>
        <button type="button" className="app-card-preview-primary" onClick={()=>setSelection({kind:'deal',id:d.id})}>{bn?'গ্রুপে যোগ দিন':'Join Deal'}</button></div>
      </div>
     </article>})}
@@ -94,7 +94,7 @@ export function PreviewHomeCards({section,language,search}:Props){
       <p className="app-card-preview-stock">{bn?'স্টকে আছে '+p.stock:'In stock · '+p.stock+' available'}</p>
      </div>
     </div>
-    <div className="app-card-preview-actions"><button type="button" onClick={()=>details(p.id)}>{bn?'বিস্তারিত':'View details'}</button>
+    <div className="app-card-preview-actions"><Link href={'/demo-product/'+p.id}>{bn?'বিস্তারিত':'View details'}</Link>
      <button className="app-card-preview-primary" type="button" onClick={()=>{
       const count=(basket[p.id]??0)+1;setBasket(previous=>({...previous,[p.id]:count}))
       setNotice(bn?'ডেমো ঝুড়িতে '+count+'টি যোগ হয়েছে। বাস্তব কার্ট পরিবর্তন হয়নি।':'Added '+count+' to the preview basket. Your real cart is unchanged.')

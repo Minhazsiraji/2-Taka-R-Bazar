@@ -6,6 +6,7 @@ import {renderToStaticMarkup} from 'react-dom/server'
 import {loadSource} from './helpers/load-tsx.mjs'
 const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
 const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
+ 'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
  '@/lib/home-card-preview-fixtures':fixtures,'./home-card-preview.css':{},
 })
 const render=(section,language='bn',search='')=>renderToStaticMarkup(React.createElement(PreviewHomeCards,{section,language,search}))
@@ -15,7 +16,7 @@ test('approved fixture values and labels render without pending price placeholde
  for(const value of ['Price pending','unlock pending','<form','offer_id'])assert.ok(!deal.includes(value),value)
  const exclusive=render('exclusive','en')
  for(const value of ['Premium Butter','Pure Cow Ghee','Chinigura Rice','Farm Fresh Eggs','৳1,160','৳1,240','৳680','৳780','৳145','In stock · 45 available','In stock · 24 available'])assert.ok(exclusive.includes(value),value)
- assert.equal((exclusive.match(/>View details<\/button>/g)||[]).length,4)
+ assert.equal((exclusive.match(/>View details<\/a>/g)||[]).length,4)
  assert.equal((exclusive.match(/>Add to cart<\/button>/g)||[]).length,4)
  assert.ok(!exclusive.includes('<form'))
  const pools=render('pools')
@@ -40,4 +41,58 @@ test('Production cannot enable preview card fixtures, even with a populated real
  assert.ok(home.includes('previewCards=false'))
  const component=readFileSync('components/home-card-preview.tsx','utf8')
  assert.doesNotMatch(component,/fetch\(|localStorage|setCommerceCartItem|supabase|action=|<form/)
+})
+
+test('each preview Details action links to its matching full page, preserving deal price context',()=>{
+ const exclusive=render('exclusive','en')
+ for(const p of fixtures.previewProducts)assert.ok(exclusive.includes('href="/demo-product/'+p.id+'"'))
+ const deals=render('deals','en')
+ for(const d of fixtures.previewDeals)assert.ok(deals.includes('href="/demo-product/'+d.id+'?kind=deal"'))
+ assert.ok(!exclusive.includes('<dialog'))
+})
+test('preview detail route resolves fixture links, preserves legacy demos and rejects Production access',async()=>{
+ let enabled=true
+ const Page=(await loadSource('app/demo-product/[id]/page.tsx',{
+  'next/headers':{cookies:async()=>({get:()=>({value:'bn'})})},
+  'next/navigation':{notFound:()=>{throw Error('NOT_FOUND')}},
+  '@/lib/storefront-language':{languageFromPreference:()=> 'bn',isValidLanguagePreference:()=>true,STOREFRONT_LANGUAGE_COOKIE:'language'},
+  '@/lib/public-demo-products':{demoStorefrontEnabled:()=>enabled,DEMO_OFFERS:[{product_id:'legacy-id'}]},
+  '@/lib/home-card-preview-fixtures':fixtures,
+  '@/components/home-preview-product-details':{HomePreviewProductDetails:()=>null},
+  '@/components/demo-product-details':{DemoProductDetails:()=>null},
+ })).default
+ const open=(id,kind)=>Page({params:Promise.resolve({id}),searchParams:Promise.resolve({kind})})
+ for(const p of fixtures.previewProducts){
+  const page=await open(p.id)
+  assert.equal(page.props.product.id,p.id)
+  assert.equal(page.props.product.price,p.price)
+  assert.equal(page.props.deal,undefined)
+  assert.equal(page.props.initialLanguage,'bn')
+ }
+ for(const d of fixtures.previewDeals)assert.equal((await open(d.id,'deal')).props.deal.price,d.price)
+ assert.equal((await open('legacy-id')).props.offer.product_id,'legacy-id')
+ await assert.rejects(open('missing'),/NOT_FOUND/)
+ enabled=false
+ for(const id of ['butter','rice','legacy-id'])await assert.rejects(open(id),/NOT_FOUND/)
+})
+test('full-page preview details retain matching prices and stock in both languages without real commerce',async()=>{
+ const {HomePreviewProductDetails}=await loadSource('components/home-preview-product-details.tsx',{
+  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
+  '@/components/public-header':{PublicHeader:()=>null},'@/components/public-footer':{PublicFooter:()=>null},
+  '@/lib/use-storefront-language':{useStorefrontLanguage:language=>[language,()=>{}]},
+  '@/lib/home-card-preview-fixtures':fixtures,'./home-card-preview.css':{},
+ })
+ for(const language of ['en','bn'])for(const product of fixtures.previewProducts){
+  const html=renderToStaticMarkup(React.createElement(HomePreviewProductDetails,{product,initialLanguage:language,hasLanguageCookie:true}))
+  for(const value of [language==='bn'?product.nameBn:product.name,fixtures.previewMoney(product.price),fixtures.previewMoney(product.oldPrice),String(product.stock)])assert.ok(html.includes(value),value)
+  assert.ok(!html.includes('<dialog'))
+  assert.ok(html.includes('href="/#mobile-exclusive"'))
+ }
+ const product=fixtures.previewProducts.find(p=>p.id==='rice')
+ const deal=fixtures.previewDeals.find(p=>p.id==='rice')
+ const html=renderToStaticMarkup(React.createElement(HomePreviewProductDetails,{product,deal,initialLanguage:'en',hasLanguageCookie:true}))
+ assert.ok(html.includes('৳135'))
+ assert.ok(html.includes('4/5 joined'))
+ const source=readFileSync('components/home-preview-product-details.tsx','utf8')
+ assert.doesNotMatch(source,/fetch\(|setCommerceCartItem|supabase|action=|<form/)
 })
