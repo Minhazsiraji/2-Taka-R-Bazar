@@ -41,7 +41,7 @@ export function LivePreviewHomeCards({section,language,search,selectedArea,data}
   if(offer.offer_kind==='SOLO'&&(!record.offer||record.offer.offer_kind!=='SOLO')){
    record.offer=offer
    record.solo=confirmedOfferPrice(offer)
-   record.stock=offer.commerce_solo_available?Math.max(0,offer.commerce_available_quantity??0):null
+   record.stock=typeof offer.commerce_available_quantity==='number'&&offer.commerce_available_quantity>=0?Math.max(0,offer.commerce_available_quantity):null
   }
  }
  for(const p of data.catalog){
