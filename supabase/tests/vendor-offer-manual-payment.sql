@@ -56,7 +56,7 @@ create temp table manual_pay_test(booking_id uuid,claim_id uuid);
 insert into manual_pay_test(booking_id)
 select public.pilot_request_booking('00000000-0000-4000-8000-000000007720',
  1,'pickup',null,'Next day booking request','00000000-0000-4000-8000-000000007750',true);
-select is((select count(*)::int from public.pilot_payment_options((select booking_id from manual_pay_test)),
+select is((select count(*)::int from public.pilot_payment_options((select booking_id from manual_pay_test))),
 0,'Recipient remains invisible for unconfirmed booking');
 select throws_like(format('select public.pilot_submit_payment_reference(%L::uuid,%L::uuid,%L)',
  (select booking_id from manual_pay_test),'00000000-0000-4000-8000-000000007740','PAY7702-001'),
@@ -67,10 +67,10 @@ select is(public.pilot_staff_update_booking((select booking_id from manual_pay_t
  'confirmed',1250,50,'Vendor stock and next-day service independently confirmed'),
  'confirmed','Admin confirms product price, actual availability and fee');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000007704',true);
-select is((select count(*)::int from public.pilot_payment_options((select booking_id from manual_pay_test)),
+select is((select count(*)::int from public.pilot_payment_options((select booking_id from manual_pay_test))),
 0,'Another customer cannot view confirmed booking bank/bKash account');
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000007702',true);
-select is((select count(*)::int from public.pilot_payment_options((select booking_id from manual_pay_test)),
+select is((select count(*)::int from public.pilot_payment_options((select booking_id from manual_pay_test))),
 1,'Confirmed owner of booking can view enabled approved recipient');
 update manual_pay_test set claim_id=public.pilot_submit_payment_reference(
  (select booking_id from manual_pay_test),'00000000-0000-4000-8000-000000007740','PAY7702-001');
