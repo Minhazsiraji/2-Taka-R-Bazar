@@ -1,0 +1,72 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const read=path=>readFileSync(''+path,'utf8')
+const migration=read('supabase/migrations/20261021141500_vendor_offer_manual_checkout_pilot.sql')
+const actions=read('app/actions/vendor-offers.ts')
+const offers=read('app/admin/easy-business/quick-offers/page.tsx')
+const recipients=read('app/admin/payment-recipients/page.tsx')
+const customer=read('components/pilot-manual-payment-bookings.tsx')
+const admin=read('components/pilot-manual-payment-review.tsx')
+const bookings=read('app/pilot-bookings/page.tsx')
+const inbox=read('app/admin/pilot-bookings/page.tsx')
+const easy=read('app/admin/easy-business/page.tsx')
+
+test('vendor offer drafts are not customer offers, stock or Finance postings',()=>{
+ assert.match(migration,/create table public.vendor_offer_drafts/)
+ assert.match(migration,/check\(supply_mode='on_demand'\)/)
+ assert.match(migration,/check\(confirmation_policy='confirm_per_order'\)/)
+ assert.match(migration,/check\(status='draft'\)/)
+ assert.match(migration,/join public.supplier_products sp/)
+ assert.match(migration,/private.has_role/)
+ assert.match(actions,/requireAdmin\(\)/)
+ assert.match(actions,/vendor_offer_drafts/)
+ assert.match(actions,/status:'draft'/)
+ assert.match(offers,/vendor_unit_cost_bdt/)
+ assert.match(offers,/proposed_customer_unit_price_bdt/)
+ assert.match(offers,/audit/)
+ assert.match(offers,/No fabricated stock|No fabricated stock|No fabricated stock/i)
+ assert.match(easy,/\/admin\/easy-business\/quick-offers/)
+ for(const bad of ["commerce_offers').insert","commerce_supplier_stock').insert","own_product_inventory').insert","finance_journal_lines').insert"]){
+  assert.doesNotMatch(actions,new RegExp(bad.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')))
+ }
+})
+
+test('payment recipients are isolated from Treasury and activated only by verified platform owner',()=>{
+ assert.match(migration,/create table public.pilot_payment_recipients/)
+ assert.match(migration,/private.is_platform_owner/)
+ assert.match(migration,/active boolean not null default false/)
+ assert.match(migration,/create function public.pilot_payment_options/)
+ assert.match(migration,/b.customer_id=auth.uid\(\) and b.status='confirmed'/)
+ assert.match(actions,/requireSuperAdmin\(\)/)
+ assert.match(actions,/is_current_platform_owner/)
+ assert.match(recipients,/owner-only|OWNER-ONLY/i)
+ assert.match(recipients,/masked\(item.account_number\)/)
+ assert.doesNotMatch(migration,/join public.treasury_accounts/)
+})
+
+test('customer reference is an unverified claim and independent reviewer never posts Finance',()=>{
+ assert.match(migration,/create table public.pilot_booking_payment_claims/)
+ assert.match(migration,/create function public.pilot_submit_payment_reference/)
+ assert.match(migration,/create function public.pilot_staff_review_payment_reference/)
+ assert.match(migration,/c.customer_id=v_user/)
+ assert.match(migration,/claimed_amount/)
+ assert.match(migration,/unique_ref/)
+ assert.match(customer,/pilot_payment_options/)
+ assert.match(customer,/pilot_booking_payment_claims/)
+ assert.match(customer,/submitPilotPaymentReference/)
+ assert.match(customer,/Finance reconciliation pending/)
+ assert.match(admin,/reviewPilotPaymentReference/)
+ assert.match(bookings,/PilotManualPaymentBookings/)
+ assert.match(inbox,/PilotManualPaymentReview/)
+ assert.doesNotMatch(migration,/insert into public.finance_journal|update public.treasury_transactions|update public.commerce_orders/)
+ assert.doesNotMatch(actions,/\.from\('payment_records'\)|finance_post|treasury_request/)
+})
+
+test('manual checkout and Commerce real purchase gates remain separate',()=>{
+ const commerce=read('lib/commerce/server.ts')
+ assert.match(commerce,/VERCEL_ENV==='preview'/)
+ assert.match(read('app/checkout/page.tsx'),/if\(!commerceEnabled\(\)\)/)
+ assert.match(read('app/checkout/page.tsx'),/pilot-book/)
+ assert.match(offers,/No stock, live offer, payment|No fabricated stock|No fabricated stock/i)
+})
