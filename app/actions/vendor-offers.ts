@@ -34,7 +34,7 @@ export async function saveVendorOfferDraft(fd:FormData){
 
  // Read the most recent owner-approved price proposal, never mutate the
  // immutable source audit or count a draft as a Commerce offer.
- const productSku=product.sku
+ const productSku=String(product?.sku??'')
  const {data:audits}=await supabase.from('audit_events')
   .select('id,metadata').in('event_type',['owner_revised_vendor_product_pricing','owner_proposed_vendor_product_pricing'])
   .order('id',{ascending:false}).limit(10)
