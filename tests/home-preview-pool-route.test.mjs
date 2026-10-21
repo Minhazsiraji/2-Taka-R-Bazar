@@ -12,13 +12,15 @@ const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
  '@/lib/home-card-preview-fixtures':fixtures,
  './home-card-preview.css':{},
 })
+const parity=await loadSource('lib/preview-native-detail-data.ts',{'@/lib/home-card-preview-fixtures':fixtures})
 const {HomePreviewPoolDetails}=await loadSource('components/home-preview-pool-details.tsx',{
  'next/link':link,
  '@/components/public-header':{PublicHeader:()=>null},
  '@/components/public-footer':{PublicFooter:()=>null},
  '@/lib/use-storefront-language':{useStorefrontLanguage:language=>[language,()=>{}]},
  '@/lib/home-card-preview-fixtures':fixtures,
- './home-preview-pool-details.css':{},
+ '@/lib/preview-native-detail-data':parity,
+ './home-preview-pool-details.css':{},'./home-preview-native-details.css':{},
 })
 
 test('each homepage Pool CTA is a real detail-page link; no Pool modal path remains',()=>{
@@ -65,28 +67,46 @@ test('Pool preview routing matches the selected homepage fixture and blocks Prod
  for(const pool of fixtures.previewPools)await assert.rejects(open(pool.id),/NOT_FOUND/)
 })
 
-test('Pool detail pages show the matching 3 photos, counts, deadline and linked products in both languages',()=>{
+test('Pool details match the locked Expo cards, unbounded progress, products and zero-selection basket',()=>{
  for(const pool of fixtures.previewPools){
   for(const language of ['en','bn']){
    const html=renderToStaticMarkup(React.createElement(HomePreviewPoolDetails,{
     pool,initialLanguage:language,hasLanguageCookie:true}))
    assert.ok(html.includes(language==='bn'?pool.nameBn:pool.name))
-   assert.ok(html.includes(pool.joined.toLocaleString('en-BD')))
-   assert.ok(html.includes(pool.target.toLocaleString('en-BD')))
-   assert.ok(html.includes(pool.date))
+   const num=n=>new Intl.NumberFormat(language==='bn'?'bn-BD':'en-US').format(n)
+   assert.ok(html.includes(num(pool.joined)))
+   assert.ok(html.includes(num(pool.target)))
    assert.ok(html.includes('aria-valuenow="'+pool.joined+'"'))
    assert.ok(html.includes('aria-valuemax="'+pool.target+'"'))
-   assert.equal((html.match(/class="home-preview-pool-product market-ui-card"/g)||[]).length,3)
+   assert.equal((html.match(/class="home-preview-pool-product native-preview-pool-item/g)||[]).length,3)
+   assert.equal((html.match(/aria-label="Increase /g)||[]).length,3)
    for(const id of pool.products){
-    assert.ok(html.includes('href="/demo-product/'+id+'"'))
+    assert.ok(html.includes('href="/demo-product/'+id+'?kind=retail&amp;from=pool&amp;pool='+pool.id+'"'))
     const product=fixtures.previewProducts.find(p=>p.id===id)
     assert.ok(html.includes(language==='bn'?product.nameBn:product.name))
    }
+   for(const label of [language==='bn'?'পুলের দাম কীভাবে কমে':'How Pool prices unlock',
+    language==='bn'?'আপনার পুলের বাজার':'Your Pool basket'])assert.ok(html.includes(label),label)
+   assert.equal((html.match(/<strong>—<\/strong>/g)||[]).length,3,'Zero selection has three dash totals')
+   assert.ok(html.includes('disabled=""'))
+   assert.ok(html.includes('0')||html.includes('০'))
    assert.ok(!html.includes('<dialog'))
    assert.ok(!html.includes('<form'))
   }
  }
  const source=readFileSync('components/home-preview-pool-details.tsx','utf8')
- assert.doesNotMatch(source,/fetch\(|setCommerceCartItem|supabase|\/checkout|<form/)
- assert.match(source,/Back to Community Pools/)
+ assert.doesNotMatch(source,/fetch\\(|setCommerceCartItem|supabase|\\/checkout|<form/)
+ assert.match(source,/changeQty/)
+ assert.match(source,/Review Join Pool/)
+})
+test('Pool price math agrees exactly with approved native reference scenarios',()=>{
+ const weekly=parity.previewPoolItems('weekly')
+ const monthly=parity.previewPoolItems('monthly')
+ const total=(items,qty,key)=>items.reduce((n,x)=>n+x.tiers[key]*(qty[x.product.id]??0),0)
+ assert.equal(total(weekly,{butter:2,rice:1},'opening'),2475)
+ assert.equal(total(weekly,{butter:2,rice:1},'current'),2340)
+ assert.equal(total(weekly,{butter:2,rice:1},'next'),2230)
+ assert.equal(total(monthly,{rice:2,ghee:1},'opening'),1030)
+ assert.equal(total(monthly,{rice:2,ghee:1},'current'),970)
+ assert.equal(total(monthly,{rice:2,ghee:1},'next'),920)
 })
