@@ -117,6 +117,15 @@ try{
      assert.ok(frame.left>=frame.parentLeft-1&&frame.right<=frame.parentRight+1,'Product image escapes its card')
     }
    }
+   if(route==='/products'&&width===390){
+    const details=page.locator('[data-vendor-cards] .app-card-preview-actions > a').first()
+    await details.click()
+    await page.waitForURL('**/vendor-products/00000000-0000-4000-8000-000000000821',{waitUntil:'load'})
+    assert.equal(await page.getByRole('dialog').count(),0,'Real product details navigate to their full page')
+    assert.ok((await page.locator('main').innerText()).includes('Synthetic vendor rice'))
+    await page.goBack({waitUntil:'load'})
+    await page.locator('[data-vendor-cards]').waitFor()
+   }
    assert.ok(!geometry.overlap,`${route} brand overlaps controls at ${width}`)
    assert.equal(geometry.bg,theme==='dark'?'rgb(13, 20, 36)':'rgb(244, 241, 246)',`${route}/${width}/${theme}/${language} background`)
    assert.deepEqual(geometry.wrongBengaliFont,[],'Bengali copy must use the approved fallback')
