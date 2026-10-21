@@ -199,7 +199,7 @@ grant execute on function public.pilot_staff_review_payment_reference(uuid,boole
 -- audit_events RLS/default-deny and never expose unrelated audit records.
 create function public.vendor_offer_admin_price_snapshot()
  returns table(product_id uuid,sku text,supplier_id uuid,vendor_unit_cost numeric,proposed_sale_price numeric,audit_id bigint)
- language plpgsql stable security definer set search_path='' as $
+ language plpgsql stable security definer set search_path='' as $vendor_price_rpc$
 declare v_event public.audit_events%rowtype;begin
  if auth.uid() is null or not(private.has_role(auth.uid(),'admin') or private.has_role(auth.uid(),'super_admin'))
  then raise exception using errcode='42501',message='Admin required';end if;
@@ -220,7 +220,7 @@ declare v_event public.audit_events%rowtype;begin
  where sp.supplier_id=(v_event.metadata->>'supplier_id')::uuid
  and p.active and not p.is_demo and p.source_type='SUPPLIER_POOL'
  and x.vendor_unit_cost_bdt>0 and x.proposed_customer_unit_price_bdt>x.vendor_unit_cost_bdt;
-end $;
+end $vendor_price_rpc$;
 revoke all on function public.vendor_offer_admin_price_snapshot() from public,anon,service_role;
 grant execute on function public.vendor_offer_admin_price_snapshot() to authenticated;
 
