@@ -48,6 +48,8 @@ export function AdminQuickProductForm({userId}:{userId:string}){
   }catch{/* The form still retains entered values until navigation. */}
  }
  function submit(e:FormEvent<HTMLFormElement>){
+  // ProductImageInput blocks submission while it optimizes a chosen PC image.
+  if(e.defaultPrevented)return
   e.preventDefault()
   if(sending.current||pending)return
   const form=formRef.current
