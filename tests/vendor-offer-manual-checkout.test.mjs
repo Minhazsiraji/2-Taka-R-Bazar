@@ -10,6 +10,8 @@ const customer=read('components/pilot-manual-payment-bookings.tsx')
 const admin=read('components/pilot-manual-payment-review.tsx')
 const bookings=read('app/pilot-bookings/page.tsx')
 const inbox=read('app/admin/pilot-bookings/page.tsx')
+const liveSetup=read('app/super-admin/payment-setup/page.tsx')
+const canonical=read('lib/manual-payment-destinations.ts')
 const easy=read('app/admin/easy-business/page.tsx')
 
 test('vendor offer drafts are not customer offers, stock or Finance postings',()=>{
@@ -45,6 +47,26 @@ test('payment recipients are isolated from Treasury and activated only by verifi
  assert.match(recipients,/owner-only|OWNER-ONLY/i)
  assert.match(recipients,/masked\(item.account_number\)/)
  assert.doesNotMatch(migration,/join public.treasury_accounts/)
+})
+
+test('manual recipient activation reuses existing real-payment configuration without copying masked Treasury test accounts',()=>{
+ assert.match(actions,/MANUAL_PAYMENT_DESTINATIONS/)
+ assert.match(actions,/setExistingPaymentRecipientActive/)
+ assert.match(actions,/is_current_platform_owner/)
+ assert.match(actions,/rows\?\.\[0\]/)
+ assert.match(actions,/row.account_number!==existing.account_number/)
+ assert.match(recipients,/MANUAL_PAYMENT_DESTINATIONS as accounts/)
+ assert.match(recipients,/setExistingPaymentRecipientActive/)
+ assert.match(recipients,/Activate existing/)
+ assert.match(recipients,/masked\(entry.number\)/)
+ assert.doesNotMatch(recipients,/name="account_number"/)
+ assert.match(customer,/MANUAL_PAYMENT_DESTINATIONS/)
+ assert.match(customer,/op.account_number===MANUAL_PAYMENT_DESTINATIONS/)
+ assert.match(customer,/Use bKash Payment \(not Send Money\)/)
+ assert.match(liveSetup,/Activate existing receiving accounts/)
+ assert.match(liveSetup,/MANUAL_PAYMENT_DESTINATIONS as accounts/)
+ assert.match(canonical,/bkash:/)
+ assert.match(canonical,/bank:/)
 })
 
 test('customer reference is an unverified claim and independent reviewer never posts Finance',()=>{
