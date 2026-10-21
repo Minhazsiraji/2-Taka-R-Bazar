@@ -241,6 +241,7 @@ try {
   assert.equal(await page.getByRole('heading', {name: 'Staff tools', exact: true}).count(), 0)
   assert.equal(await page.getByText('Purchases are awaiting release qualification.', {exact: true}).count(), 0)
   assert.equal(await page.locator('.market-flat-header').count(), 1)
+  await page.locator('header .public-account-panel a[href="/account"]').waitFor({state:'attached'})
   assert.equal(await page.locator('header .public-account-panel a[href="/account"]').count(),1)
   assert.equal(await page.locator('.market-storefront-dock a[href="/account"]').count(),0)
   for (const width of [320, 360, 393, 640, 768, 1440]) {
