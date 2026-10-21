@@ -2,6 +2,7 @@ import Link from 'next/link'
 import {requireAdmin} from '@/lib/auth'
 import {AdminShell} from '@/components/admin-shell'
 import {staffUpdatePilotBooking,staffSendPilotServiceUpdate} from '@/app/actions/pilot-booking'
+import {PilotManualPaymentReview} from '@/components/pilot-manual-payment-review'
 
 export const dynamic='force-dynamic'
 type Props={searchParams:Promise<{notice?:string;error?:string}>}
@@ -77,5 +78,6 @@ export default async function PilotBookingInbox({searchParams}:Props){
       </form>
     </div>}
    </article>)}</div>}
+  <PilotManualPaymentReview/>
  </div></AdminShell>
 }
