@@ -6,25 +6,22 @@ import {saveVendorOfferDraft} from '@/app/actions/vendor-offers'
 export const dynamic='force-dynamic'
 type S={notice?:string;error?:string}
 type Draft={product_id:string;supplier_id:string;vendor_unit_cost:number;proposed_sale_price:number;supplier_handover_days:number;status:string}
-type PriceLine={sku:string;vendor_unit_cost_bdt:number;proposed_customer_unit_price_bdt:number}
+type PriceLine={sku:string;vendor_unit_cost:number;proposed_sale_price:number;audit_id:number}
 const taka=(v:number)=>'৳'+v.toLocaleString('en-BD',{maximumFractionDigits:2})
 export default async function VendorQuickOffers({searchParams}:{searchParams:Promise<S>}){
  const sp=await searchParams
  const {supabase:db}=await requireAdmin()
- const [productsResult,suppliersResult,linksResult,plansResult,auditsResult]=await Promise.all([
+ const [productsResult,suppliersResult,linksResult,plansResult,pricingResult]=await Promise.all([
   db.from('products').select('id,name,sku,package_size,source_type').eq('active',true).eq('is_demo',false).order('created_at'),
   db.from('suppliers').select('id,business_name,active,reliability_status').eq('active',true),
   db.from('supplier_products').select('product_id,supplier_id').eq('active',true),
   db.from('vendor_offer_drafts').select('product_id,supplier_id,vendor_unit_cost,proposed_sale_price,supplier_handover_days,status'),
-  db.from('audit_events').select('id,event_type,metadata').in('event_type',
-   ['owner_revised_vendor_product_pricing','owner_proposed_vendor_product_pricing'])
-    .order('id',{ascending:false}).limit(25),
+  db.rpc('vendor_offer_admin_price_snapshot'),
  ])
  const products=productsResult.data??[],suppliers=suppliersResult.data??[],links=linksResult.data??[]
  const plans=(plansResult.data??[]) as Draft[]
- const audits=auditsResult.data??[]
- const currentAudit=audits[0]??null
- const sourceLines=(currentAudit?.metadata?.pricing_lines??[]) as PriceLine[]
+ const sourceLines=(pricingResult.data??[]) as PriceLine[]
+ const currentAuditId=sourceLines[0]?.audit_id??null
  const bySku=new Map(sourceLines.map(line=>[line.sku,line]))
  const planFor=(productId:string,supplierId:string)=>plans.find(p=>p.product_id===productId&&p.supplier_id===supplierId)
  const rows=products.filter(p=>p.source_type==='SUPPLIER_POOL').map(p=>{
@@ -34,24 +31,24 @@ export default async function VendorQuickOffers({searchParams}:{searchParams:Pro
   const sourceLine=bySku.get(p.sku)
   return {product:p,vendor,plan,sourceLine}
  })
- const missingMigration=Boolean(plansResult.error)
+ const missingMigration=Boolean(plansResult.error||pricingResult.error)
  return <AdminShell><div className="grid gap-4">
   <section className="card">
    <p className="card-title">2TBR · Vendor-held / on demand</p>
    <h1 className="mt-2 text-2xl font-black">Quick Offer Setup</h1>
    <p className="muted mt-2">Price proposals, not customer-orderable offers. Confirm real supply for each booking. No fabricated stock, payment, inventory reservation or automatic checkout. SEO/AEO/GEO is optional.</p>
    <div className="mt-3 flex flex-wrap gap-2"><Link className="btn-secondary" href="/admin/easy-business">← Easy Business</Link><Link className="btn-secondary" href="/admin/pilot-bookings">Manual booking approvals</Link><Link className="btn-secondary" href="/admin/payment-recipients">Payment receiving accounts</Link></div>
-   {currentAudit&&<p className="muted mt-3 text-xs">Current owner-proposed pricing: audit #{currentAudit.id}, not yet published. {audits.length>1?'Older revisions remain in audit history.':''}</p>}
+   {currentAuditId&&<p className="muted mt-3 text-xs">Current unpublished owner proposal: audit #{currentAuditId}. Earlier revisions remain preserved.</p>}
   </section>
   {sp.notice&&<p role="status" className="success">{sp.notice}</p>}
   {sp.error&&<p role="alert" className="error">{sp.error}</p>}
   {missingMigration&&<p role="status" className="notice">This Preview is read-only until the secure Quick Offer migration is qualified and deployed. You can review proposed prices now; saving is disabled.</p>}
-  {(productsResult.error||suppliersResult.error||linksResult.error||auditsResult.error)&&
+  {(productsResult.error||suppliersResult.error||linksResult.error||pricingResult.error)&&
    <p role="alert" className="error">Some catalog information is unavailable. Refresh before editing.</p>}
   <section className="grid gap-3">
   {rows.map(({product,vendor,plan,sourceLine})=>{
-   const cost=Number(plan?.vendor_unit_cost??sourceLine?.vendor_unit_cost_bdt??0)
-   const sale=Number(plan?.proposed_sale_price??sourceLine?.proposed_customer_unit_price_bdt??0)
+   const cost=Number(plan?.vendor_unit_cost??sourceLine?.vendor_unit_cost??0)
+   const sale=Number(plan?.proposed_sale_price??sourceLine?.proposed_sale_price??0)
    const ready=Boolean(vendor&&cost>0&&sale>cost)
    return <article className="card" key={product.id}>
     <div className="flex flex-wrap items-start justify-between gap-3">
