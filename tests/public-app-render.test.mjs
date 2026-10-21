@@ -9,6 +9,7 @@ const Link=({href,children,...props})=>React.createElement('a',{href,...props},c
 const chooseText=(language,en,bn)=>language==='bn'?bn:en
 const formatPrice=n=>n>0?'৳'+Number(n).toLocaleString('en-BD'):'Price pending'
 const {MobileMarketplaceHome}=await loadSource('components/mobile-marketplace-home.tsx',{
+ '@/components/home-card-preview':{PreviewHomeCards:()=>null},
  'next/link':Link,'@/app/actions/commerce':{setCommerceCartItem:()=>{}},
  '@/lib/storefront':{formatPrice},'@/lib/storefront-language':{chooseText},
 })

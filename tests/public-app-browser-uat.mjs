@@ -39,6 +39,7 @@ try{
    localStorage.setItem('2tbr-storefront-language-v1',language)
   },{theme,language})
   await context.addCookies([{name:'2tbr_storefront_language',value:language,url:`http://127.0.0.1:${port}`}])
+  await context.route('https://images.unsplash.com/**',route=>route.abort()) // Exercise local placeholders deterministically.
   const page=await context.newPage()
   for(const route of (process.env.UAT_DEBUG?['/']:['/','/login','/signup','/products','/about','/faq','/privacy','/terms','/return-policy','/refund-policy','/cart','/group-deals','/pool','/account','/account/savings','/money'])){
    const response=await page.goto(`http://127.0.0.1:${port}${route}`,{waitUntil:'networkidle'})
@@ -65,7 +66,7 @@ try{
     const rimNodes=[...shell.querySelectorAll('.market-flat-header,.market-header-search,.market-header-quick-link,.public-account-trigger,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button,.market-single-language,.mhome-geo-button,.mhome-area-picker summary,.mhome-native-area,.mhome-hero,.mhome-hero-copy>a,.mhome-card-pill,.mhome-pool-status,.btn-primary,.btn-secondary,.mhome-details-btn,.mhome-deal-actions>a:first-child,.mhome-join-deal,.border.rounded-full,form.border.rounded-xl')].filter(n=>n.getClientRects().length)
     const rims=rimNodes.map(n=>({class:n.className,shadow:getComputedStyle(n).boxShadow}))
     const footerPanels=[...shell.querySelectorAll('.market-footer-brand,.market-footer-information>nav,.market-footer-contact')].map(n=>{const c=getComputedStyle(n);return {bg:c.backgroundColor,image:c.backgroundImage,border:c.borderWidth,shadow:c.boxShadow}})
-    const poolActions=[...shell.querySelectorAll('.mhome-pool-link')].map(n=>{const r=n.getBoundingClientRect();const p=n.parentElement.getBoundingClientRect();return {left:r.left,right:r.right,parentLeft:p.left,parentRight:p.right,width:r.width,scroll:n.scrollWidth,client:n.clientWidth}})
+    const poolActions=[...shell.querySelectorAll('.mhome-pool-link')].map(n=>{const r=n.getBoundingClientRect();const p=n.parentElement.getBoundingClientRect();return {preview:Boolean(n.closest('[data-preview-cards]')),left:r.left,right:r.right,parentLeft:p.left,parentRight:p.right,width:r.width,scroll:n.scrollWidth,client:n.clientWidth}})
     const picker=shell.querySelector('.mhome-area-picker')
     const hero=shell.querySelector('.mhome-hero')
     const bodySample=shell.querySelector('.auth-page-content .card > p,section.rounded-2xl p')
@@ -117,7 +118,7 @@ try{
    }
    assert.equal(geometry.footerPanels.length,4,'Keep all four footer information groups')
    for(const panel of geometry.footerPanels){assert.equal(panel.bg,'rgba(0, 0, 0, 0)');assert.equal(panel.image,'none');assert.equal(panel.border,'0px');assert.equal(panel.shadow,'none')}
-   for(const action of geometry.poolActions){assert.ok(Math.abs(action.left-action.parentLeft)<1&&Math.abs(action.right-action.parentRight)<1,`Pool action must fill its content column: ${JSON.stringify(action)}`);assert.ok(action.scroll<=action.client+1,'Pool action label clips')}
+   for(const action of geometry.poolActions){if(action.preview){assert.ok(Math.abs(action.right-action.parentRight)<1,'Preview Pool action must align lower right');assert.ok(action.left>=action.parentLeft-1)}else{assert.ok(Math.abs(action.left-action.parentLeft)<1&&Math.abs(action.right-action.parentRight)<1,`Pool action must fill its content column: ${JSON.stringify(action)}`)}assert.ok(action.scroll<=action.client+1,'Pool action label clips')}
    if(geometry.bodyTextColor)assert.equal(geometry.bodyTextColor,theme==='dark'?'rgb(190, 201, 217)':'rgb(91, 105, 128)',`Public body text must follow the readable theme palette: ${route}/${width}/${theme}`)
    assert.equal(geometry.secondNav,false)
    assert.equal(geometry.navCount,width<768?1:0)
@@ -152,6 +153,7 @@ try{
     // Local-only layout probe: eligibility is independently covered by rendered tests.
     // Measure the short join label in a real card's allocated action width, then
     // restore its original restricted control before interactions or screenshots.
+    if(await page.locator('.mhome-deal-actions').count()){
     const joinProbe=await page.locator('.mhome-deal-actions').first().evaluate((actions,label)=>{
      const original=actions.children[1]
      const probe=document.createElement('a');probe.className='mhome-join-deal';probe.href='#'
@@ -165,6 +167,7 @@ try{
     },language==='bn'?'ডিলে যোগ দিন':'Join Deal')
     assert.equal(joinProbe.nowrap,'nowrap')
     assert.ok(joinProbe.scroll<=joinProbe.client+1,`Short join label clips at ${width}/${theme}/${language}: ${JSON.stringify(joinProbe)}`)
+    }
     assert.equal(geometry.homeBg,'rgba(0, 0, 0, 0)','Home background must match the shared shell')
     assert.equal(await page.locator('.public-login-join').count(),0)
     if(width>=1024){
@@ -173,6 +176,54 @@ try{
     }
     await page.getByLabel(language==='bn'?'পরের ব্যানার':'Next banner',{exact:true}).click()
     assert.equal(await page.locator('.mhome-dots button[aria-current="true"]').getAttribute('aria-label'),language==='bn'?'ব্যানার 2':'Banner 2')
+    // Owner-requested card parity: fixtures remain a read-only presentation.
+    assert.equal(await page.locator('[data-preview-cards="deals"] article').count(),2)
+    assert.equal(await page.locator('[data-preview-cards="exclusive"] article').count(),4)
+    assert.equal(await page.locator('[data-preview-cards="pools"] article').count(),2)
+    const rice=page.locator('[data-preview-cards="deals"] article').first()
+    for(const text of ['৳135','৳165','৳30','4/5 joined','Ends in 2 days'])assert.ok((await rice.innerText()).includes(text),text)
+    assert.equal(await rice.locator('button').count(),2)
+    assert.equal(await rice.locator('[role="progressbar"]').getAttribute('aria-valuenow'),'4')
+    for(const [index,price,old,stock] of [[0,'৳1,160','৳1,240','32'],[1,'৳680','৳780','20'],[2,'৳145','৳165','45'],[3,'৳145','৳165','24']]){
+     const card=page.locator('[data-preview-cards="exclusive"] article').nth(index)
+     for(const text of [price,old,stock])assert.ok((await card.innerText()).includes(text),text)
+     assert.equal(await card.locator('button').count(),2,'Exactly two Exclusive buttons')
+     assert.equal(await card.locator('form').count(),0,'Demo cannot submit a real cart action')
+    }
+    for(const card of await page.locator('[data-preview-cards="pools"] article').all()){
+     assert.equal(await card.locator('img').count(),3)
+     assert.ok((await card.innerText()).includes('ACTIVE'))
+    }
+    const cardBoxes=await page.locator('[data-preview-cards] article').evaluateAll(nodes=>nodes.map(card=>{
+     const r=card.getBoundingClientRect()
+     return {width:r.width,scroll:card.scrollWidth,client:card.clientWidth,children:[...card.querySelectorAll('.app-card-preview-copy,.app-card-preview-actions,button')].map(n=>{const b=n.getBoundingClientRect();return {left:b.left-r.left,right:b.right-r.left,scroll:n.scrollWidth,client:n.clientWidth}})}
+    }))
+    for(const box of cardBoxes){assert.ok(box.scroll<=box.client+1,'Preview card overflows');for(const child of box.children){assert.ok(child.left>=-1&&child.right<=box.width+1,'Preview control escapes card');assert.ok(child.scroll<=child.client+1,'Preview copy/button clips')}}
+    if([320,390,820,1440].includes(width)){
+     for(const section of ['deals','exclusive','pools'])await page.locator('#mobile-'+section).screenshot({path:`${out}/cards-${section}-${width}-${theme}-${language}.png`})
+    }
+    if(width===390){
+     const mutations=[]
+     const watch=request=>{if(!['GET','HEAD','OPTIONS'].includes(request.method()))mutations.push(request.method()+' '+request.url())}
+     page.on('request',watch)
+     await page.locator('[data-preview-cards="exclusive"] article').first().locator('button').first().click()
+     await page.getByRole('dialog').waitFor()
+     assert.ok((await page.getByRole('dialog').innerText()).includes('৳1,160'))
+     await page.getByRole('dialog').getByRole('button').click()
+     await page.locator('[data-preview-cards="exclusive"] article').first().locator('button').nth(1).click()
+     await page.getByRole('status').waitFor()
+     assert.ok((await page.getByRole('status').innerText()).includes(language==='bn'?'ডেমো':'preview'))
+     await rice.locator('button').nth(1).click()
+     await page.getByRole('dialog').waitFor()
+     await page.getByRole('dialog').press('Escape')
+     await page.locator('[data-preview-cards="pools"] article').first().locator('button').click()
+     await page.getByRole('dialog').waitFor()
+     assert.ok((await page.getByRole('dialog').innerText()).includes('875'))
+     await page.getByRole('dialog').press('Escape')
+     assert.equal(await page.getByRole('dialog').count(),0)
+     assert.deepEqual(mutations,[],'Preview controls must not send write requests')
+     page.off('request',watch)
+    }
     // Live search filters product and Group Deal cards rather than a hidden legacy section.
     await page.locator('#market-header-product-search').fill('no-such-product-123')
     assert.equal(await page.locator('.mhome-deal-card,.mhome-exclusive-card').count(),0)
