@@ -4,7 +4,7 @@
 @media (max-width:767px){
  html body.site-glass-root.site-glass-root .public-glass-header.market-flat-header.market-flat-header
  .market-header-inner .market-header-actions.market-header-actions
- :is(button.market-single-language,button.theme-toggle,button.customer-notification-bell,button.market-mobile-menu-button){
+ :is(.market-single-language,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button){
   box-sizing:border-box!important;
   width:44px!important;min-width:44px!important;max-width:44px!important;
   height:44px!important;min-height:44px!important;max-height:44px!important;
