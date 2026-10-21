@@ -6,12 +6,13 @@ import {PublicHeader} from '@/components/public-header'
 import {PublicFooter} from '@/components/public-footer'
 import {useStorefrontLanguage} from '@/lib/use-storefront-language'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
-import {previewPools,previewProducts,previewPhoto,previewMoney} from '@/lib/home-card-preview-fixtures'
+import {previewPools,previewPhoto} from '@/lib/home-card-preview-fixtures'
+import {previewPoolItems} from '@/lib/preview-native-detail-data'
 import './home-preview-pool-details.css'
+import './home-preview-native-details.css'
 
 type Pool=typeof previewPools[number]
-type Product=typeof previewProducts[number]
-
+type Product=ReturnType<typeof previewPoolItems>[number]['product']
 function PoolProductPhoto({product}:{product:Product}){
  const [failed,setFailed]=useState(false)
  return <img src={failed?'/preview-app-product-placeholder.svg':previewPhoto(product.photo)}
@@ -19,78 +20,144 @@ function PoolProductPhoto({product}:{product:Product}){
   onError={()=>setFailed(true)} className={failed?'home-preview-pool-placeholder':undefined}/>
 }
 
-/** This component receives only approved preview fixtures from a server-gated route.
- * No checkout, database, real cart, reservation or join request can originate here. */
+/** Preview-only fixture. Quantity and totals remain on-device; no database, order or payment writes. */
 export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie}:{
  pool:Pool;initialLanguage:MarketplaceLanguage;hasLanguageCookie:boolean
 }){
  const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
+ const [quantities,setQuantities]=useState<Record<string,number>>({})
+ const [status,setStatus]=useState('')
  const bn=language==='bn'
  const t=(en:string,local:string)=>bn?local:en
+ const n=(num:number)=>new Intl.NumberFormat(bn?'bn-BD':'en-US').format(num)
+ const cash=(num:number)=>'৳'+n(num)
  const name=t(pool.name,pool.nameBn)
- const products=pool.products.map(id=>previewProducts.find(item=>item.id===id)).filter((p):p is Product=>Boolean(p))
- return <main className="public-marketplace-flat market-pool-detail-page home-preview-pool-detail min-h-screen">
+ const lines=previewPoolItems(pool.id)
+ const selected=lines.filter(line=>(quantities[line.product.id]??0)>0)
+ const units=selected.reduce((sum,line)=>sum+(quantities[line.product.id]??0),0)
+ const total=(value:'opening'|'current'|'next')=>selected.reduce((sum,line)=>sum+line.tiers[value]*(quantities[line.product.id]??0),0)
+ const retail=selected.reduce((sum,line)=>sum+line.product.oldPrice*(quantities[line.product.id]??0),0)
+ const starting=total('opening'),current=total('current'),next=total('next')
+ const endDate=()=>{
+  const match=pool.date.match(/^(\d+)\s+([A-Za-z]+)$/)
+  if(!match)return pool.date
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  const month=months.indexOf(match[2]);if(month<0)return pool.date
+  return new Intl.DateTimeFormat(bn?'bn-BD':'en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'})
+   .format(new Date(Date.UTC(2026,month,Number(match[1]))))
+ }
+ function changeQty(id:string,diff:number){
+  setQuantities(old=>({...old,[id]:Math.min(20,Math.max(0,(old[id]??0)+diff))}))
+  setStatus('')
+ }
+ return <main className="public-marketplace-flat market-pool-detail-page home-preview-pool-detail native-preview-detail-page min-h-screen" lang={language}>
   <PublicHeader storefront shopBaseHref="/" browseHref="/#mobile-pools" actionHref="/#mobile-pools"
    actionLabel={t('Back to Pools','পুলে ফিরে যান')} mobileActionLabel={t('Pools','পুল')}
    language={language} onLanguageChange={setLanguage}/>
-  <div className="market-pool-detail-content home-preview-pool-content" lang={language}>
-   <nav className="market-pool-breadcrumb" aria-label={t('Breadcrumb','পথ নির্দেশনা')}>
-    <Link href="/">{t('Home','হোম')}</Link><span aria-hidden="true">/</span>
-    <Link href="/#mobile-pools">{t('Community Pools','কমিউনিটি পুল')}</Link><span aria-hidden="true">/</span>
-    <span aria-current="page">{name}</span>
-   </nav>
-   <p className="market-demo-detail-banner" role="status">{t(
-    'DEMO PREVIEW — sample products and participation only. No real ordering or joining.',
-    'ডেমো প্রিভিউ — নমুনা পণ্য ও অংশগ্রহণ। বাস্তব অর্ডার বা যোগদান নয়।')}</p>
-   <section className="home-preview-pool-hero market-ui-card">
-    <div className="home-preview-pool-photos" aria-label={t('Pool product photos','পুলের পণ্যের ছবি')}>
-     {products.map(p=><Link key={p.id} href={'/demo-product/'+p.id} aria-label={t('View ','দেখুন: ')+t(p.name,p.nameBn)}>
-      <PoolProductPhoto product={p}/></Link>)}
+  <div className="market-pool-detail-content home-preview-pool-content native-preview-content">
+   <Link href="/#mobile-pools" className="native-preview-back">‹ &nbsp;{t('Back','ফিরুন')}</Link>
+   <div className="native-preview-pool-header">
+    <div className="native-preview-pool-badges">
+     <span className="native-preview-pill">{pool.id==='weekly'?t('WEEKLY POOL','সাপ্তাহিক পুল'):t('MONTHLY POOL','মাসিক পুল')}</span>
+     <span className="native-preview-pill native-preview-active">● ACTIVE</span>
+     <span className="native-preview-pill native-preview-demo">{t('DEMO DATA','ডেমো তথ্য')}</span>
     </div>
-    <div className="home-preview-pool-summary">
-     <div className="home-preview-pool-badges"><span>{t(pool.label,pool.labelBn)}</span>
-      <span className="home-preview-pool-active">● ACTIVE · DEMO</span></div>
-     <h1>{name}</h1>
-     <p className="home-preview-pool-muted">{products.length} {t('products','টি পণ্য')} · {pool.joined.toLocaleString('en-BD')} {t('households joined','পরিবার যুক্ত')}</p>
-     <div className="home-preview-pool-count"><strong>{pool.joined.toLocaleString('en-BD')}</strong><span>/ {pool.target.toLocaleString('en-BD')} {t('households','পরিবার')}</span></div>
-     <div className="home-preview-pool-progress" role="progressbar"
-      aria-label={t('Household progress','পরিবারের অংশগ্রহণ')}
-      aria-valuemin={0} aria-valuemax={pool.target} aria-valuenow={pool.joined}>
-      <span style={{width:Math.min(100,pool.joined/pool.target*100)+'%'}}/></div>
-     <div className="home-preview-pool-info">
-      <p>◷ {t('Commit ends in','কমিট শেষ হবে')} {pool.days} {t('days','দিনে')} · {pool.date}</p>
-      <p>{t('Next savings tier','পরবর্তী সাশ্রয় টিয়ার')}: <strong>{pool.target.toLocaleString('en-BD')}</strong> {t('households','পরিবার')}</p>
-     </div>
-     <div className="home-preview-pool-actions">
-      <a className="btn-primary" href="#pool-products">{t('View Pool products','পুলের পণ্য দেখুন')} ↓</a>
-      <Link className="btn-secondary" href="/#mobile-pools">← {t('Back to Community Pools','কমিউনিটি পুলে ফিরে যান')}</Link>
-     </div>
+    <h1>{name}</h1>
+    <p className="native-preview-muted">{n(lines.length)} {t('products','টি পণ্য')} · {n(pool.joined)} {t('households joined','পরিবার যুক্ত')}</p>
+   </div>
+
+   <section className="native-preview-panel native-preview-pool-progress home-preview-pool-summary">
+    <h2>{t('Community savings progress','কমিউনিটির অগ্রগতি')}</h2>
+    <div className="native-preview-split native-preview-small-row">
+     <strong>{n(pool.joined)} {t('households joined','পরিবার যুক্ত')}</strong>
+     <span>{n(pool.target)} {t('next milestone','পরবর্তী ধাপ')}</span>
+    </div>
+    <div className="home-preview-pool-progress native-preview-progress" role="progressbar"
+     aria-label={t('Household progress','পরিবারের অগ্রগতি')}
+     aria-valuemin={0} aria-valuemax={pool.target} aria-valuenow={pool.joined}>
+     <span style={{width:Math.min(100,pool.joined/pool.target*100)+'%'}}/>
+    </div>
+    <p className="native-preview-muted">{t('No cap on participation. Progress shows the next price milestone, not Pool capacity.','অংশগ্রহণ সীমাহীন। অগ্রগতি পরের দামের ধাপ বোঝায়, পুলের সদস্যসীমা নয়।')}</p>
+    <div className="native-preview-split native-preview-pool-deadline">
+     <strong>◷ {t('Commitment ends','যোগদান শেষ')}: {endDate()}</strong>
+     <strong>{n(pool.days)} {t('days left','দিন বাকি')}</strong>
     </div>
    </section>
-   <section className="home-preview-pool-products" id="pool-products">
-    <h2>{t('Products in this Pool','এই পুলের পণ্য')}</h2>
-    <p className="home-preview-pool-muted">{t('Illustrative product prices; each item opens its own full details page.',
-     'নমুনা পণ্যমূল্য; প্রতিটি পণ্যের আলাদা বিস্তারিত পৃষ্ঠা রয়েছে।')}</p>
-    <div className="home-preview-pool-products-grid">
-     {products.map(p=><article className="home-preview-pool-product market-ui-card" key={p.id}>
-      <Link href={'/demo-product/'+p.id} className="home-preview-pool-product-image" aria-label={t('View ','দেখুন: ')+t(p.name,p.nameBn)}>
-       <PoolProductPhoto product={p}/></Link>
-      <div>
-       <h3>{t(p.name,p.nameBn)}</h3><p className="home-preview-pool-muted">{p.unit}</p>
-       <div className="home-preview-pool-price"><strong>{previewMoney(p.price)}</strong><s>{previewMoney(p.oldPrice)}</s></div>
-       <span className="home-preview-pool-save">{t('Save','সাশ্রয়')} {previewMoney(p.oldPrice-p.price)}</span>
-       <Link href={'/demo-product/'+p.id} className="home-preview-pool-product-link">{t('View details','বিস্তারিত দেখুন')} →</Link>
-      </div>
-     </article>)}
+
+   <section className="native-preview-pool-shop">
+    <div className="native-preview-split native-preview-pool-shop-heading">
+     <div><h2>{t('Choose your products','প্রয়োজনীয় পণ্য বেছে নিন')}</h2>
+      <p className="native-preview-muted">{t('Pick only what you need · 1–20 products per Pool','যা প্রয়োজন শুধু তাই নিন · পুলে ১–২০টি পণ্য')}</p></div>
+     <span className="native-preview-selected">{n(selected.length)} {t('selected','নির্বাচিত')}</span>
+    </div>
+    <div className="home-preview-pool-products-grid native-preview-pool-products">
+     {lines.map(({product,tiers})=>{
+      const q=quantities[product.id]??0
+      const productHref='/demo-product/'+product.id+'?kind=retail&from=pool&pool='+pool.id
+      return <article className={'home-preview-pool-product native-preview-pool-item native-preview-panel '+(q?'is-selected':'')} key={product.id}>
+       <Link href={productHref} className="home-preview-pool-product-image" aria-label={t('Product Details: ','পণ্যের বিস্তারিত: ')+t(product.name,product.nameBn)}>
+        <PoolProductPhoto product={product}/></Link>
+       <div className="native-preview-pool-item-copy">
+        <div className="native-preview-split native-preview-item-name"><h3>{t(product.name,product.nameBn)}</h3><small>{product.unit}</small></div>
+        <div className="native-preview-item-price"><strong>{cash(tiers.current)}</strong><s>{cash(product.oldPrice)}</s></div>
+        <p className="native-preview-accent">{t('Potential saving','সম্ভাব্য সাশ্রয়')} {cash(Math.max(0,product.oldPrice-tiers.current))} / {product.unit}</p>
+        <p className="native-preview-muted">{t('Next tier','পরবর্তী স্তর')}: {cash(tiers.next)} · {n(pool.target)} {t('households','পরিবার')}</p>
+        <div className="native-preview-split native-preview-item-bottom">
+         <Link className="native-preview-product-link" href={productHref}>{t('Product Details','পণ্যের বিস্তারিত')} →</Link>
+         <div className="native-preview-quantity" role="group" aria-label={t('Quantity for ','পরিমাণ: ')+t(product.name,product.nameBn)}>
+          <button type="button" disabled={q===0} aria-label={'Decrease '+product.name} onClick={()=>changeQty(product.id,-1)}>−</button>
+          <output>{n(q)}</output>
+          <button type="button" disabled={q>=20} aria-label={'Increase '+product.name} onClick={()=>changeQty(product.id,1)}>＋</button>
+         </div>
+        </div>
+       </div>
+      </article>
+     })}
     </div>
    </section>
-   <section className="home-preview-pool-note market-ui-card">
-    <h2>{t('How participation works','কীভাবে অংশগ্রহণ করবেন')}</h2>
-    <p>{t('Community members can join an eligible Pool when real availability, savings tiers and a deadline are published.',
-     'বাস্তব পুলে পণ্যের প্রাপ্যতা, সাশ্রয়ের ধাপ ও শেষ সময় প্রকাশ হলে যোগ্য কমিউনিটির সদস্যরা অংশ নিতে পারবেন।')}</p>
-    <p>{t('Joining and payment are disabled for this preview. The household counts, prices and dates above are examples only.',
-     'এই প্রিভিউতে যোগদান ও পেমেন্ট বন্ধ। উপরের পরিবারের সংখ্যা, দাম ও তারিখ শুধু নমুনা।')}</p>
+
+   <section className="native-preview-panel native-preview-pool-tiers">
+    <h2>{t('How Pool prices unlock','পুলের দাম কীভাবে কমে')}</h2>
+    <div className="native-preview-tier-grid">
+     {[
+      {title:t('Starting total','শুরুর মোট মূল্য'),value:starting},
+      {title:t('Current Pool total','বর্তমান পুল মূল্য'),value:current},
+      {title:t('Next-tier total','পরবর্তী স্তরের মূল্য'),value:next}
+     ].map((tier,i)=><div key={i} className={'native-preview-tier '+(i===1?'is-current':'')}>
+      <small>{tier.title}</small><strong>{units?cash(tier.value):'—'}</strong>
+     </div>)}
+    </div>
+    <p className="native-preview-hint">{units?t('Illustrative totals for selected quantities. All final prices require qualification and confirmation.','নির্বাচিত পরিমাণের নমুনা দাম। চূড়ান্ত মূল্য যাচাই ও নিশ্চিতকরণ সাপেক্ষ।'):
+     t('Select one or more products above to compare starting, current and next-tier prices.','শুরুর, বর্তমান ও পরবর্তী দামের তুলনায় ওপর থেকে এক বা একাধিক পণ্য বেছে নিন।')}</p>
    </section>
+
+   <section className="native-preview-panel native-preview-pool-basket">
+    <div className="native-preview-split">
+     <h2>{t('Your Pool basket','আপনার পুলের বাজার')}</h2>
+     <small>{n(selected.length)} {t('products','পণ্য')} · {n(units)} {t('units','ইউনিট')}</small>
+    </div>
+    {[
+     [t('Market retail total','খুচরা বাজারমূল্য'),retail],
+     [t('Current estimated Pool total','বর্তমান পুলের আনুমানিক মূল্য'),current],
+     [t('Potential savings','সম্ভাব্য সাশ্রয়'),Math.max(0,retail-current)],
+     [t('Total at next tier','পরবর্তী স্তরে মোট মূল্য'),next]
+    ].map(([label,value],i)=><div className="native-preview-split native-preview-basket-row" key={String(label)}>
+     <span>{label}</span><strong className={i===1?'native-preview-total':''}>{cash(Number(value))}</strong>
+    </div>)}
+    <p className="native-preview-hint">{t('Excludes delivery fees. No real stock, booking or payment occurs in demo.','ডেলিভারি চার্জ বাদে। ডেমোতে বাস্তব স্টক, বুকিং বা পেমেন্ট হয় না।')}</p>
+   </section>
+
+   <section className="native-preview-panel native-preview-pool-before">
+    <h2>{t('Before you join','যোগদানের আগে জানুন')}</h2>
+    <p>{t('Select only what you need. The final price, availability, deadline and delivery rules must be confirmed.','শুধু প্রয়োজনীয় পণ্য বেছে নিন। চূড়ান্ত দাম, প্রাপ্যতা, সময়সীমা ও ডেলিভারি নিশ্চিত করতে হবে।')}</p>
+    <p>{t('No order, Pool commitment or payment is created from this preview.','এই প্রিভিউ থেকে কোনো অর্ডার, পুলে যোগদান বা পেমেন্ট তৈরি হয় না।')}</p>
+   </section>
+   <div className="native-preview-pool-review" role="region" aria-label={t('Pool selection review','পুল নির্বাচন পর্যালোচনা')}>
+    <div><small>{n(units)} {t('units selected','টি ইউনিট নির্বাচিত')}</small><strong>{cash(current)}</strong></div>
+    <button type="button" disabled={!units} onClick={()=>setStatus(t('Your Pool selection is saved for this on-screen demo only. No real commitment or payment.','নির্বাচনটি শুধু ডেমোর জন্য। কোনো বাস্তব যোগদান বা পেমেন্ট হয়নি।'))}>
+     {t('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো')} →</button>
+   </div>
+   {status&&<p role="status" className="native-preview-status">{status}</p>}
   </div>
   <PublicFooter storefront language={language}/>
  </main>
