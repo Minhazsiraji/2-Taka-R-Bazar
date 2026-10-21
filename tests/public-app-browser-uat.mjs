@@ -324,7 +324,8 @@ try{
    assert.equal(await cards.count(),count,'Retain locked empty card footprint')
    for(const card of await cards.all()){
     assert.equal(await card.getAttribute('data-empty'),'true')
-    assert.ok(await card.evaluate(n=>getComputedStyle(n).filter.includes('blur')))
+    assert.equal(await card.evaluate(n=>getComputedStyle(n).filter),'none','Keep the locked card rim crisp')
+    assert.ok(await card.locator('img').first().evaluate(n=>getComputedStyle(n).filter.includes('blur')),'Blur missing image content inside the unchanged holder')
     assert.equal(await card.getAttribute('inert'),'')
    }
   }

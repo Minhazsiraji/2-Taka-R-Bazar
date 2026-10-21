@@ -73,7 +73,7 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
       <div className="home-preview-product-price native-preview-large-price"><strong data-empty={deal.price===null||undefined}>{money(group?.current.price??deal.price)}</strong></div>
       <p className="native-preview-muted" data-empty={product.oldPrice===null||undefined}>{t('Market retail','বাজারের খুচরা দাম')}: {money(product.oldPrice)}</p>
       <p className="native-preview-accent" data-empty={product.oldPrice===null||deal.price===null||undefined}>{t('Potential saving','সম্ভাব্য সাশ্রয়')}: {money(Math.max(0,(product.oldPrice??0)-(group?.current.price??deal.price??0)))}</p>
-      {group?.next&&<p className="native-preview-muted">{t('Next tier at','পরবর্তী স্তর')} {n(group.next.minimum)} {t('people','জন')}: {money(group.next.price)} · {n(Math.max(0,group.next.minimum-deal.joined))} {t('more needed','জন আরও প্রয়োজন')}</p>}
+      {group?.next&&<p className="native-preview-muted" data-empty={group.next.price===null||undefined}>{t('Next tier at','পরবর্তী স্তর')} {n(group.next.minimum)} {t('people','জন')}: {money(group.next.price)} · {n(Math.max(0,group.next.minimum-deal.joined))} {t('more needed','জন আরও প্রয়োজন')}</p>}
      </DemoPanel>
      {group&&<DemoPanel>
       <h2>{t('Group Deal price tiers','গ্রুপ ডিলের দামের ধাপ')}</h2>
@@ -88,7 +88,7 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
      </DemoPanel>}
      <DemoPanel>
       <h2>{t('Community progress','কমিউনিটির অগ্রগতি')}</h2>
-      <div className="native-preview-split native-preview-small-row"><strong>👥 {n(deal.joined)}/{n(deal.target)} {t('joined','যুক্ত')}</strong><span>◷ {t('Ends in','শেষ হবে')} {n(deal.days??0)} {t('day(s)','দিনে')}</span></div>
+      <div className="native-preview-split native-preview-small-row"><strong>👥 {n(deal.joined)}/{n(deal.target)} {t('joined','যুক্ত')}</strong><span data-empty={deal.days===null||undefined}>◷ {t('Ends in','শেষ হবে')} {n(deal.days??0)} {t('day(s)','দিনে')}</span></div>
       <div className="native-preview-progress" role="progressbar" aria-label={t('Group participation','গ্রুপের অংশগ্রহণ')}
        aria-valuemin={0} aria-valuemax={deal.target} aria-valuenow={deal.joined}><span style={{width:(deal.target>0?Math.min(100,deal.joined/deal.target*100):0)+'%'}}/></div>
       <p className="native-preview-muted">{t('Qualified buyers and closing rules determine the final price. Below-minimum groups expire without payment.','যোগ্য ক্রেতা ও সময়সীমার নিয়মে চূড়ান্ত দাম নির্ধারিত হবে। ন্যূনতম সদস্য না হলে টাকা ছাড়া গ্রুপ শেষ হবে।')}</p>

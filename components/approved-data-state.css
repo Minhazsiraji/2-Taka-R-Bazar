@@ -1,3 +1,4 @@
-/* Only unavailable data is blurred. Locked colors, geometry, rims and holders are untouched. */
-[data-approved-data] [data-empty="true"]{filter:blur(2px);opacity:.42;user-select:none;pointer-events:none}
+/* Missing values only: keep the locked card rims, colors, buttons and image holders crisp. */
+[data-approved-data] [data-empty="true"]:not(article),
+[data-approved-data] article[data-empty="true"] :is(h3,.app-card-preview-meta,.app-card-preview-deal-stats,.app-card-preview-stock,.app-card-preview-active){filter:blur(2px);opacity:.42;user-select:none;pointer-events:none}
 [data-approved-data] article[data-empty="true"]{pointer-events:none}

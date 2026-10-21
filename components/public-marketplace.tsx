@@ -125,7 +125,7 @@ export function PublicMarketplace({areas,offers,vendorProducts=[],authenticated=
   <MobileMarketplaceHome areas={areas} selectedArea={area} onChooseArea={selectArea}
    onDetectArea={useLocation} detectingArea={gpsBusy} offers={offers}
    products={featured} vendorProducts={vendorProducts} publishedProducts={publishedProducts} pools={heroPools} language={language} demoMode={demoMode} previewCards={previewCards} search={search} savings={savings}/>
-  <div className="market-legacy-home">
+  {!previewCards&&<div className="market-legacy-home">
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">
    <div className="market-location-panel">
     <div className="market-location-intro"><strong>📍 {t('Find savings near your community','আপনার এলাকায় কম দামের অফার খুঁজুন')}</strong>
@@ -215,7 +215,7 @@ export function PublicMarketplace({areas,offers,vendorProducts=[],authenticated=
   </section>
   <PublishedProductsSection initial={publishedProducts} language={language}/>
   <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={selectArea} language={language} demoMode={demoMode}/>
-  </div>
+  </div>}
   <PublicFooter storefront language={language}/>
  </>
 }
