@@ -2,6 +2,7 @@
 import {redirect} from 'next/navigation'
 import {revalidatePath} from 'next/cache'
 import {requireAdmin,requireSuperAdmin,requireOnboardedUser} from '@/lib/auth'
+import {MANUAL_PAYMENT_DESTINATIONS} from '@/lib/manual-payment-destinations'
 
 const input=(f:FormData,k:string)=>String(f.get(k)??'').trim()
 const uuid=(s:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s)
@@ -50,6 +51,54 @@ export async function saveVendorOfferDraft(fd:FormData){
  revalidatePath(draftRoute)
  revalidatePath('/admin/easy-business')
  redirect(draftRoute+'?notice='+encodeURIComponent('Vendor offer draft saved. No stock, live offer, payment or financial record created.'))
+}
+
+/**
+ * Link the payment destinations already published to the owner on
+ * /super-admin/payment-setup. Each owner's click activates only the chosen
+ * canonical account for confirmed customer bookings, not an open payment
+ * gateway or a Treasury receipt. Never import synthetic Treasury accounts.
+ */
+export async function setExistingPaymentRecipientActive(fd:FormData){
+ const {supabase,user}=await requireSuperAdmin()
+ const {data:isOwner,error:ownerError}=await supabase.rpc('is_current_platform_owner')
+ if(ownerError||!isOwner)redirectError(destinationsRoute,'Only the verified platform owner can approve receiving accounts.')
+ const method=input(fd,'method'),operation=input(fd,'operation')
+ if(!['bkash','bank'].includes(method)||!['enable','disable'].includes(operation))
+  redirectError(destinationsRoute,'Choose a valid canonical recipient and enable/disable decision.')
+ const existing=method==='bkash'?{
+  method:'bkash',account_name:MANUAL_PAYMENT_DESTINATIONS.bkash.name,
+  account_number:MANUAL_PAYMENT_DESTINATIONS.bkash.accountNumber,
+  bank_name:null,branch_name:null,
+ }:{
+  method:'bank',account_name:MANUAL_PAYMENT_DESTINATIONS.bank.accountHolder,
+  account_number:MANUAL_PAYMENT_DESTINATIONS.bank.accountNumber,
+  bank_name:MANUAL_PAYMENT_DESTINATIONS.bank.institution,
+  branch_name:MANUAL_PAYMENT_DESTINATIONS.bank.branch,
+ }
+ // Fail closed on conflicts, rather than silently overwriting any historic
+ // owner-recipient or activating a different number for this method.
+ const {data:rows,error:queryError}=await supabase.from('pilot_payment_recipients')
+  .select('id,method,account_name,account_number,bank_name,branch_name,configured_by')
+  .eq('method',method)
+ if(queryError)redirectError(destinationsRoute,'Recipient activation is not available until the secure database migration is deployed.')
+ if((rows??[]).length>1)redirectError(destinationsRoute,'Multiple recipients exist for this method. Resolve the conflict with Admin before activation.')
+ const row=rows?.[0]
+ if(row&&(row.account_name!==existing.account_name||row.account_number!==existing.account_number||
+  row.bank_name!==existing.bank_name||row.branch_name!==existing.branch_name))
+  redirectError(destinationsRoute,'Stored payee differs from the existing verified payment setup. No activation was changed.')
+ const active=operation==='enable'
+ if(!row&&!active)
+  redirect(destinationsRoute+'?notice='+encodeURIComponent('Already disabled. No account created.'))
+ const result=row
+  ?await supabase.from('pilot_payment_recipients').update({active}).eq('id',row.id).eq('configured_by',user.id).select('id').single()
+  :await supabase.from('pilot_payment_recipients').insert({...existing,active,configured_by:user.id}).select('id').single()
+ if(result.error||!result.data)redirectError(destinationsRoute,'Payment recipient status could not be saved. Check verified ownership and deployment.')
+ revalidatePath(destinationsRoute)
+ revalidatePath('/pilot-bookings')
+ redirect(destinationsRoute+'?notice='+encodeURIComponent(active
+  ?'Existing '+(method==='bkash'?'bKash':'City Bank')+' receiving account enabled for staff-confirmed pilot bookings only.'
+  :'Existing '+(method==='bkash'?'bKash':'City Bank')+' receiving account disabled for future payment instructions.'))
 }
 
 export async function savePilotPaymentRecipient(fd:FormData){
