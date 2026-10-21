@@ -19,7 +19,7 @@ test('English storefront is default and persistent language switching applies th
  assert.match(header,/market-single-language/)
  assert.match(market,/language=\{language\}/)
  assert.match(lower,/chooseText\(language,en,bn\)/)
- assert.match(header,/কমিউনিটিতে যোগ দিন/)
+ assert.match(header,/পুলে যোগ দিন/)
  assert.match(lower,/সাধারণ প্রশ্নোত্তর/)
 })
 test('banner removed and community panel compact, with GPS/manual fallback',()=>{

@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import {usePathname} from 'next/navigation'
-import {useState} from 'react'
+import {useEffect,useRef,useState} from 'react'
+import {signOut} from '@/app/actions/auth'
 import { BrandLogo } from '@/components/brand-logo'
 import { NotificationBell } from '@/components/notification-bell'
 import { HeaderActionIcon } from '@/components/header-action-icon'
@@ -15,38 +16,37 @@ type HeaderProps={
  actionHref?:string;actionLabel?:string;mobileActionLabel?:string;storefront?:boolean
  searchValue?:string;onSearchChange?:(value:string)=>void
  language?:MarketplaceLanguage;onLanguageChange?:(language:MarketplaceLanguage)=>void
- shopBaseHref?:string;browseHref?:string
+ shopBaseHref?:string;browseHref?:string;authenticated?:boolean
 }
-const storefrontNav=[
- {href:'#deals',label:'Group Deals',bn:'গ্রুপ ডিল'},
- {href:'#exclusive-products',label:'Our Products',bn:'আমাদের পণ্য'},
- {href:'#popular-nearby',label:'Popular Nearby',bn:'জনপ্রিয়'},
- {href:'#how-it-works',label:'How It Works',bn:'যেভাবে কাজ করে'},
- {href:'#our-communities',label:'Our Areas',bn:'এলাকা'},
- {href:'#customer-experiences',label:'Reviews',bn:'মতামত'},
- {href:'/cart',label:'Cart',bn:'কার্ট'},
- {href:'/money',label:'My Money',bn:'আমার অর্থ'},
-] as const
-
-const approvedMobileNav=[
- {href:'#mobile-deals',label:'Group Deals',bn:'গ্রুপ ডিল'},
- {href:'#mobile-exclusive',label:'Exclusive Products',bn:'এক্সক্লুসিভ পণ্য'},
- {href:'#mobile-pools',label:'Community Pools',bn:'কমিউনিটি পুল'},
- {href:'#mhome-community',label:'Your community',bn:'আপনার এলাকা'},
- {href:'/cart',label:'Cart',bn:'কার্ট'},
- {href:'/account/orders',label:'My Orders',bn:'আমার অর্ডার'},
+const shoppingLinks=[
+ {href:'/#mobile-deals',label:'Group Deals',bn:'গ্রুপ ডিল'},
+ {href:'/products',label:'Exclusive Products',bn:'এক্সক্লুসিভ পণ্য'},
+ {href:'/pool',label:'Community Pools',bn:'কমিউনিটি পুল'},
+ {href:'/#your-community',label:'Your community',bn:'আপনার এলাকা'},
  {href:'/about',label:'How it works',bn:'যেভাবে কাজ করে'},
+ {href:'/faq',label:'FAQ',bn:'প্রশ্নোত্তর'},
 ] as const
 
 export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefront=false,
  searchValue='',onSearchChange,language='en',onLanguageChange,
- shopBaseHref='',browseHref,mobileActionLabel}:HeaderProps){
+ mobileActionLabel,authenticated}:HeaderProps){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const compactActionLabel=mobileActionLabel??(actionHref==='/account'?t('Account','অ্যাকাউন্ট'):actionHref==='/signup'?t('Sign up','নিবন্ধন'):actionHref==='/'?t('Home','হোম'):actionLabel)
  const actionCopy=<><span className="public-header-action-desktop" aria-hidden="true">{actionLabel}</span><span className="public-header-action-mobile" aria-hidden="true">{compactActionLabel}</span></>
- const shopHref=(href:string)=>href.startsWith('#')?shopBaseHref+href:href
  const [menuOpen,setMenuOpen]=useState(false)
  const pathname=usePathname()
+ const [signedIn,setSignedIn]=useState(authenticated??false)
+ const accountRef=useRef<HTMLDetailsElement>(null)
+ useEffect(()=>{
+  if(authenticated!==undefined){setSignedIn(authenticated);return}
+  const controller=new AbortController()
+  fetch('/api/notifications/status',{cache:'no-store',signal:controller.signal})
+   .then(response=>response.ok?response.json():null)
+   .then(status=>{if(status&&!controller.signal.aborted)setSignedIn(status.authenticated===true)})
+   .catch(()=>{})
+  return()=>controller.abort()
+ },[authenticated,pathname])
+ useEffect(()=>{setMenuOpen(false);accountRef.current?.removeAttribute('open')},[pathname])
  if(storefront)return <header className="public-glass-header market-flat-header" lang={language} aria-label="2-TAKA-R-BAZAR public shop header">
   <div className="market-header-inner">
    <Link href="/" className="market-brand-lockup" aria-label="2-TAKA-R-BAZAR home">
@@ -57,15 +57,19 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
      <small lang="bn">{SITE_TAGLINE_BN}</small>
     </span>
    </Link>
-   <div className="market-header-search">
-    {!browseHref&&<label htmlFor="market-header-product-search" className="sr-only">{t('Search groceries and products','পণ্য ও বাজার খুঁজুন')}</label>}
-    <span aria-hidden="true" className="market-search-icon">⌕</span>
-    {browseHref?<Link href={browseHref} className="market-header-browse">{t('Browse groceries and products','পণ্য ও বাজার দেখুন')}</Link>:<input id="market-header-product-search" type="search" value={searchValue}
-     onChange={e=>onSearchChange?.(e.target.value)}
-     onKeyDown={e=>{if(e.key==='Enter')document.getElementById('deals')?.scrollIntoView({behavior:'smooth',block:'start'})}}
-     placeholder={t('Search rice, oil, groceries…','চাল, ডাল, তেল, বাজার খুঁজুন…')} autoComplete="off" enterKeyHint="search"/>}
-   </div>
+   <form className="market-header-search" action="/" role="search" onSubmit={onSearchChange?e=>{e.preventDefault();document.getElementById('mobile-deals')?.scrollIntoView({behavior:'smooth',block:'start'})}:undefined}>
+    <label htmlFor="market-header-product-search" className="sr-only">{t('Search groceries and products','পণ্য ও বাজার খুঁজুন')}</label>
+    <span aria-hidden="true" className="market-search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></span>
+    <input id="market-header-product-search" name="q" type="search"
+     {...(onSearchChange?{value:searchValue,onChange:(e:React.ChangeEvent<HTMLInputElement>)=>onSearchChange(e.target.value)}:{defaultValue:''})}
+     placeholder={t('Search rice, oil, groceries…','চাল, ডাল, তেল, বাজার খুঁজুন…')} autoComplete="off" enterKeyHint="search"/>
+    <button className="public-search-submit" type="submit" aria-label={t('Search','খুঁজুন')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>
+   </form>
    <div className="market-header-actions">
+    <Link href="/cart" className="market-header-quick-link market-header-quick-cart" aria-label={t('Cart','কার্ট')} title={t('Cart','কার্ট')}>
+     <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4h3l2.5 12h12l2.5-9H6M8 21h.01M18 21h.01"/></svg>
+     <span>{t('Cart','কার্ট')}</span>
+    </Link>
     <div className="market-language-toggle" role="group" aria-label="Language / ভাষা">
      <button type="button" className="market-single-language" onClick={()=>onLanguageChange?.(language==='bn'?'en':'bn')}
       aria-label={language==='bn'?'Switch to English':'বাংলায় পরিবর্তন করুন'}
@@ -73,22 +77,31 @@ export function PublicHeader({actionHref='/login',actionLabel='Sign in',storefro
     </div>
     <ThemeToggle/>
     <NotificationBell/>
-    <Link href={actionHref} className="public-header-action market-header-account btn-secondary" aria-label={actionLabel} title={actionLabel}><span className="market-header-account-icon"><HeaderActionIcon kind="profile"/></span><span className="market-header-account-copy">{actionCopy}</span></Link>
+    <details className="public-account-menu" ref={accountRef} onKeyDown={e=>{if(e.key==='Escape')accountRef.current?.removeAttribute('open')}}>
+     <summary className="public-account-trigger" aria-label={t('Account menu','অ্যাকাউন্ট মেনু')} title={t('Account','অ্যাকাউন্ট')}><HeaderActionIcon kind="profile"/></summary>
+     <nav className="public-account-panel" aria-label={t('Account navigation','অ্যাকাউন্ট নেভিগেশন')}>
+      {signedIn?<>
+       <Link href="/account">{t('My Account','আমার অ্যাকাউন্ট')}</Link>
+       <Link href="/account/orders">{t('My Orders','আমার অর্ডার')}</Link>
+       <Link href="/money">{t('My Money','আমার টাকা')}</Link>
+       <Link href="/account/savings">{t('My Savings','আমার সাশ্রয়')}</Link>
+       <Link href="/profile">{t('Settings','সেটিংস')}</Link>
+       <form action={signOut}><button type="submit">{t('Sign out','সাইন আউট')}</button></form>
+      </>:<>
+       <Link href="/login">{t('Sign in','সাইন ইন')}</Link>
+       <Link href="/signup">{t('Sign up','নিবন্ধন')}</Link>
+      </>}
+     </nav>
+    </details>
     <button type="button" className="market-mobile-menu-button" aria-expanded={menuOpen} aria-controls="market-mobile-navigation"
      aria-label={menuOpen?t('Close menu','মেনু বন্ধ করুন'):t('Open menu','মেনু খুলুন')}
-     onClick={()=>setMenuOpen(open=>!open)}><span aria-hidden="true">{menuOpen?'✕':'☰'}</span></button>
+     onClick={()=>setMenuOpen(open=>!open)}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d={menuOpen?'m6 6 12 12M6 18 18 6':'M4 6h16M4 12h16M4 18h16'}/></svg></button>
    </div>
   </div>
-  <nav className="market-header-nav market-desktop-nav" aria-label={t('Shop and information','দোকান ও তথ্য')}>
-   <div className="market-header-nav-inner">
-    {storefrontNav.map(item=><a key={item.href} href={shopHref(item.href)}>{t(item.label,item.bn)}</a>)}
-    <Link href="/signup" className="market-header-join">{t('Join Community','কমিউনিটিতে যোগ দিন')}</Link>
-   </div>
-  </nav>
+  {pathname==='/login'&&<Link href="/signup" className="public-login-join">{t('Join the pool','পুলে যোগ দিন')}</Link>}
   {menuOpen&&<nav id="market-mobile-navigation" className="market-mobile-nav-panel"
     aria-label={t('Mobile navigation','মোবাইল মেনু')} onKeyDown={e=>{if(e.key==='Escape')setMenuOpen(false)}}>
-   {(pathname==='/'?approvedMobileNav:storefrontNav).map(item=><a key={item.href} href={shopHref(item.href)} onClick={()=>setMenuOpen(false)}>{t(item.label,item.bn)} <span aria-hidden="true">↗</span></a>)}
-   <Link href="/signup" onClick={()=>setMenuOpen(false)}>{t('Join Community','কমিউনিটিতে যোগ দিন')} <span aria-hidden="true">↗</span></Link>
+   {shoppingLinks.map(item=><Link key={item.href} href={item.href} onClick={()=>setMenuOpen(false)}>{t(item.label,item.bn)} <span aria-hidden="true">↗</span></Link>)}
   </nav>}
  </header>
  return <header className="public-glass-header public-compact-header flex items-center justify-between gap-3">

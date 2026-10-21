@@ -37,7 +37,7 @@ test('all five storefront PR scopes are represented with safe publication gates'
  assert.ok(showcaseRoute.includes('ShowcaseProductGallery'))
  assert.ok(productPub.includes('get_public_own_product_showcase'))
  // #59 guest-first menu, #60 featured slider and design-locked gallery
- assert.ok(header.includes('market-header-nav'))
+ assert.ok(header.includes('market-mobile-navigation'))
  assert.ok(pool.includes('market-featured-pool-body'))
  // #61 real, narrow public Pool projection
  assert.ok(home.includes('get_public_featured_pools'))
