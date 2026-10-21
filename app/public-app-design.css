@@ -323,3 +323,15 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-deal-list{grid-template-columns:repeat(3,minmax(0,1fr))!important}
 body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .mhome .mhome-exclusive-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
 }
+
+
+/* Verified 320px touch-target safety on the approved single-row mobile header.
+   Increase interaction boxes only; preserve brand, icons, native-style placement. */
+@media(max-width:767px){
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header
+ :is(.market-single-language,.theme-toggle,.customer-notification-bell){
+  width:44px!important;min-width:44px!important;max-width:44px!important;
+  height:44px!important;min-height:44px!important;max-height:44px!important;
+  flex-basis:44px!important;padding:0!important;
+ }
+}
