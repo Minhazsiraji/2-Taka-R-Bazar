@@ -33,7 +33,8 @@ export function productFromPublicSources(id:string,offers:PublicLiveOffer[],seo:
  const name=seo?.title_en||showcase?.name||first?.product_name
  if(!name)return null
  const image=seo?.image_url||showcase?.image_url||first?.image_url||null
- const retail=validMoney(first?.reference_price)??null
+ const references=[...new Set(offers.map(o=>validMoney(o.reference_price)).filter((x):x is number=>x!==null))]
+ const retail=references.length===1?references[0]:null
  return {id,name,nameBn:seo?.title_bn||showcase?.name_bn||first?.product_name_bn||name,
   sku:seo?.sku||null,unit:seo?.package_size||showcase?.package_size||first?.package_size||'',
   category:seo?.category||showcase?.category||first?.category||'',
