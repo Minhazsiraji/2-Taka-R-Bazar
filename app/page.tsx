@@ -9,6 +9,7 @@ import {demoStorefrontEnabled,DEMO_AREAS,DEMO_OFFERS,DEMO_SHOWCASE} from '@/lib/
 import {PublicMarketplace} from '@/components/public-marketplace'
 import {loadPublishedCatalogPage} from '@/lib/published-product-catalog-feed'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
+import type {PublicVendorBookingProduct} from '@/lib/public-vendor-booking'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {BUSINESS_CONTACT_EMAIL,SUPPORT_CONTACT_EMAIL,SITE_DESCRIPTION,SITE_NAME,SITE_TAGLINE_EN,SITE_URL} from '@/lib/site'
 
@@ -24,19 +25,21 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  const storedLanguage=cookieStore.get(STOREFRONT_LANGUAGE_COOKIE)?.value
  const initialLanguage=languageFromPreference(storedLanguage)
  const supabase=await createClient()
- const [verifiedSession,areasRes,offersRes,featuredRes,poolsRes,publishedProducts]=await Promise.all([
+ const [verifiedSession,areasRes,offersRes,featuredRes,poolsRes,publishedProducts,vendorProductsResult]=await Promise.all([
   supabase.auth.getUser(),
   supabase.rpc('get_public_storefront_areas'),
   supabase.rpc('get_public_storefront_offers',{p_community_id:null}),
   supabase.rpc('get_public_own_product_showcase',{p_product_id:null,p_featured_only:true}),
   supabase.rpc('get_public_featured_pools',{p_community_id:null}),
   loadPublishedCatalogPage(),
+  supabase.rpc('get_public_pilot_vendor_catalog',{p_product_id:null}),
  ])
  const authenticated=Boolean(verifiedSession.data.user?.id)
  const savings=await getHomeSavingsSummary(authenticated)
  const realAreas=(areasRes.data??[]) as StorefrontArea[]
  const realOffers=await withCommerceOffers((offersRes.data??[]) as StorefrontOffer[])
  const realFeatured=(featuredRes.data??[]) as ShowcaseProduct[]
+ const vendorProducts=(vendorProductsResult.data??[]) as PublicVendorBookingProduct[]
  // Seed presentation data only when Preview has no public active offers; never write fixtures to the DB.
  const demoMode=demoStorefrontEnabled() && realOffers.length===0
  const areas=demoMode ? DEMO_AREAS : realAreas
@@ -59,6 +62,6 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
   {/* English is the first-visit default. A previously selected BN/EN cookie wins on reload. */}
-  <PublicMarketplace initialSearch={typeof q==='string'?q.slice(0,200):''} initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} publishedProducts={publishedProducts} savings={savings} demoMode={demoMode} previewCards={demoStorefrontEnabled()} howLabelBn="কীভাবে কাজ করে"/>
+  <PublicMarketplace initialSearch={typeof q==='string'?q.slice(0,200):''} initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} publishedProducts={publishedProducts} vendorProducts={vendorProducts} savings={savings} demoMode={demoMode} previewCards={demoStorefrontEnabled()} howLabelBn="কীভাবে কাজ করে"/>
  </main>
 }
