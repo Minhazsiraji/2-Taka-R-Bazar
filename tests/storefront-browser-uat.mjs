@@ -96,7 +96,7 @@ try{
   if(width<768)assert.equal(await dock.evaluate(e=>getComputedStyle(e).position),'fixed')
   await assertMobileDock(page,width)
   const links=await page.locator('footer a[href^="mailto:"]').evaluateAll(es=>es.map(e=>e.getAttribute('href')))
-  assert.deepEqual(links,['mailto:business@2takarbazar.com','mailto:support@2takarbazar.com','mailto:business@agentsiraji.com'])
+  assert.deepEqual(links,['mailto:business@2takarbazar.com','mailto:support@2takarbazar.com','mailto:business@2takarbazar.com','mailto:business@agentsiraji.com'])
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true)
   await assertApprovedPoolLayout(page,width)
   if(width===393)await page.locator('.mhome-pool-card').first().screenshot({path:'/tmp/2tbr-review-mobile-393-en.png'})
