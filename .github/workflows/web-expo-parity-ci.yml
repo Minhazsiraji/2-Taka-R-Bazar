@@ -5,6 +5,7 @@ on:
     branches:
       - feat/web-parity-approved-expo-ui-v1
       - fix/product-image-backing
+      - fix/locked-product-card-parity
   workflow_dispatch:
 
 permissions:

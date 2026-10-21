@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import {VendorProductCard} from '@/components/vendor-product-card'
 import {PreviewHomeCards} from '@/components/home-card-preview'
 import {LivePreviewHomeCards} from '@/components/live-preview-home-cards'
 import {hasPublishedLiveContent} from '@/lib/approved-live-detail-data'
@@ -311,7 +312,9 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
    <SectionHeading 
     title={t('Exclusive Products','এক্সক্লুসিভ পণ্য')} description={t('Handpicked essentials, great everyday value.','প্রতিদিনের প্রয়োজনীয় পণ্য, ভালো দাম।')}
     href="/products" viewText={t('View all','সব দেখুন')}/>
-   {previewCards?(hasLivePreview?<LivePreviewHomeCards section="exclusive" language={language} search={search} selectedArea={selectedArea} data={livePreviewData}/>:<PreviewHomeCards section="exclusive" language={language} search={search}/>): visibleExclusive.length?<div className="mhome-exclusive-grid">{visibleExclusive.map(p=>{
+   {previewCards&&vendorProducts.length===0?(hasLivePreview?<LivePreviewHomeCards section="exclusive" language={language} search={search} selectedArea={selectedArea} data={livePreviewData}/>:<PreviewHomeCards section="exclusive" language={language} search={search}/>): visibleExclusive.length?<div className="mhome-exclusive-grid app-card-preview app-card-preview-exclusive" data-vendor-cards={vendorProducts.length?true:undefined}>{visibleExclusive.map(p=>{
+    const vendor=p.vendorOnDemand?vendorProducts.find(v=>v.product_id===p.id):undefined
+    if(vendor)return <VendorProductCard key={p.id} product={vendor} language={language}/>
     const href=p.href??(p.demo?'/demo-product/'+p.id:'/products/'+p.id)
     const canCart=!p.demo&&p.stock!==0&&Boolean(p.commerceId&&p.available&&selectedArea&&p.price)
     const saving=p.oldPrice&&p.price&&p.oldPrice>p.price&&!p.demo?p.oldPrice-p.price:null

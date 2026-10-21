@@ -72,3 +72,10 @@ body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public
 .home-preview-product-detail .market-demo-detail-image img{display:block;width:100%;height:100%;max-height:430px;object-fit:contain}
 .home-preview-product-detail .home-preview-product-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
 .home-preview-product-detail .home-preview-product-actions>:is(a,button){min-height:44px;max-width:100%;white-space:normal}
+
+/* Real vendor listings share the locked Preview shell, without a separate photo backing. */
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .vendor-product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .app-card-preview.app-card-preview .vendor-product-card .app-card-preview-product-image{background:transparent!important;box-shadow:none!important;aspect-ratio:auto!important;height:auto!important;min-height:138px!important}
+body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .app-card-preview.app-card-preview .vendor-product-card img{object-fit:contain!important}
+.vendor-product-photo-fallback{display:flex;align-items:center;justify-content:center;height:100%;padding:8px;text-align:center;font-size:11px;color:var(--public-muted)}
+@media(min-width:1024px){body.site-glass-root main.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat.public-marketplace-flat .vendor-product-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}

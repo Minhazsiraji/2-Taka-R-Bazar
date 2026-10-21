@@ -90,13 +90,26 @@ try{
     const rules=await page.evaluate(()=>{const n=document.querySelector('main.public-marketplace-flat');const found=[];function scan(rules,url){for(const r of rules){if(r.cssRules)scan(r.cssRules,url);else if(r.selectorText&&n.matches(r.selectorText)&&r.style.background)found.push({url,selector:r.selectorText,bg:r.style.background,priority:r.style.getPropertyPriority('background')})}}for(const sheet of document.styleSheets){try{scan(sheet.cssRules,sheet.href)}catch{}}return {vars:getComputedStyle(n).getPropertyValue('--public-bg'),rules:found}});console.log(JSON.stringify(rules,null,2));await page.screenshot({path:out+'/debug-dark.png',fullPage:true})
    }
    assert.ok(geometry.scroll<=width+1,`${route} overflow at ${width}/${theme}/${language}: ${JSON.stringify(geometry)}`)
-   if(route==='/products'){
-    const photoFrames=await page.locator('.mhome-exclusive-image').evaluateAll(nodes=>nodes.map(frame=>{
+   if(route==='/'||route==='/products'){
+    const photoFrames=await page.locator('.vendor-product-card .app-card-preview-product-image').evaluateAll(nodes=>nodes.map(frame=>{
      const image=frame.querySelector('img');const f=getComputedStyle(frame);const i=getComputedStyle(image)
      const r=frame.getBoundingClientRect();const p=frame.closest('article').getBoundingClientRect()
      return {background:f.backgroundColor,shadow:f.boxShadow,fit:i.objectFit,left:r.left,right:r.right,parentLeft:p.left,parentRight:p.right}
     }))
     assert.equal(photoFrames.length,2,'Verify real vendor-card shells, not just preview fixture cards')
+    const actions=await page.locator('[data-vendor-cards] .app-card-preview-actions').evaluateAll(nodes=>nodes.map(n=>{
+     const links=[...n.querySelectorAll('a')].map(a=>{const r=a.getBoundingClientRect();return {width:r.width,height:r.height,top:r.top,scroll:a.scrollWidth,client:a.clientWidth,href:a.getAttribute('href')}})
+     return links
+    }))
+    for(const pair of actions){
+     assert.equal(pair.length,2)
+     assert.ok(Math.abs(pair[0].width-pair[1].width)<1,'Balanced action widths')
+     assert.ok(Math.abs(pair[0].top-pair[1].top)<1,'Actions align in one row')
+     for(const action of pair){assert.ok(action.height>=38);assert.ok(action.scroll<=action.client+1,'Action label cannot clip')}
+     assert.ok(pair[0].href.startsWith('/vendor-products/'),'Details use the existing product page')
+     assert.ok(pair[1].href.startsWith('/pilot-book?product='),'Preserve staff-confirmed booking flow')
+    }
+
     for(const frame of photoFrames){
      assert.equal(frame.background,'rgba(0, 0, 0, 0)','Product photos must not have a separate white backing')
      assert.equal(frame.shadow,'none','Product photos must not have a separate white halo')
@@ -200,17 +213,18 @@ try{
     assert.equal(await page.locator('.mhome-dots button[aria-current="true"]').getAttribute('aria-label'),language==='bn'?'ব্যানার 2':'Banner 2')
     // Owner-requested card parity: fixtures remain a read-only presentation.
     assert.equal(await page.locator('[data-preview-cards="deals"] article').count(),2)
-    assert.equal(await page.locator('[data-preview-cards="exclusive"] article').count(),4)
+    assert.equal(await page.locator('[data-vendor-cards] article').count(),2)
     assert.equal(await page.locator('[data-preview-cards="pools"] article').count(),2)
     const rice=page.locator('[data-preview-cards="deals"] article').first()
     for(const text of ['৳135','৳165','৳30','4/5 joined','Ends in 2 days'])assert.ok((await rice.innerText()).includes(text),text)
     assert.equal(await rice.locator('.app-card-preview-actions > :is(a,button)').count(),2)
     assert.equal(await rice.locator('[role="progressbar"]').getAttribute('aria-valuenow'),'4')
-    for(const [index,price,old,stock] of [[0,'৳1,160','৳1,240','32'],[1,'৳680','৳780','20'],[2,'৳145','৳165','45'],[3,'৳145','৳165','24']]){
-     const card=page.locator('[data-preview-cards="exclusive"] article').nth(index)
-     for(const text of [price,old,stock])assert.ok((await card.innerText()).includes(text),text)
-     assert.equal(await card.locator('.app-card-preview-actions > :is(a,button)').count(),2,'Exactly two Exclusive actions')
-     assert.equal(await card.locator('form').count(),0,'Demo cannot submit a real cart action')
+    for(const [index,price] of [[0,'৳120'],[1,'৳1,250']]){
+     const card=page.locator('[data-vendor-cards] article').nth(index)
+     assert.ok((await card.innerText()).includes(price),'Real vendor price')
+     assert.equal(await card.locator('.app-card-preview-actions > a').count(),2,'Exactly two aligned vendor actions')
+     assert.equal(await card.locator('form').count(),0,'Vendor card cannot bypass staff-confirmed booking')
+     assert.equal(await card.locator('.app-card-preview-price s,.app-card-preview-save').count(),0,'No invented reference price or savings')
     }
     for(const card of await page.locator('[data-preview-cards="pools"] article').all()){
      assert.equal(await card.locator('img').count(),3)
@@ -230,7 +244,7 @@ try{
       assert.equal(frame.fit,frame.fallback?'contain':'cover','Pool images preserve proportions')
      }
     }
-    const cardBoxes=await page.locator('[data-preview-cards] article').evaluateAll(nodes=>nodes.map(card=>{
+    const cardBoxes=await page.locator('[data-preview-cards] article,[data-vendor-cards] article').evaluateAll(nodes=>nodes.map(card=>{
      const r=card.getBoundingClientRect()
      return {width:r.width,scroll:card.scrollWidth,client:card.clientWidth,children:[...card.querySelectorAll('.app-card-preview-copy,.app-card-preview-actions,button,.app-card-preview-actions>a')].map(n=>{const b=n.getBoundingClientRect();return {left:b.left-r.left,right:b.right-r.left,scroll:n.scrollWidth,client:n.clientWidth}})}
     }))
@@ -242,24 +256,13 @@ try{
      const mutations=[]
      const watch=request=>{if(!['GET','HEAD','OPTIONS'].includes(request.method()))mutations.push(request.method()+' '+request.url())}
      page.on('request',watch)
-     for(const [index,id,price] of [[0,'butter','৳1,160'],[1,'ghee','৳680'],[2,'rice','৳145'],[3,'eggs','৳145']]){
-      await page.locator('[data-preview-cards="exclusive"] article').nth(index).getByRole('link').click()
-      await page.waitForURL('**/demo-product/'+id,{waitUntil:'load'})
-      assert.equal(await page.getByRole('dialog').count(),0,'Details must navigate rather than open a popup')
-      assert.ok((await page.locator('.home-preview-product-price').innerText()).includes(price))
-      await page.goBack({waitUntil:'load'})
-      await page.locator('[data-preview-cards="exclusive"]').waitFor()
-     }
      await rice.getByRole('link').click()
      await page.waitForURL('**/demo-product/rice?kind=deal',{waitUntil:'load'})
      assert.equal(await page.getByRole('dialog').count(),0)
      assert.ok((await page.locator('.home-preview-product-price').innerText()).includes('৳155'))
      assert.ok((await page.locator('.native-preview-tier-grid').innerText()).includes('৳135'))
      await page.locator('.native-preview-back').click()
-     await page.locator('[data-preview-cards="exclusive"]').waitFor()
-     await page.locator('[data-preview-cards="exclusive"] article').first().getByRole('button').click()
-     await page.locator('.app-card-preview-notice[role="status"]').waitFor()
-     assert.ok((await page.locator('.app-card-preview-notice[role="status"]').innerText()).includes(language==='bn'?'ডেমো':'preview'))
+     await page.locator('[data-vendor-cards]').waitFor()
      await rice.getByRole('button').click()
      await page.getByRole('dialog').waitFor()
      await page.getByRole('dialog').press('Escape')

@@ -8,7 +8,9 @@ import {loadSource} from './helpers/load-tsx.mjs'
 const Link=({href,children,...props})=>React.createElement('a',{href,...props},children)
 const chooseText=(language,en,bn)=>language==='bn'?bn:en
 const formatPrice=n=>n>0?'৳'+Number(n).toLocaleString('en-BD'):'Price pending'
+const {VendorProductCard}=await loadSource('components/vendor-product-card.tsx',{'next/link':Link,'./home-card-preview.css':{}})
 const {MobileMarketplaceHome}=await loadSource('components/mobile-marketplace-home.tsx',{
+ '@/components/vendor-product-card':{VendorProductCard},
  '@/components/home-card-preview':{PreviewHomeCards:()=>null},
  '@/components/live-preview-home-cards':{LivePreviewHomeCards:()=>null},
  '@/lib/approved-live-detail-data':{hasPublishedLiveContent:()=>false},
@@ -111,4 +113,19 @@ test('gloss highlight retains AA contrast for normal-size white primary labels',
  const linear=n=>(n/=255)<=.04045?n/12.92:((n+.055)/1.055)**2.4
  const luminance=[0,127,131].map(n=>255*alpha+n*(1-alpha)).reduce((v,n,i)=>v+linear(n)*[.2126,.7152,.0722][i],0)
  assert.ok(1.05/(luminance+.05)>=4.5,'The glossy highlight must not wash out white primary text')
+})
+
+test('real vendor products retain approved card presentation in Preview without fake checkout or stock',()=>{
+ const vendorProducts=Array.from({length:6},(_,i)=>({product_id:'vendor-'+i,name:'Real product '+i,category:'Rice',package_size:'1 kg',image_url:'/real-photo.jpg',approved_unit_price:120+i,supplier_name:'Public vendor',supplier_handover_days:1}))
+ for(const language of ['en','bn']){
+  const html=render({vendorProducts,previewCards:true,language})
+  assert.equal((html.match(/vendor-product-card/g)||[]).length,6)
+  assert.ok(html.includes('app-card-preview-product-main'))
+  assert.ok(html.includes('href="/vendor-products/vendor-0"'))
+  assert.ok(html.includes('href="/pilot-book?product=vendor-0"'))
+  assert.ok(html.includes('৳120'))
+  assert.ok(!html.includes('name="offer_id"'))
+  assert.ok(!html.includes('app-card-preview-save'))
+  assert.ok(!html.includes('In stock'))
+ }
 })
