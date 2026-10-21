@@ -12,7 +12,7 @@ const key=process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY
 if(!key)throw new Error('Local fixture credential required')
 const headers={apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json',Prefer:'return=minimal'}
 async function insert(table,row,requestHeaders=headers){const r=await fetch(`${api}/rest/v1/${table}`,{method:'POST',headers:requestHeaders,body:JSON.stringify(row)});if(!r.ok)throw new Error(`Fixture ${table}: ${r.status} ${await r.text()}`)}
-async function assertReviewLayout(page,width){
+async function assertApprovedPoolLayout(page,width){
  const card=page.locator('.mhome-pool-card').first()
  await card.waitFor({state:'visible'})
  const geometry=await card.evaluate(element=>{
@@ -72,7 +72,7 @@ try{
    assert.equal((await toggle.innerText()).trim(),'BAN')
    await toggle.click()
    assert.equal((await toggle.innerText()).trim(),'EN')
-   await assertReviewLayout(page,width) // Bengali: ensure the review copy stays full width
+   await assertApprovedPoolLayout(page,width) // Bengali: check visible approved Pool content remains readable
    await page.reload({waitUntil:'networkidle'})
    assert.equal((await toggle.innerText()).trim(),'EN','BAN choice must survive full reload')
    assert.equal((await page.context().cookies()).some(c=>c.name==='2tbr_storefront_language'&&c.value==='bn'),true)
@@ -98,14 +98,14 @@ try{
   const links=await page.locator('footer a[href^="mailto:"]').evaluateAll(es=>es.map(e=>e.getAttribute('href')))
   assert.deepEqual(links,['mailto:business@2takarbazar.com','mailto:support@2takarbazar.com','mailto:business@agentsiraji.com'])
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true)
-  await assertReviewLayout(page,width)
+  await assertApprovedPoolLayout(page,width)
   if(width===393)await page.locator('.mhome-pool-card').first().screenshot({path:'/tmp/2tbr-review-mobile-393-en.png'})
   await page.locator('header').getByRole('button',{name:'Switch to dark mode'}).click()
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark')
   await assertCustomerChrome(page,width)
   assert.equal(await dock.isVisible(),width<768)
   await assertMobileDock(page,width)
-  await assertReviewLayout(page,width)
+  await assertApprovedPoolLayout(page,width)
   if(width===393){
    await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}))
    await page.screenshot({path:'/tmp/2tbr-header-dock-storefront-footer.png'})
