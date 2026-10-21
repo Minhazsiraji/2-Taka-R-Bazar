@@ -61,7 +61,7 @@ export default async function EasyBusiness({searchParams}:{searchParams:Promise<
  const benchmarkByProduct=new Map((benchmarks??[]).filter(b=>b.community_id===pool?.community_id)
   .map(b=>[b.product_id,Number(b.benchmark_price)]))
  const productsById=new Map(products.map(p=>[p.id,p]))
- const readyProducts=products.filter(p=>benchmarkByProduct.has(p.id)&&!items.some(i=>i.product_id===p.id))
+ const readyProducts=products.filter(p=>benchmarkByProduct.has(p.id)&&(p.source_type!=='SUPPLIER_POOL'||Boolean(linkedVendors.get(p.id)?.size))&&!items.some(i=>i.product_id===p.id))
  const community=communities.find(c=>c.id===pool?.community_id)
  const communityPickups=pickups.filter(p=>p.community_id===pool?.community_id)
  const getTiers=(id:string)=>quotes.filter(q=>q.pool_item_id===id).sort((a,b)=>Number(a.threshold_quantity)-Number(b.threshold_quantity))
