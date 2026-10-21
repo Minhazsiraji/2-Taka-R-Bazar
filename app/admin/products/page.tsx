@@ -4,7 +4,7 @@ import { ProductImage } from '@/components/product-image'
 import { ProductImageInput } from '@/components/product-image-input'
 import { SubmitButton } from '@/components/submit-button'
 import { AdminProductSeoEditor } from '@/components/admin-product-seo-editor'
-import { AdminProductCreateWizard } from '@/components/admin-product-create-wizard'
+import { AdminQuickProductForm } from '@/components/admin-quick-product-form'
 import { AdminProductLifecycle } from '@/components/admin-product-lifecycle'
 import { updateProductWithImage as updateProduct } from '@/app/actions/product-images'
 import { requireAdmin } from '@/lib/auth'
@@ -53,7 +53,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
     <div className="card flex flex-wrap items-center justify-between gap-3"><div><b>Already added your product?</b><p className="muted text-sm">Next, choose the area, verified supplier price and Pool on one screen.</p></div><a className="btn-primary" href="/admin/easy-business">Continue to Easy Business →</a></div>
     <Flash {...sp}/>
 
-    <AdminProductCreateWizard key={user.id} userId={user.id}/>
+    {!archived&&<AdminQuickProductForm key={user.id} userId={user.id}/>}
 
     <nav aria-label="Catalog status" className="flex flex-wrap items-center gap-2">
       <Link href="/admin/products" aria-current={!archived?'page':undefined} className={!archived?'btn-primary':'btn-secondary'}>Active catalog</Link>
@@ -70,6 +70,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
           </div>
         </summary>
         <div className="border-t border-slate-200 p-4 sm:p-5">
+          {archived?<p className="muted text-sm">Archived historical reference · read-only. Existing orders, SKU and finance history are preserved. Create a new SKU from the Active catalog instead of reactivating this record.</p>:<>
           <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(220px,.7fr)_minmax(0,1.3fr)]">
             <div><ProductImage src={r.image_url} name={r.name}/><p className="muted mt-2 text-xs">Current master image. Replacing it updates every view that references this product.</p></div>
             <form action={updateProduct} className="grid min-w-0 gap-4 md:grid-cols-2">
@@ -83,6 +84,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
           </div>
           <AdminProductSeoEditor product={r} seo={seoByProduct.get(r.id)} faqs={faqByProduct.get(r.id)??[]} media={mediaByProduct.get(r.id)??[]} canReview={roles.has('super_admin')} isOwner={isOwner} currentUser={user.id}/>
           {canDelete&&<AdminProductLifecycle product={r} eligibility={eligibilityByProduct.get(r.id)}/>}
+          </>}
         </div>
       </details>)}
       {!(rows??[]).length&&<div className="card muted">{archived?'No archived products.':'No active products yet. Upload your first fresh product above.'}</div>}
