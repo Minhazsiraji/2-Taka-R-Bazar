@@ -35,18 +35,16 @@ export async function saveVendorOfferDraft(fd:FormData){
  // Read the most recent owner-approved price proposal, never mutate the
  // immutable source audit or count a draft as a Commerce offer.
  const productSku=String(product?.sku??'')
- const {data:audits}=await supabase.from('audit_events')
-  .select('id,metadata').in('event_type',['owner_revised_vendor_product_pricing','owner_proposed_vendor_product_pricing'])
-  .order('id',{ascending:false}).limit(10)
- const source=audits?.find(a=>a.metadata?.supplier_id===supplierId&&
-  Array.isArray(a.metadata?.pricing_lines)&&
-  a.metadata.pricing_lines.some((line:{sku?:string})=>line.sku===productSku))
+ const {data:sourceLines,error:pricingError}=await supabase.rpc('vendor_offer_admin_price_snapshot')
+ if(pricingError)redirectError(draftRoute,'Authoritative pricing snapshot unavailable until the secured migration is deployed.')
+ const source=sourceLines?.find((line:{product_id:string;supplier_id:string;sku:string;audit_id:number})=>
+  line.product_id===productId&&line.supplier_id===supplierId&&line.sku===productSku)
  const {error}=await supabase.from('vendor_offer_drafts').upsert({
   product_id:productId,supplier_id:supplierId,
   vendor_unit_cost:cost,proposed_sale_price:sell,
   supply_mode:'on_demand',confirmation_policy:'confirm_per_order',
   supplier_handover_days:days,status:'draft',
-  source_audit_id:source?.id??null,updated_by:user.id,
+  source_audit_id:source?.audit_id??null,updated_by:user.id,
  },{onConflict:'product_id,supplier_id'})
  if(error)redirectError(draftRoute,'Draft not saved. Check the Preview database migration and your permissions.')
  revalidatePath(draftRoute)
