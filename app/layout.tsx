@@ -27,6 +27,7 @@ import './marketplace-review-mobile-fix.css'
 import './marketplace-mobile-approved.css'
 import './marketplace-expo-parity.css'
 import './public-app-design.css'
+import './mobile-header-hit-target-fix.css'
 import { PwaRegister } from '@/components/pwa-register'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE_EN, SITE_URL } from '@/lib/site'
 
