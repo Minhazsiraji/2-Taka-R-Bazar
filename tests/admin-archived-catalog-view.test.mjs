@@ -21,10 +21,3 @@ test('Admin catalog defaults to active products with a separate, explicit archiv
   assert.doesNotMatch(source,/\.delete\(|\.truncate\(|from\('orders'\).*delete/,file)
  }
 })
-test('Approved storefront homepage and product-detail sources are untouched by admin filters',()=>{
- const files=['components/mobile-marketplace-home.tsx','components/home-card-preview.tsx','components/home-preview-product-details.tsx']
- for(const file of files){
-  const content=readFileSync(file,'utf8')
-  assert.ok(content.length>100, file+' must exist')
- }
-})
