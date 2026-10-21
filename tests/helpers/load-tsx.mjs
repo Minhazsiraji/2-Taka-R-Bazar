@@ -13,6 +13,6 @@ export async function loadSource(path, mocks = {}, environment = process.env) {
     module: { type: 'commonjs' },
   })
   const exports = {}
-  vm.runInNewContext(code, { exports, require: name => name in mocks ? mocks[name] : require(name), process: { env: environment }, URL, console })
+  vm.runInNewContext(code, { exports, require: name => name in mocks ? mocks[name] : name.endsWith('.css') ? {} : require(name), process: { env: environment }, URL, console })
   return exports
 }

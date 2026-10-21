@@ -31,10 +31,10 @@ test('secure optional files reuse original genuine image validation and clean up
  assert.doesNotMatch(action,/p_media:\s*\[\]/)
  assert.match(config,/bodySizeLimit: '6mb'/)
 })
-test('browser exercises uploaded PC marketing file in product save and bilingual alt metadata',()=>{
- assert.match(uat,/input\[name="marketing_file_1"\]/)
- assert.match(uat,/setInputFiles\(/)
- assert.match(uat,/image\/png/)
- assert.match(uat,/product_seo_media/)
- assert.match(uat,/\/storage\/v1\/object\/public\/product-images\//)
+test('browser exercises optional master image and deferred SEO in Quick Product Upload',()=>{
+ assert.match(uat,/quick-product-upload/)
+ assert.match(uat,/input\[name="image_file"\]/)
+ assert.match(uat,/SEO \/ AEO \/ GEO product content/)
+ assert.match(uat,/seoBefore/)
+ assert.match(read('tests/quick-product-upload.test.mjs'),/Image is optional|image\/png/)
 })

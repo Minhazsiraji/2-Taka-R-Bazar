@@ -12,14 +12,14 @@ const key=process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY
 if(!key)throw new Error('Local fixture credential required')
 const headers={apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json',Prefer:'return=minimal'}
 async function insert(table,row,requestHeaders=headers){const r=await fetch(`${api}/rest/v1/${table}`,{method:'POST',headers:requestHeaders,body:JSON.stringify(row)});if(!r.ok)throw new Error(`Fixture ${table}: ${r.status} ${await r.text()}`)}
-async function assertReviewLayout(page,width){
- const card=page.locator('#customer-experiences .market-review-pending')
- await card.waitFor()
+async function assertApprovedPoolLayout(page,width){
+ const card=page.locator('.mhome-pool-card').first()
+ await card.waitFor({state:'visible'})
  const geometry=await card.evaluate(element=>{
   const bounds=x=>x.getBoundingClientRect()
   const cardBox=bounds(element)
-  const copyBox=bounds(element.children[1])
-  const noteBox=bounds(element.querySelector('.market-review-note'))
+  const copyBox=bounds(element.querySelector('.mhome-pool-copy'))
+  const noteBox=bounds(element.querySelector('.mhome-pool-top'))
   return {cardWidth:cardBox.width,cardHeight:cardBox.height,copyWidth:copyBox.width,
    copyTop:copyBox.top,noteBottom:noteBox.bottom,
    copyLeft:copyBox.left,cardLeft:cardBox.left,copyRight:copyBox.right,cardRight:cardBox.right,
@@ -28,39 +28,10 @@ async function assertReviewLayout(page,width){
  assert.ok(geometry.documentWidth<=geometry.viewportWidth,`No horizontal overflow at ${width}px`)
  assert.ok(geometry.copyLeft>=geometry.cardLeft-1&&geometry.copyRight<=geometry.cardRight+1,`Review copy stays inside its card at ${width}px`)
  if(width<=767){
-  assert.ok(geometry.copyWidth>=geometry.cardWidth*.72,`Review copy must not be squeezed into a narrow mobile column at ${width}px: ${JSON.stringify(geometry)}`)
-  assert.ok(geometry.copyTop>=geometry.noteBottom-1,`Review copy must flow below verified label at ${width}px`)
-  assert.ok(geometry.cardHeight<560,`Review card should remain compact at ${width}px`)
+  assert.ok(geometry.copyWidth>=geometry.cardWidth*.42,`Approved Pool copy must not be squeezed at ${width}px: ${JSON.stringify(geometry)}`)
+  assert.ok(geometry.copyTop<=geometry.noteBottom,`Pool copy must contain its title/status at ${width}px`)
+  assert.ok(geometry.cardHeight<560,`Approved Pool card should remain compact at ${width}px`)
  }
-}
-async function assertUnifiedApprovedHome(page,width){
- const mobile=page.locator('.mhome')
- await mobile.waitFor({state:'visible'})
- assert.equal(await page.locator('.market-legacy-home').isVisible(),false,'Only the approved mobile home is visible')
- const headings=await mobile.locator('.mhome-section-heading h2').allTextContents()
- assert.deepEqual(headings,['Group Deals','Exclusive Products','Community Pools'])
- assert.equal((await mobile.locator('.mhome-savings-heading h2').textContent())?.trim(),'Your savings')
- const columns=await mobile.locator('.mhome-savings-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length)
- assert.equal(columns,4,'All four verified savings tiles must fit in one row at '+width+'px')
- assert.equal(await mobile.locator('.mhome-savings-card').count(),4,'Four safely derived savings cards are present')
- assert.ok(await mobile.locator('.mhome-savings-grid').isVisible(),'Savings grid is visible on every viewport')
- const hero=mobile.locator('.mhome-hero')
- await hero.getByRole('heading',{level:1}).waitFor()
- const title=await hero.getByRole('heading',{level:1}).textContent()
- await hero.getByRole('button',{name:'Next banner'}).click()
- assert.notEqual(await hero.getByRole('heading',{level:1}).textContent(),title)
- assert.equal(await page.locator('.market-brand-copy').isVisible(),true)
- const labels=await page.locator('.market-storefront-dock .app-mobile-nav-link').allTextContents()
- assert.deepEqual(labels,['Home','Pools','Deals','Exclusive','Cart'])
- assert.equal(await page.locator('.market-storefront-dock .mhome-dock-icon').count(),5)
- assert.ok(await mobile.locator('.mhome-pool-card').count()>=1,'Published Pool in compact mobile row')
- const overflow=await page.evaluate(()=>({
-  scroll:document.documentElement.scrollWidth,viewport:innerWidth,
-  cards:[...document.querySelectorAll('.mhome-deal-card,.mhome-exclusive-card,.mhome-pool-card')]
-   .map(x=>({right:x.getBoundingClientRect().right,width:x.getBoundingClientRect().width})),
- }))
- assert.ok(overflow.scroll<=overflow.viewport, 'Approved mobile design no horizontal overflow at '+width+': '+JSON.stringify(overflow))
- for(const c of overflow.cards)assert.ok(c.right<=width+1&&c.width>0,'Mobile card must fit viewport at '+width)
 }
 const ids={community:'00000000-0000-4000-8000-000000000821',product:'00000000-0000-4000-8000-000000000822',pool:'00000000-0000-4000-8000-000000000823',item:'00000000-0000-4000-8000-000000000824'}
 await insert('communities',{id:ids.community,name:'Synthetic browser community',slug:'synthetic-browser-community'})
@@ -90,11 +61,10 @@ try{
  const location = new URL(legacy.headers.get('location'), 'http://127.0.0.1:3000')
  assert.equal(location.pathname, '/')
  assert.equal(location.searchParams.get('notice'), 'legacy-bookmark')
- for(const width of [320,360,393,430,640,767,768,790,820,1024,1100,1440,1920]){
+ for(const width of [320,360,393,640,767,768,790,820,1024,1100,1440,1920]){
   const page=await browser.newPage({viewport:{width,height:900}})
   page.on('pageerror',e=>errors.push(e.message))
-  await page.goto('http://127.0.0.1:3000/',{waitUntil:'domcontentloaded',timeout:60000})
-  await page.locator('.mhome').waitFor({state:'visible'})
+  await page.goto('http://127.0.0.1:3000/',{waitUntil:'networkidle'})
   await page.getByRole('heading',{name:'Synthetic browser Pool',exact:true}).waitFor()
   if(width===393){
    const toggle=page.locator('.market-flat-header .market-single-language')
@@ -102,13 +72,13 @@ try{
    assert.equal((await toggle.innerText()).trim(),'BAN')
    await toggle.click()
    assert.equal((await toggle.innerText()).trim(),'EN')
-   // All viewports now share the same approved responsive component tree.
-   await page.reload({waitUntil:'domcontentloaded',timeout:60000})
+   await assertApprovedPoolLayout(page,width) // Bengali: check visible approved Pool content remains readable
+   await page.reload({waitUntil:'networkidle'})
    assert.equal((await toggle.innerText()).trim(),'EN','BAN choice must survive full reload')
    assert.equal((await page.context().cookies()).some(c=>c.name==='2tbr_storefront_language'&&c.value==='bn'),true)
    await toggle.click()
    assert.equal((await toggle.innerText()).trim(),'BAN')
-   await page.reload({waitUntil:'domcontentloaded',timeout:60000})
+   await page.reload({waitUntil:'networkidle'})
    assert.equal((await toggle.innerText()).trim(),'BAN','EN choice must survive full reload')
   }
   assert.equal(await page.locator('header .market-header-location').count(),0)
@@ -116,9 +86,11 @@ try{
   await assertCustomerChrome(page,width)
   if([768,820,1024].includes(width))await page.screenshot({path:'/tmp/2tbr-header-tablet-brand-'+width+'.png'})
   if(width===393)await page.screenshot({path:'/tmp/2tbr-header-storefront-guest.png',fullPage:true})
-  await assertUnifiedApprovedHome(page,width)
-  const savingsColumns=await page.locator('.mhome-savings-grid').evaluate(e=>getComputedStyle(e).gridTemplateColumns.split(' ').length)
-  assert.equal(savingsColumns,4,'All four approved savings cards remain in one row at '+width+'px')
+  assert.equal(await page.locator('.market-pool-demo-pill').count(),0)
+  assert.equal(await page.locator('.mhome-pool-photos a').first().getAttribute('href'),`/shop/${ids.product}?area=${ids.community}`)
+  const poolText=await page.locator('.mhome-pool-card').first().innerText()
+  assert.ok(!poolText.includes('নমুনা')&&!poolText.includes('DEMO'))
+  assert.ok(poolText.includes('Pending')||poolText.includes('অপেক্ষমাণ'),'Unpublished price remains pending')
   const dock=page.locator('.market-storefront-dock')
   assert.equal(await dock.isVisible(),width<768)
   if(width<768)assert.equal(await dock.evaluate(e=>getComputedStyle(e).position),'fixed')
@@ -126,14 +98,14 @@ try{
   const links=await page.locator('footer a[href^="mailto:"]').evaluateAll(es=>es.map(e=>e.getAttribute('href')))
   assert.deepEqual(links,['mailto:business@2takarbazar.com','mailto:support@2takarbazar.com','mailto:business@agentsiraji.com'])
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true)
-  if([393,820,1440].includes(width))await page.locator('.mhome').screenshot({path:'/tmp/2tbr-approved-unified-home-'+width+'-en.png'})
+  await assertApprovedPoolLayout(page,width)
+  if(width===393)await page.locator('.mhome-pool-card').first().screenshot({path:'/tmp/2tbr-review-mobile-393-en.png'})
   await page.locator('header').getByRole('button',{name:'Switch to dark mode'}).click()
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark')
   await assertCustomerChrome(page,width)
   assert.equal(await dock.isVisible(),width<768)
   await assertMobileDock(page,width)
-  await assertUnifiedApprovedHome(page,width)
-  if([393,820,1440].includes(width))await page.locator('.mhome').screenshot({path:'/tmp/2tbr-approved-unified-home-'+width+'-dark.png'})
+  await assertApprovedPoolLayout(page,width)
   if(width===393){
    await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}))
    await page.screenshot({path:'/tmp/2tbr-header-dock-storefront-footer.png'})

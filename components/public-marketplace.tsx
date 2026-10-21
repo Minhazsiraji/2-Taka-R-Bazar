@@ -1,5 +1,6 @@
 'use client'
 
+import type {PublicVendorBookingProduct} from '@/lib/public-vendor-booking'
 import {setCommerceCartItem} from '@/app/actions/commerce'
 
 import {useMemo,useState,useRef,useCallback,useEffect} from 'react'
@@ -25,7 +26,7 @@ import {AnimatedHeroMessages} from '@/components/animated-hero-messages'
 import {getCommunityDemoFeaturedPools,type DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
-export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],publishedProducts={items:[],hasMore:false,nextOffset:0},demoMode=false,previewCards=false,pools=[],initialArea='',initialSearch='',initialLanguage='en',hasLanguageCookie=false,savings}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];publishedProducts?:PublishedCatalogPage;demoMode?:boolean;previewCards?:boolean;pools?:DemoFeaturedPool[];initialArea?:string;initialSearch?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean;savings:HomeSavingsSummary}){
+export function PublicMarketplace({areas,offers,vendorProducts=[],authenticated=false,howLabelBn,catalogAvailable=true,featured=[],publishedProducts={items:[],hasMore:false,nextOffset:0},demoMode=false,previewCards=false,pools=[],initialArea='',initialSearch='',initialLanguage='en',hasLanguageCookie=false,savings}:{vendorProducts?:PublicVendorBookingProduct[];areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];publishedProducts?:PublishedCatalogPage;demoMode?:boolean;previewCards?:boolean;pools?:DemoFeaturedPool[];initialArea?:string;initialSearch?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean;savings:HomeSavingsSummary}){
  const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const [area,setArea]=useState(()=>areas.some(a=>a.community_id===initialArea)?initialArea:'')
@@ -123,7 +124,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
    language={language} onLanguageChange={setLanguage}/>
   <MobileMarketplaceHome areas={areas} selectedArea={area} onChooseArea={selectArea}
    onDetectArea={useLocation} detectingArea={gpsBusy} offers={offers}
-   products={featured} publishedProducts={publishedProducts} pools={heroPools} language={language} demoMode={demoMode} previewCards={previewCards} search={search} savings={savings}/>
+   products={featured} vendorProducts={vendorProducts} publishedProducts={publishedProducts} pools={heroPools} language={language} demoMode={demoMode} previewCards={previewCards} search={search} savings={savings}/>
   <div className="market-legacy-home">
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">
    <div className="market-location-panel">

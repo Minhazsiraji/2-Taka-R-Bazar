@@ -38,8 +38,10 @@ test('browser tab draft autosave recovers EN/BN inputs and FAQ but never stores 
  assert.match(client,/window\.confirm/)
  assert.match(client,/form\.reset\(\)/)
  assert.match(client,/if\(!result\.ok\)/)
- assert.match(uat,/Product wizard failed-save retention, refresh recovery and successful retry PASS/)
- assert.match(uat,/longEnglish/)
- assert.match(uat,/longBangla/)
- assert.match(uat,/marketing_alt_bn_1/)
+ // Legacy six-step editor is retained for future rich SEO enrichment.
+ // The default browser flow now checks one-step master draft recovery.
+ assert.match(uat,/Quick Product Upload: mobile widths, tab draft recovery/)
+ assert.match(uat,/quick-product-upload/)
+ assert.match(uat,/Product saved and active in the catalog/)
+ assert.match(uat,/seoBefore/)
 })

@@ -4,20 +4,23 @@ import {useEffect,useRef,useState} from 'react'
 import Link from 'next/link'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {previewProducts,previewDeals,previewPools,previewPhoto,previewMoney as money} from '@/lib/home-card-preview-fixtures'
+import type {ApprovedProduct,ApprovedHomeView,ApprovedDeal,ApprovedPool} from '@/lib/approved-card-view'
 import './home-card-preview.css'
+import './approved-data-state.css'
 
-type Product=typeof previewProducts[number]
+type Product=ApprovedProduct
 type Selection={kind:'deal';id:string}|null
-type Props={section:'deals'|'exclusive'|'pools';language:MarketplaceLanguage;search:string}
+type Props={section:'deals'|'exclusive'|'pools';language:MarketplaceLanguage;search:string;view?:ApprovedHomeView}
 function Photo({product}:{product:Product}){
  const [failed,setFailed]=useState(false)
- return <img src={failed?'/preview-app-product-placeholder.svg':previewPhoto(product.photo)}
-  className={failed?'app-card-preview-placeholder':undefined} width="240" height="320"
+ const src=product.image!==undefined?product.image:previewPhoto(product.photo)
+ return <img data-empty={failed||!src||undefined} src={failed||!src?'/preview-app-product-placeholder.svg':src}
+  className={failed||!src?'app-card-preview-placeholder':undefined} width="240" height="320"
   alt={product.name} loading="lazy" decoding="async" onError={()=>{if(!failed)setFailed(true)}}/>
 }
 function Progress({value,max,label}:{value:number;max:number;label:string}){
  return <div className="app-card-preview-progress" role="progressbar" aria-label={label}
-  aria-valuemin={0} aria-valuemax={max} aria-valuenow={value}><span style={{width:Math.min(100,value/max*100)+'%'}}/></div>
+  aria-valuemin={0} aria-valuemax={max} aria-valuenow={value}><span style={{width:(max>0?Math.min(100,value/max*100):0)+'%'}}/></div>
 }
 function PreviewDialog({selection,language,onClose}:{selection:NonNullable<Selection>;language:MarketplaceLanguage;onClose:()=>void}){
  const ref=useRef<HTMLDialogElement>(null)
@@ -36,8 +39,8 @@ function PreviewDialog({selection,language,onClose}:{selection:NonNullable<Selec
    <small>{bn?'ডেমো প্রিভিউ · বাস্তব অফার নয়':'DEMO PREVIEW · Not a real offer'}</small>
    <h3>{title}</h3>
    {product&&<><div className="app-card-preview-dialog-photo"><Photo product={product}/></div>
-    <p>{product.unit} · Savar DOHS</p><p>{money(deal?.price??product.price)} <s>{money(product.oldPrice)}</s></p>
-    <p>{bn?'সাশ্রয়':'Save'} {money(product.oldPrice-(deal?.price??product.price))}</p>
+    <p>{product.unit} · Savar DOHS</p><p>{money(deal?.price??product.price??0)} <s>{money(product.oldPrice??0)}</s></p>
+    <p>{bn?'সাশ্রয়':'Save'} {money((product.oldPrice??0)-(deal?.price??product.price??0))}</p>
     {deal?<p>{deal.joined}/{deal.target} joined · Ends in {deal.days} days</p>:
      <p>{bn?'স্টকে আছে '+product.stock:'In stock · '+product.stock+' available'}</p>}</>}
 
@@ -46,7 +49,7 @@ function PreviewDialog({selection,language,onClose}:{selection:NonNullable<Selec
  </dialog>
 }
 
-export function PreviewHomeCards({section,language,search}:Props){
+export function PreviewHomeCards({section,language,search,view}:Props){
  const bn=language==='bn'
  const [selection,setSelection]=useState<Selection>(null)
  const [notice,setNotice]=useState('')
@@ -54,66 +57,73 @@ export function PreviewHomeCards({section,language,search}:Props){
  const query=search.trim().toLocaleLowerCase()
  const matches=(p:Product)=>!query||[p.name,p.nameBn,p.unit].some(s=>s.toLocaleLowerCase().includes(query))
  useEffect(()=>{if(!notice)return;const timer=setTimeout(()=>setNotice(''),4500);return()=>clearTimeout(timer)},[notice])
- const demoLabel=<span className="app-card-preview-demo">{bn?'ডেমো':'DEMO'}</span>
+ const rowsProducts:readonly ApprovedProduct[]=view?.products??previewProducts
+ const lookup:readonly ApprovedProduct[]=view?.lookup??previewProducts
+ const rowsDeals:readonly ApprovedDeal[]=view?.deals??previewDeals
+ const rowsPools:readonly ApprovedPool[]=view?.pools??previewPools
+ const showMoney=(n:number|null)=>money(n??0)
+ const productHref=(id:string,kind='')=>view?'/preview-live/product/'+id+(kind?'?kind='+kind:''):'/demo-product/'+id+(kind?'?kind='+kind:'')
+ const demoLabel=view?null:<span className="app-card-preview-demo">{bn?'ডেমো':'DEMO'}</span>
  let cards
  if(section==='deals'){
-  const rows=previewDeals.filter(d=>matches(previewProducts.find(p=>p.id===d.id)!))
+  const rows=rowsDeals.filter(d=>matches(lookup.find(p=>p.id===d.id)!))
   cards=rows.length?<div className="mhome-deal-list app-card-preview app-card-preview-deals" data-preview-cards="deals">
-   {rows.map(d=>{const p=previewProducts.find(item=>item.id===d.id)!
-    return <article className="mhome-deal-card app-card-preview-deal" key={d.id}>
+   {rows.map(d=>{const p=lookup.find(item=>item.id===d.id)!
+    const reference=view?(d.reference??null):p.oldPrice
+    return <article className="mhome-deal-card app-card-preview-deal" key={d.id+('offerId' in d?d.offerId:'')} data-empty={d.empty||undefined} inert={d.empty||undefined}>
      <div className="app-card-preview-deal-image">
       <Photo product={p}/><span className="app-card-preview-label">GROUP DEAL</span>{demoLabel}
      </div>
      <div className="app-card-preview-copy"><div className="app-card-preview-heading"><div className="app-card-preview-overline">BUY TOGETHER • SAVE MORE</div>
       <h3>{bn?(p.id==='rice'?'চিনিগুড়া চাল':p.nameBn):p.name}</h3>
-      <p className="app-card-preview-meta">{p.unit} · Savar DOHS</p></div>
-      <div className="app-card-preview-price"><strong>{money(d.price)}</strong><s>{money(p.oldPrice)}</s></div>
-      <span className="app-card-preview-save">{bn?'সাশ্রয়':'Save'} {money(p.oldPrice-d.price)}</span>
-      <div className="app-card-preview-deal-stats"><span>👥 {d.joined}/{d.target} joined</span><span>◷ Ends in {d.days} {d.days===1?'day':'days'}</span></div>
+      <p className="app-card-preview-meta">{p.unit} · {view?(d.community||' '):'Savar DOHS'}</p></div>
+      <div className="app-card-preview-price"><strong data-empty={d.price===null||undefined}>{showMoney(d.price)}</strong><s data-empty={reference===null||undefined}>{showMoney(reference)}</s></div>
+      <span className="app-card-preview-save" data-empty={reference===null||d.price===null||undefined}>{bn?'সাশ্রয়':'Save'} {showMoney(reference!==null&&d.price!==null?Math.max(0,reference-d.price):null)}</span>
+      <div className="app-card-preview-deal-stats"><span>👥 {d.joined}/{d.target} joined</span><span data-empty={d.days===null||undefined}>◷ Ends in {d.days??0} {d.days===1?'day':'days'}</span></div>
       <Progress value={d.joined} max={d.target} label={bn?'গ্রুপ অংশগ্রহণ':'Group participation'}/>
-      <div className="app-card-preview-actions"><Link href={'/demo-product/'+d.id+'?kind=deal'}>{bn?'বিস্তারিত':'View details'}</Link>
-       <button type="button" className="app-card-preview-primary" onClick={()=>setSelection({kind:'deal',id:d.id})}>{bn?'গ্রুপে যোগ দিন':'Join Deal'}</button></div>
+      <div className="app-card-preview-actions"><Link href={d.empty?'#':productHref(d.id,'deal')+(view&&d.offerId?'&offer='+d.offerId:'')}>{bn?'বিস্তারিত':'View details'}</Link>
+       <button type="button" className="app-card-preview-primary" disabled={Boolean(view)} onClick={()=>{if(!view)setSelection({kind:'deal',id:d.id})}}>{bn?'গ্রুপে যোগ দিন':'Join Deal'}</button></div>
      </div>
     </article>})}
-  </div>:<div className="mhome-empty">{bn?'এই খোঁজে গ্রুপ ডিল নেই।':'No Group Deals match your search.'}</div>
+  </div>:view?<div className="mhome-empty" data-empty="true"> </div>:<div className="mhome-empty">{bn?'এই খোঁজে গ্রুপ ডিল নেই।':'No Group Deals match your search.'}</div>
  }else if(section==='exclusive'){
-  const rows=previewProducts.filter(matches)
+  const rows=rowsProducts.filter(matches)
   cards=rows.length?<div className="mhome-exclusive-grid app-card-preview app-card-preview-exclusive" data-preview-cards="exclusive">
-   {rows.map(p=><article className="mhome-exclusive-card app-card-preview-product" key={p.id}>
+   {rows.map(p=><article className="mhome-exclusive-card app-card-preview-product" key={p.id} data-empty={p.empty||undefined} inert={p.empty||undefined}>
     <div className="app-card-preview-product-main"><div className="app-card-preview-product-image"><Photo product={p}/>{demoLabel}</div>
      <div className="app-card-preview-copy"><h3>{bn?p.nameBn:p.name}</h3><p className="app-card-preview-meta">{p.unit}</p>
-      <div className="app-card-preview-price"><strong>{money(p.price)}</strong><s>{money(p.oldPrice)}</s></div>
-      <span className="app-card-preview-save">{bn?'সাশ্রয়':'Save'} {money(p.oldPrice-p.price)}</span>
-      <p className="app-card-preview-stock">{bn?'স্টকে আছে '+p.stock:'In stock · '+p.stock+' available'}</p>
+      <div className="app-card-preview-price"><strong data-empty={p.price===null||undefined}>{showMoney(p.price)}</strong><s data-empty={p.oldPrice===null||undefined}>{showMoney(p.oldPrice)}</s></div>
+      <span className="app-card-preview-save" data-empty={p.oldPrice===null||p.price===null||undefined}>{bn?'সাশ্রয়':'Save'} {showMoney(p.oldPrice!==null&&p.price!==null?Math.max(0,p.oldPrice-p.price):null)}</span>
+      <p className="app-card-preview-stock" data-empty={p.stock===null||undefined}>{bn?'স্টকে আছে '+(p.stock??0):'In stock · '+(p.stock??0)+' available'}</p>
      </div>
     </div>
-    <div className="app-card-preview-actions"><Link href={'/demo-product/'+p.id}>{bn?'বিস্তারিত':'View details'}</Link>
-     <button className="app-card-preview-primary" type="button" onClick={()=>{
+    <div className="app-card-preview-actions"><Link href={p.empty?'#':productHref(p.id)}>{bn?'বিস্তারিত':'View details'}</Link>
+     <button className="app-card-preview-primary" type="button" disabled={Boolean(view)} onClick={()=>{
       const count=(basket[p.id]??0)+1;setBasket(previous=>({...previous,[p.id]:count}))
       setNotice(bn?'ডেমো ঝুড়িতে '+count+'টি যোগ হয়েছে। বাস্তব কার্ট পরিবর্তন হয়নি।':'Added '+count+' to the preview basket. Your real cart is unchanged.')
      }}>{bn?'কার্টে যোগ দিন':'Add to cart'}</button></div>
    </article>)}
-  </div>:<div className="mhome-empty">{bn?'আপনার খোঁজের সঙ্গে কোনো পণ্য মেলেনি।':'No products match your search.'}</div>
+  </div>:view?<div className="mhome-empty" data-empty="true"> </div>:<div className="mhome-empty">{bn?'আপনার খোঁজের সঙ্গে কোনো পণ্য মেলেনি।':'No products match your search.'}</div>
  }else{
   cards=<div className="mhome-pool-list app-card-preview app-card-preview-pools" data-preview-cards="pools">
-   {previewPools.map(pool=><article className="mhome-pool-card app-card-preview-pool" key={pool.id}>
+   {rowsPools.map(pool=><article className="mhome-pool-card app-card-preview-pool" key={pool.id} data-empty={pool.empty||undefined} inert={pool.empty||undefined}>
     <div className="app-card-preview-pool-photos">{pool.products.map(id=>{
-     const p=previewProducts.find(item=>item.id===id)!
+     const p=lookup.find(item=>item.id===id)!
      return <div key={id}><Photo product={p}/></div>
     })}{demoLabel}</div>
     <div className="app-card-preview-copy"><div className="app-card-preview-pool-top"><span className="app-card-preview-label">{bn?pool.labelBn:pool.label}</span><span className="app-card-preview-active"><span aria-hidden="true">● </span>ACTIVE</span></div>
      <h3>{bn?pool.nameBn:pool.name}</h3>
-     <p className="app-card-preview-meta">{bn?'3 টি পণ্য · '+pool.joined.toLocaleString('en-BD')+' পরিবারের যুক্ত':'3 products · '+pool.joined.toLocaleString('en-BD')+' households joined'}</p>
+     <p className="app-card-preview-meta">{bn?(pool.productCount??3)+' টি পণ্য · '+pool.joined.toLocaleString('en-BD')+' পরিবারের যুক্ত':(pool.productCount??3)+' products · '+pool.joined.toLocaleString('en-BD')+' households joined'}</p>
      <Progress value={pool.joined} max={pool.target} label={bn?'অংশগ্রহণের অগ্রগতি':'Household progress'}/>
-     <p className="app-card-preview-deadline">◷ Commit ends in {pool.days} days · {pool.date}</p>
-     <div className="app-card-preview-pool-bottom"><span className="app-card-preview-next">{bn?'পরবর্তী সাশ্রয় টিয়ার':'Next savings tier'}: {pool.target.toLocaleString('en-BD')}</span>
-      <Link href={'/demo-pool/'+pool.id+'?source=home'} className="app-card-preview-primary mhome-pool-link">Explore Pool →</Link></div>
+     <p className="app-card-preview-deadline" data-empty={pool.days===null||undefined}>◷ Commit ends in {pool.days??0} days · {pool.date}</p>
+     <div className="app-card-preview-pool-bottom"><span className="app-card-preview-next" data-empty={pool.target===0||undefined}>{bn?'পরবর্তী সাশ্রয় টিয়ার':'Next savings tier'}: {pool.target.toLocaleString('en-BD')}</span>
+      <Link href={pool.empty?'#':view?'/preview-live/pool/'+pool.id:'/demo-pool/'+pool.id+'?source=home'} className="app-card-preview-primary mhome-pool-link">Explore Pool →</Link></div>
     </div>
    </article>)}
   </div>
  }
- return <>{cards}
+ return <div data-approved-data={view?true:undefined}>{cards}
   {selection&&<PreviewDialog selection={selection} language={language} onClose={()=>setSelection(null)}/>}
   {notice&&<div className="app-card-preview-notice" role="status">{notice}</div>}
- </>
+ </div>
 }

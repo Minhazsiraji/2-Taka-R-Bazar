@@ -87,23 +87,14 @@ try{
  })))
  const home=await page.goto(base+'/',{waitUntil:'domcontentloaded'})
  assert.equal(home?.status(),200)
- const mobileCatalog=page.locator('#mobile-exclusive')
- await mobileCatalog.getByRole('heading',{name:'Exclusive Products'}).waitFor()
- const previewCards=mobileCatalog.locator('.mhome-exclusive-card')
- assert.equal(await previewCards.count(),6,'The approved mobile grid includes six published listings')
- assert.ok(await mobileCatalog.locator('a[href^="/p/"]').count()>=6,'SEO-published product details available on phones')
- assert.equal(await mobileCatalog.locator('form,[href^="/cart"],[href^="/checkout"]').count(),0,
-  'Unpriced published catalog products stay read-only on phones')
- for(const excluded of ineligible)assert.equal(await mobileCatalog.getByText(excluded.slug).count(),0,
-  'Unapproved, inactive and demo products absent from mobile grid')
- await page.setViewportSize({width:1024,height:900})
- await page.goto(base+'/products',{waitUntil:'domcontentloaded'})
+ await page.locator('a[href="/products"]').first().waitFor()
+ const catalog=await page.goto(base+'/products',{waitUntil:'domcontentloaded'})
+ assert.equal(catalog?.status(),200,'The approved Home links to the dedicated browse-only All Products page')
  const section=page.locator('#published-products')
  await section.getByRole('heading',{name:'All Products'}).waitFor()
- assert.equal(new URL(page.url()).pathname,'/products','SEO catalogue has its own explicit View all route')
  assert.equal(await section.locator('[data-testid="published-product-card"]').count(),12,'First catalog page contains 12 eligible records')
  assert.equal(await section.getByRole('link',{name:/View Details/}).count(),12,'Every product has a public details link')
- assert.equal(await section.getByText('Price pending',{exact:true}).count(),12)
+ assert.equal(await section.getByText('Price not published',{exact:true}).count(),12)
  assert.equal(await section.locator('img[src="https://res.cloudinary.com/demo/image/upload/sample.jpg"]').count(),12)
  assert.equal(await section.locator('form,[href^="/cart"],[href^="/checkout"],button:has-text("Buy"),button:has-text("Cart")').count(),0,
   'Read-only catalog has no cart or buy controls')
@@ -116,16 +107,13 @@ try{
  const toggle=page.locator('.market-flat-header .market-single-language')
  await toggle.click()
  assert.equal(await section.getByRole('heading',{name:'সব পণ্য'}).count(),1)
- assert.equal(await section.getByText('মূল্য শীঘ্রই',{exact:true}).count(),14)
+ assert.equal(await section.getByText('দাম প্রকাশিত হয়নি',{exact:true}).count(),14)
  assert.match(await firstLink.getAttribute('href')??'',/^\/bn\/p\/(?:catalog-uat|seo-uat)/)
- await page.setViewportSize({width:390,height:844})
- await page.goto(base+'/',{waitUntil:'domcontentloaded'})
- await mobileCatalog.getByRole('heading',{name:'এক্সক্লুসিভ পণ্য'}).waitFor()
  await page.screenshot({path:'/tmp/2tbr-product-seo-catalog-bn-mobile.png',fullPage:true})
  await toggle.click()
  for(const width of [320,393,768,1024,1440]){
   await page.setViewportSize({width,height:900})
-  await page.locator('#mobile-exclusive').scrollIntoViewIfNeeded()
+  await page.locator('#published-products').scrollIntoViewIfNeeded()
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,
    'No catalog horizontal overflow at '+width)
  }
@@ -138,7 +126,7 @@ try{
  await insert('product_seo_content',{product_id:future.id,slug:future.slug,
   title_en:'Newly published catalog item',title_bn:'নতুন প্রকাশিত ক্যাটালগ পণ্য',
   alt_en:'True uploaded test fixture image',alt_bn:'পরীক্ষার ছবি',status:'published'})
- await page.goto(base+'/products',{waitUntil:'domcontentloaded'})
+ await page.reload({waitUntil:'domcontentloaded'})
  assert.equal(await page.locator('#published-products').getByText('Newly published catalog item').count(),1,
   'Future published products automatically appear after refresh')
  console.log('Issue 99 published catalog: EN/BN, genuine image URL, no purchase, 12+ paging, ineligible isolation, future publish and responsive widths PASS.')

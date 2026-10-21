@@ -29,20 +29,6 @@ assert.equal(createError, null)
 const id = created.user.id
 const roleResponse = await fetch(endpoint + '/rest/v1/user_roles', {method: 'POST', headers, body: JSON.stringify({user_id: id, role: 'super_admin'})})
 assert.ok(roleResponse.ok)
-async function assertApprovedHome(page){
- // Auth return paths must land on the actual public shopping homepage, not a retired dashboard.
- if(await page.evaluate(()=>matchMedia('(max-width: 767px)').matches)){
-  const home=page.locator('.mhome')
-  await home.waitFor({state:'visible'})
-  await home.locator('.mhome-hero h1').waitFor({state:'visible'})
-  assert.match((await home.locator('.mhome-hero').innerText()),/SMART SHOPPING\. REAL SAVINGS!/)
-  assert.deepEqual(await home.locator('.mhome-section-heading h2').allTextContents(),
-    ['Group Deals','Exclusive Products','Community Pools'])
-  assert.equal(await page.locator('.market-legacy-home').isVisible(),false)
- }else{
-  await assertApprovedHome(page)
- }
-}
 const browser = await chromium.launch({headless: true})
 try {
   const page = await browser.newPage({viewport: {width: 393, height: 900}})
@@ -198,7 +184,7 @@ try {
   await page.locator('[name="community_id"]').selectOption('00000000-0000-4000-8000-000000000821')
   await page.getByRole('button', {name: 'Finish setup', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/')
-  await assertApprovedHome(page)
+  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
   assert.equal((await rows('profiles', emailFixture.user.id))[0].phone, '8801700000093')
   const tamperedContact = await native.from('profiles').update({phone: '8801700000099'}).eq('id', emailFixture.user.id)
   assert.match(tamperedContact.error?.message || '', /Mobile contact is fixed/)
@@ -222,15 +208,14 @@ try {
   await page.goto('http://127.0.0.1:3000/login', {waitUntil: 'domcontentloaded'})
   await login('01700000094', password)
   await page.waitForURL(url => url.pathname === '/')
-  await assertApprovedHome(page)
+  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
   // Stale signed-in bookmarks must never render the retired Home dashboard.
   await page.goto('http://127.0.0.1:3000/home', {waitUntil: 'domcontentloaded'})
   await page.waitForURL(url => url.pathname === '/')
-  await assertApprovedHome(page)
+  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
   assert.equal(await page.getByRole('heading', {name: 'Your community is buying smarter.', exact: true}).count(), 0)
-  const dashboards = page.getByRole('link', {name: 'My dashboard', exact: true})
-  assert.deepEqual(await dashboards.evaluateAll(links => links.map(link => link.getAttribute('href'))), ['/account'])
-  assert.deepEqual(await page.locator('.market-storefront-dock .app-mobile-nav-link').allTextContents(),['Home','Pools','Deals','Exclusive','Cart'])
+  const dashboards = page.locator('header .public-account-panel a[href="/account"]')
+  assert.equal(await dashboards.count(),1,'Approved profile menu contains the Account route')
   for (const width of [320, 360, 393, 640, 768, 1440]) {
     await page.setViewportSize({width, height: 900})
     await assertHeaderGeometry(page, '.market-brand-lockup', '.market-header-actions', width)
@@ -247,6 +232,7 @@ try {
   await page.locator('#market-mobile-navigation').waitFor()
   await page.getByRole('button', {name: 'Close menu', exact: true}).click()
   assert.equal(await page.locator('#market-mobile-navigation').count(), 0)
+  await page.locator('header .public-account-menu summary').click()
   await dashboards.first().click()
   await page.waitForURL(url => url.pathname === '/account')
   await page.getByRole('heading', {name: 'My dashboard', exact: true}).waitFor()
@@ -255,7 +241,9 @@ try {
   assert.equal(await page.getByRole('heading', {name: 'Staff tools', exact: true}).count(), 0)
   assert.equal(await page.getByText('Purchases are awaiting release qualification.', {exact: true}).count(), 0)
   assert.equal(await page.locator('.market-flat-header').count(), 1)
-  assert.equal(await page.locator('.market-storefront-dock a[aria-current="page"]').getAttribute('href'), '/account')
+  await page.locator('header .public-account-panel a[href="/account"]').waitFor({state:'attached'})
+  assert.equal(await page.locator('header .public-account-panel a[href="/account"]').count(),1)
+  assert.equal(await page.locator('.market-storefront-dock a[href="/account"]').count(),0)
   for (const width of [320, 360, 393, 640, 768, 1440]) {
     await page.setViewportSize({width, height: 900})
     await page.screenshot({path: '/tmp/2tbr-account-width-' + width + '.png', fullPage: true})
@@ -297,8 +285,8 @@ try {
   await moneyNav.getByRole('link', {name: 'Transactions', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/money/transactions')
   assert.equal(await moneyNav.locator('[aria-current="page"]').getAttribute('href'), '/money/transactions')
-  await page.locator('header').getByRole('button',{name:'Open menu',exact:true}).click()
-  await page.getByRole('link',{name:'My Money',exact:true}).click()
+  await page.locator('header .public-account-menu summary').click()
+  await page.locator('header .public-account-panel a[href="/money"]').click()
   await page.waitForURL(url => url.pathname === '/money')
   await page.getByRole('heading', {name: 'My Money Dashboard', exact: true}).waitFor()
   await page.locator('header').getByRole('button', {name: 'Switch to light mode', exact: true}).click()
@@ -338,7 +326,7 @@ try {
   await page.locator('.market-single-language').click()
   // Use the real dock links through client navigation, including their active state.
   await page.setViewportSize({width:393,height:640})
-  for (const path of ['/','/group-deals','/pool','/cart','/account']) {
+  for (const path of ['/','/group-deals','/pool','/cart']) {
     await page.locator('.app-mobile-nav a[href="'+path+'"]').click()
     await page.waitForURL(url => url.pathname === path)
     await page.locator('header').first().waitFor()
@@ -346,6 +334,14 @@ try {
     assert.equal(await page.locator('.app-mobile-nav a[aria-current="page"]').getAttribute('href'),path)
   }
   await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}))
+  const exclusiveDockLink=page.locator('.app-mobile-nav a[href="/#mobile-exclusive"]')
+  assert.equal(await exclusiveDockLink.count(),1,'Approved Exclusive dock destination exists')
+  await exclusiveDockLink.click()
+  await page.waitForURL(url=>url.pathname==='/'&&url.hash==='#mobile-exclusive')
+  await assertMobileDock(page,393)
+  await page.locator('header .public-account-menu summary').click()
+  await page.locator('header .public-account-panel a[href="/account"]').click()
+  await page.waitForURL(url=>url.pathname==='/account')
   await page.screenshot({path:'/tmp/2tbr-header-dock-account-footer.png'})
   // Complete delivery path using only disposable native identities and real DB/RPCs.
   const outsiderCommunity='00000000-0000-4000-8000-000000000897'
@@ -424,159 +420,63 @@ try {
   await staff.setViewportSize({width:393,height:900})
   await staff.screenshot({path:'/tmp/2tbr-easy-business-mobile.png',fullPage:true})
   console.log('Easy Business: guided draft creation, no purchase/finance bypass, mobile/tablet widths PASS.')
+  // Fresh catalog: authorized Admin uses one-step Quick Upload.
+  // Previously this test assumed six SEO steps were compulsory. SEO is now
+  // optional enrichment on the saved master and must never block creation.
   await staff.goto('http://127.0.0.1:3000/admin/products',{waitUntil:'domcontentloaded'})
-  await staff.getByRole('heading',{name:'Create product',exact:true}).waitFor()
-  const productSteps=staff.getByRole('navigation',{name:'Product creation steps'})
-  assert.equal(await productSteps.getByRole('button').count(),6)
+  await staff.getByRole('heading',{name:'Quick Product Upload',exact:true}).waitFor()
+  assert.equal(await staff.getByRole('navigation',{name:'Product creation steps'}).count(),0,
+   'Admin product creation must not require a six-step SEO wizard')
+  const productForm=staff.locator('#quick-product-upload')
+  await productForm.waitFor()
+  assert.equal(await productForm.locator('input[name="sku"]').count(),1)
+  assert.equal(await productForm.locator('input[name="image_file"]').count(),1)
+  assert.equal(await productForm.getByRole('button',{name:'Save & activate product'}).count(),1)
   for(const width of [320,393,768,1024,1440]){
     await staff.setViewportSize({width,height:900})
-    const geometry=await productSteps.evaluate(nav=>{
-      const navRect=nav.getBoundingClientRect()
-      const buttons=[...nav.querySelectorAll('button')]
-      return {
-        screenOverflow:document.documentElement.scrollWidth>window.innerWidth+1,
-        invalid:buttons.flatMap(button=>{
-          const rect=button.getBoundingClientRect()
-          const label=button.querySelector('.product-wizard-step-label')
-          const bad=rect.left<navRect.left-2 || rect.right>navRect.right+2
-            || (label && label.scrollWidth>label.clientWidth+1)
-            || (label && window.getComputedStyle(label).whiteSpace!=='nowrap')
-          return bad?[{label:label?.textContent,button:Math.round(rect.width),text:label?.scrollWidth}]:[]
-        }),
-        rowCount:new Set(buttons.map(button=>Math.round(button.getBoundingClientRect().top))).size
-      }
-    })
-    assert.equal(geometry.screenOverflow,false,'Product Management must not overflow viewport at '+width)
-    assert.deepEqual(geometry.invalid,[],'All six compact step labels must fit their pill at '+width)
-    assert.ok(geometry.rowCount<=3,'No more than three compact step rows at '+width)
-    if(width===393||width===1440)await staff.screenshot({path:'/tmp/2tbr-product-admin-steps-'+width+'.png',fullPage:false})
+    assert.equal(await staff.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,
+      'Quick Product Upload cannot overflow at width '+width)
+    if(width===393||width===1440)await staff.screenshot({
+      path:'/tmp/2tbr-product-admin-steps-'+width+'.png',fullPage:false})
   }
   await staff.setViewportSize({width:393,height:900})
-  await staff.locator('#guided-create-product input[name="name"]').fill('Draft preview - do not submit')
-  await productSteps.getByRole('button',{name:'Step 3: SEO · EN/BN'}).click()
-  await staff.getByRole('heading',{name:'3. SEO and bilingual descriptions'}).waitFor()
-  assert.equal(await productSteps.getByRole('button',{name:'Step 3: SEO · EN/BN'}).getAttribute('aria-current'),'step')
-  await productSteps.getByRole('button',{name:'Step 1: Product & SKU'}).click()
-  assert.equal(await staff.locator('#guided-create-product input[name="name"]').inputValue(),'Draft preview - do not submit')
-  console.log('Product admin storefront styling and six compact steps PASS at 320/393/768/1024/1440.')
-  // Issue #90 regression: failed optional-media validation must NEVER lose six-step data.
-  const productForm=staff.locator('#guided-create-product')
-  const draftSku='ISSUE90-'+Date.now().toString(36).toUpperCase()
-  const draftSlug='issue90-draft-'+Date.now().toString(36).toLowerCase()
+  // Test draft recovery, without submitting an unfinished record.
   await productForm.locator('input[name="name"]').fill('Synthetic draft recovery ghee')
   await productForm.locator('input[name="category"]').fill('Dairy & Ghee')
   await productForm.locator('input[name="package_size"]').fill('1 kg')
   await productForm.locator('input[name="unit"]').fill('pack')
+  const draftSku='QUP-'+Date.now().toString(36).toUpperCase()
   await productForm.locator('input[name="sku"]').fill(draftSku)
-  await productForm.locator('input[name="is_demo"]').check()
-  await productSteps.getByRole('button',{name:'Step 3: SEO · EN/BN'}).click()
-  const longEnglish='Synthetic test ghee, for checking form retention only. '.repeat(8)
-  const longBangla='শুধু ফর্ম সংরক্ষণ পরীক্ষার জন্য ঘি। '.repeat(8)
-  await productForm.locator('input[name="slug"]').fill(draftSlug)
-  await productForm.locator('input[name="title_en"]').fill('Synthetic ghee 1 kg')
-  await productForm.locator('input[name="title_bn"]').fill('পরীক্ষামূলক ঘি ১ কেজি')
-  await productForm.locator('textarea[name="description_en"]').fill(longEnglish)
-  await productForm.locator('textarea[name="description_bn"]').fill(longBangla)
-  await productSteps.getByRole('button',{name:'Step 4: AEO / GEO'}).click()
-  await productForm.getByText('Add up to eight bilingual FAQ pairs').click()
-  await productForm.locator('input[name="q_en_1"]').fill('Is this a test product?')
-  await productForm.locator('input[name="q_bn_1"]').fill('এটি কি পরীক্ষার পণ্য?')
-  await productForm.locator('textarea[name="a_en_1"]').fill('Yes, this is exclusively synthetic test data.')
-  await productForm.locator('textarea[name="a_bn_1"]').fill('হ্যাঁ, এটি শুধুমাত্র পরীক্ষার তথ্য।')
-  await productSteps.getByRole('button',{name:'Step 5: Media'}).click()
-  await productForm.getByText('Marketing posters (up to 6)').click()
-  await productForm.locator('input[name="marketing_alt_en_1"]').fill('Ghee promotion picture')
-  await productForm.locator('input[name="marketing_alt_bn_1"]').fill('ঘি প্রচারের ছবি')
-  await productSteps.getByRole('button',{name:'Step 6: Review'}).click()
-  await productForm.getByRole('button',{name:'Create product & save SEO draft'}).click()
-  await productForm.getByRole('alert').waitFor({timeout:25000})
-  console.log('Issue 90 validation result:',await productForm.getByRole('alert').allTextContents())
-  assert.match((await productForm.getByRole('alert').textContent())??'',/marketing image 1: select a PC file, add an approved HTTPS URL/i)
-  assert.ok(!staff.url().includes('?error='),'Validation error must not redirect')
-  assert.equal(await productForm.locator('textarea[name="description_en"]').inputValue(),longEnglish)
-  assert.equal(await productForm.locator('textarea[name="description_bn"]').inputValue(),longBangla)
-  assert.equal(await productForm.locator('input[name="q_en_1"]').inputValue(),'Is this a test product?')
-  assert.equal(await productForm.locator('input[name="marketing_alt_bn_1"]').inputValue(),'ঘি প্রচারের ছবি')
-  assert.equal(await productForm.locator('input[name="sku"]').inputValue(),draftSku)
-  // Refresh should recover text/FAQs/marketing and the last working step from tab-only sessionStorage.
   await staff.reload({waitUntil:'domcontentloaded'})
-  await staff.getByText('Your unfinished product information was recovered from this browser tab.').waitFor()
-  assert.equal(await productForm.locator('textarea[name="description_en"]').inputValue(),longEnglish)
-  assert.equal(await productForm.locator('input[name="q_bn_1"]').inputValue(),'এটি কি পরীক্ষার পণ্য?')
-  assert.equal(await productForm.locator('input[name="marketing_alt_en_1"]').inputValue(),'Ghee promotion picture')
-  // Empty optional media rows are fine; expand the collapsed Marketing section after refresh.
-  await productForm.getByText('Marketing posters (up to 6)').click()
-  await productForm.locator('input[name="marketing_alt_en_1"]').fill('')
-  await productForm.locator('input[name="marketing_alt_bn_1"]').fill('')
-  // Optional PC gallery or Marketing upload requires no approved HTTPS URL.
-  const pcImagePng=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEElEQVR4nGP8zwAFTAyYLAAdWwEFNX6VDAAAAABJRU5ErkJggg==','base64')
-  await productForm.locator('input[name="marketing_file_1"]').setInputFiles({name:'test-marketing.png',mimeType:'image/png',buffer:pcImagePng})
+  await staff.getByRole('heading',{name:'Quick Product Upload',exact:true}).waitFor()
   await staff.waitForFunction(()=>{
-    const input=document.querySelector('#guided-create-product input[name="marketing_file_1"]')
-    const field=input?.closest('label')
-    return input?.files?.length===1 && (field?.textContent||'').includes('Ready')
-  },null,{timeout:10000})
-  await productForm.locator('input[name="marketing_alt_en_1"]').fill('Synthetic test marketing photo for this product')
-  await productForm.locator('input[name="marketing_alt_bn_1"]').fill('পণ্যের পরীক্ষামূলক প্রচারমূলক ছবি')
-  await productSteps.getByRole('button',{name:'Step 6: Review'}).click()
-  await productForm.getByRole('button',{name:'Create product & save SEO draft'}).click()
-  await staff.waitForTimeout(1200)
-  console.log('Optional media upload diagnostics',await productForm.locator('[role="alert"]').allTextContents(),await productForm.locator('[role="status"]').allTextContents())
-  await productForm.getByRole('status').getByText(/Product and bilingual SEO draft saved/).waitFor({timeout:25000})
-  const {data:createdMaster,error:masterLookupError}=await admin.from('products').select('id').eq('sku',draftSku).single()
+    const form=document.querySelector('#quick-product-upload')
+    return form?.querySelector('input[name="sku"]')?.value?.startsWith('QUP-')
+  })
+  assert.equal(await productForm.locator('input[name="name"]').inputValue(),'Synthetic draft recovery ghee')
+  assert.equal(await productForm.locator('input[name="sku"]').inputValue(),draftSku)
+  // New master must not require SEO/FAQ fields or any stock/price.
+  await productForm.getByRole('button',{name:'Save & activate product'}).click()
+  await productForm.getByRole('status').filter({hasText:'Product saved and active in the catalog'}).waitFor({timeout:25000})
+  const {data:createdMaster,error:masterLookupError}=await admin.from('products')
+    .select('id,sku,active,is_demo,image_url').eq('sku',draftSku).single()
   assert.equal(masterLookupError,null)
-  const {data:createdMedia,error:mediaLookupError}=await admin.from('product_seo_media').select('kind,url,alt_en,alt_bn').eq('product_id',createdMaster.id)
-  assert.equal(mediaLookupError,null)
-  assert.ok(createdMedia.some(m=>m.kind==='marketing'&&m.url.includes('/storage/v1/object/public/product-images/')&&m.alt_en==='Synthetic test marketing photo for this product'&&m.alt_bn==='পণ্যের পরীক্ষামূলক প্রচারমূলক ছবি'))
+  assert.equal(createdMaster.active,true)
+  assert.equal(createdMaster.is_demo,false)
+  assert.equal(createdMaster.image_url,null,'Image is optional; placeholder is used when no PC image is uploaded')
+  const {data:seoBefore,error:seoBeforeError}=await admin.from('product_seo_content')
+    .select('status').eq('product_id',createdMaster.id).maybeSingle()
+  assert.equal(seoBeforeError,null)
+  assert.equal(seoBefore,null,'AEO/GEO/SEO are deferred; no artificial SEO publication created')
   assert.equal(await productForm.locator('input[name="name"]').inputValue(),'')
-  assert.equal(await staff.evaluate(()=>Object.keys(sessionStorage).filter(k=>k.startsWith('2tbr:product-draft:v1:')).length),0)
-  console.log('Product wizard failed-save retention, refresh recovery and successful retry PASS.')
-
-  // Issue #94: actual product SEO browser form must save fresh text BEFORE review, with
-  // explicit blockers and browser-tab recovery. This is synthetic disposable DB only.
+  assert.equal(await staff.evaluate(()=>Object.keys(sessionStorage).filter(k=>k.startsWith('2tbr:quick-product:v1:')).length),0)
+  await staff.getByText('Synthetic draft recovery ghee',{exact:true}).first().waitFor()
+  // Optional SEO editor is available on the saved master for a later session.
   const productCard=staff.locator('details.card').filter({hasText:'Synthetic draft recovery ghee'})
   await productCard.locator(':scope > summary').click()
-  const seoEditor=productCard.locator('form:has(input[name="expected_version"])')
-  const evidenceNote='Synthetic independent-review evidence recorded in disposable CI only.'
-  await seoEditor.locator('textarea[name="verification_notes"]').fill(evidenceNote)
-  await staff.reload({waitUntil:'domcontentloaded'})
-  const restoredCard=staff.locator('details.card').filter({hasText:'Synthetic draft recovery ghee'})
-  await restoredCard.locator(':scope > summary').click()
-  const restoredEditor=restoredCard.locator('form:has(input[name="expected_version"])')
-  await restoredCard.getByText('Unfinished edits recovered from this browser tab.').waitFor({timeout:15000})
-  assert.equal(await restoredEditor.locator('textarea[name="verification_notes"]').inputValue(),evidenceNote,
-   'Existing product SEO notes should recover after refresh')
-  await restoredEditor.locator('input[name="meta_title_en"]').fill('Synthetic 1 kg ghee - SEO test')
-  await restoredEditor.locator('input[name="meta_title_bn"]').fill('পরীক্ষামূলক ঘি এক কেজি')
-  await restoredEditor.locator('textarea[name="meta_description_en"]').fill('Synthetic ghee SEO meta description for an isolated product review save test only.')
-  await restoredEditor.locator('textarea[name="meta_description_bn"]').fill('এটি শুধুমাত্র বিচ্ছিন্ন পরীক্ষার জন্য ঘি পণ্যের মেটা বিবরণ।')
-  await restoredEditor.locator('input[name="alt_en"]').fill('Synthetic ghee photo for test')
-  await restoredEditor.locator('input[name="alt_bn"]').fill('ঘি পণ্যের পরীক্ষার ছবি')
-  // Open the collapsed optional Media section before editing its URL like a real admin.
-  await restoredEditor.locator('summary').filter({hasText:'5 · Additional media'}).click()
-  // Replace the CI-only localhost image reference with an approved HTTPS image source.
-  await restoredEditor.locator('input[name="marketing_url_1"]').fill('https://res.cloudinary.com/demo/image/upload/sample.jpg')
-  await restoredEditor.getByRole('button',{name:'Save & submit for independent review'}).click()
-  await restoredCard.getByRole('alert').filter({hasText:'Your changes were SAVED as a draft'}).waitFor({timeout:25000})
-  assert.match(await restoredCard.getByRole('alert').last().textContent()??'',/Demo\/test product cannot be published/)
-  assert.match(await restoredCard.getByRole('alert').last().textContent()??'',/Upload a genuine master product image/)
-  assert.equal(new URL(staff.url()).pathname,'/admin/products','validation cannot navigate away from edits')
-  const {data:noteSaved,error:noteError}=await admin.from('product_seo_content').select('verification_notes,status,version').eq('product_id',createdMaster.id).single()
-  assert.equal(noteError,null)
-  assert.equal(noteSaved.verification_notes,evidenceNote,'New evidence must save BEFORE review gating')
-  assert.equal(noteSaved.status,'draft','Blocked review must remain Draft')
-  assert.ok(noteSaved.version>=2,'Draft version must increment')
-  const {error:fixtureUpdateError}=await admin.from('products').update({
-   is_demo:false,image_url:'https://res.cloudinary.com/demo/image/upload/sample.jpg'
-  }).eq('id',createdMaster.id)
-  assert.equal(fixtureUpdateError,null,'Only the disposable synthetic fixture can be made review-eligible')
-  await restoredEditor.getByRole('button',{name:'Save & submit for independent review'}).click()
-  await restoredCard.getByRole('status').filter({hasText:'Product details saved and submitted for independent review'}).waitFor({timeout:25000})
-  const {data:reviewedDraft,error:reviewReadError}=await admin.from('product_seo_content').select('status,verification_notes').eq('product_id',createdMaster.id).single()
-  assert.equal(reviewReadError,null)
-  assert.equal(reviewedDraft.status,'review')
-  assert.equal(reviewedDraft.verification_notes,evidenceNote)
-  console.log('Issue 94 SEO edit refresh recovery -> failed review saves notes + exact reasons -> eligible review submission PASS.')
+  await productCard.getByRole('heading',{name:'SEO / AEO / GEO product content'}).waitFor()
+  await productCard.getByText('Not started',{exact:true}).waitFor()
+  console.log('Quick Product Upload: mobile widths, tab draft recovery, active master without SEO, optional editor PASS.')
 
   await staff.goto('http://127.0.0.1:3000/admin/notifications',{waitUntil:'domcontentloaded'})
   await staff.getByRole('heading',{name:'Notification center',exact:true}).waitFor()
@@ -640,7 +540,7 @@ try {
   await page.goto('http://127.0.0.1:3000/login?next=%2Fhome', {waitUntil: 'domcontentloaded'})
   await login('01700000094', password)
   await page.waitForURL(url => url.pathname === '/')
-  await assertApprovedHome(page)
+  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
   console.log('Retired Home UAT passed: signed-in bookmark and old login intent reach storefront; My dashboard opens Account.')
   // A returning password member who has not completed setup must still finish it.
   const unfinishedPassword = randomUUID() + 'aA1!'
@@ -656,7 +556,7 @@ try {
   await page.locator('[name="community_id"]').selectOption('00000000-0000-4000-8000-000000000821')
   await page.getByRole('button', {name: 'Finish setup', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/')
-  await assertApprovedHome(page)
+  await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
   assert.deepEqual(errors, [])
   console.log('No-SMS Auth UAT passed: password change and login preserve owner identity/roles; old password rejected; native customer signup/referral/onboarding; email-only contact onboarding and mobile linking; phone collision/guest access/invalid OAuth callbacks rejected.')
 } finally {await browser.close()}

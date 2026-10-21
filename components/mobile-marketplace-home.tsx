@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import {PreviewHomeCards} from '@/components/home-card-preview'
 import {LivePreviewHomeCards} from '@/components/live-preview-home-cards'
-import {hasPublishedLiveContent} from '@/lib/approved-live-detail-data'
+import type {PublicVendorBookingProduct} from '@/lib/public-vendor-booking'
 import {useEffect,useRef,useState} from 'react'
 import {setCommerceCartItem} from '@/app/actions/commerce'
 import type {DemoFeaturedPool} from '@/lib/featured-pools'
@@ -22,6 +22,7 @@ type Props={
  onDetectArea:()=>void
  detectingArea:boolean
  offers:StorefrontOffer[]
+ vendorProducts?:PublicVendorBookingProduct[]
  products:ShowcaseProduct[]
  publishedProducts:PublishedCatalogPage
  pools:DemoFeaturedPool[]
@@ -70,12 +71,12 @@ function SectionHeading({title,description,href,viewText,savings=false}:{
 const money=(n:number|null|undefined)=>n!=null&&Number(n)>0?formatPrice(n):null
 
 export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectArea,detectingArea,
- offers,products,publishedProducts,pools,language,demoMode,previewCards=false,search,savings}:Props){
+ offers,products,publishedProducts,vendorProducts=[],pools,language,demoMode,previewCards=false,search,savings}:Props){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  // Data-only switch. The locked homepage markup and CSS are unchanged:
  // use demo fixtures until genuinely published public records exist.
- const livePreviewData={offers,pools,products,catalog:publishedProducts.items}
- const hasLivePreview=previewCards&&hasPublishedLiveContent(livePreviewData)
+ const livePreviewData={offers,pools,products,catalog:publishedProducts.items,vendorProducts}
+ const hasLivePreview=previewCards
  const [slide,setSlide]=useState(0)
  const areaPickerRef=useRef<HTMLDetailsElement>(null)
  const [clockNow,setClockNow]=useState<number|null>(null)

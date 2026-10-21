@@ -21,17 +21,24 @@ type Pool={id:string;community_id:string;title:string;status:string;cadence:stri
 export default async function EasyBusiness({searchParams}:{searchParams:Promise<Search>}){
  const {supabase:db}=await requireAdmin()
  const sp=await searchParams
- const [productRes,seoRes,communityRes,supplierRes,pickupRes,poolsRes]=await Promise.all([
+ const [productRes,seoRes,communityRes,supplierRes,pickupRes,poolsRes,supplierLinksRes]=await Promise.all([
   db.from('products').select('id,name,package_size,source_type,active,is_demo').eq('active',true).eq('is_demo',false).order('name').limit(150),
   db.from('product_seo_content').select('product_id,status').eq('status','published').limit(150),
   db.from('communities').select('id,name').eq('active',true).order('sort_order'),
   db.from('suppliers').select('id,business_name').eq('active',true).order('business_name'),
   db.from('pickup_points').select('id,community_id,name,address').eq('active',true).order('name'),
-  db.from('pools').select('id,community_id,title,status,cadence,opens_at,commitment_closes_at,confirmation_closes_at,supplier_delivery_at,pickup_at,receiving_pickup_point_id,notes,is_paused').order('created_at',{ascending:false}).limit(30)
+  db.from('pools').select('id,community_id,title,status,cadence,opens_at,commitment_closes_at,confirmation_closes_at,supplier_delivery_at,pickup_at,receiving_pickup_point_id,notes,is_paused').order('created_at',{ascending:false}).limit(30),
+  db.from('supplier_products').select('product_id,supplier_id').eq('active',true)
  ])
  const criticalError=productRes.error||communityRes.error||poolsRes.error
  const products=productRes.data??[],publishedIds=new Set((seoRes.data??[]).map(r=>r.product_id))
  const communities=communityRes.data??[],suppliers=supplierRes.data??[],pickups=pickupRes.data??[],pools=(poolsRes.data??[]) as Pool[]
+ const supplierLinks=(supplierLinksRes.data??[]) as Array<{product_id:string;supplier_id:string}>
+ const linkedVendors=new Map<string,Set<string>>()
+ for(const link of supplierLinks){
+  const current=linkedVendors.get(link.product_id)??new Set<string>()
+  current.add(link.supplier_id);linkedVendors.set(link.product_id,current)
+ }
  const selection=validUuid.test(sp.pool??'')?sp.pool:null
  const pool=pools.find(p=>p.id===selection)??pools.find(p=>p.status==='draft')??pools.find(p=>p.status==='open')??null
  const poolId=pool?.id??null
@@ -54,7 +61,7 @@ export default async function EasyBusiness({searchParams}:{searchParams:Promise<
  const benchmarkByProduct=new Map((benchmarks??[]).filter(b=>b.community_id===pool?.community_id)
   .map(b=>[b.product_id,Number(b.benchmark_price)]))
  const productsById=new Map(products.map(p=>[p.id,p]))
- const readyProducts=products.filter(p=>benchmarkByProduct.has(p.id)&&publishedIds.has(p.id)&&!items.some(i=>i.product_id===p.id))
+ const readyProducts=products.filter(p=>benchmarkByProduct.has(p.id)&&(p.source_type!=='SUPPLIER_POOL'||Boolean(linkedVendors.get(p.id)?.size))&&!items.some(i=>i.product_id===p.id))
  const community=communities.find(c=>c.id===pool?.community_id)
  const communityPickups=pickups.filter(p=>p.community_id===pool?.community_id)
  const getTiers=(id:string)=>quotes.filter(q=>q.pool_item_id===id).sort((a,b)=>Number(a.threshold_quantity)-Number(b.threshold_quantity))
@@ -63,7 +70,7 @@ export default async function EasyBusiness({searchParams}:{searchParams:Promise<
  const progress=pool?poolLaunchChecklist({pool,itemCount:items.length,
   supplierItemTierCounts:supplierTierCounts,ownPricingReady,
   pickupCount:poolPickups.size,receivingIncluded:Boolean(pool.receiving_pickup_point_id&&poolPickups.has(pool.receiving_pickup_point_id)),homePublished:featured?.published??false}):null
- const loadError=criticalError||itemsRes.error||benchmarkRes.error||tierRes.error||pickupOptionsRes.error||publicationRes.error||seoRes.error||supplierRes.error||pickupRes.error
+ const loadError=criticalError||itemsRes.error||benchmarkRes.error||tierRes.error||pickupOptionsRes.error||publicationRes.error||seoRes.error||supplierRes.error||supplierLinksRes.error||pickupRes.error
 
  return <AdminShell><div className="grid min-w-0 gap-4">
   <section className="card">
@@ -72,6 +79,7 @@ export default async function EasyBusiness({searchParams}:{searchParams:Promise<
    <p className="muted mt-2">One guided place for products, local offers, verified pricing and publication. Your existing brand design and Finance approvals stay unchanged.</p>
    <div className="mt-4 flex flex-wrap gap-2">
     <Link className="btn-primary" href="/admin/products">+ Add a product</Link>
+    <Link className="btn-primary" href="/admin/easy-business/quick-offers">Set vendor prices →</Link>
     <Link className="btn-secondary" href="/admin/orders">Orders</Link>
     <Link className="btn-secondary" href="/admin/treasury">Finance requests</Link>
     <details className="relative self-center"><summary className="chip cursor-pointer">Advanced tools</summary><div className="mt-2 flex flex-wrap gap-2">
@@ -85,20 +93,35 @@ export default async function EasyBusiness({searchParams}:{searchParams:Promise<
   {loadError&&<div className="error" role="alert">Some operational data could not be loaded. Please refresh before making changes. Nothing was published.</div>}
   {!loadError&&<>
   <section className="card" aria-labelledby="easy-step-one">
-   <div className="flex flex-wrap items-center justify-between gap-2"><h2 id="easy-step-one" className="text-xl font-black">1. Choose your product</h2><span className="chip">{products.filter(p=>publishedIds.has(p.id)).length} published</span></div>
-   <p className="muted mt-2 text-sm">Published product details are already visible in All Products. A local selling offer is separate.</p>
+   <div className="flex flex-wrap items-center justify-between gap-2"><h2 id="easy-step-one" className="text-xl font-black">1. Choose your product</h2><span className="chip">{products.length} active masters</span></div>
+   <p className="muted mt-2 text-sm">Quick Upload products are ready to configure here without SEO/AEO/GEO publication. These are master records, <strong>not published selling offers</strong>.</p>
    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-    {products.filter(p=>publishedIds.has(p.id)).slice(0,10).map(p=><div key={p.id} className="rounded-xl border border-slate-200 bg-white/60 p-3">
-     <b className="block truncate">{p.name}</b><p className="muted text-xs">{p.package_size} · Published</p>
-    </div>)}
+    {products.slice(0,30).map(p=>{
+     const vendorIds=linkedVendors.get(p.id)
+     const vendorNames=suppliers.filter(s=>vendorIds?.has(s.id)).map(s=>s.business_name)
+     const requiresVendor=p.source_type==='SUPPLIER_POOL'
+     const hasVendor=vendorNames.length>0
+     return <article key={p.id} className="rounded-xl border border-slate-200 bg-white/60 p-3">
+      <b className="block truncate">{p.name}</b>
+      <p className="muted text-xs">{p.package_size} · Active master · {publishedIds.has(p.id)?'SEO published':'SEO optional / later'}</p>
+      <p className="mt-2 text-xs">{requiresVendor?(hasVendor?'Vendor linked: '+vendorNames.join(', '):'Vendor not linked · on-demand supply not verified'):'2TBR direct-stock category · reconcile own inventory separately'}</p>
+      <p className="muted mt-1 text-xs">No customer price or guaranteed quantity is implied. Confirm vendor supply before publishing any offer.</p>
+     </article>
+    })}
    </div>
-   {!products.some(p=>publishedIds.has(p.id))&&<p className="notice mt-3">No published products yet. Add a product, verify its facts, and publish its information first.</p>}
-   <Link className="mt-3 inline-block text-sm font-bold text-cyan-800 underline" href="/admin/products">Manage products and images →</Link>
+   {!products.length&&<p className="notice mt-3">No active products yet. Use Quick Product Upload to create a new master first.</p>}
+   {products.length>0&&!products.every(p=>linkedVendors.get(p.id)?.size)&&<p className="notice mt-3">Some products need a supplier link. Open Group Deals → Supplier catalog → Link supplier to product. For vendor-held goods, do not enter fictitious 2TBR stock.</p>}
+   <div className="mt-3 flex flex-wrap gap-3 text-sm font-bold">
+    <Link className="text-cyan-800 underline" href="/admin/products">Manage products and images →</Link>
+    <Link className="text-cyan-800 underline" href="/admin/easy-business/quick-offers">Open Quick Offer Setup →</Link>
+    <Link className="text-cyan-800 underline" href="/admin/group-deals">Link product to vendor →</Link>
+    <Link className="text-cyan-800 underline" href="/admin/market-prices">Verify a local market price →</Link>
+   </div>
   </section>
 
   <section className="card" aria-labelledby="easy-step-two">
    <h2 id="easy-step-two" className="text-xl font-black">2. Choose where to sell</h2>
-   <p className="muted mt-2 text-sm">One Pool belongs to one community. Your product information stays visible in all areas. Local availability is shown only through eligible offers.</p>
+   <p className="muted mt-2 text-sm">One Pool belongs to one community. The same product can be offered in different communities. Vendor-held on-demand goods must have a linked supplier and verified availability; do not treat them as warehouse inventory.</p>
    <div className="mt-3 flex flex-wrap gap-2">
     {pools.filter(p=>!['completed','cancelled'].includes(p.status)).slice(0,10).map(p=><Link key={p.id} href={'/admin/easy-business?pool='+p.id}
      className={p.id===pool?.id?'btn-primary':'btn-secondary'}>{p.title} · {p.status==='open'?'Open':p.status==='draft'?'Draft':p.status.replaceAll('_',' ')}</Link>)}
@@ -140,10 +163,10 @@ export default async function EasyBusiness({searchParams}:{searchParams:Promise<
      <h3 className="font-black">Add products to this Pool</h3>
      {readyProducts.length>0?<form action={addPoolItem} className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_120px_auto] sm:items-end">
       <input type="hidden" name="return_to" value="/admin/easy-business"/><input type="hidden" name="pool_id" value={pool.id}/>
-      <label><span className="label">Published product with verified local benchmark</span><select className="input" name="product_id" required defaultValue=""><option value="">Choose product</option>{readyProducts.map(p=><option value={p.id} key={p.id}>{p.name} · {taka(benchmarkByProduct.get(p.id)??0)} benchmark</option>)}</select></label>
+      <label><span className="label">Active product with verified local benchmark</span><select className="input" name="product_id" required defaultValue=""><option value="">Choose product</option>{readyProducts.map(p=><option value={p.id} key={p.id}>{p.name} · {taka(benchmarkByProduct.get(p.id)??0)} benchmark</option>)}</select></label>
       <label><span className="label">Max / buyer</span><input name="max_quantity" className="input" type="number" min="1" defaultValue="20"/></label>
       <SubmitButton className="btn-primary">Add</SubmitButton>
-     </form>:<p className="notice mt-3">No additional approved products are eligible for this area. Verify the local market price before adding a product. <Link className="underline font-bold" href="/admin/market-prices">Market prices →</Link></p>}
+     </form>:<p className="notice mt-3">No active products with a verified local benchmark are available for this area. Detailed SEO/AEO/GEO is optional. Verify a genuine market reference price before adding an item. <Link className="underline font-bold" href="/admin/market-prices">Market prices →</Link></p>}
     </div>
     {items.map(item=>{
      const product=productsById.get(item.product_id),tier=getTiers(item.id),benchmark=Number(item.benchmark_price_snapshot??0)

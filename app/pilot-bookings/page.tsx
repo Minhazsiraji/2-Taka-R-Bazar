@@ -3,6 +3,7 @@ import {requireOnboardedUser} from '@/lib/auth'
 import {CustomerHeader} from '@/components/customer-header'
 import {CustomerFooter} from '@/components/customer-footer'
 import {cancelPilotBooking} from '@/app/actions/pilot-booking'
+import {PilotManualPaymentBookings} from '@/components/pilot-manual-payment-bookings'
 
 export const dynamic='force-dynamic'
 type Params={searchParams:Promise<{notice?:string;error?:string}>}
@@ -23,7 +24,7 @@ export default async function MyPilotBookings({searchParams}:Params){
     <div><p className="text-xs font-bold uppercase text-teal-700">2TBR pilot</p><h1 className="text-3xl font-black">My bookings / আমার বুকিং</h1></div>
     <Link href="/pilot-book" className="btn-primary">Request another product</Link>
    </div>
-   <p className="muted mt-3 text-sm">Bookings are requests until confirmed by our team. No online payment, stock reservation or automatic Finance entry is made on this page.</p>
+   <p className="muted mt-3 text-sm">Bookings are requests until confirmed by staff. Once confirmed, you can use owner-approved manual bKash/bank instructions and submit a transaction reference for review. No stock reservation or automatic Finance receipt is made.</p>
    {sp.notice&&<p role="status" className="mt-4 rounded-xl border border-teal-300 p-3 text-sm">{sp.notice}</p>}
    {sp.error&&<p role="alert" className="error mt-4">{sp.error}</p>}
    {error?<p className="error mt-5" role="alert">Bookings could not be loaded. Please refresh.</p>:
@@ -44,6 +45,7 @@ export default async function MyPilotBookings({searchParams}:Params){
       <input type="hidden" name="booking_id" value={item.id}/><button type="submit" className="btn-secondary text-sm">Cancel this request</button>
      </form>}
     </article>)}</div>}
+   <PilotManualPaymentBookings bookings={bookings} userId={user.id}/>
   </div>
   <CustomerFooter/>
  </main>

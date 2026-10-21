@@ -2,9 +2,9 @@ name: Step 1 CI
 
 on:
   push:
-    branches: [main, feat/finance-treasury-integrated-20261009, feat/finance-complete-release-uat-20261011, feat/storefront-home-integration-20261012, feat/approved-unified-home-savings-121]
+    branches: [main, feat/finance-treasury-integrated-20261009, feat/finance-complete-release-uat-20261011, feat/storefront-home-integration-20261012]
   pull_request:
-    branches: [main, rebuild/clean-storefront-pilot-v2]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -117,7 +117,6 @@ jobs:
             /tmp/2tbr-account-*.png
             /tmp/2tbr-header-*.png
             /tmp/2tbr-product-seo-*.png
-            /tmp/2tbr-approved-unified-home-*.png
           if-no-files-found: ignore
           retention-days: 7
       - name: Stop disposable Supabase

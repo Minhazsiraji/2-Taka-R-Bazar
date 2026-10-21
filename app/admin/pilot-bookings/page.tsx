@@ -2,24 +2,27 @@ import Link from 'next/link'
 import {requireAdmin} from '@/lib/auth'
 import {AdminShell} from '@/components/admin-shell'
 import {staffUpdatePilotBooking,staffSendPilotServiceUpdate} from '@/app/actions/pilot-booking'
+import {PilotManualPaymentReview} from '@/components/pilot-manual-payment-review'
 
 export const dynamic='force-dynamic'
 type Props={searchParams:Promise<{notice?:string;error?:string}>}
-type Booking={id:string;product_name:string;quantity:number;contact_name:string;contact_phone:string;
+type Booking={id:string;product_id:string;product_name:string;quantity:number;contact_name:string;contact_phone:string;
  community_id:string;fulfillment_method:string;delivery_address:string|null;customer_note:string;
  status:string;staff_note:string;confirmed_unit_price:number|null;confirmed_delivery_fee:number|null;
  created_at:string}
 export default async function PilotBookingInbox({searchParams}:Props){
  const sp=await searchParams
  const {supabase}=await requireAdmin()
- const [{data:records,error},{data:communities}]=await Promise.all([
+ const [{data:records,error},{data:communities},{data:drafts}]=await Promise.all([
   supabase.from('pilot_booking_requests')
-   .select('id,product_name,quantity,contact_name,contact_phone,community_id,fulfillment_method,delivery_address,customer_note,status,staff_note,confirmed_unit_price,confirmed_delivery_fee,created_at')
+   .select('id,product_id,product_name,quantity,contact_name,contact_phone,community_id,fulfillment_method,delivery_address,customer_note,status,staff_note,confirmed_unit_price,confirmed_delivery_fee,created_at')
    .order('created_at',{ascending:false}).limit(150),
   supabase.from('communities').select('id,name'),
+  supabase.from('vendor_offer_drafts').select('product_id,proposed_sale_price').eq('status','draft'),
  ])
  const communityMap=new Map((communities??[]).map(c=>[c.id,c.name]))
  const bookings=(records??[]) as Booking[]
+ const ownerPriceByProduct=new Map((drafts??[]).map(d=>[d.product_id,Number(d.proposed_sale_price)]))
  const pending=bookings.filter(b=>b.status==='requested').length
  return <AdminShell><div className="grid gap-4">
   <section className="card">
@@ -45,9 +48,10 @@ export default async function PilotBookingInbox({searchParams}:Props){
     {b.staff_note&&<p className="muted mt-2 text-sm"><b>Last staff note:</b> {b.staff_note}</p>}
     {!['cancelled','confirmed'].includes(b.status)&&<form action={staffUpdatePilotBooking} className="mt-4 grid gap-3 rounded-xl border p-3">
      <input type="hidden" name="booking_id" value={b.id}/>
+     {ownerPriceByProduct.has(b.product_id)&&<p className="rounded-lg border p-2 text-sm">Owner's unpublished proposal: <b>৳{ownerPriceByProduct.get(b.product_id)}</b> per package. Staff must independently confirm price, vendor supply and fees before booking acceptance.</p>}
      <div className="grid gap-3 sm:grid-cols-2">
       <label className="grid gap-1 text-sm font-bold">Agreed price per unit (৳)
-       <input className="input" type="number" name="unit_price" min="0.01" step="0.01" defaultValue={b.confirmed_unit_price??''} placeholder="Confirm before accepting"/></label>
+       <input className="input" type="number" name="unit_price" min="0.01" step="0.01" defaultValue={b.confirmed_unit_price??ownerPriceByProduct.get(b.product_id)??''} placeholder="Confirm before accepting"/></label>
       <label className="grid gap-1 text-sm font-bold">Delivery fee (৳; 0 for free pickup)
        <input className="input" type="number" name="delivery_fee" min="0" step="0.01" defaultValue={b.confirmed_delivery_fee??''} placeholder="0 for free pickup"/></label>
      </div>
@@ -77,5 +81,6 @@ export default async function PilotBookingInbox({searchParams}:Props){
       </form>
     </div>}
    </article>)}</div>}
+  <PilotManualPaymentReview/>
  </div></AdminShell>
 }

@@ -1,0 +1,27 @@
+/* 2TBR approved storefront: minimum touch targets without changing design-lock files.
+   More specific than the historical body:has(.mhome) 29–36px !important rule.
+   This applies across public shopping pages, including the 320px viewport. */
+@media (max-width:767px){
+ html body.site-glass-root.site-glass-root .public-glass-header.market-flat-header.market-flat-header
+ .market-header-inner .market-header-actions.market-header-actions
+ :is(.market-single-language,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button){
+  box-sizing:border-box!important;
+  width:44px!important;min-width:44px!important;max-width:44px!important;
+  height:44px!important;min-height:44px!important;max-height:44px!important;
+  flex:0 0 44px!important;padding:0!important;
+ }
+}
+
+/* Narrow tablet still uses the compact two-row header; all visible buttons
+   and links must retain 44px interaction boxes at the 768/790px UAT widths. */
+@media(min-width:768px) and (max-width:790px){
+ html body.site-glass-root.site-glass-root .public-glass-header.market-flat-header.market-flat-header
+ .market-header-inner .market-header-actions.market-header-actions
+ :is(.market-header-quick-link,.market-single-language,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button){
+  box-sizing:border-box!important;
+  width:44px!important;min-width:44px!important;max-width:44px!important;
+  height:44px!important;min-height:44px!important;max-height:44px!important;
+  flex:0 0 44px!important;padding:0!important;
+  display:inline-flex;align-items:center;justify-content:center;
+ }
+}

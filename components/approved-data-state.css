@@ -1,0 +1,3 @@
+/* Only unavailable data is blurred. Locked colors, geometry, rims and holders are untouched. */
+[data-approved-data] [data-empty="true"]{filter:blur(2px);opacity:.42;user-select:none;pointer-events:none}
+[data-approved-data] article[data-empty="true"]{pointer-events:none}
