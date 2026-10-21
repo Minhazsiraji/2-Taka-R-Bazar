@@ -24,15 +24,15 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  const storedLanguage=cookieStore.get(STOREFRONT_LANGUAGE_COOKIE)?.value
  const initialLanguage=languageFromPreference(storedLanguage)
  const supabase=await createClient()
- const [claims,areasRes,offersRes,featuredRes,poolsRes,publishedProducts]=await Promise.all([
-  supabase.auth.getClaims(),
+ const [verifiedSession,areasRes,offersRes,featuredRes,poolsRes,publishedProducts]=await Promise.all([
+  supabase.auth.getUser(),
   supabase.rpc('get_public_storefront_areas'),
   supabase.rpc('get_public_storefront_offers',{p_community_id:null}),
   supabase.rpc('get_public_own_product_showcase',{p_product_id:null,p_featured_only:true}),
   supabase.rpc('get_public_featured_pools',{p_community_id:null}),
   loadPublishedCatalogPage(),
  ])
- const authenticated=Boolean(claims.data?.claims?.sub)
+ const authenticated=Boolean(verifiedSession.data.user?.id)
  const savings=await getHomeSavingsSummary(authenticated)
  const realAreas=(areasRes.data??[]) as StorefrontArea[]
  const realOffers=await withCommerceOffers((offersRes.data??[]) as StorefrontOffer[])
