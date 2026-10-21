@@ -45,7 +45,7 @@ test('payment recipients are isolated from Treasury and activated only by verifi
  assert.match(actions,/requireSuperAdmin\(\)/)
  assert.match(actions,/is_current_platform_owner/)
  assert.match(recipients,/owner-only|OWNER-ONLY/i)
- assert.match(recipients,/masked\(item.account_number\)/)
+ assert.match(recipients,/masked\(entry.number\)/)
  assert.doesNotMatch(migration,/join public.treasury_accounts/)
 })
 
