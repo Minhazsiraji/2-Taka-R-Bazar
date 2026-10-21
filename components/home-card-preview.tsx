@@ -69,18 +69,17 @@ export function PreviewHomeCards({section,language,search}:Props){
    {rows.map(d=>{const p=previewProducts.find(item=>item.id===d.id)!
     return <article className="mhome-deal-card app-card-preview-deal" key={d.id}>
      <div className="app-card-preview-deal-image">
-      <Photo product={p}/><span className="app-card-preview-label">GROUP DEAL</span>
+      <Photo product={p}/><span className="app-card-preview-label">GROUP DEAL</span>{demoLabel}
      </div>
-     <div className="app-card-preview-copy"><div className="app-card-preview-overline">BUY TOGETHER • SAVE MORE</div>
+     <div className="app-card-preview-copy"><div className="app-card-preview-heading"><div className="app-card-preview-overline">BUY TOGETHER • SAVE MORE</div>
       <h3>{bn?(p.id==='rice'?'চিনিগুড়া চাল':p.nameBn):p.name}</h3>
-      <p className="app-card-preview-meta">{p.unit} · Savar DOHS</p>
+      <p className="app-card-preview-meta">{p.unit} · Savar DOHS</p></div>
       <div className="app-card-preview-price"><strong>{money(d.price)}</strong><s>{money(p.oldPrice)}</s></div>
       <span className="app-card-preview-save">{bn?'সাশ্রয়':'Save'} {money(p.oldPrice-d.price)}</span>
       <div className="app-card-preview-deal-stats"><span>👥 {d.joined}/{d.target} joined</span><span>◷ Ends in {d.days} {d.days===1?'day':'days'}</span></div>
       <Progress value={d.joined} max={d.target} label={bn?'গ্রুপ অংশগ্রহণ':'Group participation'}/>
       <div className="app-card-preview-actions"><button type="button" onClick={()=>setSelection({kind:'deal',id:d.id})}>{bn?'বিস্তারিত':'View details'}</button>
        <button type="button" className="app-card-preview-primary" onClick={()=>setSelection({kind:'deal',id:d.id})}>{bn?'গ্রুপে যোগ দিন':'Join Deal'}</button></div>
-      {demoLabel}
      </div>
     </article>})}
   </div>:<div className="mhome-empty">{bn?'এই খোঁজে গ্রুপ ডিল নেই।':'No Group Deals match your search.'}</div>
@@ -88,12 +87,11 @@ export function PreviewHomeCards({section,language,search}:Props){
   const rows=previewProducts.filter(matches)
   cards=rows.length?<div className="mhome-exclusive-grid app-card-preview app-card-preview-exclusive" data-preview-cards="exclusive">
    {rows.map(p=><article className="mhome-exclusive-card app-card-preview-product" key={p.id}>
-    <div className="app-card-preview-product-main"><div className="app-card-preview-product-image"><Photo product={p}/></div>
+    <div className="app-card-preview-product-main"><div className="app-card-preview-product-image"><Photo product={p}/>{demoLabel}</div>
      <div className="app-card-preview-copy"><h3>{bn?p.nameBn:p.name}</h3><p className="app-card-preview-meta">{p.unit}</p>
       <div className="app-card-preview-price"><strong>{money(p.price)}</strong><s>{money(p.oldPrice)}</s></div>
       <span className="app-card-preview-save">{bn?'সাশ্রয়':'Save'} {money(p.oldPrice-p.price)}</span>
       <p className="app-card-preview-stock">{bn?'স্টকে আছে '+p.stock:'In stock · '+p.stock+' available'}</p>
-      {demoLabel}
      </div>
     </div>
     <div className="app-card-preview-actions"><button type="button" onClick={()=>details(p.id)}>{bn?'বিস্তারিত':'View details'}</button>
@@ -109,7 +107,7 @@ export function PreviewHomeCards({section,language,search}:Props){
     <div className="app-card-preview-pool-photos">{pool.products.map(id=>{
      const p=previewProducts.find(item=>item.id===id)!
      return <div key={id}><Photo product={p}/></div>
-    })}</div>
+    })}{demoLabel}</div>
     <div className="app-card-preview-copy"><div className="app-card-preview-pool-top"><span className="app-card-preview-label">{bn?pool.labelBn:pool.label}</span><span className="app-card-preview-active"><span aria-hidden="true">● </span>ACTIVE</span></div>
      <h3>{bn?pool.nameBn:pool.name}</h3>
      <p className="app-card-preview-meta">{bn?'3 টি পণ্য · '+pool.joined.toLocaleString('en-BD')+' পরিবারের যুক্ত':'3 products · '+pool.joined.toLocaleString('en-BD')+' households joined'}</p>
@@ -117,7 +115,6 @@ export function PreviewHomeCards({section,language,search}:Props){
      <p className="app-card-preview-deadline">◷ Commit ends in {pool.days} days · {pool.date}</p>
      <div className="app-card-preview-pool-bottom"><span className="app-card-preview-next">{bn?'পরবর্তী সাশ্রয় টিয়ার':'Next savings tier'}: {pool.target.toLocaleString('en-BD')}</span>
       <button type="button" className="app-card-preview-primary mhome-pool-link" onClick={()=>setSelection({kind:'pool',id:pool.id})}>Explore Pool →</button></div>
-     {demoLabel}
     </div>
    </article>)}
   </div>
