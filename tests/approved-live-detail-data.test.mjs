@@ -106,3 +106,37 @@ test('published client detail pages show the correct sections and no real writes
   for(const forbidden of ['service_role','setCommerceCartItem','insert(','delete(','update(','<form'])assert.ok(!source.includes(forbidden),path+' contains '+forbidden)
  }
 })
+
+test('real-data preview routes reject invalid IDs and remain unavailable in Production',async()=>{
+ let enabled=true
+ const mocks={
+  'next/headers':{cookies:async()=>({get:()=>({value:'en'})})},
+  'next/navigation':{notFound:()=>{throw Error('NOT_FOUND')}},
+  '@/lib/public-demo-products':{demoStorefrontEnabled:()=>enabled},
+  '@/lib/approved-live-detail-server':{
+   loadLivePublishedProduct:async id=>id===product.id?product:null,
+   loadLivePublishedPool:async id=>id===livePool.id?livePool:null,
+  },
+  '@/lib/approved-live-detail-data':data,
+  '@/lib/storefront-language':{
+   STOREFRONT_LANGUAGE_COOKIE:'language',languageFromPreference:()=> 'en',
+   isValidLanguagePreference:()=>true,
+  },
+  '@/components/live-approved-product-details':{LiveApprovedProductDetails:()=>null},
+  '@/components/live-approved-pool-details':{LiveApprovedPoolDetails:()=>null},
+ }
+ const ProductPage=(await loadSource('app/preview-live/product/[id]/page.tsx',mocks)).default
+ const PoolPage=(await loadSource('app/preview-live/pool/[id]/page.tsx',mocks)).default
+ const pp=id=>ProductPage({params:Promise.resolve({id}),searchParams:Promise.resolve({kind:'deal'})})
+ const pool=id=>PoolPage({params:Promise.resolve({id})})
+ assert.equal((await pp(product.id)).props.product.id,product.id)
+ assert.equal((await pool(livePool.id)).props.pool.id,livePool.id)
+ await assert.rejects(pp('rice'),/NOT_FOUND/)
+ await assert.rejects(pool('weekly'),/NOT_FOUND/)
+ enabled=false
+ await assert.rejects(pp(product.id),/NOT_FOUND/)
+ await assert.rejects(pool(livePool.id),/NOT_FOUND/)
+})
+test('conflicting community retail benchmarks do not become a fabricated single market price',()=>{
+ assert.equal(data.productFromPublicSources(id,[base,{...base,reference_price:170}],null,null).retail,null)
+})
