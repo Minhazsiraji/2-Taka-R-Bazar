@@ -1,9 +1,10 @@
-/* 2TBR approved storefront: small-screen touch target safety only.
-   Scoped to the public shopping header; no modification to locked approved CSS.
-   Do not require :has(.mhome), because other customer pages reuse the header. */
-@media(max-width:767px){
- .site-glass-root .public-glass-header.market-flat-header .market-header-actions
- :is(.market-single-language,.theme-toggle,.customer-notification-bell,.market-mobile-menu-button){
+/* 2TBR approved storefront: minimum touch targets without changing design-lock files.
+   More specific than the historical body:has(.mhome) 29–36px !important rule.
+   This applies across public shopping pages, including the 320px viewport. */
+@media (max-width:767px){
+ html body.site-glass-root.site-glass-root .public-glass-header.market-flat-header.market-flat-header
+ .market-header-inner .market-header-actions.market-header-actions
+ :is(button.market-single-language,button.theme-toggle,button.customer-notification-bell,button.market-mobile-menu-button){
   box-sizing:border-box!important;
   width:44px!important;min-width:44px!important;max-width:44px!important;
   height:44px!important;min-height:44px!important;max-height:44px!important;
