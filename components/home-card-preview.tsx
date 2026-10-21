@@ -107,7 +107,7 @@ export function PreviewHomeCards({section,language,search}:Props){
      <Progress value={pool.joined} max={pool.target} label={bn?'অংশগ্রহণের অগ্রগতি':'Household progress'}/>
      <p className="app-card-preview-deadline">◷ Commit ends in {pool.days} days · {pool.date}</p>
      <div className="app-card-preview-pool-bottom"><span className="app-card-preview-next">{bn?'পরবর্তী সাশ্রয় টিয়ার':'Next savings tier'}: {pool.target.toLocaleString('en-BD')}</span>
-      <Link href={'/demo-pool/'+pool.id+'?source=home'} className="app-card-preview-primary mhome-pool-link">{bn?'পুল দেখুন':'Explore Pool'} →</Link></div>
+      <Link href={'/demo-pool/'+pool.id+'?source=home'} className="app-card-preview-primary mhome-pool-link">Explore Pool →</Link></div>
     </div>
    </article>)}
   </div>
