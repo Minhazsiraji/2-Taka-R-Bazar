@@ -42,7 +42,7 @@ try{
   await context.route('https://images.unsplash.com/**',route=>route.abort()) // Exercise local placeholders deterministically.
   const page=await context.newPage()
   for(const route of (process.env.UAT_DEBUG?['/']:['/','/login','/signup','/products','/about','/faq','/privacy','/terms','/return-policy','/refund-policy','/cart','/group-deals','/pool','/account','/account/savings','/money','/demo-product/butter','/demo-product/ghee','/demo-product/rice','/demo-product/eggs','/demo-product/rice?kind=deal','/demo-product/butter?kind=deal','/demo-product/00000000-0000-4000-8000-000000000101'])){
-   const response=await page.goto(`http://127.0.0.1:${port}${route}`,{waitUntil:'networkidle'})
+   const response=await page.goto(`http://127.0.0.1:${port}${route}`,{waitUntil:'load'})
    assert.ok(response?.status()<400,`${route} returned ${response?.status()}`)
    await page.locator('.market-header-search input').waitFor()
    await page.evaluate(()=>document.fonts.ready)
@@ -320,6 +320,9 @@ try{
  await Promise.all(Array.from({length:Math.min(3,widths.length)},async()=>{while(pending.length){const width=pending.shift();await checkWidth(width)}}))
  await writeFile(`${out}/results.json`,JSON.stringify({checks:results.length,results},null,2))
  console.log(`PASS: ${results.length} public route/width/theme/language combinations plus search, hero, guest Account, theme and language interactions.`)
+}catch(error){
+ console.error('Next server diagnostic tail:\n'+logs.slice(-6000))
+ throw error
 }finally{
  await writeFile(`${out}/server.log`,logs)
  await browser?.close()
