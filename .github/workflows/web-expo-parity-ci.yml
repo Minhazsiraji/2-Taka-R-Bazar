@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/web-parity-approved-expo-ui-v1
+      - fix/product-image-backing
   workflow_dispatch:
 
 permissions:
