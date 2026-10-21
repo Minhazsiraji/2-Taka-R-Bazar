@@ -8,6 +8,7 @@ import { AdminProductCreateWizard } from '@/components/admin-product-create-wiza
 import { AdminProductLifecycle } from '@/components/admin-product-lifecycle'
 import { updateProductWithImage as updateProduct } from '@/app/actions/product-images'
 import { requireAdmin } from '@/lib/auth'
+import Link from 'next/link'
 
 export const dynamic='force-dynamic'
 
@@ -23,10 +24,11 @@ function ProductFields({row}:{row?:any}){
   </>
 }
 
-export default async function Page({searchParams}:{searchParams:Promise<{error?:string;notice?:string}>}){
+export default async function Page({searchParams}:{searchParams:Promise<{error?:string;notice?:string;view?:string}>}){
   const {supabase,user,roles}=await requireAdmin();const sp=await searchParams
+  const archived=sp.view==='archived'
   const [productRes,seoRes,faqRes,mediaRes]=await Promise.all([
-    supabase.from('products').select('*').order('created_at',{ascending:false}),
+    supabase.from('products').select('*').eq('active',!archived).order('created_at',{ascending:false}),
     supabase.from('product_seo_content').select('*'),
     supabase.from('product_seo_faqs').select('*'),
     supabase.from('product_seo_media').select('*'),
@@ -53,6 +55,12 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
 
     <AdminProductCreateWizard key={user.id} userId={user.id}/>
 
+    <nav aria-label="Catalog status" className="flex flex-wrap items-center gap-2">
+      <Link href="/admin/products" aria-current={!archived?'page':undefined} className={!archived?'btn-primary':'btn-secondary'}>Active catalog</Link>
+      <Link href="/admin/products?view=archived" aria-current={archived?'page':undefined} className={archived?'btn-primary':'btn-secondary'}>Archived products</Link>
+      <span className="muted text-sm">Archived products are retained for historical orders, but are not sellable.</span>
+    </nav>
+
     <section className="grid gap-3">
       {(rows??[]).map((r:any)=><details className="card min-w-0 p-0" key={r.id}>
         <summary className="cursor-pointer list-none p-3 sm:p-4">
@@ -77,7 +85,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
           {canDelete&&<AdminProductLifecycle product={r} eligibility={eligibilityByProduct.get(r.id)}/>}
         </div>
       </details>)}
-      {!(rows??[]).length&&<div className="card muted">No products yet.</div>}
+      {!(rows??[]).length&&<div className="card muted">{archived?'No archived products.':'No active products yet. Upload your first fresh product above.'}</div>}
     </section>
     <p className="muted">Only never-used products can be deleted by a Super Admin. Products with sales, Pools, procurements, inventory, supplier links or publication history can only be archived.</p>
   </div></AdminShell>
