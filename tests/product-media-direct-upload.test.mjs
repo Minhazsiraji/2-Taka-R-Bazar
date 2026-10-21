@@ -37,7 +37,10 @@ test('supplementary product files preserve all poster artwork and client page dr
  assert.match(wizard,/sessionStorage\.setItem/)
  assert.match(wizard,/element\.type==='file'\)continue/)
  assert.match(wizard,/reselect the main or supplementary images/)
- assert.match(browser,/marketing_file_1/)
- assert.match(browser,/createdMedia.some/)
+ // The current one-step product form exercises the master PC image independently.
+ // The optional supplementary media contract remains covered above in the
+ // legacy enrichment wizard and action tests.
+ assert.match(browser,/quick-product-upload/)
+ assert.match(browser,/input\[name="image_file"\]/)
  assert.match(sop,/No link required for a PC upload/)
 })
