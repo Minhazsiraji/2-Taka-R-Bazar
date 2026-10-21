@@ -281,7 +281,7 @@ try{
     assert.equal(await page.getByRole('dialog').count(),0)
     const image=page.locator('.market-demo-detail-image img')
     await image.waitFor()
-    await page.waitForFunction(()=>document.querySelector('.market-demo-detail-image img')?.getAttribute('src')==='/preview-app-product-placeholder.svg')
+    await page.waitForFunction(()=>{const image=document.querySelector('.market-demo-detail-image img');return image?.getAttribute('src')==='/preview-app-product-placeholder.svg'&&image.complete&&image.naturalWidth>0})
     if([320,390,820,1440].includes(width)&&['/demo-product/butter','/demo-product/rice?kind=deal'].includes(route))await page.screenshot({path:`${out}/product-detail-${id}${route.includes('?')?'-deal':''}-${width}-${theme}-${language}.png`,fullPage:true})
    }
    if([320,390,820,1440].includes(width)&&['/','/login','/products','/privacy'].includes(route)){

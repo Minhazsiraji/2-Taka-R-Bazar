@@ -1,6 +1,6 @@
 'use client'
 
-import {useState} from 'react'
+import {useEffect,useRef,useState} from 'react'
 import Link from 'next/link'
 import {PublicHeader} from '@/components/public-header'
 import {PublicFooter} from '@/components/public-footer'
@@ -14,6 +14,9 @@ type Props={product:typeof previewProducts[number];deal?:typeof previewDeals[num
 export function HomePreviewProductDetails({product,deal,initialLanguage,hasLanguageCookie}:Props){
  const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
  const [failed,setFailed]=useState(false)
+ const imageRef=useRef<HTMLImageElement>(null)
+ // SSR images can fail before hydration attaches onError; check the completed image as well.
+ useEffect(()=>{const image=imageRef.current;if(image?.complete&&image.naturalWidth===0)setFailed(true)},[])
  const [basket,setBasket]=useState(0)
  const bn=language==='bn'
  const name=bn?product.nameBn:product.name
@@ -24,7 +27,7 @@ export function HomePreviewProductDetails({product,deal,initialLanguage,hasLangu
   <div className="market-pool-detail-content">
    <p className="market-demo-detail-banner">{bn?'ডেমো পণ্য — দেখানো দাম ও মজুত নমুনা। বাস্তব অর্ডার নয়।':'DEMO PRODUCT — illustrative prices and stock. No real ordering.'}</p>
    <div className="market-demo-detail-grid market-ui-product-detail">
-    <div className="market-demo-detail-image market-ui-card"><img width="600" height="600" src={failed?'/preview-app-product-placeholder.svg':previewPhoto(product.photo)} alt={name} onError={()=>{if(!failed)setFailed(true)}}/></div>
+    <div className="market-demo-detail-image market-ui-card"><img ref={imageRef} width="600" height="600" src={failed?'/preview-app-product-placeholder.svg':previewPhoto(product.photo)} alt={name} onError={()=>{if(!failed)setFailed(true)}}/></div>
     <section className="market-demo-detail-copy market-ui-card">
      <p className="market-story-eyebrow">{deal?'GROUP DEAL':bn?'এক্সক্লুসিভ পণ্য':'Exclusive product'}</p>
      <h1>{name}</h1>
