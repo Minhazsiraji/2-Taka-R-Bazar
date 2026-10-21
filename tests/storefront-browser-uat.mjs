@@ -12,14 +12,14 @@ const key=process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY
 if(!key)throw new Error('Local fixture credential required')
 const headers={apikey:key,Authorization:`Bearer ${key}`,'Content-Type':'application/json',Prefer:'return=minimal'}
 async function insert(table,row,requestHeaders=headers){const r=await fetch(`${api}/rest/v1/${table}`,{method:'POST',headers:requestHeaders,body:JSON.stringify(row)});if(!r.ok)throw new Error(`Fixture ${table}: ${r.status} ${await r.text()}`)}
-async function assertReviewLayout(page,width){
- const card=page.locator('#customer-experiences .market-review-pending')
- await card.waitFor()
+async function assertApprovedPoolLayout(page,width){
+ const card=page.locator('.mhome-pool-card').first()
+ await card.waitFor({state:'visible'})
  const geometry=await card.evaluate(element=>{
   const bounds=x=>x.getBoundingClientRect()
   const cardBox=bounds(element)
-  const copyBox=bounds(element.children[1])
-  const noteBox=bounds(element.querySelector('.market-review-note'))
+  const copyBox=bounds(element.querySelector('.mhome-pool-copy'))
+  const noteBox=bounds(element.querySelector('.mhome-pool-top'))
   return {cardWidth:cardBox.width,cardHeight:cardBox.height,copyWidth:copyBox.width,
    copyTop:copyBox.top,noteBottom:noteBox.bottom,
    copyLeft:copyBox.left,cardLeft:cardBox.left,copyRight:copyBox.right,cardRight:cardBox.right,
@@ -28,9 +28,9 @@ async function assertReviewLayout(page,width){
  assert.ok(geometry.documentWidth<=geometry.viewportWidth,`No horizontal overflow at ${width}px`)
  assert.ok(geometry.copyLeft>=geometry.cardLeft-1&&geometry.copyRight<=geometry.cardRight+1,`Review copy stays inside its card at ${width}px`)
  if(width<=767){
-  assert.ok(geometry.copyWidth>=geometry.cardWidth*.72,`Review copy must not be squeezed into a narrow mobile column at ${width}px: ${JSON.stringify(geometry)}`)
-  assert.ok(geometry.copyTop>=geometry.noteBottom-1,`Review copy must flow below verified label at ${width}px`)
-  assert.ok(geometry.cardHeight<560,`Review card should remain compact at ${width}px`)
+  assert.ok(geometry.copyWidth>=geometry.cardWidth*.42,`Approved Pool copy must not be squeezed at ${width}px: ${JSON.stringify(geometry)}`)
+  assert.ok(geometry.copyTop<=geometry.noteBottom,`Pool copy must contain its title/status at ${width}px`)
+  assert.ok(geometry.cardHeight<560,`Approved Pool card should remain compact at ${width}px`)
  }
 }
 const ids={community:'00000000-0000-4000-8000-000000000821',product:'00000000-0000-4000-8000-000000000822',pool:'00000000-0000-4000-8000-000000000823',item:'00000000-0000-4000-8000-000000000824'}
@@ -72,7 +72,7 @@ try{
    assert.equal((await toggle.innerText()).trim(),'BAN')
    await toggle.click()
    assert.equal((await toggle.innerText()).trim(),'EN')
-   await assertReviewLayout(page,width) // Bengali: ensure the review copy stays full width
+   await assertApprovedPoolLayout(page,width) // Bengali: check visible approved Pool content remains readable
    await page.reload({waitUntil:'networkidle'})
    assert.equal((await toggle.innerText()).trim(),'EN','BAN choice must survive full reload')
    assert.equal((await page.context().cookies()).some(c=>c.name==='2tbr_storefront_language'&&c.value==='bn'),true)
@@ -87,10 +87,10 @@ try{
   if([768,820,1024].includes(width))await page.screenshot({path:'/tmp/2tbr-header-tablet-brand-'+width+'.png'})
   if(width===393)await page.screenshot({path:'/tmp/2tbr-header-storefront-guest.png',fullPage:true})
   assert.equal(await page.locator('.market-pool-demo-pill').count(),0)
-  assert.equal(await page.locator('.market-pool-thumbnails a').first().getAttribute('href'),`/shop/${ids.product}?area=${ids.community}`)
-  const poolText=await page.locator('.market-featured-pool').innerText()
-  assert.ok(!poolText.includes('নমুনা'))
-  assert.ok(poolText.includes('Price pending'))
+  assert.equal(await page.locator('.mhome-pool-photos a').first().getAttribute('href'),`/shop/${ids.product}?area=${ids.community}`)
+  const poolText=await page.locator('.mhome-pool-card').first().innerText()
+  assert.ok(!poolText.includes('নমুনা')&&!poolText.includes('DEMO'))
+  assert.ok(poolText.includes('Pending')||poolText.includes('অপেক্ষমাণ'),'Unpublished price remains pending')
   const dock=page.locator('.market-storefront-dock')
   assert.equal(await dock.isVisible(),width<768)
   if(width<768)assert.equal(await dock.evaluate(e=>getComputedStyle(e).position),'fixed')
@@ -98,20 +98,20 @@ try{
   const links=await page.locator('footer a[href^="mailto:"]').evaluateAll(es=>es.map(e=>e.getAttribute('href')))
   assert.deepEqual(links,['mailto:business@2takarbazar.com','mailto:support@2takarbazar.com','mailto:business@agentsiraji.com'])
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true)
-  await assertReviewLayout(page,width)
-  if(width===393)await page.locator('#customer-experiences').screenshot({path:'/tmp/2tbr-review-mobile-393-en.png'})
+  await assertApprovedPoolLayout(page,width)
+  if(width===393)await page.locator('.mhome-pool-card').first().screenshot({path:'/tmp/2tbr-review-mobile-393-en.png'})
   await page.locator('header').getByRole('button',{name:'Switch to dark mode'}).click()
   assert.equal(await page.locator('html').getAttribute('data-theme'),'dark')
   await assertCustomerChrome(page,width)
   assert.equal(await dock.isVisible(),width<768)
   await assertMobileDock(page,width)
-  await assertReviewLayout(page,width)
+  await assertApprovedPoolLayout(page,width)
   if(width===393){
    await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}))
    await page.screenshot({path:'/tmp/2tbr-header-dock-storefront-footer.png'})
    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}))
   }
-  await page.locator('.market-pool-thumbnail').first().click()
+  await page.locator('.mhome-pool-photos a').first().click()
   await page.waitForURL(url=>url.pathname==='/shop/'+ids.product)
   await page.getByRole('heading',{name:'Synthetic browser rice',exact:true,level:1}).waitFor()
   await assertCustomerChrome(page,width)

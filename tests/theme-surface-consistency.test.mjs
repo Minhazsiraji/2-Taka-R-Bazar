@@ -27,9 +27,9 @@ test('dark primary surfaces use the same deep family instead of a grey slab',()=
   assert.match(css,/content:none !important/)
 })
 
-test('named glass panels outrank the legacy rounded-element dark rule',()=>{
+test('named staff glass panels retain the legacy contract outside the public shell',()=>{
   const css=readFileSync(new URL('../app/site-theme-surface-fix.css',import.meta.url),'utf8')
-  assert.match(css,/body\.site-glass-root main :is\(section,article,form,div,blockquote,aside,details\)\.glass-panel\[class\*="rounded-"\]/)
+  assert.match(css,/body\.site-glass-root main:not\(\.public-marketplace-flat\) :is\(section,article,form,div,blockquote,aside,details\)\.glass-panel\[class\*="rounded-"\]/)
   assert.match(css,/\.glass-subpanel\[class\*="rounded-"\]/)
   assert.match(css,/\.glass-inset\[class\*="rounded-"\]/)
   assert.match(css,/html\[data-theme="light"\]/)

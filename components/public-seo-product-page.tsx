@@ -2,11 +2,14 @@ import Link from 'next/link'
 import {CustomerHeader as PublicHeader} from '@/components/customer-header'
 import {CustomerFooter as PublicFooter} from '@/components/customer-footer'
 import {publicShowcaseImageUrl} from '@/lib/showcase-media'
-import {productUrls,productJsonLd,safeJsonLd,type ProductSeoPublic} from '@/lib/product-seo-public'
+import {productJsonLd,safeJsonLd,type ProductSeoPublic} from '@/lib/product-seo-public'
 import {SITE_NAME} from '@/lib/site'
 
 export function PublicSeoProductPage({product:p,locale}:{product:ProductSeoPublic;locale:'en'|'bn'}){
- const bn=locale==='bn',urls=productUrls(p.slug)
+ const bn=locale==='bn'
+ // In-app language switches stay on the current deployment (including Vercel Preview).
+ // Canonical/hreflang metadata remains absolute and unchanged for SEO.
+ const localePaths={en:'/p/'+p.slug,bn:'/bn/p/'+p.slug}
  const title=bn?p.title_bn:p.title_en
  const short=bn?p.short_bn:p.short_en
  const description=bn?p.description_bn:p.description_en
@@ -22,8 +25,8 @@ export function PublicSeoProductPage({product:p,locale}:{product:ProductSeoPubli
     <Link href="/" className="underline">{bn?'হোম':'Home'}</Link><span aria-hidden="true">›</span><span>{title}</span>
    </nav>
    <div className="mb-6 flex flex-wrap gap-2 text-sm">
-    <Link href={urls.en} hrefLang="en-BD" lang="en" className={'rounded-full border px-3 py-1 '+(!bn?'bg-teal-100 font-bold':'')}>EN</Link>
-    <Link href={urls.bn} hrefLang="bn-BD" lang="bn" className={'rounded-full border px-3 py-1 '+(bn?'bg-teal-100 font-bold':'')}>বাংলা</Link>
+    <Link href={localePaths.en} hrefLang="en-BD" lang="en" className={'rounded-full border px-3 py-1 '+(!bn?'bg-teal-100 font-bold':'')}>EN</Link>
+    <Link href={localePaths.bn} hrefLang="bn-BD" lang="bn" className={'rounded-full border px-3 py-1 '+(bn?'bg-teal-100 font-bold':'')}>বাংলা</Link>
    </div>
    <div className="grid gap-8 lg:grid-cols-2">
     <div className="min-w-0">

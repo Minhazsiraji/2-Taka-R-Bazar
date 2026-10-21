@@ -214,8 +214,8 @@ try {
   await page.waitForURL(url => url.pathname === '/')
   await page.getByRole('heading', {name: /Smart people make smart decisions/}).waitFor()
   assert.equal(await page.getByRole('heading', {name: 'Your community is buying smarter.', exact: true}).count(), 0)
-  const dashboards = page.getByRole('link', {name: 'My dashboard', exact: true})
-  assert.deepEqual(await dashboards.evaluateAll(links => links.map(link => link.getAttribute('href'))), ['/account', '/account'])
+  const dashboards = page.locator('header .public-account-panel a[href="/account"]')
+  assert.equal(await dashboards.count(),1,'Approved profile menu contains the Account route')
   for (const width of [320, 360, 393, 640, 768, 1440]) {
     await page.setViewportSize({width, height: 900})
     await assertHeaderGeometry(page, '.market-brand-lockup', '.market-header-actions', width)
@@ -232,6 +232,7 @@ try {
   await page.locator('#market-mobile-navigation').waitFor()
   await page.getByRole('button', {name: 'Close menu', exact: true}).click()
   assert.equal(await page.locator('#market-mobile-navigation').count(), 0)
+  await page.locator('header .public-account-menu summary').click()
   await dashboards.first().click()
   await page.waitForURL(url => url.pathname === '/account')
   await page.getByRole('heading', {name: 'My dashboard', exact: true}).waitFor()
@@ -240,7 +241,9 @@ try {
   assert.equal(await page.getByRole('heading', {name: 'Staff tools', exact: true}).count(), 0)
   assert.equal(await page.getByText('Purchases are awaiting release qualification.', {exact: true}).count(), 0)
   assert.equal(await page.locator('.market-flat-header').count(), 1)
-  assert.equal(await page.locator('.market-storefront-dock a[aria-current="page"]').getAttribute('href'), '/account')
+  await page.locator('header .public-account-panel a[href="/account"]').waitFor({state:'attached'})
+  assert.equal(await page.locator('header .public-account-panel a[href="/account"]').count(),1)
+  assert.equal(await page.locator('.market-storefront-dock a[href="/account"]').count(),0)
   for (const width of [320, 360, 393, 640, 768, 1440]) {
     await page.setViewportSize({width, height: 900})
     await page.screenshot({path: '/tmp/2tbr-account-width-' + width + '.png', fullPage: true})
@@ -282,8 +285,8 @@ try {
   await moneyNav.getByRole('link', {name: 'Transactions', exact: true}).click()
   await page.waitForURL(url => url.pathname === '/money/transactions')
   assert.equal(await moneyNav.locator('[aria-current="page"]').getAttribute('href'), '/money/transactions')
-  await page.locator('header').getByRole('button',{name:'Open menu',exact:true}).click()
-  await page.getByRole('link',{name:'My Money',exact:true}).click()
+  await page.locator('header .public-account-menu summary').click()
+  await page.locator('header .public-account-panel a[href="/money"]').click()
   await page.waitForURL(url => url.pathname === '/money')
   await page.getByRole('heading', {name: 'My Money Dashboard', exact: true}).waitFor()
   await page.locator('header').getByRole('button', {name: 'Switch to light mode', exact: true}).click()
@@ -323,7 +326,7 @@ try {
   await page.locator('.market-single-language').click()
   // Use the real dock links through client navigation, including their active state.
   await page.setViewportSize({width:393,height:640})
-  for (const path of ['/','/group-deals','/pool','/cart','/account']) {
+  for (const path of ['/','/group-deals','/pool','/cart']) {
     await page.locator('.app-mobile-nav a[href="'+path+'"]').click()
     await page.waitForURL(url => url.pathname === path)
     await page.locator('header').first().waitFor()
@@ -331,6 +334,14 @@ try {
     assert.equal(await page.locator('.app-mobile-nav a[aria-current="page"]').getAttribute('href'),path)
   }
   await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}))
+  const exclusiveDockLink=page.locator('.app-mobile-nav a[href="/#mobile-exclusive"]')
+  assert.equal(await exclusiveDockLink.count(),1,'Approved Exclusive dock destination exists')
+  await exclusiveDockLink.click()
+  await page.waitForURL(url=>url.pathname==='/'&&url.hash==='#mobile-exclusive')
+  await assertMobileDock(page,393)
+  await page.locator('header .public-account-menu summary').click()
+  await page.locator('header .public-account-panel a[href="/account"]').click()
+  await page.waitForURL(url=>url.pathname==='/account')
   await page.screenshot({path:'/tmp/2tbr-header-dock-account-footer.png'})
   // Complete delivery path using only disposable native identities and real DB/RPCs.
   const outsiderCommunity='00000000-0000-4000-8000-000000000897'

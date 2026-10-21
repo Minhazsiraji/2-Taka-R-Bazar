@@ -72,9 +72,8 @@ export function PublishedProductsSection({initial,language}:{initial:PublishedCa
        {(language==='bn'?item.short_bn:item.short_en)&&
         <p className="market-product-community mt-2 line-clamp-2 text-sm text-slate-600">{language==='bn'?item.short_bn:item.short_en}</p>}
        <div className="market-product-actions mt-auto flex flex-wrap items-center justify-between gap-2 pt-4">
-        <span className="rounded-xl border border-teal-200/80 px-3 py-2 text-sm font-semibold text-teal-700">{t('Price pending','মূল্য শীঘ্রই')}</span>
+        <span className="rounded-xl border border-teal-200/80 px-3 py-2 text-sm font-semibold text-teal-700">{t('Price not published','দাম প্রকাশিত হয়নি')}</span>
         <Link href={href} className="btn-secondary text-sm">{t('View Details','বিস্তারিত দেখুন')} →</Link>
-        <Link href={'/pilot-book?product='+item.product_id} className="btn-primary text-sm">{t('Book · Pilot','বুক করুন')}</Link>
        </div>
       </article>
      })}

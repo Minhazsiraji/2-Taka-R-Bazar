@@ -11,6 +11,8 @@ import {browseCatalogOffers} from '@/lib/catalog-discovery.mjs'
 import {PublicMarketplaceLower} from '@/components/public-marketplace-lower'
 import {CommunityPicker} from '@/components/community-picker'
 import {PublicHeader} from '@/components/public-header'
+import {MobileMarketplaceHome} from '@/components/mobile-marketplace-home'
+import type {HomeSavingsSummary} from '@/lib/home-savings'
 import {PublicFooter} from '@/components/public-footer'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {chooseText} from '@/lib/storefront-language'
@@ -23,11 +25,11 @@ import {AnimatedHeroMessages} from '@/components/animated-hero-messages'
 import {getCommunityDemoFeaturedPools,type DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
 
-export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],publishedProducts={items:[],hasMore:false,nextOffset:0},demoMode=false,pools=[],initialArea='',initialLanguage='en',hasLanguageCookie=false}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];publishedProducts?:PublishedCatalogPage;demoMode?:boolean;pools?:DemoFeaturedPool[];initialArea?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean}){
+export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,catalogAvailable=true,featured=[],publishedProducts={items:[],hasMore:false,nextOffset:0},demoMode=false,previewCards=false,pools=[],initialArea='',initialSearch='',initialLanguage='en',hasLanguageCookie=false,savings}:{areas:StorefrontArea[];offers:StorefrontOffer[];authenticated?:boolean;howLabelBn?:string;catalogAvailable?:boolean;featured?:ShowcaseProduct[];publishedProducts?:PublishedCatalogPage;demoMode?:boolean;previewCards?:boolean;pools?:DemoFeaturedPool[];initialArea?:string;initialSearch?:string;initialLanguage?:MarketplaceLanguage;hasLanguageCookie?:boolean;savings:HomeSavingsSummary}){
  const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  const [area,setArea]=useState(()=>areas.some(a=>a.community_id===initialArea)?initialArea:'')
- const [search,setSearch]=useState('')
+ const [search,setSearch]=useState(initialSearch)
  const [gpsBusy,setGpsBusy]=useState(false)
  const [gpsMessage,setGpsMessage]=useState('')
  const [locationState,setLocationState]=useState<'pending'|'matched'|'nearby'|'denied'|'unavailable'|'failed'|'manual'>('pending')
@@ -116,9 +118,13 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
  t('Browse freely. Detect your area only when you want.','লোকেশন ছাড়াই বাজার দেখুন। চাইলে এলাকা খুঁজুন।')
 
  return <>
-  <PublicHeader storefront actionHref={authenticated?'/account':'/login'} actionLabel={authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Sign in','লগইন')}
+  <PublicHeader storefront authenticated={authenticated} actionHref={authenticated?'/account':'/login'} actionLabel={authenticated?t('My dashboard','আমার ড্যাশবোর্ড'):t('Sign in','লগইন')}
    searchValue={search} onSearchChange={setSearch}
    language={language} onLanguageChange={setLanguage}/>
+  <MobileMarketplaceHome areas={areas} selectedArea={area} onChooseArea={selectArea}
+   onDetectArea={useLocation} detectingArea={gpsBusy} offers={offers}
+   products={featured} publishedProducts={publishedProducts} pools={heroPools} language={language} demoMode={demoMode} previewCards={previewCards} search={search} savings={savings}/>
+  <div className="market-legacy-home">
   <section className="market-band market-hero-band"><div className="market-content market-hero-content">
    <div className="market-location-panel">
     <div className="market-location-intro"><strong>📍 {t('Find savings near your community','আপনার এলাকায় কম দামের অফার খুঁজুন')}</strong>
@@ -208,6 +214,7 @@ export function PublicMarketplace({areas,offers,authenticated=false,howLabelBn,c
   </section>
   <PublishedProductsSection initial={publishedProducts} language={language}/>
   <PublicMarketplaceLower areas={areas} offers={offers} selectedArea={area} authenticated={authenticated} onChooseArea={selectArea} language={language} demoMode={demoMode}/>
+  </div>
   <PublicFooter storefront language={language}/>
  </>
 }

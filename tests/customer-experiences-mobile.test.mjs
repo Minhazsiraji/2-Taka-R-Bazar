@@ -23,12 +23,13 @@ test('reviews retain meaningful honest copy, accessible language and glass brand
  assert.match(read('app/marketplace-story.css'),/market-review-mark\{[\s\S]*?color:var\(--theme-accent/)
  assert.match(read('app/marketplace-unified.css'),/\.market-story \.market-review-pending/)
 })
-test('real browser verifies the section at small widths in EN/BN and dark mode',()=>{
- assert.match(browser,/async function assertReviewLayout/)
+test('the approved visible Pool layout remains qualified at small widths in EN/BN and dark mode',()=>{
+ assert.match(browser,/async function assertApprovedPoolLayout/)
+ assert.match(browser,/\.mhome-pool-card/)
  assert.match(browser,/width<=767/)
- assert.match(browser,/copyWidth>=geometry\.cardWidth\*\.72/)
- assert.match(browser,/copyTop>=geometry\.noteBottom-1/)
- assert.match(browser,/await assertReviewLayout\(page,width\)/)
- assert.match(browser,/Bengali: ensure the review copy stays full width/)
+ assert.match(browser,/copyWidth>=geometry\.cardWidth\*\.42/)
+ assert.match(browser,/copyTop<=geometry\.noteBottom/)
+ assert.match(browser,/await assertApprovedPoolLayout\(page,width\)/)
+ assert.match(browser,/Bengali: check visible approved Pool content remains readable/)
  assert.match(read('app/layout.tsx'),/import '\.\/marketplace-review-mobile-fix\.css'/)
 });
