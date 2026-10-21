@@ -89,7 +89,7 @@ test('Group and Exclusive details follow approved native display tiers, retail-o
   const html=renderToStaticMarkup(React.createElement(HomePreviewProductDetails,{
    product,initialLanguage:language,hasLanguageCookie:true}))
   for(const value of [language==='bn'?product.nameBn:product.name,fixtures.previewMoney(product.price),
-   fixtures.previewMoney(product.oldPrice),'Same product'])assert.ok(html.includes(value),value)
+   fixtures.previewMoney(product.oldPrice),language==='bn'?'একই পণ্য':'Same product'])assert.ok(html.includes(value),value)
   assert.ok(html.includes('aria-pressed="true"'))
   assert.ok(html.includes('href="/demo-product/'+product.id+'?kind=retail'))
   assert.ok(!html.includes('<dialog'))
