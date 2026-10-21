@@ -110,10 +110,13 @@ try{
    assert.equal(geometry.fonts,true,'Self-hosted Inter failed to load')
    assert.equal(geometry.bengaliFont,true,'Self-hosted Hind Siliguri failed to load')
    assert.deepEqual(geometry.actionOrder,width<768?['language','theme','notifications','account','menu']:['cart','language','theme','notifications','account','menu'])
-   const expectedSize=width<768?31:width<1024?34:40
    for(const [i,control] of geometry.controlBounds.entries()){
+    // Current released header enlarges these touch targets at phone/narrow-tablet widths.
+    const account=geometry.actionOrder[i]==='account'
+    const expectedSize=width<768?(account?31:44):width<=790?(account?34:44):width<1024?34:40
     assert.ok(Math.abs(control.width-expectedSize)<1,`Header width mismatch: ${JSON.stringify(control)}`)
-    assert.ok(Math.abs(control.top-geometry.controlBounds[0].top)<1,'Controls are not vertically aligned')
+    const first=geometry.controlBounds[0]
+    assert.ok(Math.abs(control.top+control.height/2-first.top-first.height/2)<1,'Header control centers are not vertically aligned')
     if(i)assert.ok(control.left>=geometry.controlBounds[i-1].right,'Header controls overlap')
    }
    for(const part of geometry.searchPieces){
