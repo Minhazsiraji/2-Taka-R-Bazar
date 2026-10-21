@@ -195,4 +195,44 @@ end $$;
 revoke all on function public.pilot_staff_review_payment_reference(uuid,boolean,text) from public,anon,service_role;
 grant execute on function public.pilot_staff_review_payment_reference(uuid,boolean,text) to authenticated;
 
+-- Non-destructive bootstrap: import only the six authenticated owner's
+-- existing, independently audit-preserved draft prices. No customer-facing
+-- offer or stock is created, and no live price is automatically published.
+-- Disposable databases without that exact audit simply have zero drafts.
+do $bootstrap_vendor_offer_drafts$
+declare
+ v_lines jsonb;
+ v_owner uuid;
+ v_count integer;
+ v_supplier uuid:='0814a10b-f4dd-4239-a267-aeddadb355d6'::uuid;
+begin
+ select owner_user_id into v_owner from private.platform_owner_identity where singleton;
+ select metadata->'pricing_lines' into v_lines from public.audit_events
+ where id=958 and event_type='owner_revised_vendor_product_pricing'
+ and metadata->>'supplier_id'=v_supplier::text and metadata->>'direct_exclusive_price_status'='draft_unpublished';
+ if v_lines is null then return;end if;
+ if v_owner is null or jsonb_array_length(v_lines)<>6
+ then raise exception 'Six-line owner pricing draft lacks authorized bootstrap identity';end if;
+ select count(*) into v_count
+ from jsonb_to_recordset(v_lines) p(
+ product_id uuid,sku text,selling_package_size text,vendor_unit_cost_bdt numeric,proposed_customer_unit_price_bdt numeric)
+ join public.products master on master.id=p.product_id
+ and master.sku=p.sku and master.package_size=p.selling_package_size
+ and master.active and not master.is_demo and master.source_type='SUPPLIER_POOL'
+ join public.supplier_products sp on sp.product_id=master.id
+ and sp.supplier_id=v_supplier and sp.active
+ join public.suppliers seller on seller.id=sp.supplier_id and seller.active
+ where p.vendor_unit_cost_bdt>0 and p.proposed_customer_unit_price_bdt>p.vendor_unit_cost_bdt;
+ if v_count<>6 then raise exception 'Six product/vendor/pricing sources do not match; no drafts seeded';end if;
+ insert into public.vendor_offer_drafts(
+  product_id,supplier_id,vendor_unit_cost,proposed_sale_price,supply_mode,confirmation_policy,
+  supplier_handover_days,status,source_audit_id,updated_by,note)
+ select p.product_id,v_supplier,p.vendor_unit_cost_bdt,p.proposed_customer_unit_price_bdt,
+ 'on_demand','confirm_per_order',1,'draft',958,v_owner,
+ 'Owner-revised source audit #958. Vendor handover next day; customer delivery separately agreed.'
+ from jsonb_to_recordset(v_lines) p(
+  product_id uuid,sku text,selling_package_size text,vendor_unit_cost_bdt numeric,proposed_customer_unit_price_bdt numeric)
+ on conflict(product_id,supplier_id) do nothing;
+end $bootstrap_vendor_offer_drafts$;
+
 -- Explicitly no public/anon read of account numbers, and no Finance mutations.
