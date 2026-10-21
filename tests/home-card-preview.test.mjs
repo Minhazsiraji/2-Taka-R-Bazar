@@ -113,6 +113,6 @@ test('Group and Exclusive details follow approved native display tiers, retail-o
   product:rice,deal:riceDeal,initialLanguage:'en',hasLanguageCookie:true}))
  for(const value of ['৳155','৳135','4/5','Next tier at'])assert.ok(riceHtml.includes(value),value)
  const source=readFileSync('components/home-preview-product-details.tsx','utf8')
- assert.doesNotMatch(source,/fetch\\(|setCommerceCartItem|supabase|action=|<form/)
+ for(const forbidden of ['fetch(', 'setCommerceCartItem', 'supabase', '<form'])assert.ok(!source.includes(forbidden),forbidden)
  assert.match(source,/previewGroupPriceTiers/)
 })
