@@ -268,7 +268,8 @@ try{
       await page.locator('.native-preview-back').click()
       await page.locator('.native-preview-pool-tiers').waitFor()
       if(index===0)await page.screenshot({path:`${out}/pool-detail-${width}-${theme}-${language}.png`,fullPage:true})
-      await page.goBack({waitUntil:'load'})
+      await page.locator('.native-preview-back').click()
+      await page.waitForURL(url=>url.pathname==='/',{waitUntil:'load'})
       await page.locator('[data-preview-cards="pools"]').waitFor()
      }
      assert.equal(await page.getByRole('dialog').count(),0)
