@@ -43,7 +43,7 @@ test('public detail adapter never promotes draft, synthetic or upcoming prices',
 })
 test('Pool basket does not invent starting or next tier prices and does not count pending revenue',()=>{
  const confirmed=data.poolBasketTotals([base,solo],{[id]:2})
- assert.equal(confirmed.units,4,'Two same-product offers must never be supplied to one Pool')
+ assert.equal(confirmed.units,2,'Two same-product offers must never be counted twice')
 });
 test('Pool basket correct with actual unique products, quantities, confirmed and pending prices',()=>{
  const secondId='22222222-2222-4222-8222-222222222222'
