@@ -94,7 +94,7 @@ try{
  await section.getByRole('heading',{name:'All Products'}).waitFor()
  assert.equal(await section.locator('[data-testid="published-product-card"]').count(),12,'First catalog page contains 12 eligible records')
  assert.equal(await section.getByRole('link',{name:/View Details/}).count(),12,'Every product has a public details link')
- assert.equal(await section.getByText('Price pending',{exact:true}).count(),12)
+ assert.equal(await section.getByText('Price not published',{exact:true}).count(),12)
  assert.equal(await section.locator('img[src="https://res.cloudinary.com/demo/image/upload/sample.jpg"]').count(),12)
  assert.equal(await section.locator('form,[href^="/cart"],[href^="/checkout"],button:has-text("Buy"),button:has-text("Cart")').count(),0,
   'Read-only catalog has no cart or buy controls')
@@ -107,7 +107,7 @@ try{
  const toggle=page.locator('.market-flat-header .market-single-language')
  await toggle.click()
  assert.equal(await section.getByRole('heading',{name:'সব পণ্য'}).count(),1)
- assert.equal(await section.getByText('মূল্য শীঘ্রই',{exact:true}).count(),14)
+ assert.equal(await section.getByText('দাম প্রকাশিত হয়নি',{exact:true}).count(),14)
  assert.match(await firstLink.getAttribute('href')??'',/^\/bn\/p\/(?:catalog-uat|seo-uat)/)
  await page.screenshot({path:'/tmp/2tbr-product-seo-catalog-bn-mobile.png',fullPage:true})
  await toggle.click()
