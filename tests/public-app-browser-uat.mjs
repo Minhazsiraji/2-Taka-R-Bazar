@@ -13,6 +13,11 @@ const fixture=createServer((req,res)=>{
  res.setHeader('content-type','application/json')
  if(req.url==='/auth/v1/settings')return res.end(JSON.stringify({external:{google:true}}))
  if(req.url?.startsWith('/auth/')){res.statusCode=401;return res.end('{"message":"No local fixture session"}')}
+ // Exercise the real public vendor-card image shell on /products, without hosted data.
+ if(req.url?.startsWith('/rest/v1/rpc/get_public_pilot_vendor_catalog'))return res.end(JSON.stringify([
+  {product_id:'00000000-0000-4000-8000-000000000821',name:'Synthetic vendor rice',category:'Rice',package_size:'1 kg',image_url:'/preview-app-product-placeholder.svg',approved_unit_price:120,supplier_name:'Synthetic test vendor',supplier_handover_days:1},
+  {product_id:'00000000-0000-4000-8000-000000000822',name:'Synthetic vendor butter',category:'Dairy',package_size:'1 kg',image_url:'/preview-app-product-placeholder.svg',approved_unit_price:1250,supplier_name:'Synthetic test vendor',supplier_handover_days:1},
+ ]))
  // Narrow public RPCs are intentionally empty: existing DEMO UI must label its fixtures.
  res.end('[]')
 })
@@ -85,16 +90,33 @@ try{
     const rules=await page.evaluate(()=>{const n=document.querySelector('main.public-marketplace-flat');const found=[];function scan(rules,url){for(const r of rules){if(r.cssRules)scan(r.cssRules,url);else if(r.selectorText&&n.matches(r.selectorText)&&r.style.background)found.push({url,selector:r.selectorText,bg:r.style.background,priority:r.style.getPropertyPriority('background')})}}for(const sheet of document.styleSheets){try{scan(sheet.cssRules,sheet.href)}catch{}}return {vars:getComputedStyle(n).getPropertyValue('--public-bg'),rules:found}});console.log(JSON.stringify(rules,null,2));await page.screenshot({path:out+'/debug-dark.png',fullPage:true})
    }
    assert.ok(geometry.scroll<=width+1,`${route} overflow at ${width}/${theme}/${language}: ${JSON.stringify(geometry)}`)
+   if(route==='/products'){
+    const photoFrames=await page.locator('.mhome-exclusive-image').evaluateAll(nodes=>nodes.map(frame=>{
+     const image=frame.querySelector('img');const f=getComputedStyle(frame);const i=getComputedStyle(image)
+     const r=frame.getBoundingClientRect();const p=frame.closest('article').getBoundingClientRect()
+     return {background:f.backgroundColor,shadow:f.boxShadow,fit:i.objectFit,left:r.left,right:r.right,parentLeft:p.left,parentRight:p.right}
+    }))
+    assert.equal(photoFrames.length,2,'Verify real vendor-card shells, not just preview fixture cards')
+    for(const frame of photoFrames){
+     assert.equal(frame.background,'rgba(0, 0, 0, 0)','Product photos must not have a separate white backing')
+     assert.equal(frame.shadow,'none','Product photos must not have a separate white halo')
+     assert.equal(frame.fit,'contain','Preserve the complete product photo without cropping')
+     assert.ok(frame.left>=frame.parentLeft-1&&frame.right<=frame.parentRight+1,'Product image escapes its card')
+    }
+   }
    assert.ok(!geometry.overlap,`${route} brand overlaps controls at ${width}`)
    assert.equal(geometry.bg,theme==='dark'?'rgb(13, 20, 36)':'rgb(244, 241, 246)',`${route}/${width}/${theme}/${language} background`)
    assert.deepEqual(geometry.wrongBengaliFont,[],'Bengali copy must use the approved fallback')
    assert.equal(geometry.fonts,true,'Self-hosted Inter failed to load')
    assert.equal(geometry.bengaliFont,true,'Self-hosted Hind Siliguri failed to load')
    assert.deepEqual(geometry.actionOrder,width<768?['language','theme','notifications','account','menu']:['cart','language','theme','notifications','account','menu'])
-   const expectedSize=width<768?31:width<1024?34:40
    for(const [i,control] of geometry.controlBounds.entries()){
+    // Current released header enlarges these touch targets at phone/narrow-tablet widths.
+    const account=geometry.actionOrder[i]==='account'
+    const expectedSize=width<768?(account?31:44):width<=790?(account?34:44):width<1024?34:40
     assert.ok(Math.abs(control.width-expectedSize)<1,`Header width mismatch: ${JSON.stringify(control)}`)
-    assert.ok(Math.abs(control.top-geometry.controlBounds[0].top)<1,'Controls are not vertically aligned')
+    const first=geometry.controlBounds[0]
+    assert.ok(Math.abs(control.top+control.height/2-first.top-first.height/2)<1,'Header control centers are not vertically aligned')
     if(i)assert.ok(control.left>=geometry.controlBounds[i-1].right,'Header controls overlap')
    }
    for(const part of geometry.searchPieces){
