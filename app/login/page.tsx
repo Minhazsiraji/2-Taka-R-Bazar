@@ -12,8 +12,8 @@ export default async function LoginPage({searchParams}: {searchParams: Promise<{
   const [{error, notice, next}, providers] = await Promise.all([searchParams, getAuthProviders()])
   const returnTo = safeAuthReturnPath(next)
   return <main className="public-marketplace-flat customer-page-shell min-h-screen bg-slate-50 text-black">
-    <PublicHeader actionHref="/signup" actionLabel="Join the community pool"/>
-    <div className="mx-auto flex min-h-[calc(100vh-81px)] max-w-6xl items-center justify-center px-4 py-10">
+    <PublicHeader actionHref="/signup" actionLabel="Join the pool"/>
+    <div className="mx-auto flex auth-page-content max-w-6xl items-center justify-center px-4 py-6">
       <section className="card w-full max-w-md p-6 sm:p-8">
         <div className="mb-6 text-center"><h1 className="text-3xl font-black">Sign in</h1>
           <p className="mt-1 text-sm font-semibold text-slate-600" lang="bn">সাইন ইন করুন</p>
@@ -35,7 +35,7 @@ export default async function LoginPage({searchParams}: {searchParams: Promise<{
         <p className="mt-4 text-sm">Already signed in on another window? <Link className="underline" href="/account/security">Set your password or link Google</Link> there. Existing members should link Google from their account before using Google sign-in.</p>
         <p className="mt-3 text-sm">Forgot your password? Use Google if already linked. If you have neither a linked Google account nor an active session, <a className="underline" href="mailto:support@2takarbazar.com">contact support for account recovery</a>.</p>
         {process.env.VERCEL_ENV === 'preview' && <Link className="btn-secondary mt-4 w-full" href="/preview-demo">Open synthetic Preview</Link>}
-        <p className="mt-5 text-center text-sm">New here? <Link className="font-bold underline" href={'/signup' + (returnTo ? '?next=' + encodeURIComponent(returnTo) : '')}>Join the community pool</Link></p>
+        <p className="mt-5 text-center text-sm">New here? <Link className="font-bold underline" href={'/signup' + (returnTo ? '?next=' + encodeURIComponent(returnTo) : '')}>Join the pool</Link></p>
       </section>
     </div><PublicFooter/>
   </main>

@@ -1,4 +1,5 @@
 import {withCommerceOffers} from '@/lib/commerce/storefront'
+import {getHomeSavingsSummary} from '@/lib/home-savings'
 import {cookies} from 'next/headers'
 import {languageFromPreference,isValidLanguagePreference,STOREFRONT_LANGUAGE_COOKIE} from '@/lib/storefront-language'
 import type {DemoFeaturedPool} from '@/lib/featured-pools'
@@ -18,8 +19,8 @@ export const metadata:Metadata={
  alternates:{canonical:SITE_URL},
 }
 
-export default async function Page({searchParams}:{searchParams:Promise<{area?:string}>}){
- const [{area:requestedArea},cookieStore]=await Promise.all([searchParams,cookies()])
+export default async function Page({searchParams}:{searchParams:Promise<{area?:string;q?:string}>}){
+ const [{area:requestedArea,q},cookieStore]=await Promise.all([searchParams,cookies()])
  const storedLanguage=cookieStore.get(STOREFRONT_LANGUAGE_COOKIE)?.value
  const initialLanguage=languageFromPreference(storedLanguage)
  const supabase=await createClient()
@@ -32,6 +33,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
   loadPublishedCatalogPage(),
  ])
  const authenticated=Boolean(claims.data?.claims?.sub)
+ const savings=await getHomeSavingsSummary(authenticated)
  const realAreas=(areasRes.data??[]) as StorefrontArea[]
  const realOffers=await withCommerceOffers((offersRes.data??[]) as StorefrontOffer[])
  const realFeatured=(featuredRes.data??[]) as ShowcaseProduct[]
@@ -57,6 +59,6 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
   {/* English is the first-visit default. A previously selected BN/EN cookie wins on reload. */}
-  <PublicMarketplace initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} publishedProducts={publishedProducts} demoMode={demoMode} howLabelBn="কীভাবে কাজ করে"/>
+  <PublicMarketplace initialSearch={typeof q==='string'?q.slice(0,200):''} initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} publishedProducts={publishedProducts} savings={savings} demoMode={demoMode} previewCards={demoStorefrontEnabled()} howLabelBn="কীভাবে কাজ করে"/>
  </main>
 }

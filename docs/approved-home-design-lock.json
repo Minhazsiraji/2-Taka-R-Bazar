@@ -11,18 +11,19 @@
     "app/marketplace-story.css": "c2a36662a999814ce542b718930c8b8c3996840f778871a69bf28b62e9c7be1b",
     "app/marketplace-unified.css": "8654c2e5c47343e4a058ec97066aa139db068192bd84c166d4300b6d4fd60def",
     "components/animated-hero-messages.tsx": "7787d408afa61296ea499bacff02f6e7c06212cc41ed49e7b9a1b5f9b378f2cc",
-    "components/public-header.tsx": "1113cfadefbd4c5026d97e67393f760d4257a9d85870fed9199c931314248721",
-    "components/storefront-footer.tsx": "0d71227fc9629396028a860332acbf47257067c1d9904b5ef62a59226902f0c5",
+    "components/public-header.tsx": "9853d4eb713e6941cef55f29e827ceb3fb1b0742eadf8a9906e5720bba330ef3",
+    "components/storefront-footer.tsx": "afea1bd5d1bd28090e2be2724f9ebcb9686b711bb1054ba0d8d52c267dbd4c1a",
     "lib/hero-messages.ts": "1d9d0f793ce30114647b0ad66c3196ceedd3698ce71da273b2cf8a7b270ff89a",
     "app/site-header-mobile.css": "49c50d83fe0647bb63c173c579c932cc93d069f78b6d094d9aa74314c735c8b6",
     "components/public-footer.tsx": "cf79680dad5efac51a11c7976de6a2793fa3b70022d04575a297eed70bfb5029",
-    "components/mobile-customer-nav.tsx": "fed39bfe21cb0ce077212ef70be493191cfb8bd025d6eb2d1573c6075f3e89f1",
+    "components/mobile-customer-nav.tsx": "52dccf7d246ffeefe3230d511fcb876876d5a06dcb19886431b36c65073a8e36",
     "app/site-mobile-dock.css": "16af382e2e5acb7de9426fb45fb9738de315503d73a440db1fb05ce06c1190db",
     "components/customer-header-client.tsx": "9516d928e269d43cf1d03084b8917404b9efddc83dc88d0e4b9cc4cb320f03d5",
     "components/customer-shell-client.tsx": "af5c0aedb4906e6f8c1acf3a73a003b4bbd1372160bb8c06d144239eb4a640cc",
     "app/site-customer-shell.css": "9797fceb995adf79cac0a0ea05355ac63393039cb60e083c63d2cccb534aefa9",
     "components/customer-footer.tsx": "6897dc663122b6bca66fb0e211b4c529b7427099c2dd67439a098d28e69ead79",
-    "components/theme-toggle.tsx": "ad784cdfdeca0c299a3317b99acb95e9966bd399f1772568f3d8182062c7229a"
+    "components/theme-toggle.tsx": "ad784cdfdeca0c299a3317b99acb95e9966bd399f1772568f3d8182062c7229a",
+    "app/public-app-design.css": "ed3c1a51d45d6ba1659a94df9dc071aceab83fc1ff8bd137defac131e55a7e29"
   },
   "navigation_change": {
     "source": "Issue #64, approved functional navigation",
@@ -56,5 +57,64 @@
   "customer_ui_unification": {
     "approved_by": "User, 2026-10-14 all customer pages consistency request",
     "changes": "Storefront header/footer are canonical for customer, My Money, auth, policy, product, community invite and unavailable-page states. Both permanent slogans appear in footer. My Money is available through the shared shopping menu and Account. Language preference is reused across chrome. Staff operations retain their existing frame and permissions. Phone/tablet branding and mobile dock guards remain required."
+  },
+  "unified_home_approval": {
+    "approved_by": "User, 2026-10-18 — FINAL APPROVED SCREENSHOT",
+    "reference": "Approved App Dashboard(1).png",
+    "source_of_truth": "Mobile layout; desktop and tablet are responsive expansions of the same component tree",
+    "required_order": [
+      "header",
+      "search",
+      "community",
+      "hero",
+      "verified_savings",
+      "group_deals",
+      "exclusive_products",
+      "community_pools",
+      "footer",
+      "mobile_dock"
+    ],
+    "savings_data_policy": "Completed + verified payment + historical approved reference + non-refunded units only; no illustrative customer balances.",
+    "release": "Preview qualification only. Production unchanged; relaunch PR #122 remains Draft and unmerged.",
+    "implementation_branch": "feat/approved-unified-home-savings-121",
+    "audit_note": "Existing protected CSS/logo/header/footer hashes remain unchanged. The new approved, scoped app/marketplace-mobile-approved.css defines responsive expansions."
+  },
+  "web_expo_owner_refinement": {
+    "approved_by": "User, 2026-10-19 — 7-point correction to Expo-inspired website preview",
+    "scope": "Public storefront header only: compact responsive search, cart, My Money shortcuts. Keep other protected files hashes and production data untouched.",
+    "tracking_issue": 126,
+    "draft_pr": 127
+  },
+  "public_app_redesign_20261020": {
+    "approved_by": "Owner-supplied FINAL WEB REDESIGN IMPLEMENTATION brief, 20 October 2026",
+    "scope": "All public/customer shells share Expo light/dark tokens; compact header and working search; My Money inside Account; no secondary auth navigation; Login-only Join the pool; five storefront dock destinations. Footer retains contacts and uses valid public destinations.",
+    "protected": "Existing hero art and geometry retained. Staff dock, Admin, Finance, Treasury, auth handlers, transaction rules and database files unchanged.",
+    "release": "Draft PR #127, Preview only; owner acceptance required before merge or Production.",
+    "fonts": "Self-hosted Inter Latin and Hind Siliguri Bengali 400/500/600/700 (Fontsource 5.3.0; OFL licenses included). No CSP changes."
+  },
+  "public_glass_refinements_20261020": {
+    "approved_by": "Owner-supplied WEB UI FINAL REFINEMENT HANDOFF, Pasted text(2).txt, 20 October 2026",
+    "scope": "Public glass/rim tokens, unified search, 10–15% larger reordered actions, far-right community selector, short bilingual Join Deal label; same hero, savings geometry, fonts and mobile dock.",
+    "protected": "No Expo/native files or OTA. No Admin, Finance, Treasury, auth, catalog/cart rules, routes or database changes. All other protected file hashes retained.",
+    "release": "Draft PR #127, isolated Vercel Preview only. No main merge or Production release.",
+    "legacy_theme": "Only high-specificity rounded-panel selectors in site-theme.css and site-theme-surface-fix.css exclude the public shell. All declarations are unchanged and protected by normalized SHA-256 regression checks."
+  },
+  "public_glossy_rim_final_20261020": {
+    "approved_by": "User, 20 October 2026 — Final remaining correction, typed public website rim-only handoff",
+    "scope": "Stronger shared white rim, directional inset reflection, narrow soft halo and contrast keyline across existing public glass surfaces. Inset-only shine for existing hero/community/footer controls preserves geometry. No fill, typography, layout, content or functional changes.",
+    "protected": "All other protected hashes retained. No backend, auth handlers, mobile app, staff interfaces or Production changes.",
+    "release": "Draft PR #127 and isolated Vercel Preview only."
+  },
+  "public_rim_search_area_followup_20261020": {
+    "approved_by": "User, 20 October 2026 — four supplied screenshots and request to correct all three remaining issues",
+    "scope": "Match the live reference with translucent tinted light panes and uninterrupted white borders/dividers. Remove inner teal search focus outlines while retaining one outer white focus boundary. Reuse the existing contained community picker at phone widths so options wrap and stay inside the content frame.",
+    "protected": "No component markup, handlers, content, hero geometry, navigation structure, backend, mobile app or Production changes. Other protected hashes retained.",
+    "release": "Draft PR #127 and isolated Vercel Preview only."
+  },
+  "plain_footer_full_pool_action_20261020": {
+    "approved_by": "User, 20 October 2026 — marked image(20261020-172143).png",
+    "scope": "Remove footer group card fills/rims/shadows while retaining every word, link, group and responsive grid. Stretch the Pool action across the content column, with any existing progress bar above it.",
+    "protected": "No markup, content, route, handler, commerce logic, backend, mobile app or Production changes.",
+    "release": "Draft PR #127 and isolated Vercel Preview only."
   }
 }
