@@ -41,6 +41,7 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
  const price=selected?.price??product.price
  const origin=from==='pool'&&poolId?'/demo-pool/'+poolId+'?source=home':
   from==='deal'||deal?'/demo-product/'+product.id+'?kind=deal':
+  from==='exclusive'?'/demo-product/'+product.id:
   '/#mobile-exclusive'
  const retailHref='/demo-product/'+product.id+'?kind=retail&from='+(deal?'deal':from==='pool'?'pool':'exclusive')+
   (poolId?'&pool='+poolId:'')
