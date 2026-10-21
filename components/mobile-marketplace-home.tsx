@@ -316,7 +316,9 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
 
      </div>
     </article>})}</div>:
-    <div className="mhome-empty">{t('Products will appear as soon as they are published.','পণ্য প্রকাশিত হলে এখানে দেখা যাবে।')}</div>}
+    <div className="mhome-empty">{query
+      ?t('No products match your search.','আপনার খোঁজের সঙ্গে কোনো পণ্য মেলেনি।')
+      :t('Products will appear as soon as they are published.','পণ্য প্রকাশিত হলে এখানে দেখা যাবে।')}</div>}
   </section>
 
   <section className="mhome-section mhome-pools" id="mobile-pools">
