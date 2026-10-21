@@ -75,24 +75,44 @@ test('preview detail route resolves fixture links, preserves legacy demos and re
  enabled=false
  for(const id of ['butter','rice','legacy-id'])await assert.rejects(open(id),/NOT_FOUND/)
 })
-test('full-page preview details retain matching prices and stock in both languages without real commerce',async()=>{
+test('Group and Exclusive details follow approved native display tiers, retail-only master and preview safety',async()=>{
+ const parity=await loadSource('lib/preview-native-detail-data.ts',{'@/lib/home-card-preview-fixtures':fixtures})
  const {HomePreviewProductDetails}=await loadSource('components/home-preview-product-details.tsx',{
   'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
   '@/components/public-header':{PublicHeader:()=>null},'@/components/public-footer':{PublicFooter:()=>null},
   '@/lib/use-storefront-language':{useStorefrontLanguage:language=>[language,()=>{}]},
-  '@/lib/home-card-preview-fixtures':fixtures,'./home-card-preview.css':{},
+  '@/lib/home-card-preview-fixtures':fixtures,
+  '@/lib/preview-native-detail-data':parity,
+  './home-card-preview.css':{},'./home-preview-native-details.css':{},
  })
  for(const language of ['en','bn'])for(const product of fixtures.previewProducts){
-  const html=renderToStaticMarkup(React.createElement(HomePreviewProductDetails,{product,initialLanguage:language,hasLanguageCookie:true}))
-  for(const value of [language==='bn'?product.nameBn:product.name,fixtures.previewMoney(product.price),fixtures.previewMoney(product.oldPrice),String(product.stock)])assert.ok(html.includes(value),value)
+  const html=renderToStaticMarkup(React.createElement(HomePreviewProductDetails,{
+   product,initialLanguage:language,hasLanguageCookie:true}))
+  for(const value of [language==='bn'?product.nameBn:product.name,fixtures.previewMoney(product.price),
+   fixtures.previewMoney(product.oldPrice),'Same product'])assert.ok(html.includes(value),value)
+  assert.ok(html.includes('aria-pressed="true"'))
+  assert.ok(html.includes('href="/demo-product/'+product.id+'?kind=retail'))
   assert.ok(!html.includes('<dialog'))
-  assert.ok(html.includes('href="/#mobile-exclusive"'))
+  const retail=renderToStaticMarkup(React.createElement(HomePreviewProductDetails,{
+   product,retail:true,initialLanguage:language,hasLanguageCookie:true}))
+  assert.ok(retail.includes('SKU'))
+  assert.ok(retail.includes('SEO'))
+  assert.ok(retail.includes('AEO'))
+  assert.ok(retail.includes('GEO'))
+  assert.ok(retail.includes(fixtures.previewMoney(product.oldPrice)))
+  assert.ok(!retail.includes('Same product'))
  }
- const product=fixtures.previewProducts.find(p=>p.id==='rice')
- const deal=fixtures.previewDeals.find(p=>p.id==='rice')
- const html=renderToStaticMarkup(React.createElement(HomePreviewProductDetails,{product,deal,initialLanguage:'en',hasLanguageCookie:true}))
- assert.ok(html.includes('৳135'))
- assert.ok(html.includes('4/5 joined'))
+ const butter=fixtures.previewProducts.find(p=>p.id==='butter')
+ const deal=fixtures.previewDeals.find(p=>p.id==='butter')
+ const html=renderToStaticMarkup(React.createElement(HomePreviewProductDetails,{
+  product:butter,deal,initialLanguage:'en',hasLanguageCookie:true}))
+ for(const value of ['GROUP DEAL','৳1,120','৳1,075','7/10','Group Deal price tiers','Community progress','Product Details'])assert.ok(html.includes(value),value)
+ const rice=fixtures.previewProducts.find(p=>p.id==='rice')
+ const riceDeal=fixtures.previewDeals.find(p=>p.id==='rice')
+ const riceHtml=renderToStaticMarkup(React.createElement(HomePreviewProductDetails,{
+  product:rice,deal:riceDeal,initialLanguage:'en',hasLanguageCookie:true}))
+ for(const value of ['৳155','৳135','4/5','Next tier at'])assert.ok(riceHtml.includes(value),value)
  const source=readFileSync('components/home-preview-product-details.tsx','utf8')
- assert.doesNotMatch(source,/fetch\(|setCommerceCartItem|supabase|action=|<form/)
+ assert.doesNotMatch(source,/fetch\\(|setCommerceCartItem|supabase|action=|<form/)
+ assert.match(source,/previewGroupPriceTiers/)
 })
