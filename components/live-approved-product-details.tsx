@@ -38,7 +38,7 @@ export function LiveApprovedProductDetails({product,kind,selectedOfferId,from,po
  const market=product.retail
  const saving=market!==null&&selectedPrice!==null&&market>selectedPrice?market-selectedPrice:null
  const photo=<div className={kind==='deal'?'native-preview-group-photo':kind==='retail'?'native-preview-retail-photo':'native-preview-exclusive-photo'}>
-  {product.image?<img src={product.image} alt={product.alt||title} onError={e=>{e.currentTarget.src='/preview-app-product-placeholder.svg'}}/>:
+  {product.image?<img src={product.image} alt={product.alt||title} onError={e=>{if(!e.currentTarget.src.endsWith('/preview-app-product-placeholder.svg'))e.currentTarget.src='/preview-app-product-placeholder.svg'}}/>:
    <img src="/preview-app-product-placeholder.svg" alt={title}/>}
  </div>
  const panel=(children:React.ReactNode,className='')=><section className={'native-preview-panel '+className}>{children}</section>
