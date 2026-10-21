@@ -9,7 +9,7 @@ const sql=read('supabase/migrations/20261015031616_product_wizard_safe_delete_is
 const lifecycle=read('components/admin-product-lifecycle.tsx')
 
 test('Quick Product Upload is default; the legacy SEO wizard remains available for optional enrichment',()=>{
- assert.match(page,/<AdminQuickProductForm key=\\{user.id\\} userId=\\{user.id\\}\\/>/)
+ assert.ok(page.includes('AdminQuickProductForm key={user.id} userId={user.id}'),'Quick Product Upload must be the default Admin form')
  assert.match(wizard,/onSubmit=\{handleSubmit\}/)
  assert.equal((wizard.match(/<form\b/g)||[]).length,1,'one creation form, no nested SEO second form')
  assert.match(wizard,/ProductImageInput/)
