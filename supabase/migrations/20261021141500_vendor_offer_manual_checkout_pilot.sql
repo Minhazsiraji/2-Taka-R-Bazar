@@ -195,6 +195,35 @@ end $$;
 revoke all on function public.pilot_staff_review_payment_reference(uuid,boolean,text) from public,anon,service_role;
 grant execute on function public.pilot_staff_review_payment_reference(uuid,boolean,text) to authenticated;
 
+-- Narrow Admin-only read of latest owner-confirmed draft pricing. Preserve
+-- audit_events RLS/default-deny and never expose unrelated audit records.
+create function public.vendor_offer_admin_price_snapshot()
+ returns table(product_id uuid,sku text,supplier_id uuid,vendor_unit_cost numeric,proposed_sale_price numeric,audit_id bigint)
+ language plpgsql stable security definer set search_path='' as $
+declare v_event public.audit_events%rowtype;begin
+ if auth.uid() is null or not(private.has_role(auth.uid(),'admin') or private.has_role(auth.uid(),'super_admin'))
+ then raise exception using errcode='42501',message='Admin required';end if;
+ select * into v_event from public.audit_events a where a.event_type in
+ ('owner_revised_vendor_product_pricing','owner_proposed_vendor_product_pricing')
+ and a.metadata->>'direct_exclusive_price_status'='draft_unpublished'
+ and jsonb_typeof(a.metadata->'pricing_lines')='array'
+ order by a.id desc limit 1;
+ if v_event.id is null then return;end if;
+ return query
+ select p.id,p.sku,sp.supplier_id,
+  x.vendor_unit_cost_bdt,x.proposed_customer_unit_price_bdt,v_event.id
+ from jsonb_to_recordset(v_event.metadata->'pricing_lines') x(
+   product_id uuid,sku text,selling_package_size text,vendor_unit_cost_bdt numeric,proposed_customer_unit_price_bdt numeric)
+ join public.products p on p.id=x.product_id and p.sku=x.sku and p.package_size=x.selling_package_size
+ join public.supplier_products sp on sp.product_id=p.id and sp.active
+ join public.suppliers su on su.id=sp.supplier_id and su.active
+ where sp.supplier_id=(v_event.metadata->>'supplier_id')::uuid
+ and p.active and not p.is_demo and p.source_type='SUPPLIER_POOL'
+ and x.vendor_unit_cost_bdt>0 and x.proposed_customer_unit_price_bdt>x.vendor_unit_cost_bdt;
+end $;
+revoke all on function public.vendor_offer_admin_price_snapshot() from public,anon,service_role;
+grant execute on function public.vendor_offer_admin_price_snapshot() to authenticated;
+
 -- Non-destructive bootstrap: import only the six authenticated owner's
 -- existing, independently audit-preserved draft prices. No customer-facing
 -- offer or stock is created, and no live price is automatically published.
