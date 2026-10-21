@@ -25,7 +25,7 @@ type Props={
  offers:StorefrontOffer[]
  products:ShowcaseProduct[]
  publishedProducts:PublishedCatalogPage
- vendorProducts:PublicVendorBookingProduct[]
+ vendorProducts?:PublicVendorBookingProduct[]
  pools:DemoFeaturedPool[]
  language:MarketplaceLanguage
  demoMode:boolean
@@ -72,7 +72,7 @@ function SectionHeading({title,description,href,viewText,savings=false}:{
 const money=(n:number|null|undefined)=>n!=null&&Number(n)>0?formatPrice(n):null
 
 export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectArea,detectingArea,
- offers,products,publishedProducts,vendorProducts,pools,language,demoMode,previewCards=false,search,savings}:Props){
+ offers,products,publishedProducts,vendorProducts=[],pools,language,demoMode,previewCards=false,search,savings}:Props){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  // Data-only switch. The locked homepage markup and CSS are unchanged:
  // use demo fixtures until genuinely published public records exist.
