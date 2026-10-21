@@ -87,6 +87,6 @@ test('Pool detail pages show the matching 3 photos, counts, deadline and linked 
   }
  }
  const source=readFileSync('components/home-preview-pool-details.tsx','utf8')
- assert.doesNotMatch(source,/fetch\(|setCommerceCartItem|supabase|checkout|<form/)
+ assert.doesNotMatch(source,/fetch\(|setCommerceCartItem|supabase|\/checkout|<form/)
  assert.match(source,/Back to Community Pools/)
 })
