@@ -1,0 +1,11 @@
+/* 2TBR approved storefront: touch-accessibility correction only.
+   Keep the locked original styling and visual scale unchanged.
+   This file loads after the owner-approved CSS layer. */
+@media(max-width:767px){
+ body.site-glass-root:has(main.public-marketplace-flat .mhome) .market-flat-header
+ :is(.market-single-language,.theme-toggle,.customer-notification-bell){
+  width:44px!important;min-width:44px!important;max-width:44px!important;
+  height:44px!important;min-height:44px!important;max-height:44px!important;
+  flex-basis:44px!important;padding:0!important;
+ }
+}
