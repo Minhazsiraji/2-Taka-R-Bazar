@@ -1,5 +1,6 @@
 import {createClient} from '@/lib/supabase/server'
 import {submitPilotPaymentReference} from '@/app/actions/vendor-offers'
+import {MANUAL_PAYMENT_DESTINATIONS} from '@/lib/manual-payment-destinations'
 
 type ConfirmedBooking={id:string;product_name:string;quantity:number;status:string;
  confirmed_unit_price:number|null;confirmed_delivery_fee:number|null}
@@ -15,7 +16,17 @@ export async function PilotManualPaymentBookings({bookings,userId}:{bookings:Con
   db.from('pilot_booking_payment_claims').select('id,booking_id,reference_code,status,claimed_amount')
    .eq('customer_id',userId).order('submitted_at',{ascending:false}).limit(100),
  ])
- const options=(optionsResult.data??[]) as PaymentOption[]
+ // Never render a stale/mismatched stored account number. The approved
+ // existing payment setup is authoritative; the DB only gates activation.
+ const options=((optionsResult.data??[]) as PaymentOption[]).filter(op=>
+  op.method==='bkash'
+   ? op.account_number===MANUAL_PAYMENT_DESTINATIONS.bkash.accountNumber
+     && op.account_name===MANUAL_PAYMENT_DESTINATIONS.bkash.name
+   : op.method==='bank'
+     && op.account_number===MANUAL_PAYMENT_DESTINATIONS.bank.accountNumber
+     && op.account_name===MANUAL_PAYMENT_DESTINATIONS.bank.accountHolder
+     && op.bank_name===MANUAL_PAYMENT_DESTINATIONS.bank.institution
+   )
  const claims=(claimsResult.data??[]) as Claim[]
  return <section className="mt-6 grid gap-4">
   <h2 className="text-xl font-black">Manual payments / ম্যানুয়াল পেমেন্ট</h2>
@@ -31,9 +42,10 @@ export async function PilotManualPaymentBookings({bookings,userId}:{bookings:Con
     {!optionsResult.error&&!claimsResult.error&&options.length===0&&<p className="notice mt-3">No approved bKash or bank account has been activated. Please arrange payment with 2TBR staff instead. Do not send money to an unverified account.</p>}
     {options.length>0&&<div className="mt-3 grid gap-2">
      {options.map(op=><div key={op.id} className="rounded-xl border p-3 text-sm">
-      <b>{op.method==='bkash'?'bKash':'Bank transfer'} · {op.account_name}</b>
+      <b>{op.method==='bkash'?'bKash · Payment (PRA)':'Bank transfer'} · {op.account_name}</b>
       <p className="mt-1 break-all font-mono font-black">{op.account_number}</p>
       {op.method==='bank'&&<p>{op.bank_name}{op.branch_name?' · '+op.branch_name:''}</p>}
+      {op.method==='bkash'&&<p className="mt-1 text-xs">Use bKash Payment (not Send Money). Check the registered recipient in the bKash app. Never share PIN or OTP.</p>}
      </div>)}
     </div>}
     {past.map(c=><p key={c.id} className="mt-3 rounded-xl border p-3 text-sm">
