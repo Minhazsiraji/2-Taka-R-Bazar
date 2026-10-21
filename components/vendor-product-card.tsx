@@ -21,8 +21,8 @@ export function VendorProductCard({product,language}:{product:PublicVendorBookin
     <h3><Link href={href}>{product.name}</Link></h3>
     <p className="app-card-preview-meta">{product.package_size}</p>
     <div className="app-card-preview-price"><strong>৳{Number(product.approved_unit_price).toLocaleString('en-BD')}</strong></div>
-    <p className="app-card-preview-stock">{bn?'ভেন্ডরের কাছে · বুকিং সাপেক্ষে':'Vendor-held · By request'}</p>
-    <p className="app-card-preview-stock">{bn?'চূড়ান্ত মূল্য ও সরবরাহ নিশ্চিতকরণ সাপেক্ষে':'Final price and supply subject to confirmation'}</p>
+    <p className="app-card-preview-stock">{bn?'ভেন্ডরের কাছে':'Vendor-held'}</p>
+    <p className="app-card-preview-stock">{bn?'নিশ্চিতকরণ সাপেক্ষে':'Subject to confirmation'}</p>
    </div>
   </div>
   <div className="app-card-preview-actions">
