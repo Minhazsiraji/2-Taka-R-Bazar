@@ -31,6 +31,6 @@ export default async function PaymentSetupPage(){
         <li>For each payment, record the exact order reference, transaction ID, amount and original evidence. Staff verification, independent Treasury approval and bank reconciliation remain separate steps.</li>
       </ol>
     </section>
-    <nav className="mt-6 flex flex-wrap gap-4"><Link className="btn-secondary" href="/account/security">Set my password</Link><Link className="btn-secondary" href="/admin/own-products">Own products</Link><Link className="btn-secondary" href="/super-admin/treasury">Treasury accounts</Link><Link className="btn-secondary" href="/commerce">Commerce operations</Link></nav>
+    <nav className="mt-6 flex flex-wrap gap-4"><Link className="btn-primary" href="/admin/payment-recipients">Activate existing receiving accounts for confirmed pilot bookings →</Link><Link className="btn-secondary" href="/account/security">Set my password</Link><Link className="btn-secondary" href="/admin/own-products">Own products</Link><Link className="btn-secondary" href="/super-admin/treasury">Treasury accounts</Link><Link className="btn-secondary" href="/commerce">Commerce operations</Link></nav>
   </SuperAdminShell>
 }
