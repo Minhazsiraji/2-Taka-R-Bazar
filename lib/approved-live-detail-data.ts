@@ -53,7 +53,9 @@ export function confirmedOfferPrice(offer:PublicLiveOffer):number|null{
  return ['unlocked','final'].includes(offer.price_status)?validMoney(offer.confirmed_price):null
 }
 export function poolBasketTotals(lines:PublicLiveOffer[],qty:Record<string,number>){
- const selected=lines.filter(o=>Number.isInteger(qty[o.product_id])&&qty[o.product_id]>0&&qty[o.product_id]<=20)
+ const seen=new Set<string>()
+ const selected=lines.filter(o=>{if(seen.has(o.product_id))return false;seen.add(o.product_id)
+  return Number.isInteger(qty[o.product_id])&&qty[o.product_id]>0&&qty[o.product_id]<=20})
  const units=selected.reduce((sum,o)=>sum+qty[o.product_id],0)
  const sumVerified=(get:(o:PublicLiveOffer)=>number|null)=>{
   if(!units)return 0
