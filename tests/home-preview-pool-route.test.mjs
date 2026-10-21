@@ -95,7 +95,7 @@ test('Pool details match the locked Expo cards, unbounded progress, products and
   }
  }
  const source=readFileSync('components/home-preview-pool-details.tsx','utf8')
- assert.doesNotMatch(source,/fetch\\(|setCommerceCartItem|supabase|\\/checkout|<form/)
+ for(const forbidden of ['fetch(', 'setCommerceCartItem', 'supabase', '<form'])assert.ok(!source.includes(forbidden),forbidden)
  assert.match(source,/changeQty/)
  assert.match(source,/Review Join Pool/)
 })
