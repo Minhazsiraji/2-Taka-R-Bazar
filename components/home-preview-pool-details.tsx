@@ -2,7 +2,9 @@
 
 import {useState} from 'react'
 import Link from 'next/link'
-import {addLaunchItems} from '@/lib/launch-cart'
+import {addLaunchItems,readLaunchCart} from '@/lib/launch-cart'
+import {joinSimpleSalePool} from '@/app/actions/simple-offer-joins'
+import {useRouter} from 'next/navigation'
 import {PublicHeader} from '@/components/public-header'
 import {PublicFooter} from '@/components/public-footer'
 import {useStorefrontLanguage} from '@/lib/use-storefront-language'
@@ -30,6 +32,8 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
  const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
  const [quantities,setQuantities]=useState<Record<string,number>>({})
  const [status,setStatus]=useState('')
+ const [joining,setJoining]=useState(false)
+ const router=useRouter()
  const bn=language==='bn'
  const t=(en:string,local:string)=>bn?local:en
  const n=(num:number)=>new Intl.NumberFormat(bn?'bn-BD':'en-US').format(num)
@@ -158,7 +162,27 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
    </section>
    <div className="native-preview-pool-review" role="region" aria-label={t('Pool selection review','পুল নির্বাচন পর্যালোচনা')}>
     <div><small>{n(units)} {t('units selected','টি ইউনিট নির্বাচিত')}</small><strong>{cash(current)}</strong></div>
-    <button type="button" disabled={Boolean(view)&&!pool.launchOfferId||!units||selected.some(l=>(quantities[l.product.id]??0)>(l.product.stock??100))} onClick={()=>{if(pool.launchOfferId){const added=addLaunchItems(selected.map(l=>({product_id:l.product.id,offer_id:pool.launchOfferId,quantity:quantities[l.product.id]})));if(!added){setStatus(t('Your cart can hold 6 different products. Review it before adding this Pool.','কার্টে ৬টি ভিন্ন পণ্য রাখা যায়। আগে কার্ট দেখুন।'));return}window.location.assign('/cart');return}setStatus(t('Your Pool selection is saved for this on-screen demo only. No real commitment or payment.','নির্বাচনটি শুধু ডেমোর জন্য। কোনো বাস্তব যোগদান বা পেমেন্ট হয়নি।'))}}>
+    <button type="button" disabled={joining||Boolean(view)&&!pool.launchOfferId||!units||selected.some(l=>(quantities[l.product.id]??0)>(l.product.stock??100))} onClick={async()=>{
+      if(pool.launchOfferId){
+       const chosen=selected.map(l=>({product_id:l.product.id,offer_id:pool.launchOfferId,quantity:quantities[l.product.id]}))
+       if(new Set([...readLaunchCart(),...chosen].map(x=>x.product_id)).size>6){
+        setStatus(t('Your cart can hold 6 different products. Review it first.','কার্টে ৬টি ভিন্ন পণ্য রাখা যায়। আগে কার্ট দেখুন।'));return
+       }
+       setJoining(true)
+       try{
+        const result=await joinSimpleSalePool(pool.launchOfferId,chosen.map(i=>i.product_id))
+        if(!result.ok){setStatus(result.message);if(result.code==='SIGN_IN')router.push('/login?next=%2F');return}
+        const added=addLaunchItems(chosen)
+        if(!added){setStatus(t('Review your cart before adding these products.','পণ্য যোগ করার আগে কার্ট দেখুন।'));return}
+        window.dispatchEvent(new Event('2tbr-notifications-refresh'))
+        router.refresh()
+        window.location.assign('/cart')
+       }catch{setStatus(t('Could not join this Pool. Please retry.','পুলে যোগ দেওয়া যায়নি। আবার চেষ্টা করুন।'))}
+       finally{setJoining(false)}
+       return
+      }
+      setStatus(t('Your Pool selection is saved for this on-screen demo only. No real commitment or payment.','নির্বাচনটি শুধু ডেমোর জন্য। কোনো বাস্তব যোগদান বা পেমেন্ট হয়নি।'))
+     }}>
      {pool.launchOfferId?t('Review Pool order','পুল অর্ডার দেখুন'):t('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো')} →</button>
    </div>
    {status&&<p role="status" className="native-preview-status">{status}</p>}
