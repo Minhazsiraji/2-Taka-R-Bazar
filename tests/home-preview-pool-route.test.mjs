@@ -17,7 +17,9 @@ const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
 })
 const parity=await loadSource('lib/preview-native-detail-data.ts',{'@/lib/home-card-preview-fixtures':fixtures})
 const {HomePreviewPoolDetails}=await loadSource('components/home-preview-pool-details.tsx',{
- '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ '@/lib/launch-cart':{addLaunchItem:()=>{},addLaunchItems:()=>true,readLaunchCart:()=>[]},
+ 'next/navigation':{useRouter:()=>({refresh:()=>{},push:()=>{}})},
+ '@/app/actions/simple-offer-joins':{joinSimpleSalePool:async()=>({ok:false})},
  'next/link':link,
  '@/components/public-header':{PublicHeader:()=>null},
  '@/components/public-footer':{PublicFooter:()=>null},
