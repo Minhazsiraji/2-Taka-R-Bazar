@@ -318,7 +318,7 @@ try {
   assert.equal(await page.locator('.market-single-language').innerText(),'EN')
   assert.equal(await page.locator('footer').getAttribute('lang'),'bn')
   await assertCustomerChrome(page,1440)
-  await page.locator('footer a[href="/about"]').click()
+  await page.locator('footer').getByRole('link',{name:/^(About 2TBR|2TBR পরিচিতি)$/}).click()
   await page.waitForURL(url=>url.pathname==='/about')
   await page.locator('.market-single-language').filter({hasText:'EN'}).waitFor()
   await page.locator('footer[lang="bn"]').waitFor()
