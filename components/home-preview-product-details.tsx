@@ -91,7 +91,7 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
         <span>{isCurrentTier(tier)?t('Current tier','বর্তমান স্তর'):tier.minimum>deal.joined?t('Not yet unlocked','এখনো আনলক হয়নি'):t('Unlocked','আনলক হয়েছে')}</span>
        </div>)}
       </div>
-      <p className="native-preview-hint">{t('Demo price tiers only. Server-authoritative prices required before checkout.','এগুলো নমুনা দাম। চেকআউটের আগে সার্ভার-যাচাইকৃত মূল্য প্রয়োজন।')}</p>
+      <p className="native-preview-hint">{view?t('Configured prices unlock when each verified participation target is reached. Checkout rechecks the current price.','যাচাইকৃত সদস্যসংখ্যা পূর্ণ হলে নির্ধারিত দাম আনলক হবে। চেকআউটে বর্তমান দাম পুনরায় যাচাই হবে।'):t('Demo price tiers only. Server-authoritative prices required before checkout.','এগুলো নমুনা দাম। চেকআউটের আগে সার্ভার-যাচাইকৃত মূল্য প্রয়োজন।')}</p>
      </DemoPanel>}
      <DemoPanel>
       <h2>{t('Community progress','কমিউনিটির অগ্রগতি')}</h2>
