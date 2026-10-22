@@ -1,4 +1,5 @@
 import 'server-only'
+import {simpleStorefrontOffers,simpleFeaturedPools,type SimpleOffer} from './simple-offers'
 import type {PublicVendorBookingProduct} from './public-vendor-booking'
 import {createClient} from '@/lib/supabase/server'
 import {withCommerceOffers} from '@/lib/commerce/storefront'
@@ -13,18 +14,20 @@ import {productFromPublicSources,publishedLiveOffers,publishedLivePools,uuidPatt
 export async function loadLivePublishedProduct(id:string):Promise<PublicLiveProduct|null>{
  if(!uuidPattern.test(id))return null
  const supabase=await createClient()
- const [rawOffers,showcase,slugResult,vendorResult]=await Promise.all([
+ const [rawOffers,showcase,slugResult,vendorResult,simpleResult]=await Promise.all([
   supabase.rpc('get_public_storefront_offers',{p_community_id:null}),
   supabase.rpc('get_public_own_product_showcase',{p_product_id:id,p_featured_only:false}),
   supabase.rpc('get_public_product_seo_slug_for_id',{p_product_id:id}),
   supabase.rpc('get_public_launch_catalog',{p_product_id:id}),
+  supabase.rpc('get_public_simple_offers'),
  ])
  const vendor=(vendorResult.error?[]:vendorResult.data??[]).find((p:PublicVendorBookingProduct)=>p.product_id===id) as PublicVendorBookingProduct|undefined
- if(rawOffers.error&&!vendor)return null
+ const simple=simpleStorefrontOffers((simpleResult.error?[]:simpleResult.data??[]) as SimpleOffer[]).filter(o=>o.product_id===id)
+ if(rawOffers.error&&!vendor&&!simple.length)return null
  let offers:StorefrontOffer[]=[]
  try{offers=await withCommerceOffers((rawOffers.data??[]) as StorefrontOffer[],id)}
  catch{offers=(rawOffers.data??[]) as StorefrontOffer[]}
- offers=publishedLiveOffers(offers).filter(o=>o.product_id===id)
+ offers=publishedLiveOffers([...offers,...simple]).filter(o=>o.product_id===id)
  const slug=typeof slugResult.data==='string'?slugResult.data:''
  let seo:ProductSeoPublic|null=null
  if(!slugResult.error&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)&&slug.length<=120){
@@ -44,9 +47,9 @@ export async function loadLivePublishedProduct(id:string):Promise<PublicLiveProd
 export async function loadLivePublishedPool(id:string):Promise<DemoFeaturedPool|null>{
  if(!uuidPattern.test(id))return null
  const client=await createClient()
- const {data,error}=await client.rpc('get_public_featured_pools',{p_community_id:null})
- if(error||!Array.isArray(data))return null
- const found=publishedLivePools(data as DemoFeaturedPool[]).find(p=>p.id===id)
+ const [legacy,simple]=await Promise.all([client.rpc('get_public_featured_pools',{p_community_id:null}),client.rpc('get_public_simple_offers')])
+ const pools=[...(legacy.error?[]:legacy.data??[]) as DemoFeaturedPool[],...simpleFeaturedPools((simple.error?[]:simple.data??[]) as SimpleOffer[])]
+ const found=publishedLivePools(pools).find(p=>p.id===id)
  if(!found)return null
  const offerLines=found.bundle.filter(l=>l.offer&&!l.offer.is_demo&&!l.offer.commerce_synthetic)
   .map(line=>({...line,offer:{...line.offer,image_url:line.offer.image_url&&publicShowcaseImageUrl(line.offer.image_url)?line.offer.image_url:null}}))

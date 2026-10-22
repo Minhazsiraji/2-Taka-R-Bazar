@@ -83,7 +83,7 @@ export function PreviewHomeCards({section,language,search,view}:Props){
       <div className="app-card-preview-deal-stats"><span>👥 {d.joined}/{d.target} joined</span><span data-empty={d.days===null||undefined}>◷ Ends in {d.days??0} {d.days===1?'day':'days'}</span></div>
       <Progress value={d.joined} max={d.target} label={bn?'গ্রুপ অংশগ্রহণ':'Group participation'}/>
       <div className="app-card-preview-actions"><Link href={d.empty?'#':productHref(d.id,'deal')+(view&&d.offerId?'&offer='+d.offerId:'')}>{bn?'বিস্তারিত':'View details'}</Link>
-       <button type="button" className="app-card-preview-primary" disabled={Boolean(view)} onClick={()=>{if(!view)setSelection({kind:'deal',id:d.id})}}>{bn?'গ্রুপে যোগ দিন':'Join Deal'}</button></div>
+       <button type="button" className="app-card-preview-primary" disabled={Boolean(view)&&!d.launchOfferId} onClick={()=>{if(d.launchOfferId){addLaunchItem(d.id,d.launchOfferId);setNotice(bn?'কার্টে যোগ হয়েছে।':'Added to cart.');return}if(!view)setSelection({kind:'deal',id:d.id})}}>{bn?'গ্রুপে যোগ দিন':'Join Deal'}</button></div>
      </div>
     </article>})}
   </div>:view?<div className="mhome-empty" data-empty="true"> </div>:<div className="mhome-empty">{bn?'এই খোঁজে গ্রুপ ডিল নেই।':'No Group Deals match your search.'}</div>
@@ -100,7 +100,7 @@ export function PreviewHomeCards({section,language,search,view}:Props){
     </div>
     <div className="app-card-preview-actions"><Link href={p.empty?'#':productHref(p.id)}>{bn?'বিস্তারিত':'View details'}</Link>
      <button className="app-card-preview-primary" type="button" disabled={Boolean(view)&&!p.purchasable} onClick={()=>{
-      if(p.purchasable){addLaunchItem(p.id);setNotice(bn?'কার্টে যোগ হয়েছে।':'Added to cart.');return}
+      if(p.purchasable){addLaunchItem(p.id,p.launchOfferId);setNotice(bn?'কার্টে যোগ হয়েছে।':'Added to cart.');return}
       const count=(basket[p.id]??0)+1;setBasket(previous=>({...previous,[p.id]:count}))
       setNotice(bn?'ডেমো ঝুড়িতে '+count+'টি যোগ হয়েছে। বাস্তব কার্ট পরিবর্তন হয়নি।':'Added '+count+' to the preview basket. Your real cart is unchanged.')
      }}>{bn?'কার্টে যোগ দিন':'Add to cart'}</button></div>

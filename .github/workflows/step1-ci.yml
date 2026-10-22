@@ -108,6 +108,7 @@ jobs:
           node tests/account-security-browser-uat.mjs
           node tests/product-seo-browser-uat.mjs
           node tests/pilot-booking-public-smoke.mjs
+          node tests/simple-offers-browser-uat.mjs
       - name: Upload synthetic account and header screenshots
         if: always()
         uses: actions/upload-artifact@v4

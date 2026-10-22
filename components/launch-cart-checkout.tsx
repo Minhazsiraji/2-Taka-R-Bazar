@@ -11,7 +11,7 @@ export function LaunchCartCheckout({catalog,checkout=false,authenticated=false,e
  useEffect(()=>{setItems(readLaunchCart());setRequest(crypto.randomUUID());setLoaded(true)},[])
  const money=(v:number)=>'৳'+v.toLocaleString('en-BD')
  const change=(id:string,quantity:number)=>{const next=items.map(i=>i.product_id===id?{...i,quantity}:i).filter(i=>i.quantity>0);writeLaunchCart(next);setItems(next)}
- const lines=items.map(item=>({item,product:catalog.find(p=>p.product_id===item.product_id)}))
+ const lines=items.map(item=>({item,product:catalog.find(p=>p.product_id===item.product_id&&(!item.offer_id||p.offer_id===item.offer_id))}))
  const unavailable=lines.some(l=>!l.product?.launch_enabled||l.item.quantity>(l.product.available_quantity??0))
  const total=lines.reduce((s,l)=>s+(l.product?.approved_unit_price??0)*l.item.quantity,0)
  if(!loaded)return <p role="status">Loading / লোড হচ্ছে…</p>
@@ -19,7 +19,7 @@ export function LaunchCartCheckout({catalog,checkout=false,authenticated=false,e
  return <>{error&&<p className="error mb-4" role="alert">{error}</p>}<section className="glass-panel rounded-3xl border border-white/80 p-5">
  <h2 className="text-xl font-black">Your products / আপনার পণ্য</h2>
  <div className="mt-4 grid gap-4">{lines.map(({item,product:p})=><article key={item.product_id} className="glass-subpanel flex flex-wrap items-center gap-4 rounded-2xl border border-white/80 p-4">
- {p?.image_url&&<img src={p.image_url} width="72" height="72" alt={p.name} className="rounded-xl object-contain"/>}<div className="min-w-0 flex-1"><Link className="font-bold" href={'/preview-live/product/'+item.product_id}>{p?.name??'Unavailable product / অনুপলব্ধ পণ্য'}</Link><p>{p?.package_size} · {money(p?.approved_unit_price??0)}</p>
+ {p?.image_url&&<img src={p.image_url} width="72" height="72" alt={p.name} className="rounded-xl object-contain"/>}<div className="min-w-0 flex-1"><Link className="font-bold" href={'/preview-live/product/'+item.product_id+(item.offer_id?'?offer='+item.offer_id:'')}>{p?.name??'Unavailable product / অনুপলব্ধ পণ্য'}</Link><p>{p?.package_size} · {money(p?.approved_unit_price??0)}</p>{p?.offer_title&&<p className="text-sm">{p.offer_title}</p>}
  <label className="mt-2 inline-flex items-center gap-2">Quantity / পরিমাণ <input aria-label={'Quantity for '+(p?.name??item.product_id)} className="input w-20" type="number" min="1" max={Math.max(1,p?.available_quantity??100)} value={item.quantity} onChange={e=>{const q=Number(e.target.value);if(Number.isInteger(q)&&q>=1&&q<=100)change(item.product_id,q)}}/></label></div>
  <button className="btn-secondary" type="button" onClick={()=>change(item.product_id,0)}>Remove / সরান</button>
  </article>)}</div><p className="mt-5 text-xl font-black">Subtotal / পণ্যের মোট: {money(total)}</p>

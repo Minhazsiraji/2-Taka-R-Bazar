@@ -3,6 +3,10 @@
  * Selling price is an indicative pilot booking quote subject to staff confirmation.
  */
 export type PublicVendorBookingProduct={
+ offer_id?:string
+ offer_title?:string
+ offer_kind?:string
+ community_id?:string
  available_quantity?:number
  old_price?:number
  launch_enabled?:boolean

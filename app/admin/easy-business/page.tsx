@@ -79,7 +79,7 @@ export default async function EasyBusiness({searchParams}:{searchParams:Promise<
    <p className="muted mt-2">One guided place for products, local offers, verified pricing and publication. Your existing brand design and Finance approvals stay unchanged.</p>
    <div className="mt-4 flex flex-wrap gap-2">
     <Link className="btn-primary" href="/admin/products">+ Add a product</Link>
-    <Link className="btn-primary" href="/admin/easy-business/quick-offers">Set vendor prices →</Link>
+    <Link className="btn-primary" href="/admin/offers">Create Direct / Group Deal / Pool offer →</Link>
     <Link className="btn-secondary" href="/admin/orders">Orders</Link>
     <Link className="btn-secondary" href="/admin/treasury">Finance requests</Link>
     <details className="relative self-center"><summary className="chip cursor-pointer">Advanced tools</summary><div className="mt-2 flex flex-wrap gap-2">

@@ -1,3 +1,4 @@
+import {simpleStorefrontOffers,simpleFeaturedPools,type SimpleOffer} from '@/lib/simple-offers'
 import type {PublicVendorBookingProduct} from '@/lib/public-vendor-booking'
 import {withCommerceOffers} from '@/lib/commerce/storefront'
 import {getHomeSavingsSummary} from '@/lib/home-savings'
@@ -24,7 +25,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  const storedLanguage=cookieStore.get(STOREFRONT_LANGUAGE_COOKIE)?.value
  const initialLanguage=languageFromPreference(storedLanguage)
  const supabase=await createClient()
- const [claims,areasRes,offersRes,featuredRes,poolsRes,publishedProducts,vendorRes]=await Promise.all([
+ const [claims,areasRes,offersRes,featuredRes,poolsRes,publishedProducts,vendorRes,simpleRes]=await Promise.all([
   supabase.auth.getClaims(),
   supabase.rpc('get_public_storefront_areas'),
   supabase.rpc('get_public_storefront_offers',{p_community_id:null}),
@@ -32,6 +33,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
   supabase.rpc('get_public_featured_pools',{p_community_id:null}),
   loadPublishedCatalogPage(),
   supabase.rpc('get_public_launch_catalog',{p_product_id:null}),
+  supabase.rpc('get_public_simple_offers'),
  ])
  const authenticated=Boolean(claims.data?.claims?.sub)
  const savings=await getHomeSavingsSummary(authenticated)
@@ -41,7 +43,8 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  // Existing public feeds only. Missing records stay as blurred, empty approved slots.
  const demoMode=false
  const areas=realAreas
- const offers=realOffers
+ const simple=(simpleRes.error?[]:simpleRes.data??[]) as SimpleOffer[]
+ const offers=[...realOffers,...simpleStorefrontOffers(simple)]
  const featured=realFeatured
  const vendorProducts=(vendorRes.error?[]:vendorRes.data??[]) as PublicVendorBookingProduct[]
  const catalogAvailable=!areasRes.error&&!offersRes.error
@@ -61,6 +64,6 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
   {/* English is the first-visit default. A previously selected BN/EN cookie wins on reload. */}
-  <PublicMarketplace initialSearch={typeof q==='string'?q.slice(0,200):''} initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} publishedProducts={publishedProducts} vendorProducts={vendorProducts} savings={savings} demoMode={demoMode} previewCards={true} howLabelBn="কীভাবে কাজ করে"/>
+  <PublicMarketplace initialSearch={typeof q==='string'?q.slice(0,200):''} initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={[...(poolsRes.data??[]) as DemoFeaturedPool[],...simpleFeaturedPools(simple)]} featured={featured} publishedProducts={publishedProducts} vendorProducts={vendorProducts} savings={savings} demoMode={demoMode} previewCards={true} howLabelBn="কীভাবে কাজ করে"/>
  </main>
 }

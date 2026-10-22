@@ -8,6 +8,7 @@ export type StorefrontArea = {
   match_radius_m: number | null
 }
 export type StorefrontOffer = {
+  launch_offer_id?: string
   offer_id: string
   offer_kind: 'GROUP_DEAL'|'COMMUNITY_POOL'|'SOLO'
   community_id: string
