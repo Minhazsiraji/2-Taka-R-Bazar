@@ -38,7 +38,7 @@ test('savings and cart cannot silently behave like paid verified orders',()=>{
 test('Group Deal card visibly shows a people icon and deadline clock',()=>{
  assert.ok(app.includes('name="people" size={14} color="#149be7"'));
  assert.ok(app.includes('name="time-outline" size={14}'));
- assert.ok(app.includes('Ends in {offer.daysLeft} day'));
+ assert.ok(app.includes('Deadline not set')&&app.includes('offer.daysLeft'));
 });
 test('Exclusive card keeps image-first layout, price and available inventory',()=>{
  assert.match(app,/function ExclusiveCard/);
@@ -106,7 +106,7 @@ test('Pool product selections, total and retail navigation are isolated from app
  for(const token of ['changePoolQty','poolQuantities','Potential savings','Current estimated Pool total','Total at next tier','Product Details','Review Join Pool · Demo']){
   assert.ok(app.includes(token),token);
  }
- assert.ok(app.includes("disabled={!units} onPress={()=>draftPool(pool,quantities)}"));
+ assert.ok(app.includes("disabled={demo&&!units} onPress={()=>demo?draftPool(pool,quantities):openPublishedPool(pool)}"));
  assert.ok(app.includes("offer.mode==='POOL'&&selectedPool?'pool'"));
  const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
  assert.ok(home.includes('{Hero()}'));
@@ -140,7 +140,7 @@ test('Pool tier cards show selected-product monetary totals, never household cou
    'value:opening',
    'value:current',
    'value:next',
-   "units?cash(tier.value):'—'",
+   "units&&(index!==2||pool.nextTier)?cash(tier.value):'—'",
    'Select one or more products above to compare starting, current and next-tier prices.'
  ])assert.ok(pool.includes(token),'Missing Pool tier price guard: '+token);
  assert.ok(!pool.includes("index===1?n(pool.participants):n(pool.nextTier)"));

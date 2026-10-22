@@ -43,7 +43,7 @@ test('unpublished, invalid, duplicate, missing price and negative inventory are 
 
 test('live native adapter calls only public launch read RPC and has no mutation methods',()=>{
  const live=readFileSync(new URL('../src/live.ts',import.meta.url),'utf8');
- assert.match(live,/rpc\/get_public_launch_catalog/);
+ assert.match(live,/rpc\('get_public_launch_catalog'/);
  assert.match(live,/p_product_id:null/);
  assert.doesNotMatch(live,/commerce_catalog|service_role|launch_submit_order\s*\(/);
 });

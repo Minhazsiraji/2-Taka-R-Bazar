@@ -1,8 +1,8 @@
 import type {ProductContent} from './product-content';
 export type Mode='SOLO'|'GROUP_DEAL'|'POOL';
 export type Product={id:string;name:string;nameBn:string;unit:string;image:string;referencePrice:number;category:string;brand?:string;content?:ProductContent};
-export type Offer={id:string;productId:string;mode:Mode;price:number;phase:'ready'|'waiting';groupSize?:3|5|10;joined?:number;exclusive?:boolean;poolId?:string;stock?:number;daysLeft?:number;community:string;openingPrice?:number;nextTierPrice?:number};
-export type Pool={id:string;name:string;nameBn:string;frequency:'weekly'|'monthly';productIds:string[];participants:number;nextTier:number;commitDaysLeft?:number;commitEndsLabel?:string};
+export type Offer={id:string;productId:string;mode:Mode;price:number;phase:'ready'|'waiting';groupSize?:number;joined?:number;pendingBuyers?:number;exclusive?:boolean;poolId?:string;stock?:number;daysLeft?:number;community:string;openingPrice?:number;nextTierPrice?:number};
+export type Pool={id:string;name:string;nameBn:string;frequency:'weekly'|'monthly'|'special';productIds:string[];participants:number;nextTier:number;commitDaysLeft?:number;commitEndsLabel?:string};
 const photo=(id:string)=>'https://images.unsplash.com/'+id+'?auto=format&fit=crop&w=600&q=85';
 export const products:Product[]=[
  {id:'butter',name:'Premium Butter',nameBn:'প্রিমিয়াম বাটার',unit:'1 kg',image:photo('photo-1550583724-b2692b85b150'),referencePrice:1240,category:'Dairy'},
