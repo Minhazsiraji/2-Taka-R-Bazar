@@ -12,7 +12,7 @@ export function CommitmentDeliveryPreference({offerId,title,points,previous}:{
  const [saving,setSaving]=useState(false)
  const [notice,setNotice]=useState('')
  const save=async()=>{
-  setSaving(true);try{
+  setNotice('');setSaving(true);try{
    const result=await saveSimpleSaleDeliveryPreference({
     offerId,fulfillment:method,pickupPointId:pickupPoint,homeAddress:address
    })
