@@ -90,30 +90,36 @@ try{
  await page.locator('a[href="/products"]').first().waitFor()
  const catalog=await page.goto(base+'/products',{waitUntil:'domcontentloaded'})
  assert.equal(catalog?.status(),200,'The approved Home links to the dedicated browse-only All Products page')
- const section=page.locator('#published-products')
- await section.getByRole('heading',{name:'All Products'}).waitFor()
- assert.equal(await section.locator('[data-testid="published-product-card"]').count(),12,'First catalog page contains 12 eligible records')
- assert.equal(await section.getByRole('link',{name:/View Details/}).count(),12,'Every product has a public details link')
- assert.equal(await section.getByText('Price not published',{exact:true}).count(),12)
- assert.equal(await section.locator('img[src="https://res.cloudinary.com/demo/image/upload/sample.jpg"]').count(),12)
- assert.equal(await section.locator('form,[href^="/cart"],[href^="/checkout"],button:has-text("Buy"),button:has-text("Cart")').count(),0,
-  'Read-only catalog has no cart or buy controls')
+ // The owner-approved catalog reuses the locked six-card template. The
+ // separate public projection remains paged, and must still exclude private rows.
+ const section=page.locator('[data-preview-cards="exclusive"]')
+ await page.getByRole('heading',{name:'All Products',exact:true}).waitFor()
+ assert.equal(await section.locator('article').count(),6,'Approved catalog shows six unchanged card slots')
+ assert.equal(await section.getByRole('link',{name:/View details/i}).count(),6)
+ assert.equal(await section.locator('.app-card-preview-price strong[data-empty="true"]').count(),6,'Unpriced masters keep empty price slots')
+ assert.equal(await section.locator('img[src="https://res.cloudinary.com/demo/image/upload/sample.jpg"]').count(),6)
+ for(const button of await section.getByRole('button').all())assert.equal(await button.isDisabled(),true,'Unpriced masters cannot enter checkout')
+ assert.equal(await section.locator('form,[href^="/cart"],[href^="/checkout"]').count(),0)
  for(const excluded of ineligible)assert.equal(await section.getByText(excluded.slug).count(),0,'Unapproved, inactive and demo products cannot appear')
- await section.getByRole('button',{name:'Show more products'}).click()
- await page.waitForFunction(()=>document.querySelectorAll('#published-products [data-testid="published-product-card"]').length===14)
- assert.equal(await section.getByRole('button',{name:'Show more products'}).count(),0,'Pagination ends without duplicates')
- const firstLink=section.locator('[data-testid="published-product-card"]').first().locator('h3 a')
- assert.match(await firstLink.getAttribute('href')??'',/^\/p\/(?:catalog-uat|seo-uat)/)
+ const firstPage=await page.request.get(base+'/api/published-products?offset=0').then(r=>r.json())
+ const secondPage=await page.request.get(base+'/api/published-products?offset=12').then(r=>r.json())
+ assert.equal(firstPage.items.length,12);assert.equal(firstPage.hasMore,true)
+ assert.equal(secondPage.items.length,2);assert.equal(secondPage.hasMore,false)
+ const allItems=[...firstPage.items,...secondPage.items]
+ assert.equal(new Set(allItems.map(p=>p.product_id)).size,14,'Public pagination has no duplicates')
+ assert.ok(allItems.every(p=>!ineligible.some(x=>x.id===p.product_id)))
+ const firstLink=section.locator('article').first().locator('.app-card-preview-actions a')
+ const detailsHref=await firstLink.getAttribute('href')
+ assert.match(detailsHref??'',/^\/preview-live\/product\/[0-9a-f-]{36}$/)
  const toggle=page.locator('.market-flat-header .market-single-language')
  await toggle.click()
- assert.equal(await section.getByRole('heading',{name:'সব পণ্য'}).count(),1)
- assert.equal(await section.getByText('দাম প্রকাশিত হয়নি',{exact:true}).count(),14)
- assert.match(await firstLink.getAttribute('href')??'',/^\/bn\/p\/(?:catalog-uat|seo-uat)/)
+ assert.equal(await page.getByRole('heading',{name:'সব পণ্য',exact:true}).count(),1)
+ assert.equal(await firstLink.getAttribute('href'),detailsHref,'Language preserves the internal approved details route')
  await page.screenshot({path:'/tmp/2tbr-product-seo-catalog-bn-mobile.png',fullPage:true})
  await toggle.click()
  for(const width of [320,393,768,1024,1440]){
   await page.setViewportSize({width,height:900})
-  await page.locator('#published-products').scrollIntoViewIfNeeded()
+  await section.scrollIntoViewIfNeeded()
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,
    'No catalog horizontal overflow at '+width)
  }
@@ -127,9 +133,9 @@ try{
   title_en:'Newly published catalog item',title_bn:'নতুন প্রকাশিত ক্যাটালগ পণ্য',
   alt_en:'True uploaded test fixture image',alt_bn:'পরীক্ষার ছবি',status:'published'})
  await page.reload({waitUntil:'domcontentloaded'})
- assert.equal(await page.locator('#published-products').getByText('Newly published catalog item').count(),1,
+ assert.equal(await section.getByText('Newly published catalog item').count(),1,
   'Future published products automatically appear after refresh')
- console.log('Issue 99 published catalog: EN/BN, genuine image URL, no purchase, 12+ paging, ineligible isolation, future publish and responsive widths PASS.')
+ console.log('Issue 99 published catalog: EN/BN, genuine image URL, locked six-card UI, no unpriced purchase, public API 12+ paging, ineligible isolation, future publish and responsive widths PASS.')
  const {error}=await client.from('products').update({is_demo:true}).eq('id',id)
  if(error)throw error
  const blocked=await page.goto(base+'/p/'+slug,{waitUntil:'domcontentloaded'})

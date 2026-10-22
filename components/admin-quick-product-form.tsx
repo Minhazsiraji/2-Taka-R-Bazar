@@ -85,19 +85,19 @@ export function AdminQuickProductForm({userId}:{userId:string}){
    <div>
     <div className="card-title">Product catalog</div>
     <h2 className="section-title">Quick Product Upload</h2>
-    <p className="muted mt-1 text-sm">Upload once. Add Direct, Exclusive, Group Deal or Pool pricing and stock later in the relevant offer workflow.</p>
+    <p className="muted mt-1 text-sm">Upload once. Use this product and image in Direct, Group Deal and Pool offers.</p>
    </div>
    <span className="chip">1 step · No SEO review</span>
   </div>
   <div className="muted text-xs" role="status">
-   {saved?'Draft saved in this browser tab.': 'Your entries stay on the form if saving fails.'}
+   {saved?'Draft saved in this browser tab.': 'Your entries stay on the form if saving fails. Recommended image: 1600 × 1600 pixels, square.'}
    {saved&&hadImage?' If restoring after refresh, reselect your image file.':''}
   </div>
   {error&&<div role="alert" className="rounded-xl border border-red-400 bg-red-50 p-3 text-sm text-red-900">
    <strong>Product not saved.</strong> {error} Your form entries are preserved.
   </div>}
   {success&&<div role="status" className="rounded-xl border border-teal-400 bg-teal-50 p-3 text-sm text-teal-900">
-   {success}
+   {success} <a className="underline font-bold" href="/admin/offers">Create offer →</a>
   </div>}
   <div className="grid min-w-0 gap-3 md:grid-cols-2">
    <label><span className="label">Product name *</span>

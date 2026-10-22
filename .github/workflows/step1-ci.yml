@@ -46,7 +46,8 @@ jobs:
           exit 1
 
   migrations:
-    runs-on: ubuntu-latest
+    # Playwright 1.56 supports Ubuntu 24.04; latest now resolves to 26.04.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
@@ -104,10 +105,11 @@ jobs:
             if curl -fsS --max-time 3 http://127.0.0.1:3000/ -o /dev/null; then break; fi
             sleep 1
           done
-          node tests/storefront-browser-uat.mjs
-          node tests/account-security-browser-uat.mjs
-          node tests/product-seo-browser-uat.mjs
-          node tests/pilot-booking-public-smoke.mjs
+          UAT_FAILED=0
+          for UAT_SCRIPT in tests/storefront-browser-uat.mjs tests/account-security-browser-uat.mjs tests/product-seo-browser-uat.mjs tests/pilot-booking-public-smoke.mjs tests/simple-offers-browser-uat.mjs; do
+            node "$UAT_SCRIPT" || UAT_FAILED=1
+          done
+          exit "$UAT_FAILED"
       - name: Upload synthetic account and header screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -117,6 +119,7 @@ jobs:
             /tmp/2tbr-account-*.png
             /tmp/2tbr-header-*.png
             /tmp/2tbr-product-seo-*.png
+            /tmp/2tbr-shared-offer-*.png
           if-no-files-found: ignore
           retention-days: 7
       - name: Stop disposable Supabase

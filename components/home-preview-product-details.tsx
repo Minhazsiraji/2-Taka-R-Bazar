@@ -32,7 +32,7 @@ function DemoPanel({children,className=''}:{children:React.ReactNode;className?:
 export function HomePreviewProductDetails({product,deal,retail=false,from,poolId,initialLanguage,hasLanguageCookie,view}:Props){
  const money=(n:number|null)=>fixtureMoney(n??0)
  const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
- const [chosen,setChosen]=useState(view?.offers.find(o=>o.kind==='solo')?.id??view?.offers[0]?.id??'solo')
+ const [chosen,setChosen]=useState(view?.initialOfferId??view?.offers.find(o=>o.kind==='solo')?.id??view?.offers[0]?.id??'solo')
  const [basket,setBasket]=useState(0)
  const [status,setStatus]=useState('')
  const bn=language==='bn'
@@ -44,6 +44,7 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
  const offers:ApprovedOffer[]=view?.offers??previewAvailableOffers(product.id)
  const selected=offers.find(o=>o.id===chosen)??offers.find(o=>o.kind==='solo')??offers[0]
  const price=selected?.price??product.price
+ const oldPrice=selected?.oldPrice!==undefined?selected.oldPrice:product.oldPrice
  const productPath=view?'/preview-live/product/':'/demo-product/'
  const poolPath=view?'/preview-live/pool/':'/demo-pool/'
  const origin=from==='pool'&&poolId?poolPath+poolId+'?source=home':
@@ -92,12 +93,12 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
       <h2>{t('Community progress','কমিউনিটির অগ্রগতি')}</h2>
       <div className="native-preview-split native-preview-small-row"><strong>👥 {n(deal.joined)}/{n(deal.target)} {t('joined','যুক্ত')}</strong><span data-empty={deal.days===null||undefined}>◷ {t('Ends in','শেষ হবে')} {n(deal.days??0)} {t('day(s)','দিনে')}</span></div>
       <div className="native-preview-progress" role="progressbar" aria-label={t('Group participation','গ্রুপের অংশগ্রহণ')}
-       aria-valuemin={0} aria-valuemax={deal.target} aria-valuenow={deal.joined}><span style={{width:(deal.target>0?Math.min(100,deal.joined/deal.target*100):0)+'%'}}/></div>
-      <p className="native-preview-muted">{t('Qualified buyers and closing rules determine the final price. Below-minimum groups expire without payment.','যোগ্য ক্রেতা ও সময়সীমার নিয়মে চূড়ান্ত দাম নির্ধারিত হবে। ন্যূনতম সদস্য না হলে টাকা ছাড়া গ্রুপ শেষ হবে।')}</p>
+       aria-valuemin={0} aria-valuemax={Math.max(1,deal.target,deal.joined)} aria-valuenow={deal.joined}><span style={{width:(deal.target>0?Math.min(100,deal.joined/deal.target*100):0)+'%'}}/></div>
+      <p className="native-preview-muted">{deal.launchOfferId?t('Orders are reviewed manually. Staff confirm delivery charges and payment instructions.','অর্ডার ম্যানুয়ালি যাচাই করা হয়। টিম ডেলিভারি চার্জ ও পেমেন্ট নির্দেশনা নিশ্চিত করবে।'):t('Qualified buyers and closing rules determine the final price. Below-minimum groups expire without payment.','যোগ্য ক্রেতা ও সময়সীমার নিয়মে চূড়ান্ত দাম নির্ধারিত হবে। ন্যূনতম সদস্য না হলে টাকা ছাড়া গ্রুপ শেষ হবে।')}</p>
      </DemoPanel>
      <div className="native-preview-actions">
       <Link className="native-preview-secondary" href={retailHref}>{t('Product Details','পণ্যের বিস্তারিত')}</Link>
-      <button className="native-preview-primary" type="button" onClick={()=>setStatus(t('Preview Group Deal draft noted locally. No real join or order was placed.','ডেমো গ্রুপ ডিল নির্বাচন দেখানো হয়েছে। বাস্তব যোগদান বা অর্ডার হয়নি।'))}>{t('Join Deal · Preview','গ্রুপে যোগ দিন · ডেমো')}</button>
+      <button className="native-preview-primary" type="button" disabled={Boolean(view)&&(!deal.launchOfferId||!offers.find(o=>o.id===deal.offerId)?.purchasable)} onClick={()=>{if(deal.launchOfferId){addLaunchItem(product.id,deal.launchOfferId);setStatus(t('Added to cart.','কার্টে যোগ হয়েছে।'));return}setStatus(t('Preview Group Deal draft noted locally. No real join or order was placed.','ডেমো গ্রুপ ডিল নির্বাচন দেখানো হয়েছে। বাস্তব যোগদান বা অর্ডার হয়নি।'))}}>{deal.launchOfferId?t('Join Deal','গ্রুপে যোগ দিন'):t('Join Deal · Preview','গ্রুপে যোগ দিন · ডেমো')}</button>
      </div>
      {!view&&<p className="native-preview-hint">{t('Demo only — no real order has been placed.','শুধু ডেমো — কোনো বাস্তব অর্ডার হয়নি।')}</p>}
      {status&&<p role="status" className="native-preview-status">{status}</p>}
@@ -140,8 +141,8 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
      <div className="native-preview-exclusive-photo"><ProductPhoto product={product} alt={title} hero/></div>
      <DemoPanel className="native-preview-exclusive-card">
       <p className="native-preview-muted">{product.unit} · {view?view.community:'Savar DOHS'}</p>
-      <div className="home-preview-product-price native-preview-split-price"><strong data-empty={price===null||undefined}>{money(price)}</strong><s data-empty={product.oldPrice===null||undefined}>{money(product.oldPrice)}</s></div>
-      <span className="native-preview-saving" data-empty={product.oldPrice===null||price===null||undefined}>{t('Save','সাশ্রয়')} {money(Math.max(0,(product.oldPrice??0)-(price??0)))}</span>
+      <div className="home-preview-product-price native-preview-split-price"><strong data-empty={price===null||undefined}>{money(price)}</strong><s data-empty={oldPrice===null||undefined}>{money(oldPrice)}</s></div>
+      <span className="native-preview-saving" data-empty={oldPrice===null||price===null||undefined}>{t('Save','সাশ্রয়')} {money(Math.max(0,(oldPrice??0)-(price??0)))}</span>
       <h2>{t('Same product · Available offers','একই পণ্য · উপলব্ধ অফার')}</h2>
       <div className="native-preview-offers">
        {offers.map(o=><button type="button" key={o.id}
@@ -152,11 +153,11 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
       </div>
       <div className="native-preview-actions">
        <Link href={retailHref} className="native-preview-secondary">{t('View details','বিস্তারিত দেখুন')}</Link>
-       <button type="button" className="native-preview-primary" disabled={Boolean(view)&&!product.purchasable} onClick={()=>{
-        if(product.purchasable){addLaunchItem(product.id);setStatus(t('Added to cart.','কার্টে যোগ হয়েছে।'));return}
+       <button type="button" className="native-preview-primary" disabled={Boolean(view)&&!(selected?.purchasable||selected?.kind==='solo'&&product.purchasable)} onClick={()=>{
+        if(selected?.purchasable||selected?.kind==='solo'&&product.purchasable){addLaunchItem(product.id,selected?.launchOfferId??product.launchOfferId);setStatus(t('Added to cart.','কার্টে যোগ হয়েছে।'));return}
         if(selected?.kind==='solo'){setBasket(q=>q+1);setStatus(t('Added to the preview basket. Your real cart is unchanged.','ডেমো ঝুড়িতে যোগ হয়েছে। বাস্তব কার্ট অপরিবর্তিত।'))}
         else setStatus(t('Preview offer selected. No real Group Deal or Pool participation was created.','ডেমো অফার নির্বাচন হয়েছে। বাস্তব গ্রুপ বা পুলে যোগদান হয়নি।'))
-       }}>{selected?.kind==='solo'?t('Add to Cart','কার্টে যোগ করুন'):t('Join · Preview','যোগ দিন · ডেমো')}</button>
+       }}>{selected?.kind==='solo'?t('Add to Cart','কার্টে যোগ করুন'):selected?.purchasable?t('Add to Cart','কার্টে যোগ করুন'):t('Join · Preview','যোগ দিন · ডেমো')}</button>
       </div>
       {!view&&<p className="native-preview-hint">{t('Demo only — no real order has been placed.','শুধু ডেমো — কোনো বাস্তব অর্ডার হয়নি।')}</p>}
       {status&&<p role="status" className="native-preview-status">{status}{basket>0&&' · '+n(basket)+' '+t('items in preview basket','টি পণ্য ডেমো ঝুড়িতে')}</p>}
