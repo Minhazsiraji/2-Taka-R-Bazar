@@ -2,7 +2,7 @@
 import {useEffect,useState} from 'react'
 import Link from 'next/link'
 import {readLaunchCart,writeLaunchCart,type LaunchCartItem} from '@/lib/launch-cart'
-import {leaveSimpleSaleDeal} from '@/app/actions/simple-offer-joins'
+import {setSimpleSaleCommitmentQuantity} from '@/app/actions/simple-offer-joins'
 import type {PublicVendorBookingProduct} from '@/lib/public-vendor-booking'
 import {submitLaunchOrder} from '@/app/actions/launch-orders'
 import {useFormStatus} from 'react-dom'
@@ -12,13 +12,13 @@ export function LaunchCartCheckout({catalog,checkout=false,authenticated=false,e
  useEffect(()=>{setItems(readLaunchCart());setRequest(crypto.randomUUID());setLoaded(true)},[])
  const money=(v:number)=>'৳'+v.toLocaleString('en-BD')
  const change=async(id:string,quantity:number)=>{
-  if(quantity===0){
-   const removing=items.find(item=>item.product_id===id)
-   if(removing?.offer_id){
-    const result=await leaveSimpleSaleDeal(removing.offer_id,id)
-    if(!result.ok){setCartNotice(result.message);return}
-    window.dispatchEvent(new Event('2tbr-notifications-refresh'))
-   }
+  // A cart removal is not consent to cancel a registered community commitment.
+  // Commitment cancellation must be handled explicitly and audited.
+  const selected=items.find(i=>i.product_id===id)
+  const info=catalog.find(p=>p.product_id===id&&(!selected?.offer_id||p.offer_id===selected.offer_id))
+  if(quantity>0&&selected?.offer_id&&(info?.offer_kind==='GROUP_DEAL'||info?.offer_kind==='COMMUNITY_POOL')){
+   const outcome=await setSimpleSaleCommitmentQuantity(selected.offer_id,id,quantity)
+   if(!outcome.ok){setCartNotice(outcome.message);return}
   }
   const next=items.map(i=>i.product_id===id?{...i,quantity}:i).filter(i=>i.quantity>0)
   writeLaunchCart(next);setItems(next);setCartNotice('')
@@ -26,12 +26,13 @@ export function LaunchCartCheckout({catalog,checkout=false,authenticated=false,e
  const lines=items.map(item=>({item,product:catalog.find(p=>p.product_id===item.product_id&&(!item.offer_id||p.offer_id===item.offer_id))}))
  const unavailable=lines.some(l=>!l.product?.launch_enabled||l.item.quantity>(l.product.available_quantity??0))
  const total=lines.reduce((s,l)=>s+(l.product?.approved_unit_price??0)*l.item.quantity,0)
+ const hasShared=lines.some(l=>l.product?.offer_kind==='GROUP_DEAL'||l.product?.offer_kind==='COMMUNITY_POOL')
  if(!loaded)return <p role="status">Loading / লোড হচ্ছে…</p>
  if(!items.length)return <section className="glass-panel rounded-3xl border border-white/80 p-5"><p>Your cart is empty. / আপনার কার্ট খালি।</p><Link className="btn-primary mt-4 inline-block" href="/#mobile-exclusive">Continue shopping / কেনাকাটা করুন</Link></section>
  return <>{error&&<p className="error mb-4" role="alert">{error}</p>}{cartNotice&&<p className="error mb-4" role="alert">{cartNotice}</p>}<section className="glass-panel rounded-3xl border border-white/80 p-5">
  <h2 className="text-xl font-black">Your products / আপনার পণ্য</h2>
  <div className="mt-4 grid gap-4">{lines.map(({item,product:p})=><article key={item.product_id} className="glass-subpanel grid grid-cols-[64px_minmax(0,1fr)] items-center gap-3 rounded-2xl border border-white/80 p-4 sm:grid-cols-[72px_minmax(0,1fr)_auto]">
- {p?.image_url&&<img src={p.image_url} width="72" height="72" alt={p.name} className="aspect-square h-16 w-16 rounded-xl object-contain sm:h-[72px] sm:w-[72px]"/>}<div className="min-w-0"><Link className="font-bold" href={'/preview-live/product/'+item.product_id+(item.offer_id?'?offer='+item.offer_id:'')}>{p?.name??'Unavailable product / অনুপলব্ধ পণ্য'}</Link><p>{p?.package_size} · {money(p?.approved_unit_price??0)}</p>{p?.offer_title&&<p className="text-sm">{p.offer_title}</p>}
+ {p?.image_url&&<img src={p.image_url} width="72" height="72" alt={p.name} className="aspect-square h-16 w-16 rounded-xl object-contain sm:h-[72px] sm:w-[72px]"/>}<div className="min-w-0"><Link className="font-bold" href={'/preview-live/product/'+item.product_id+(item.offer_id?'?offer='+item.offer_id:'')}>{p?.name??'Unavailable product / অনুপলব্ধ পণ্য'}</Link><p>{p?.package_size} · {money(p?.approved_unit_price??0)}{p?.offer_kind==='GROUP_DEAL'||p?.offer_kind==='COMMUNITY_POOL'?' · Estimated, not final':''}</p>{p?.offer_title&&<p className="text-sm">{p.offer_title}</p>}
  <div className="mt-2 flex flex-wrap items-center gap-2" role="group" aria-label={'Quantity for '+(p?.name??item.product_id)}>
  <span className="w-full text-xs font-semibold sm:w-auto">Quantity / পরিমাণ</span>
  <div className="inline-flex max-w-full items-center gap-2 whitespace-nowrap"><button type="button" className="btn-secondary min-h-9 min-w-9 px-2" aria-label={'Decrease '+(p?.name??'product')+' quantity'} disabled={item.quantity<=1} onClick={()=>void change(item.product_id,item.quantity-1)}>−</button>
@@ -39,10 +40,12 @@ export function LaunchCartCheckout({catalog,checkout=false,authenticated=false,e
  <button type="button" className="btn-secondary min-h-9 min-w-9 px-2" aria-label={'Increase '+(p?.name??'product')+' quantity'} disabled={item.quantity>=Math.min(100,Math.max(0,p?.available_quantity??100))} onClick={()=>void change(item.product_id,item.quantity+1)}>+</button></div>
  </div></div>
  <button className="btn-secondary col-start-2 justify-self-end sm:col-start-3" type="button" onClick={()=>change(item.product_id,0)}>Remove / সরান</button>
- </article>)}</div><p className="mt-5 text-xl font-black">Subtotal / পণ্যের মোট: {money(total)}</p>
+ </article>)}</div><p className="mt-5 text-xl font-black">{hasShared?'Current estimate / বর্তমান আনুমানিক মূল্য':'Subtotal / পণ্যের মোট'}: {money(total)}</p>
  {unavailable&&<p className="error mt-3" role="alert">Some quantities are unavailable. Update your cart. / পরিমাণ পরিবর্তন করুন।</p>}
- {!checkout&&<Link className="btn-primary mt-4 inline-block" href="/checkout">Checkout / চেকআউট</Link>}</section>
- {checkout&&(!authenticated?<Link className="btn-primary mt-5 inline-block" href="/login?next=%2Fcheckout">Sign in to place your order / অর্ডার করতে লগইন করুন</Link>:<form action={submitLaunchOrder} className="glass-panel mt-5 grid gap-4 rounded-3xl border border-white/80 p-5">
+ {hasShared&&<p className="mt-4 text-sm" role="status">Your Group Deal / Pool selection is a commitment only. Final tier price and delivery charge will be quoted after your community's commitment period closes. You must accept the final amount before payment; no order can be placed now. Removing a cart item does not cancel the registered commitment. / চূড়ান্ত দাম ও ডেলিভারি চার্জ নিশ্চিত না হওয়া পর্যন্ত অর্ডার বা পেমেন্ট নয়।</p>}
+ {!checkout&&!hasShared&&<Link className="btn-primary mt-4 inline-block" href="/checkout">Checkout / চেকআউট</Link>}
+ {!checkout&&hasShared&&<Link className="btn-secondary mt-4 inline-block" href="/">Back to offers / অফারে ফিরে যান</Link>}</section>
+ {checkout&&!hasShared&&(!authenticated?<Link className="btn-primary mt-5 inline-block" href="/login?next=%2Fcheckout">Sign in to place your order / অর্ডার করতে লগইন করুন</Link>:<form action={submitLaunchOrder} className="glass-panel mt-5 grid gap-4 rounded-3xl border border-white/80 p-5">
  <input type="hidden" name="items" value={JSON.stringify(items)}/><input type="hidden" name="request_key" value={request}/>
  <h2 className="text-xl font-black">Delivery details / ডেলিভারির তথ্য</h2>
  <label className="grid gap-1">Name / নাম<input className="input" name="contact_name" required maxLength={100} autoComplete="name"/></label>

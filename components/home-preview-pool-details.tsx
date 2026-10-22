@@ -160,13 +160,13 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
     ].map(([label,value],i)=><div className="native-preview-split native-preview-basket-row" key={String(label)}>
      <span>{label}</span><strong data-empty={value===null||undefined} className={i===1?'native-preview-total':''}>{value===null?'—':cash(Number(value))}</strong>
     </div>)}
-    <p className="native-preview-hint">{pool.launchOfferId?t('Excludes delivery fees. Your order requires manual staff approval.','ডেলিভারি চার্জ বাদে। অর্ডারের জন্য টিমের ম্যানুয়াল অনুমোদন প্রয়োজন।'):t('Excludes delivery fees. No real stock, booking or payment occurs in demo.','ডেলিভারি চার্জ বাদে। ডেমোতে বাস্তব স্টক, বুকিং বা পেমেন্ট হয় না।')}</p>
+    <p className="native-preview-hint">{pool.launchOfferId?t('Estimated only. Delivery fee and final tier price must be confirmed before payment or an order.','এগুলো আনুমানিক মূল্য। অর্ডার বা পেমেন্টের আগে চূড়ান্ত দাম ও ডেলিভারি চার্জ নিশ্চিত হবে।'):t('Excludes delivery fees. No real stock, booking or payment occurs in demo.','ডেলিভারি চার্জ বাদে। ডেমোতে বাস্তব স্টক, বুকিং বা পেমেন্ট হয় না।')}</p>
    </section>
 
    <section className="native-preview-panel native-preview-pool-before">
     <h2>{t('Before you join','যোগদানের আগে জানুন')}</h2>
     <p>{t('Select only what you need. The final price, availability, deadline and delivery rules must be confirmed.','শুধু প্রয়োজনীয় পণ্য বেছে নিন। চূড়ান্ত দাম, প্রাপ্যতা, সময়সীমা ও ডেলিভারি নিশ্চিত করতে হবে।')}</p>
-    <p>{pool.launchOfferId?t('Review your selection in the cart and sign in at checkout to submit your order.','কার্টে নির্বাচন দেখুন এবং অর্ডার করতে চেকআউটে লগইন করুন।'):t('No order, Pool commitment or payment is created from this preview.','এই প্রিভিউ থেকে কোনো অর্ডার, পুলে যোগদান বা পেমেন্ট তৈরি হয় না।')}</p>
+    <p>{pool.launchOfferId?t('Joining saves a commitment, not an order. After this community closes, we will confirm the unlocked price and delivery fee for your approval. Payment is only requested afterward.','পুলে যোগদান অর্ডার নয়। সময় শেষ হলে দাম ও ডেলিভারি চার্জ অনুমোদনের জন্য জানানো হবে। এরপর পেমেন্ট।'):t('No order, Pool commitment or payment is created from this preview.','এই প্রিভিউ থেকে কোনো অর্ডার, পুলে যোগদান বা পেমেন্ট তৈরি হয় না।')}</p>
    </section>
    <div className="native-preview-pool-review" role="region" aria-label={t('Pool selection review','পুল নির্বাচন পর্যালোচনা')}>
     <div><small>{n(units)} {t('units selected','টি ইউনিট নির্বাচিত')}</small><strong>{cash(current)}</strong></div>
@@ -178,7 +178,7 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
        }
        setJoining(true)
        try{
-        const result=await joinSimpleSalePool(pool.launchOfferId,chosen.map(i=>i.product_id))
+        const result=await joinSimpleSalePool(pool.launchOfferId,chosen.map(i=>({product_id:i.product_id,quantity:i.quantity})))
         if(!result.ok){setStatus(result.message);if(result.code==='SIGN_IN')router.push('/login?next=%2F');return}
         const added=addLaunchItems(chosen)
         if(!added){setStatus(t('Review your cart before adding these products.','পণ্য যোগ করার আগে কার্ট দেখুন।'));return}
@@ -191,7 +191,7 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
       }
       setStatus(t('Your Pool selection is saved for this on-screen demo only. No real commitment or payment.','নির্বাচনটি শুধু ডেমোর জন্য। কোনো বাস্তব যোগদান বা পেমেন্ট হয়নি।'))
      }}>
-     {pool.launchOfferId?t('Review Pool order','পুল অর্ডার দেখুন'):t('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো')} →</button>
+     {pool.launchOfferId?t('Join Pool · Save commitment','পুলে যোগ দিন · অঙ্গীকার সংরক্ষণ'):t('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো')} →</button>
    </div>
    {status&&<p role="status" className="native-preview-status">{status}</p>}
   </div>
