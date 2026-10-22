@@ -15,6 +15,7 @@ const uid=created.data.user.id
 assert.ifError((await admin.from('user_roles').insert({user_id:uid,role:'admin'})).error)
 assert.ifError((await admin.from('communities').insert([{id:cid,name:'Fictional offer area '+suffix,slug:'offer-area-'+suffix},{id:cid2,name:'Fictional second area '+suffix,slug:'offer-second-'+suffix},{id:cid3,name:'Fictional unselected area '+suffix,slug:'offer-other-'+suffix}])).error)
 assert.ifError((await admin.from('profiles').update({full_name:'Fictional shared-offer buyer',household_name:'Fictional household',phone:'017'+String(Math.floor(Math.random()*100000000)).padStart(8,'0'),community_id:cid,onboarding_completed_at:new Date().toISOString()}).eq('id',uid)).error)
+assert.ifError((await admin.from('pickup_points').insert({id:randomUUID(),community_id:cid,name:'Fictional shared-offer community gate',address:'Synthetic test gate, local community only',active:true})).error)
 const jar=new Map()
 const client=createServerClient(api,key,{cookies:{getAll:()=>[...jar.values()],setAll:cs=>cs.forEach(c=>jar.set(c.name,c))}})
 assert.ifError((await client.auth.signInWithPassword({email,password})).error)
@@ -54,10 +55,10 @@ try{
   await form.getByLabel(name+' · 1 kg',{exact:false}).check()
   await form.locator('[name="price:'+pid+'"]').fill(price)
   if(kind!=='SOLO'){
-   const tierCount=kind==='GROUP_DEAL'?3:2
+   const tierCount=kind==='GROUP_DEAL'?2:3
    await form.getByLabel('Number of tiers to offer').selectOption(String(tierCount))
    for(let level=1;level<=tierCount;level++){
-    const target=kind==='GROUP_DEAL'?[3,5,10][level-1]:[2,4][level-1]
+    const target=kind==='GROUP_DEAL'?[3,5][level-1]:[5,10,20][level-1]
     await form.locator('[name="threshold:'+level+'"]').fill(String(target))
     await form.locator('[name="tier:'+level+':'+pid+'"]').fill(String(Number(price)-5*level))
    }
@@ -117,6 +118,16 @@ try{
  },pid,{timeout:20000})
  await page.goto(base+'/cart',{waitUntil:'networkidle'})
  assert.match(await page.locator('main').innerText(),/৳90/)
+ const cartQty=page.getByRole('group',{name:'Quantity for '+name})
+ const decrease=cartQty.getByRole('button',{name:'Decrease '+name+' quantity'})
+ const increase=cartQty.getByRole('button',{name:'Increase '+name+' quantity'})
+ const before=await decrease.boundingBox(),after=await increase.boundingBox()
+ assert.ok(before&&after&&Math.abs(before.y-after.y)<8,'Cart quantity controls must remain horizontal on mobile')
+ await increase.click()
+ assert.equal((await cartQty.locator('output').innerText()).trim(),'2')
+ await decrease.click()
+ assert.equal((await cartQty.locator('output').innerText()).trim(),'1')
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Cart must fit mobile viewport')
  await page.goto(base+'/preview-live/pool/'+offers.COMMUNITY_POOL,{waitUntil:'networkidle'})
  await page.getByRole('button',{name:'Increase '+name,exact:true}).click()
  await page.getByRole('button',{name:'Review Pool order',exact:false}).click()
@@ -129,16 +140,51 @@ try{
  await page.getByRole('link',{name:'Checkout / চেকআউট',exact:true}).click()
  await page.locator('[name="contact_name"]').fill('Fictional offer buyer')
  await page.locator('[name="contact_phone"]').fill('01700000000')
- await page.locator('[name="address"]').fill('Fictional local browser address')
+ await page.locator('[name="pickup_point_id"]').selectOption({index:1})
  await page.locator('[name="terms"]').check()
  await page.getByRole('button',{name:'Place order / অর্ডার দিন',exact:true}).click()
  await page.waitForURL('**/launch-orders/**')
  const oid=new URL(page.url()).pathname.split('/').at(-1)
  const order=await client.from('launch_orders').select('subtotal,status,payment_status').eq('id',oid).single();assert.ifError(order.error)
  assert.equal(Number(order.data.subtotal),80);assert.equal(order.data.status,'requested');assert.equal(order.data.payment_status,'pending')
+ assert.equal((await client.from('launch_orders').select('fulfillment,address').eq('id',oid).single()).data.fulfillment,'pickup')
  assert.equal((await client.from('launch_order_items').select('offer_id').eq('order_id',oid).single()).data.offer_id,offers.COMMUNITY_POOL)
  assert.equal((await client.from('launch_product_stock').select('available_quantity').eq('product_id',pid).single()).data.available_quantity,9)
+ await page.goto(base+'/checkout',{waitUntil:'networkidle'})
+ await page.locator('input[name="fulfillment"][value="home_delivery"]').check()
+ await page.locator('textarea[name="address"]').fill('Fictional customer home, Road 2, Test Community')
+ await page.locator('[name="contact_name"]').fill('Fictional home customer')
+ await page.locator('[name="contact_phone"]').fill('01700000001')
+ await page.locator('[name="terms"]').check()
+ await page.getByRole('button',{name:'Place order / অর্ডার দিন',exact:true}).click()
+ await page.waitForURL('**/launch-orders/**')
+ const homeId=new URL(page.url()).pathname.split('/').at(-1)
+ const homeOrder=await client.from('launch_orders').select('fulfillment,address,status').eq('id',homeId).single();assert.ifError(homeOrder.error)
+ assert.equal(homeOrder.data.fulfillment,'home_delivery')
+ assert.match(homeOrder.data.address,/Fictional customer home/)
+ assert.equal(homeOrder.data.status,'requested')
+ assert.equal((await client.from('launch_product_stock').select('available_quantity').eq('product_id',pid).single()).data.available_quantity,8)
  assert.deepEqual(errors,[])
+ // Five extra fictional customers: all disposable/local, no real signups or SMS.
+ const fictionalPeople=[]
+ for(let n=0;n<5;n++){
+  const peerEmail='fictional-community-'+suffix+'-'+n+'@example.invalid',peerPass='Ab12!'+randomUUID()
+  const createdPeer=await admin.auth.admin.createUser({email:peerEmail,password:peerPass,email_confirm:true});assert.ifError(createdPeer.error)
+  const communityId=n===4?cid2:cid
+  assert.ifError((await admin.from('profiles').update({community_id:communityId,onboarding_completed_at:new Date().toISOString(),
+   full_name:'Fictional customer '+n,phone:'017000000'+String(n).padStart(2,'0')}).eq('id',createdPeer.data.user.id)).error)
+  const peer=createClient(api,key,{auth:{persistSession:false,autoRefreshToken:false}})
+  assert.ifError((await peer.auth.signInWithPassword({email:peerEmail,password:peerPass})).error)
+  const joined=await peer.rpc('join_simple_sale_group_deal',{p_offer:offers.GROUP_DEAL,p_product:pid,p_area:communityId})
+  assert.ifError(joined.error)
+  fictionalPeople.push({id:createdPeer.data.user.id,communityId})
+ }
+ assert.equal(fictionalPeople.length,5)
+ const joins=await admin.from('simple_sale_offer_joins').select('customer_id,community_id').eq('offer_id',offers.GROUP_DEAL).eq('status','active')
+ assert.ifError(joins.error)
+ assert.equal(new Set(joins.data.filter(j=>j.community_id===cid).map(j=>j.customer_id)).size,5)
+ assert.equal(new Set(joins.data.filter(j=>j.community_id===cid2).map(j=>j.customer_id)).size,1)
+ console.log('6 fictional accounts: Area A 5/5 (both tiers), Area B 1/3 (not unlocked). NOTE: current aggregate public RPC does not isolate tier pricing per community; autonomous cycle rollover remains pending.')
  await page.screenshot({path:'/tmp/2tbr-shared-offer-order.png',fullPage:true})
  console.log('PASS upload once → multi-area all three offers → search/select all/edit/retry → selected-area public browsing without duplicate cards → Deal cart price → Pool checkout → shared stock')
 }finally{await browser.close()}

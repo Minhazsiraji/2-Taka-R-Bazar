@@ -12,6 +12,7 @@ import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {previewPhoto} from '@/lib/home-card-preview-fixtures'
 import {previewPoolItems} from '@/lib/preview-native-detail-data'
 import type {ApprovedPool,ApprovedProduct,ApprovedPoolLine} from '@/lib/approved-card-view'
+import {wholePoolTierTotals} from '@/lib/whole-pool-tier-totals'
 import './approved-data-state.css'
 import './home-preview-pool-details.css'
 import './home-preview-native-details.css'
@@ -44,7 +45,9 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
  const units=selected.reduce((sum,line)=>sum+(quantities[line.product.id]??0),0)
  const total=(value:'opening'|'current'|'next')=>selected.some(line=>line.tiers[value]===null)?null:selected.reduce((sum,line)=>sum+(line.tiers[value]??0)*(quantities[line.product.id]??0),0)
  const retail=selected.some(line=>line.product.oldPrice===null)?null:selected.reduce((sum,line)=>sum+(line.product.oldPrice??0)*(quantities[line.product.id]??0),0)
- const starting=total('opening'),current=total('current'),next=total('next')
+ const basketTiers=wholePoolTierTotals(selected.map(({product,tiers})=>({retail:product.oldPrice,opening:tiers.opening,current:tiers.current,steps:tiers.steps??[]})),pool.joined)
+ const starting=total('opening'),current=total('current'),next=view?basketTiers.next?.total??null:total('next')
+ const potentialSaving=retail!==null&&current!==null?Math.round(Math.max(0,retail-current)*100)/100:null
  const endDate=()=>{
   if(view&&pool.closesAt)return new Intl.DateTimeFormat(bn?'bn-BD':'en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(pool.closesAt))
   const match=pool.date.match(/^(\d+)\s+([A-Za-z]+)$/)
@@ -78,7 +81,7 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
     <h2>{t('Community savings progress','কমিউনিটির অগ্রগতি')}</h2>
     <div className="native-preview-split native-preview-small-row">
      <strong>{n(pool.joined)} {t('households joined','পরিবার যুক্ত')}</strong>
-     <span>{pool.target>0?`${n(pool.target)} ${t('next milestone','পরবর্তী ধাপ')}${pool.nextMinPrice!=null?` · ${t('from','শুরু')} ${cash(pool.nextMinPrice)}`:''}`:t('No tier configured','টিয়ার নির্ধারিত হয়নি')}</span>
+     <span>{pool.wholePoolNext?`${n(pool.wholePoolNext.target)} ${t('next milestone','পরবর্তী ধাপ')} · ${t('Pool total','পুলের মোট')} ${cash(pool.wholePoolNext.total)}${pool.wholePoolNext.savings!==null?` · ${t('Save','সাশ্রয়')} ${cash(pool.wholePoolNext.savings)}`:''}`:pool.target>0?`${n(pool.target)} ${t('next milestone','পরবর্তী ধাপ')}`:t('No tier configured','টিয়ার নির্ধারিত হয়নি')}</span>
     </div>
     <div className="home-preview-pool-progress native-preview-progress" role="progressbar"
      aria-label={t('Household progress','পরিবারের অগ্রগতি')}
@@ -127,12 +130,16 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
    <section className="native-preview-panel native-preview-pool-tiers">
     <h2>{t('How Pool prices unlock','পুলের দাম কীভাবে কমে')}</h2>
     <div className="native-preview-tier-grid">
-     {[
-      {title:t('Starting total','শুরুর মোট মূল্য'),value:starting},
-      {title:t('Current Pool total','বর্তমান পুল মূল্য'),value:current},
-      {title:t('Next-tier total','পরবর্তী স্তরের মূল্য'),value:next}
-     ].map((tier,i)=><div key={i} className={'native-preview-tier '+(i===1?'is-current':'')}>
-      <small>{tier.title}</small><strong data-empty={tier.value===null||undefined}>{view?cash(tier.value):units?cash(tier.value):'—'}</strong>
+     {(view&&basketTiers.stages.length?[
+      {title:t('Current Pool total','বর্তমান পুল মূল্য'),value:current,saving:potentialSaving},
+      ...basketTiers.stages.map(stage=>({title:t('Tier','স্তর')+' '+n(stage.target)+' '+t('households','পরিবার'),value:stage.total,saving:stage.savings}))
+     ]:[
+      {title:t('Starting total','শুরুর মোট মূল্য'),value:starting,saving:null},
+      {title:t('Current Pool total','বর্তমান পুল মূল্য'),value:current,saving:null},
+      {title:t('Next-tier total','পরবর্তী স্তরের মূল্য'),value:next,saving:null}
+     ]).map((tier,i)=><div key={i} className={'native-preview-tier '+(i===0&&view?'is-current':'')}>
+      <small>{tier.title}</small><strong>{tier.value!==null&&units?cash(tier.value):'—'}</strong>
+      {tier.saving!==null&&units>0&&<span>{t('Total saving','মোট সাশ্রয়')}: {cash(tier.saving)}</span>}
      </div>)}
     </div>
     <p className="native-preview-hint">{pool.launchOfferId&&units?t('Totals for your selected quantities. Staff confirm delivery charges.','আপনার নির্বাচিত পরিমাণের মোট মূল্য। টিম ডেলিভারি চার্জ নিশ্চিত করবে।'):units?t('Illustrative totals for selected quantities. All final prices require qualification and confirmation.','নির্বাচিত পরিমাণের নমুনা দাম। চূড়ান্ত মূল্য যাচাই ও নিশ্চিতকরণ সাপেক্ষ।'):
@@ -147,10 +154,11 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
     {[
      [t('Market retail total','খুচরা বাজারমূল্য'),retail],
      [t('Current estimated Pool total','বর্তমান পুলের আনুমানিক মূল্য'),current],
-     [t('Potential savings','সম্ভাব্য সাশ্রয়'),Math.max(0,(retail??0)-(current??0))],
-     [t('Total at next tier','পরবর্তী স্তরে মোট মূল্য'),next]
+     [t('Potential savings','সম্ভাব্য সাশ্রয়'),potentialSaving],
+     [t('Total at next tier','পরবর্তী স্তরে মোট মূল্য'),next],
+     [t('Saving at next tier','পরবর্তী স্তরে সাশ্রয়'),basketTiers.next?.savings??null]
     ].map(([label,value],i)=><div className="native-preview-split native-preview-basket-row" key={String(label)}>
-     <span>{label}</span><strong data-empty={value===null||undefined} className={i===1?'native-preview-total':''}>{cash(value===null?null:Number(value))}</strong>
+     <span>{label}</span><strong data-empty={value===null||undefined} className={i===1?'native-preview-total':''}>{value===null?'—':cash(Number(value))}</strong>
     </div>)}
     <p className="native-preview-hint">{pool.launchOfferId?t('Excludes delivery fees. Your order requires manual staff approval.','ডেলিভারি চার্জ বাদে। অর্ডারের জন্য টিমের ম্যানুয়াল অনুমোদন প্রয়োজন।'):t('Excludes delivery fees. No real stock, booking or payment occurs in demo.','ডেলিভারি চার্জ বাদে। ডেমোতে বাস্তব স্টক, বুকিং বা পেমেন্ট হয় না।')}</p>
    </section>

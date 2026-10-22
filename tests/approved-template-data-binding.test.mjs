@@ -6,7 +6,8 @@ import React from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 import {loadSource} from './helpers/load-tsx.mjs'
 const data=await loadSource('lib/approved-live-detail-data.ts')
-const view=await loadSource('lib/approved-card-view.ts',{'./approved-live-detail-data':data})
+const wholePool=await loadSource('lib/whole-pool-tier-totals.ts')
+const view=await loadSource('lib/approved-card-view.ts',{'./approved-live-detail-data':data,'./whole-pool-tier-totals':wholePool})
 const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
 const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
  '@/lib/launch-cart':{addLaunchItem:()=>{},readLaunchCart:()=>[]},

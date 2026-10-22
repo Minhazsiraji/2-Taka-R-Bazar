@@ -6,6 +6,7 @@ import {renderToStaticMarkup} from 'react-dom/server'
 import {loadSource} from './helpers/load-tsx.mjs'
 
 const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
+const wholePool=await loadSource('lib/whole-pool-tier-totals.ts')
 const link=({href,children,...props})=>React.createElement('a',{href,...props},children)
 const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
  '@/lib/launch-cart':{addLaunchItem:()=>{},readLaunchCart:()=>[]},
@@ -26,6 +27,7 @@ const {HomePreviewPoolDetails}=await loadSource('components/home-preview-pool-de
  '@/lib/use-storefront-language':{useStorefrontLanguage:language=>[language,()=>{}]},
  '@/lib/home-card-preview-fixtures':fixtures,
  '@/lib/preview-native-detail-data':parity,
+ '@/lib/whole-pool-tier-totals':wholePool,
  './home-preview-pool-details.css':{},'./home-preview-native-details.css':{},
 })
 

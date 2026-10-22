@@ -3,7 +3,8 @@ import assert from 'node:assert/strict'
 import {loadSource} from './helpers/load-tsx.mjs'
 const adapters=await loadSource('lib/simple-offers.ts')
 const data=await loadSource('lib/approved-live-detail-data.ts')
-const views=await loadSource('lib/approved-card-view.ts',{'./approved-live-detail-data':data})
+const wholePool=await loadSource('lib/whole-pool-tier-totals.ts')
+const views=await loadSource('lib/approved-card-view.ts',{'./approved-live-detail-data':data,'./whole-pool-tier-totals':wholePool})
 const pid='11111111-1111-4111-8111-111111111111',area='22222222-2222-4222-8222-222222222222'
 const item={product_id:pid,name:'Real loose rice',brand:null,category:'Rice',package_size:'1 kg',unit:'kg',image_url:'https://example.com/rice.jpg',price:100,old_price:0,available_quantity:10}
 const direct={id:'33333333-3333-4333-8333-333333333333',kind:'SOLO',community_id:area,community_name:'Area A',title:'Direct',closes_at:null,buyer_count:0,items:[item]}
