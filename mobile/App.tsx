@@ -27,9 +27,11 @@ const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
 const money=(n:number)=>'৳'+Math.round(n).toLocaleString('en-US');
 function ProductPhoto({item,height=134}:{item:Product;height?:number}){
  const [failed,setFailed]=useState(false);
+ // For published real packaging show the full product; preserve demo crop.
+ const isPublishedImage=item.image.includes('.supabase.co/storage/v1/object/public/');
  useEffect(()=>setFailed(false),[item.image]);
  return <View style={{height,backgroundColor:brandV1.background,borderRadius:13,...gloss.rim,overflow:'hidden',justifyContent:'center',alignItems:'center'}}>
-  {failed?<Ionicons name="bag-handle-outline" size={46} color={brandV1.primary}/>:<Image source={{uri:item.image}} style={{width:'100%',height:'100%'}} resizeMode="cover" onError={()=>setFailed(true)}/>}
+  {failed?<Ionicons name="bag-handle-outline" size={46} color={brandV1.primary}/>:<Image source={{uri:item.image}} style={{width:'100%',height:'100%'}} resizeMode={isPublishedImage?'contain':'cover'} onError={()=>setFailed(true)}/>}
  </View>;
 }
 function Shop({fontsReady}:{fontsReady:boolean}){
@@ -173,11 +175,11 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   const item=byId(offer.productId);if(!item)return null;
   return <View style={[styles.exclusiveCard,{backgroundColor:theme.card,borderColor:gloss.edge}]}>
    <View style={{flexDirection:'row',gap:6,flex:1}}>
-    <Pressable onPress={()=>selectOffer(offer)} style={{width:'49%'}}><ProductPhoto item={item} height={128}/></Pressable>
-    <View style={{flex:1,justifyContent:'space-around'}}>
+    <Pressable onPress={()=>selectOffer(offer)} style={{width:demo?'49%':'43%'}}><ProductPhoto item={item} height={128}/></Pressable>
+    <View style={{flex:1,minWidth:0,justifyContent:'space-around'}}>
      <Text numberOfLines={2} style={{fontSize:12,fontWeight:'800',color:theme.text}}>{lang==='bn'?item.nameBn:item.name}</Text>
      <Text style={{fontSize:10,color:theme.muted}}>{item.unit}</Text>
-     <View style={{flexDirection:'row',alignItems:'center',gap:4,flexWrap:'wrap'}}><Text style={{fontSize:16,fontWeight:'900',color:theme.accent}}>{money(offer.price)}</Text>{item.referencePrice>offer.price&&<Text style={{fontSize:10,color:theme.muted,textDecorationLine:'line-through'}}>{money(item.referencePrice)}</Text>}</View>
+     <View style={{flexDirection:'row',alignItems:'center',gap:4,flexWrap:'wrap'}}><Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.73} style={{fontSize:16,fontWeight:'900',color:theme.accent,flexShrink:1}}>{money(offer.price)}</Text>{item.referencePrice>offer.price&&<Text style={{fontSize:10,color:theme.muted,textDecorationLine:'line-through'}}>{money(item.referencePrice)}</Text>}</View>
      {item.referencePrice>offer.price&&<View>{pill(t.save+' '+money(customerSaving(item.referencePrice,offer.price)),true)}</View>}
      <Text numberOfLines={1} style={{fontSize:9,color:theme.muted}}>{t.stock} · {offer.stock||0} available</Text>
     </View>
@@ -336,7 +338,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
        <Text style={{color:theme.text,fontSize:12}}>{o.mode==='SOLO'?'Direct / Exclusive':o.mode==='GROUP_DEAL'?String(o.groupSize)+'-person Group Deal':'Community Pool'}</Text>
        <Text style={{color:theme.accent,fontSize:14,fontWeight:'900'}}>{money(o.price)}</Text>
       </Pressable>)}
-      <View style={{flexDirection:'row',gap:8,marginTop:10}}>{button(t.details,()=>link((demo?'/products/':'/shop/')+p.id),false)}{button(offer.mode==='SOLO'?t.add:t.join,()=>offer.mode==='SOLO'?add(offer):draftGroup(offer))}</View>
+      <View style={{flexDirection:'row',gap:8,marginTop:10}}>{button(t.details,()=>setScreen('retail'),false)}{button(offer.mode==='SOLO'?t.add:t.join,()=>offer.mode==='SOLO'?add(offer):draftGroup(offer))}</View>
       <Text style={{color:theme.muted,fontSize:10,marginTop:8}}>{demo?t.notice:'Native checkout is not enabled. Current website flows remain authoritative.'}</Text>
     </>)}
   </>;
@@ -767,7 +769,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
    </View>
   </View>
   {busy&&<Text style={{textAlign:'center',color:theme.accent,fontSize:11}}>Loading public product catalog…</Text>}
-  <ScrollView key={screen} keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingHorizontal:12,paddingTop:4,paddingBottom:screen==='pool'?110:30}}>
+  <ScrollView key={screen} style={{flex:1}} keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingHorizontal:12,paddingTop:4,paddingBottom:screen==='pool'?110:30}}>
    {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='orderDetail'?setScreen('orders'):screen==='checkout'?setScreen('cart'):screen==='orders'||screen==='savings'||screen==='signIn'?setScreen('account'):screen==='notifications'?onTab('home'):screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
    {body()}
   </ScrollView>
