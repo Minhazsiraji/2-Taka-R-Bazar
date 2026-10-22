@@ -1,5 +1,5 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
-import {Alert,Image,Linking,Pressable,ScrollView,StyleSheet,View,useWindowDimensions} from 'react-native';
+import {Alert,AppState,Image,Linking,Pressable,ScrollView,StyleSheet,View,useWindowDimensions} from 'react-native';
 import {useFonts} from 'expo-font';
 import {Inter_400Regular,Inter_500Medium,Inter_600SemiBold,Inter_700Bold} from '@expo-google-fonts/inter';
 import {HindSiliguri_400Regular,HindSiliguri_500Medium,HindSiliguri_600SemiBold,HindSiliguri_700Bold} from '@expo-google-fonts/hind-siliguri';
@@ -24,7 +24,7 @@ type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
 const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
 // Shared V1 colors are managed in src/theme.ts; do not define screen-specific palettes here.
-const money=(n:number)=>'৳'+Math.round(n).toLocaleString('en-US');
+const money=(n:number)=>'৳'+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
 function ProductPhoto({item,height=134}:{item:Product;height?:number}){
  const [failed,setFailed]=useState(false);
  useEffect(()=>setFailed(false),[item.image]);
@@ -77,11 +77,21 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   setBusy(true);
   loadPublicCatalog().then(result=>{
     if(!alive)return;
-    setProducts(result.products);setOffers(result.offers);setPools([]);setDemo(false);
+    setProducts(result.products);setOffers(result.offers);setPools(result.pools);setDemo(false);
   }).catch(()=>{
     if(alive){setProducts(demoProducts);setOffers(demoOffers);setPools(demoPools);setDemo(true);Alert.alert('Live catalog unavailable','Showing clearly labeled demo products. No purchases are enabled.')}
   }).finally(()=>{if(alive)setBusy(false)});
   return()=>{alive=false};
+ },[]);
+ useEffect(()=>{
+  if(requestedDemo)return;
+  const subscription=AppState.addEventListener('change',state=>{
+   if(state!=='active')return;
+   void loadPublicCatalog().then(result=>{
+    setProducts(result.products);setOffers(result.offers);setPools(result.pools);
+   }).catch(()=>{}); // Retain last verified live snapshot on transient network errors.
+  });
+  return ()=>subscription.remove();
  },[]);
  const byId=(id:string)=>products.find(p=>p.id===id);
  const filtered=(list:Offer[])=>list.filter(o=>{
@@ -152,7 +162,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  </>)}
  function DealCard({offer}:{offer:Offer}){
   const item=byId(offer.productId);if(!item)return null;
-  const ratio=Math.min(100,100*(offer.joined||0)/(offer.groupSize||5));
+  const ratio=offer.groupSize?Math.min(100,100*(offer.joined||0)/offer.groupSize):0;
   return panel(<View style={{flexDirection:'row',gap:10}}>
     <Pressable onPress={()=>selectOffer(offer)} style={{width:'42%'}}>
       <ProductPhoto item={item} height={small?166:178}/>
@@ -160,11 +170,11 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     </Pressable>
     <View style={{flex:1,justifyContent:'space-between',gap:4}}>
      <View><Text style={{color:theme.accent,fontSize:9,fontWeight:'900'}}>BUY TOGETHER · SAVE MORE</Text><Text style={{color:theme.text,fontSize:15,fontWeight:'900'}} numberOfLines={2}>{lang==='bn'?item.nameBn:item.name}</Text><Text style={{color:theme.muted,fontSize:11}}>{item.unit} · {offer.community}</Text></View>
-     <View style={{flexDirection:'row',alignItems:'center',gap:6,flexWrap:'wrap'}}><Text style={{fontSize:21,fontWeight:'900',color:theme.accent}}>{money(offer.price)}</Text><Text style={{fontSize:11,color:theme.muted,textDecorationLine:'line-through'}}>{money(item.referencePrice)}</Text></View>
-     <View style={{alignSelf:'flex-start'}}>{pill(t.save+' '+money(customerSaving(item.referencePrice,offer.price)),true)}</View>
+     <View style={{flexDirection:'row',alignItems:'center',gap:6,flexWrap:'wrap'}}><Text style={{fontSize:21,fontWeight:'900',color:theme.accent}}>{money(offer.price)}</Text>{item.referencePrice>offer.price&&<Text style={{fontSize:11,color:theme.muted,textDecorationLine:'line-through'}}>{money(item.referencePrice)}</Text>}</View>
+     {item.referencePrice>offer.price&&<View style={{alignSelf:'flex-start'}}>{pill(t.save+' '+money(customerSaving(item.referencePrice,offer.price)),true)}</View>}
      <View style={{flexDirection:'row',alignItems:'center',gap:5,flexWrap:'wrap'}}>
-  <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="people" size={14} color="#149be7"/><Text style={{color:theme.text,fontSize:10,fontWeight:'800'}}>{offer.joined||0}/{offer.groupSize||5}</Text><Text style={{color:theme.muted,fontSize:9}}>joined</Text></View>
-  <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="time-outline" size={14} color="#6385b1"/><Text style={{color:theme.muted,fontSize:9}}>Ends in {offer.daysLeft} day{offer.daysLeft===1?'':'s'}</Text></View>
+  <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="people" size={14} color="#149be7"/><Text style={{color:theme.text,fontSize:10,fontWeight:'800'}}>{offer.joined||0}{offer.groupSize?'/'+offer.groupSize:''}</Text><Text style={{color:theme.muted,fontSize:9}}>joined</Text></View>
+  <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="time-outline" size={14} color="#6385b1"/><Text style={{color:theme.muted,fontSize:9}}>{offer.daysLeft===undefined?'Deadline not set':'Ends in '+offer.daysLeft+' day'+(offer.daysLeft===1?'':'s')}</Text></View>
  </View>
      <View style={{height:5,...glass.inset,borderRadius:5,overflow:'hidden'}}><View style={{height:5,width:(ratio+'%') as `${number}%`,backgroundColor:theme.highlight}}/></View>
      <View style={{flexDirection:'row',gap:5}}>{button(t.details,()=>selectOffer(offer),false,true)}{button(t.join,()=>selectOffer(offer),true,true)}</View>
@@ -193,12 +203,12 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     {pool.productIds.slice(0,3).map(id=>{const p=byId(id);return p?<View key={id} style={{flex:1}}><ProductPhoto item={p} height={88}/></View>:null})}
    </View>
    <View style={{flex:1,gap:5}}>
-    <View style={styles.between}>{pill(pool.frequency==='weekly'?t.weekly:t.monthly,true)}<View style={{...glass.selected,flexDirection:'row',alignItems:'center',gap:3,paddingVertical:3,paddingHorizontal:6,borderRadius:15}}><View style={{width:6,height:6,borderRadius:4,backgroundColor:'#0caf6a'}}/><Text style={{fontSize:9,fontWeight:'900',color:dark?'#bdfad9':'#087c4b'}}>ACTIVE</Text></View></View>
+    <View style={styles.between}>{pill(pool.frequency==='weekly'?t.weekly:pool.frequency==='monthly'?t.monthly:'COMMUNITY POOL',true)}<View style={{...glass.selected,flexDirection:'row',alignItems:'center',gap:3,paddingVertical:3,paddingHorizontal:6,borderRadius:15}}><View style={{width:6,height:6,borderRadius:4,backgroundColor:'#0caf6a'}}/><Text style={{fontSize:9,fontWeight:'900',color:dark?'#bdfad9':'#087c4b'}}>ACTIVE</Text></View></View>
     <Text style={{fontSize:13,fontWeight:'900',color:theme.text}} numberOfLines={1}>{lang==='bn'?pool.nameBn:pool.name}</Text>
     <Text style={{fontSize:10,color:theme.muted}}>{pool.productIds.length} {t.products} · {pool.participants.toLocaleString('en-US')} {t.members}</Text>
-    <View style={{height:5,...glass.inset,borderRadius:6}}><View style={{height:5,width:(Math.min(100,100*pool.participants/pool.nextTier)+'%') as `${number}%`,backgroundColor:theme.highlight,borderRadius:5}}/></View>
+    <View style={{height:5,...glass.inset,borderRadius:6}}><View style={{height:5,width:(pool.nextTier?Math.min(100,100*pool.participants/pool.nextTier):0+'%') as `${number}%`,backgroundColor:theme.highlight,borderRadius:5}}/></View>
     <View style={{flexDirection:'row',alignItems:'center',gap:5,flexWrap:'wrap'}}><Ionicons name="time-outline" size={12} color={theme.accent}/><Text style={{fontSize:9,fontWeight:'800',color:theme.accent}}>{lang==='bn'?'যোগদান শেষ':'Commit ends in'} {pool.commitDaysLeft||0} {lang==='bn'?'দিনে':'days'}</Text><Text style={{fontSize:9,color:theme.muted}}>· {pool.commitEndsLabel||'TBD'}</Text></View>
-    <View style={{flexDirection:'row',alignItems:'center',gap:6}}><Text numberOfLines={1} style={{fontSize:9,color:theme.muted,flex:1}}>{t.next}: {pool.nextTier.toLocaleString('en-US')}</Text><Pressable onPress={()=>selectPool(pool)} style={{...glass.control,backgroundColor:theme.accent,borderRadius:8,paddingVertical:6,paddingHorizontal:8}}><Text style={{fontSize:9,fontWeight:'800',color:theme.onPrimary}}>Explore Pool →</Text></Pressable></View>
+    <View style={{flexDirection:'row',alignItems:'center',gap:6}}><Text numberOfLines={1} style={{fontSize:9,color:theme.muted,flex:1}}>{t.next}: {pool.nextTier?pool.nextTier.toLocaleString('en-US'):'—'}</Text><Pressable onPress={()=>selectPool(pool)} style={{...glass.control,backgroundColor:theme.accent,borderRadius:8,paddingVertical:6,paddingHorizontal:8}}><Text style={{fontSize:9,fontWeight:'800',color:theme.onPrimary}}>Explore Pool →</Text></Pressable></View>
    </View>
   </Pressable>);
  }
@@ -269,11 +279,11 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     {panel(<>
       <Text style={{color:theme.text,fontWeight:'900',fontSize:13}}>Community progress</Text>
       <View style={[styles.between,{marginTop:9}]}>
-       <Text style={{color:theme.text,fontSize:11,fontWeight:'800'}}>👥 {offer.joined||0}/{offer.groupSize||5} joined</Text>
-       <Text style={{color:theme.muted,fontSize:10}}>◷ Ends in {offer.daysLeft||0} day(s)</Text>
+       <Text style={{color:theme.text,fontSize:11,fontWeight:'800'}}>👥 {offer.joined||0}{offer.groupSize?'/'+offer.groupSize:''} joined</Text>
+       <Text style={{color:theme.muted,fontSize:10}}>◷ {offer.daysLeft===undefined?'Deadline not set':'Ends in '+offer.daysLeft+' day(s)'}</Text>
       </View>
       <View style={{...glass.inset,height:7,borderRadius:6,overflow:'hidden',marginVertical:9}}>
-       <View style={{height:7,width:(Math.min(100,100*(offer.joined||0)/(offer.groupSize||5))+'%') as any,backgroundColor:theme.accent,borderRadius:6}}/>
+       <View style={{height:7,width:((offer.groupSize?Math.min(100,100*(offer.joined||0)/offer.groupSize):0)+'%') as any,backgroundColor:theme.accent,borderRadius:6}}/>
       </View>
       <Text style={{color:theme.muted,fontSize:11}}>Qualified buyers and closing rules determine the final price. Below-minimum groups expire without payment.</Text>
     </>)}
@@ -371,7 +381,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   </View>;
   return <>
    <View style={[styles.between,{marginTop:10,marginBottom:6,flexWrap:'wrap'}]}>
-    {pill(pool.frequency==='weekly'?label('WEEKLY POOL','সাপ্তাহিক পুল'):label('MONTHLY POOL','মাসিক পুল'),true)}
+    {pill(pool.frequency==='weekly'?label('WEEKLY POOL','সাপ্তাহিক পুল'):pool.frequency==='monthly'?label('MONTHLY POOL','মাসিক পুল'):label('COMMUNITY POOL','কমিউনিটি পুল'),true)}
     <View style={{...glass.selected,flexDirection:'row',alignItems:'center',gap:5,paddingHorizontal:8,paddingVertical:5,borderRadius:14}}>
      <View style={{height:6,width:6,backgroundColor:'#11A865',borderRadius:4}}/><Text style={{fontSize:10,color:dark?'#A9F9CF':'#087B4F',fontWeight:'900'}}>ACTIVE</Text>
     </View>
@@ -381,7 +391,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
    <Text style={{fontSize:11,color:theme.muted,marginBottom:10}}>{n(pool.productIds.length)} {t.products} · {n(pool.participants)} {t.members}</Text>
    {panel(<>
     <Text style={{fontSize:14,color:theme.text,fontWeight:'900',marginBottom:7}}>{label('Community savings progress','কমিউনিটির অগ্রগতি')}</Text>
-    <View style={styles.between}><Text style={{fontSize:13,color:theme.accent,fontWeight:'900'}}>{n(pool.participants)} {label('households joined','পরিবার যুক্ত')}</Text><Text style={{fontSize:10,color:theme.muted}}>{n(pool.nextTier)} {label('next milestone','পরের ধাপ')}</Text></View>
+    <View style={styles.between}><Text style={{fontSize:13,color:theme.accent,fontWeight:'900'}}>{n(pool.participants)} {label('households joined','পরিবার যুক্ত')}</Text><Text style={{fontSize:10,color:theme.muted}}>{pool.nextTier?n(pool.nextTier):'—'} {label('next milestone','পরের ধাপ')}</Text></View>
     <View style={{...glass.inset,height:7,borderRadius:6,marginVertical:9,overflow:'hidden'}}><View style={{height:7,width:(progress+'%') as any,backgroundColor:theme.highlight,borderRadius:6}}/></View>
     <Text style={{fontSize:10,color:theme.muted}}>{label('No cap on participation. Progress shows the next price milestone, not Pool capacity.','অংশগ্রহণ সীমাহীন। এটি পরের সাশ্রয় স্তর, সদস্যসীমা নয়।')}</Text>
     <View style={[styles.between,{paddingTop:9,marginTop:9,borderTopWidth:1,borderColor:theme.line}]}>
@@ -423,13 +433,13 @@ function Shop({fontsReady}:{fontsReady:boolean}){
         {name:label('Next-tier total','পরবর্তী স্তরের মূল্য'),value:next}
       ].map((tier,index)=><View key={index} style={{...(index===1?glass.selected:glass.inset),flex:1,minWidth:0,paddingVertical:9,paddingHorizontal:5,borderRadius:10,borderColor:index===1?theme.accent:gloss.edge}}>
         <Text style={{fontSize:10,lineHeight:14,color:theme.muted}}>{tier.name}</Text>
-        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.65} style={{fontSize:14,fontWeight:'900',color:theme.accent,marginTop:6}}>{units?cash(tier.value):'—'}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.65} style={{fontSize:14,fontWeight:'900',color:theme.accent,marginTop:6}}>{units&&(index!==2||pool.nextTier)?cash(tier.value):'—'}</Text>
       </View>)}
     </View>
     <Text style={{fontSize:11,lineHeight:16,color:theme.muted,marginTop:9}}>
       {units
         ?label('Illustrative totals for selected quantities. All final prices require qualification and confirmation.','নির্বাচিত পরিমাণের নমুনা মোট দাম। চূড়ান্ত মূল্য যাচাই ও নিশ্চিতকরণ সাপেক্ষ।')
-        :label('Select one or more products above to compare starting, current and next-tier prices.','শুরুর, বর্তমান ও পরবর্তী স্তরের দাম তুলনা করতে ওপর থেকে এক বা একাধিক পণ্য বেছে নিন।')}
+        :label(pool.nextTier?'Select one or more products above to compare starting, current and next-tier prices.':'No next-tier price is published yet. Select products to see their currently published prices.',pool.nextTier?'শুরুর, বর্তমান ও পরবর্তী স্তরের দাম তুলনা করতে ওপর থেকে এক বা একাধিক পণ্য বেছে নিন।':'পরবর্তী স্তরের দাম এখনো প্রকাশিত হয়নি। প্রকাশিত দাম দেখতে পণ্য বেছে নিন।')}
     </Text>
    </>)}
    {panel(<>
@@ -437,7 +447,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     <View style={{marginTop:8}}>{sumRow(label('Market retail total','খুচরা বাজারমূল্য'),retail)}</View>
     {sumRow(label('Current estimated Pool total','বর্তমান পুলের আনুমানিক মূল্য'),current,true)}
     {sumRow(label('Potential savings','সম্ভাব্য সাশ্রয়'),Math.max(0,retail-current))}
-    {sumRow(label('Total at next tier','পরবর্তী স্তরে মোট মূল্য'),next)}
+    {pool.nextTier?sumRow(label('Total at next tier','পরবর্তী স্তরে মোট মূল্য'),next):<Text style={{color:theme.muted,fontSize:11}}>Next-tier price not published</Text>}
     <Text style={{fontSize:10,color:theme.muted,marginTop:9}}>{label('Excludes delivery fees. No real stock, booking or payment occurs in demo.','ডেলিভারি চার্জ বাদে। ডেমোতে আসল স্টক, বুকিং বা পেমেন্ট হয় না।')}</Text>
    </>)}
    {panel(<>

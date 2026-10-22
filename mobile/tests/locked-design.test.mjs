@@ -38,7 +38,7 @@ test('savings and cart cannot silently behave like paid verified orders',()=>{
 test('Group Deal card visibly shows a people icon and deadline clock',()=>{
  assert.ok(app.includes('name="people" size={14} color="#149be7"'));
  assert.ok(app.includes('name="time-outline" size={14}'));
- assert.ok(app.includes('Ends in {offer.daysLeft} day'));
+ assert.ok(app.includes('Deadline not set')&&app.includes('offer.daysLeft'));
 });
 test('Exclusive card keeps image-first layout, price and available inventory',()=>{
  assert.match(app,/function ExclusiveCard/);
@@ -140,7 +140,7 @@ test('Pool tier cards show selected-product monetary totals, never household cou
    'value:opening',
    'value:current',
    'value:next',
-   "units?cash(tier.value):'—'",
+   "units&&(index!==2||pool.nextTier)?cash(tier.value):'—'",
    'Select one or more products above to compare starting, current and next-tier prices.'
  ])assert.ok(pool.includes(token),'Missing Pool tier price guard: '+token);
  assert.ok(!pool.includes("index===1?n(pool.participants):n(pool.nextTier)"));
