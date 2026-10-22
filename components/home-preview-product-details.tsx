@@ -78,8 +78,8 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
      <DemoPanel>
       <p className="native-preview-eyebrow">{t('Current qualifying tier · Price not final','বর্তমান যোগ্য স্তর · চূড়ান্ত মূল্য নয়')}</p>
       <div className="home-preview-product-price native-preview-large-price"><strong data-empty={deal.price===null||undefined}>{money(group?.current.price??deal.price)}</strong></div>
-      <p className="native-preview-muted" data-empty={product.oldPrice===null||undefined}>{t('Market retail','বাজারের খুচরা দাম')}: {money(product.oldPrice)}</p>
-      <p className="native-preview-accent" data-empty={product.oldPrice===null||deal.price===null||undefined}>{t('Potential saving','সম্ভাব্য সাশ্রয়')}: {money(Math.max(0,(product.oldPrice??0)-(group?.current.price??deal.price??0)))}</p>
+      <p className="native-preview-muted">{t('Market retail','বাজারের খুচরা দাম')}: {product.oldPrice!==null?money(product.oldPrice):t('Not provided','দেওয়া হয়নি')}</p>
+      <p className="native-preview-accent">{t('Potential saving','সম্ভাব্য সাশ্রয়')}: {product.oldPrice!==null&&(group?.current.price??deal.price)!==null?money(Math.max(0,product.oldPrice-(group?.current.price??deal.price??0))):t('Not available','পাওয়া যায়নি')}</p>
       {group?.next&&<p className="native-preview-muted" data-empty={group.next.price===null||undefined}>{t('Next tier at','পরবর্তী স্তর')} {n(group.next.minimum)} {t('people','জন')}: {money(group.next.price)} · {n(Math.max(0,group.next.minimum-deal.joined))} {t('more needed','জন আরও প্রয়োজন')}</p>}
      </DemoPanel>
      {group&&<DemoPanel>
@@ -95,7 +95,7 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
      </DemoPanel>}
      <DemoPanel>
       <h2>{t('Community progress','কমিউনিটির অগ্রগতি')}</h2>
-      <div className="native-preview-split native-preview-small-row"><strong>👥 {n(deal.joined)}/{n(deal.target)} {t('joined','যুক্ত')}</strong><span data-empty={deal.days===null||undefined}>◷ {t('Ends in','শেষ হবে')} {n(deal.days??0)} {t('day(s)','দিনে')}</span></div>
+      <div className="native-preview-split native-preview-small-row"><strong>👥 {n(deal.joined)}/{n(deal.target)} {t('joined','যুক্ত')}</strong><span>{group?.next?`${t('Next','পরবর্তী')} ${n(group.next.minimum)} → ${money(group.next.price)}${product.oldPrice!==null&&group.next.price!==null?` · ${t('Save','সাশ্রয়')} ${money(Math.max(0,product.oldPrice-group.next.price))}`:''}`:deal.days!==null?`◷ ${t('Ends in','শেষ হবে')} ${n(deal.days)} ${t('day(s)','দিনে')}`:t('No closing date set','শেষের তারিখ দেওয়া নেই')}</span></div>
       <div className="native-preview-progress" role="progressbar" aria-label={t('Group participation','গ্রুপের অংশগ্রহণ')}
        aria-valuemin={0} aria-valuemax={Math.max(1,deal.target,deal.joined)} aria-valuenow={deal.joined}><span style={{width:(deal.target>0?Math.min(100,deal.joined/deal.target*100):0)+'%'}}/></div>
       <p className="native-preview-muted">{deal.launchOfferId?t('Orders are reviewed manually. Staff confirm delivery charges and payment instructions.','অর্ডার ম্যানুয়ালি যাচাই করা হয়। টিম ডেলিভারি চার্জ ও পেমেন্ট নির্দেশনা নিশ্চিত করবে।'):t('Qualified buyers and closing rules determine the final price. Below-minimum groups expire without payment.','যোগ্য ক্রেতা ও সময়সীমার নিয়মে চূড়ান্ত দাম নির্ধারিত হবে। ন্যূনতম সদস্য না হলে টাকা ছাড়া গ্রুপ শেষ হবে।')}</p>
@@ -130,7 +130,7 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
      <h1>{title}</h1><p className="native-preview-muted">{product.unit} · SKU <span data-empty={view&&!view.source.sku||undefined}>{view?(view.source.sku||' '):product.id}</span></p>
      <DemoPanel>
       <h2>{t('Market retail reference price','বাজারের খুচরা রেফারেন্স মূল্য')}</h2>
-      <div className="home-preview-product-price native-preview-large-price"><strong data-empty={product.oldPrice===null||undefined}>{money(product.oldPrice)}</strong></div>
+      <div className="home-preview-product-price native-preview-large-price"><strong>{product.oldPrice!==null?money(product.oldPrice):t('Not provided','দেওয়া হয়নি')}</strong></div>
       <p className="native-preview-muted">{t('Retail reference only. Group Deal and Pool tier prices are not displayed on the individual product page.','এখানে শুধু বাজারের রেফারেন্স দাম। গ্রুপ বা পুলের দামের ধাপ দেখানো হয় না।')}</p>
      </DemoPanel>
      <DemoPanel>

@@ -78,7 +78,7 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
     <h2>{t('Community savings progress','কমিউনিটির অগ্রগতি')}</h2>
     <div className="native-preview-split native-preview-small-row">
      <strong>{n(pool.joined)} {t('households joined','পরিবার যুক্ত')}</strong>
-     <span data-empty={pool.target===0||undefined}>{n(pool.target)} {t('next milestone','পরবর্তী ধাপ')}</span>
+     <span>{pool.target>0?`${n(pool.target)} ${t('next milestone','পরবর্তী ধাপ')}${pool.nextMinPrice!=null?` · ${t('from','শুরু')} ${cash(pool.nextMinPrice)}`:''}`:t('No tier configured','টিয়ার নির্ধারিত হয়নি')}</span>
     </div>
     <div className="home-preview-pool-progress native-preview-progress" role="progressbar"
      aria-label={t('Household progress','পরিবারের অগ্রগতি')}
@@ -87,8 +87,8 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
     </div>
     <p className="native-preview-muted">{t('No cap on participation. Progress shows the next price milestone, not Pool capacity.','অংশগ্রহণ সীমাহীন। অগ্রগতি পরের দামের ধাপ বোঝায়, পুলের সদস্যসীমা নয়।')}</p>
     <div className="native-preview-split native-preview-pool-deadline">
-     <strong data-empty={pool.days===null||undefined}>◷ {t('Commitment ends','যোগদান শেষ')}: {endDate()}</strong>
-     <strong>{n(pool.days??0)} {t('days left','দিন বাকি')}</strong>
+     <strong>◷ {t('Commitment ends','যোগদান শেষ')}: {pool.days!==null?endDate():t('Not set','দেওয়া নেই')}</strong>
+     <strong>{pool.days!==null?`${n(pool.days)} ${t('days left','দিন বাকি')}`:t('No closing date','শেষের তারিখ নেই')}</strong>
     </div>
    </section>
 
@@ -109,7 +109,7 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
         <div className="native-preview-split native-preview-item-name"><h3>{t(product.name,product.nameBn)}</h3><small>{product.unit}</small></div>
         <div className="native-preview-item-price"><strong data-empty={tiers.current===null||undefined}>{cash(tiers.current)}</strong><s data-empty={product.oldPrice===null||undefined}>{cash(product.oldPrice)}</s></div>
         <p className="native-preview-accent" data-empty={product.oldPrice===null||tiers.current===null||undefined}>{t('Potential saving','সম্ভাব্য সাশ্রয়')} {cash(Math.max(0,(product.oldPrice??0)-(tiers.current??0)))} / {product.unit}</p>
-        <p className="native-preview-muted" data-empty={tiers.next===null||undefined}>{t('Next tier','পরবর্তী স্তর')}: {cash(tiers.next)} · {n(pool.target)} {t('households','পরিবার')}</p>
+        <p className="native-preview-muted">{tiers.next!==null?`${t('Next tier','পরবর্তী স্তর')}: ${cash(tiers.next)} · ${n(pool.target)} ${t('households','পরিবার')}${product.oldPrice!==null?` · ${t('Potential saving','সম্ভাব্য সাশ্রয়')} ${cash(Math.max(0,product.oldPrice-tiers.next))}`:''}`:t('Next price tier not configured','পরবর্তী মূল্যস্তর নির্ধারিত হয়নি')}</p>
         <div className="native-preview-split native-preview-item-bottom">
          <Link className="native-preview-product-link" href={productHref}>{t('Product Details','পণ্যের বিস্তারিত')} →</Link>
          <div className="native-preview-quantity" role="group" aria-label={t('Quantity for ','পরিমাণ: ')+t(product.name,product.nameBn)}>

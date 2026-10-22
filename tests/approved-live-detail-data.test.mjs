@@ -89,7 +89,8 @@ test('real preview cards use published UUID detail paths without redrawing accep
  const exclusive=renderToStaticMarkup(React.createElement(LivePreviewHomeCards,{...props,section:'exclusive'}))
  const pool=renderToStaticMarkup(React.createElement(LivePreviewHomeCards,{...props,section:'pools'}))
  assert.ok(deal.includes('href="/preview-live/product/'+id+'?kind=deal'))
- assert.ok(!deal.includes('৳135'),'Pending price must not masquerade as confirmed')
+ assert.ok(deal.includes('Next 10 → ৳135'),'Pending price is visible only as a clearly labeled future unlock')
+ assert.ok(!deal.includes('<strong>৳135</strong>'),'Pending tier price must not masquerade as the earned current price')
  assert.ok(exclusive.includes('href="/preview-live/product/'+id+'"'))
  assert.ok(pool.includes('href="/preview-live/pool/'+livePool.id+'"'))
  assert.ok(deal.includes('app-card-preview-deal')&&exclusive.includes('app-card-preview-product')&&pool.includes('app-card-preview-pool'))
@@ -160,4 +161,34 @@ test('released real-data routes reject invalid IDs and never substitute fixture 
 })
 test('conflicting community retail benchmarks do not become a fabricated single market price',()=>{
  assert.equal(data.productFromPublicSources(id,[base,{...base,reference_price:170}],null,null).retail,null)
+ assert.equal(data.productFromPublicSources(id,[base,{...base,reference_price:165.03}],null,null).retail,165,'Minor rounding variation does not erase a verified original retail reference')
+})
+
+test('real Butter reference survives minor offer rounding and next unlock is clearly labeled on cards and details',()=>{
+ const dealOffer={...base,offer_kind:'GROUP_DEAL',launch_offer_id:base.offer_id,reference_price:1250,
+  confirmed_price:1230,upcoming_price:1200,next_threshold:3,buyer_count:1,price_status:'final',
+  price_tiers:[{minimum:3,price:1200},{minimum:5,price:1180}]}
+ const poolOffer={...base,offer_kind:'COMMUNITY_POOL',reference_price:1250.03,
+  confirmed_price:1220,upcoming_price:1190,next_threshold:3,buyer_count:1,price_status:'final'}
+ const source=data.productFromPublicSources(id,[dealOffer,poolOffer],null,null)
+ assert.equal(source.retail,1250)
+ source.listingOldPrice=0
+ source.launchEnabled=true
+ const approved=viewData.approvedProductView(source,dealOffer.offer_id)
+ assert.equal(approved.product.oldPrice,1250,'No missing listing reference may override genuine retail')
+ const props={view:approved,product:approved.product,deal:approved.deal,initialLanguage:'en',hasLanguageCookie:true}
+ const dealHtml=renderToStaticMarkup(React.createElement(approvedProduct.HomePreviewProductDetails,props))
+ assert.ok(dealHtml.includes('Next 3 → ৳1,200'), 'Next unlock and price must be readable, not blurred')
+ assert.ok(dealHtml.includes('Save ৳50'), 'Potential savings must use verified retail reference')
+ const retailHtml=renderToStaticMarkup(React.createElement(approvedProduct.HomePreviewProductDetails,{...props,retail:true,deal:undefined}))
+ assert.ok(retailHtml.includes('৳1,250'))
+ assert.ok(!retailHtml.includes('>৳0</strong>'), 'Missing listing old price is not a zero retail reference')
+ const home=viewData.approvedHomeView({offers:[dealOffer,poolOffer],pools:[],products:[],catalog:[]})
+ const dealCards=renderToStaticMarkup(React.createElement(approvedCards.PreviewHomeCards,{section:'deals',language:'en',search:'',view:home}))
+ assert.ok(dealCards.includes('Next 3 → ৳1,200'))
+ assert.ok(dealCards.includes('Save ৳50'))
+ const realPool={...livePool,bundle:[{offer:poolOffer,qty:1}],livePricing:{currentPrice:1220,nextPrice:1190,upcoming:3,householdsNeeded:2,soloPrice:null}}
+ const poolView=viewData.approvedPoolView(realPool)
+ assert.equal(poolView.pool.nextMinPrice,1190)
+ assert.equal(poolView.pool.nextMaxSaving,60.03)
 })
