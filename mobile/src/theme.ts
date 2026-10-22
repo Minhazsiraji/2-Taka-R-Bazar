@@ -56,3 +56,24 @@ export const gloss={
  heroInk:{textShadowColor:'rgba(0,35,40,0.8)',textShadowOffset:{width:0,height:1},textShadowRadius:1},
  slogan:{light:brandV1.primary,dark:brandV1.accent}
 } as const;
+
+/**
+ * Owner-approved unified glass treatment for every interactive surface.
+ * Only color/edge/reflection changes here: no dimensions, content or routing.
+ * Inset surfaces are intentionally nearly clear, so nested cards no longer
+ * produce the unwanted opaque white/grey layer.
+ */
+export const glassSurfaces={
+ light:{
+  outer:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.23)',borderWidth:1},
+  inset:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.09)',borderWidth:1},
+  control:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.18)',borderWidth:1},
+  selected:{...gloss.rim,backgroundColor:'rgba(0,127,131,0.10)',borderWidth:1}
+ },
+ dark:{
+  outer:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.075)',borderWidth:1},
+  inset:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.035)',borderWidth:1},
+  control:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.065)',borderWidth:1},
+  selected:{...gloss.rim,backgroundColor:'rgba(44,214,206,0.13)',borderWidth:1}
+ }
+} as const;
