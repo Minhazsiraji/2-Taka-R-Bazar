@@ -110,6 +110,11 @@ try{
  await page.goto(base+'/?q='+encodeURIComponent(name),{waitUntil:'networkidle'})
  const deal=page.locator('.app-card-preview-deal').filter({hasText:name})
  await deal.getByRole('button',{name:'Join Deal',exact:true}).click()
+ await page.getByText('Joined Group Deal and added to cart.',{exact:false}).waitFor({timeout:20000})
+ await page.waitForFunction(productId=>{
+  try{return JSON.parse(localStorage.getItem('2tbr-launch-cart-v1')||'[]').some(item=>item.product_id===productId)}
+  catch{return false}
+ },pid,{timeout:20000})
  await page.goto(base+'/cart',{waitUntil:'networkidle'})
  assert.match(await page.locator('main').innerText(),/৳90/)
  await page.goto(base+'/preview-live/pool/'+offers.COMMUNITY_POOL,{waitUntil:'networkidle'})
