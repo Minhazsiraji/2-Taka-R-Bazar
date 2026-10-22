@@ -27,11 +27,9 @@ const requestedDemo=process.env.EXPO_PUBLIC_DEMO_MODE!=='false';
 const money=(n:number)=>'৳'+Math.round(n).toLocaleString('en-US');
 function ProductPhoto({item,height=134}:{item:Product;height?:number}){
  const [failed,setFailed]=useState(false);
- // For published real packaging show the full product; preserve demo crop.
- const isPublishedImage=item.image.includes('.supabase.co/storage/v1/object/public/');
  useEffect(()=>setFailed(false),[item.image]);
- return <View style={{height,backgroundColor:brandV1.background,borderRadius:13,...gloss.rim,overflow:'hidden',justifyContent:'center',alignItems:'center'}}>
-  {failed?<Ionicons name="bag-handle-outline" size={46} color={brandV1.primary}/>:<Image source={{uri:item.image}} style={{width:'100%',height:'100%'}} resizeMode={isPublishedImage?'contain':'cover'} onError={()=>setFailed(true)}/>}
+ return <View style={{height,backgroundColor:brandV1.background,borderRadius:13,...gloss.rim,borderWidth:1,overflow:'hidden',justifyContent:'center',alignItems:'center'}}>
+  {failed?<Ionicons name="bag-handle-outline" size={46} color={brandV1.primary}/>:<Image source={{uri:item.image}} style={{width:'100%',height:'100%'}} resizeMode="cover" onError={()=>setFailed(true)}/>}
  </View>;
 }
 function Shop({fontsReady}:{fontsReady:boolean}){
@@ -61,6 +59,8 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const [pools,setPools]=useState<Pool[]>(requestedDemo?demoPools:[]);
  const [busy,setBusy]=useState(false);
  const theme=dark?palette.dark:palette.light;
+ // Glass-only surface tint; preserves the frozen card sizes, geometry and text.
+ const cardGlass=dark?'rgba(23,35,59,0.74)':'rgba(255,255,255,0.58)';
  useEffect(()=>{
   if(!auth.ready)return;
   const owner=auth.user?.id??'guest';
@@ -130,7 +130,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const button=(label:string,action:()=>void,solid=true,compact=false)=><Pressable accessibilityRole="button" onPress={action} style={{backgroundColor:solid?theme.accent:theme.field,borderRadius:10,paddingVertical:compact?8:11,paddingHorizontal:compact?8:13,alignItems:'center',justifyContent:'center',flex:1,borderWidth:solid?0:1,...gloss.rim}}>
   <Text style={{fontSize:compact?11:13,fontWeight:'800',color:solid?theme.onPrimary:theme.text}} numberOfLines={1}>{label}</Text>
  </Pressable>;
- const panel=(child:React.ReactNode)=><View style={[styles.panel,{backgroundColor:theme.card,borderColor:gloss.edge}]}>{child}</View>;
+ const panel=(child:React.ReactNode)=><View style={[styles.panel,{backgroundColor:cardGlass,borderColor:gloss.edge}]}>{child}</View>;
  const title=(k:string,name:string,action?:()=>void)=><View style={[styles.titleRow,!k&&{marginTop:9,marginBottom:6}]}><View style={{flex:1}}>{!!k&&<Text style={{color:theme.accent,fontWeight:'900',fontSize:10,letterSpacing:1.5}}>{k}</Text>}<Text style={{color:theme.text,fontSize:21,fontWeight:'900',letterSpacing:-.65}}>{name}</Text></View>{action&&<Pressable onPress={action}><Text style={{color:theme.accent,fontWeight:'700',fontSize:12}}>{t.viewAll}  ›</Text></Pressable>}</View>;
  const headerAction=(name:IconName,fn:()=>void,badge=0)=><Pressable accessibilityRole="button" accessibilityLabel={name} onPress={fn} style={[styles.headerIcon,{borderColor:gloss.edge,backgroundColor:theme.field}]}>
    <Ionicons name={name} size={18} color={theme.text}/>{badge>0&&<View style={styles.badge}><Text style={styles.badgeText}>{badge>99?'99+':badge}</Text></View>}
@@ -173,9 +173,9 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  }
  function ExclusiveCard({offer}:{offer:Offer}){
   const item=byId(offer.productId);if(!item)return null;
-  return <View style={[styles.exclusiveCard,{backgroundColor:theme.card,borderColor:gloss.edge}]}>
+  return <View style={[styles.exclusiveCard,{backgroundColor:cardGlass,borderColor:gloss.edge}]}>
    <View style={{flexDirection:'row',gap:6,flex:1}}>
-    <Pressable onPress={()=>selectOffer(offer)} style={{width:demo?'49%':'43%'}}><ProductPhoto item={item} height={128}/></Pressable>
+    <Pressable onPress={()=>selectOffer(offer)} style={{width:'49%'}}><ProductPhoto item={item} height={128}/></Pressable>
     <View style={{flex:1,minWidth:0,justifyContent:'space-around'}}>
      <Text numberOfLines={2} style={{fontSize:12,fontWeight:'800',color:theme.text}}>{lang==='bn'?item.nameBn:item.name}</Text>
      <Text style={{fontSize:10,color:theme.muted}}>{item.unit}</Text>
@@ -284,7 +284,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  function RetailDetails(){
    const offer=selectedOffer;if(!offer)return null;const product=byId(offer.productId);if(!product)return null;
    return <>
-     <ProductPhoto item={product} height={small?330:360}/>
+     <View style={{marginBottom:12}}><ProductPhoto item={product} height={small?330:360}/></View>
      {title('PRODUCT INFORMATION',lang==='bn'?product.nameBn:product.name)}
      <Text style={{color:theme.muted,fontSize:11,marginBottom:9}}>{product.unit} · SKU {product.id}</Text>
      {panel(<>
@@ -300,7 +300,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
       <Text style={{color:theme.text,fontSize:12,marginTop:5}}>SKU: {product.id}</Text>
       <Text style={{color:theme.text,fontSize:12,marginTop:5}}>{lang==='bn'?'বিভাগ':'Category'}: {product.category}</Text>
      </>)}
-     {productInfoSections.map(section=><View key={section.id} style={{borderRadius:12,borderWidth:1,borderColor:theme.line,backgroundColor:theme.card,marginBottom:8,overflow:'hidden'}}>
+     {productInfoSections.map(section=><View key={section.id} style={{...gloss.rim,borderRadius:12,borderWidth:1,borderColor:gloss.edge,backgroundColor:cardGlass,marginBottom:8,overflow:'hidden'}}>
        <Pressable accessibilityRole="button" accessibilityLabel={lang==='bn'?section.titleBn:section.titleEn}
          accessibilityState={{expanded:!!productInfoOpen[section.id]}}
          onPress={()=>setProductInfoOpen(current=>({...current,[section.id]:!current[section.id]}))}
@@ -328,13 +328,13 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   if(offer.mode==='GROUP_DEAL')return <GroupDealDetails offer={offer} product={p}/>;
   const all=offers.filter(o=>o.productId===p.id);
   return <>{title('PRODUCT DETAILS',lang==='bn'?p.nameBn:p.name)}
-    <ProductPhoto item={p} height={260}/>
+    <View style={{marginBottom:12}}><ProductPhoto item={p} height={260}/></View>
     {panel(<><Text style={{color:theme.muted,marginBottom:8}}>{p.unit} · {offer.community}</Text>
       <View style={styles.between}><Text style={{color:theme.accent,fontSize:27,fontWeight:'900'}}>{money(offer.price)}</Text>{p.referencePrice>offer.price&&<Text style={{textDecorationLine:'line-through',color:theme.muted}}>{money(p.referencePrice)}</Text>}</View>
       {p.referencePrice>offer.price&&<View style={{marginVertical:8,alignSelf:'flex-start'}}>{pill(t.save+' '+money(customerSaving(p.referencePrice,offer.price)),true)}</View>}
 
       <Text style={{fontSize:12,fontWeight:'900',color:theme.text,marginBottom:5,marginTop:7}}>Same product · Available offers</Text>
-      {all.map(o=><Pressable key={o.id} onPress={()=>setSelectedOffer(o)} style={[styles.priceOption,{borderColor:o.id===offer.id?theme.accent:theme.line}]}>
+      {all.map(o=><Pressable key={o.id} onPress={()=>setSelectedOffer(o)} style={[styles.priceOption,{...gloss.rim,borderColor:o.id===offer.id?theme.accent:gloss.edge}]}>
        <Text style={{color:theme.text,fontSize:12}}>{o.mode==='SOLO'?'Direct / Exclusive':o.mode==='GROUP_DEAL'?String(o.groupSize)+'-person Group Deal':'Community Pool'}</Text>
        <Text style={{color:theme.accent,fontSize:14,fontWeight:'900'}}>{money(o.price)}</Text>
       </Pressable>)}
