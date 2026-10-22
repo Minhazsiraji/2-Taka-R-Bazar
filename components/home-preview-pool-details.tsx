@@ -78,7 +78,7 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
     </div>
     <div className="home-preview-pool-progress native-preview-progress" role="progressbar"
      aria-label={t('Household progress','পরিবারের অগ্রগতি')}
-     aria-valuemin={0} aria-valuemax={pool.target} aria-valuenow={pool.joined}>
+     aria-valuemin={0} aria-valuemax={Math.max(1,pool.target,pool.joined)} aria-valuenow={pool.joined}>
      <span style={{width:(pool.target>0?Math.min(100,pool.joined/pool.target*100):0)+'%'}}/>
     </div>
     <p className="native-preview-muted">{t('No cap on participation. Progress shows the next price milestone, not Pool capacity.','অংশগ্রহণ সীমাহীন। অগ্রগতি পরের দামের ধাপ বোঝায়, পুলের সদস্যসীমা নয়।')}</p>

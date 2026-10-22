@@ -21,7 +21,7 @@ function Photo({product}:{product:Product}){
 }
 function Progress({value,max,label}:{value:number;max:number;label:string}){
  return <div className="app-card-preview-progress" role="progressbar" aria-label={label}
-  aria-valuemin={0} aria-valuemax={max} aria-valuenow={value}><span style={{width:(max>0?Math.min(100,value/max*100):0)+'%'}}/></div>
+  aria-valuemin={0} aria-valuemax={Math.max(1,max,value)} aria-valuenow={value}><span style={{width:(max>0?Math.min(100,value/max*100):0)+'%'}}/></div>
 }
 function PreviewDialog({selection,language,onClose}:{selection:NonNullable<Selection>;language:MarketplaceLanguage;onClose:()=>void}){
  const ref=useRef<HTMLDialogElement>(null)
@@ -80,10 +80,10 @@ export function PreviewHomeCards({section,language,search,view}:Props){
       <p className="app-card-preview-meta">{p.unit} · {view?(d.community||' '):'Savar DOHS'}</p></div>
       <div className="app-card-preview-price"><strong data-empty={d.price===null||undefined}>{showMoney(d.price)}</strong><s data-empty={reference===null||undefined}>{showMoney(reference)}</s></div>
       <span className="app-card-preview-save" data-empty={reference===null||d.price===null||undefined}>{bn?'সাশ্রয়':'Save'} {showMoney(reference!==null&&d.price!==null?Math.max(0,reference-d.price):null)}</span>
-      <div className="app-card-preview-deal-stats"><span>👥 {d.joined}/{d.target} joined</span><span data-empty={d.days===null||undefined}>◷ Ends in {d.days??0} {d.days===1?'day':'days'}</span></div>
+      <div className="app-card-preview-deal-stats"><span>👥 {d.joined}{d.target>0||!d.launchOfferId?'/'+d.target:''} joined</span><span data-empty={d.days===null||undefined}>◷ Ends in {d.days??0} {d.days===1?'day':'days'}</span></div>
       <Progress value={d.joined} max={d.target} label={bn?'গ্রুপ অংশগ্রহণ':'Group participation'}/>
       <div className="app-card-preview-actions"><Link href={d.empty?'#':productHref(d.id,'deal')+(view&&d.offerId?'&offer='+d.offerId:'')}>{bn?'বিস্তারিত':'View details'}</Link>
-       <button type="button" className="app-card-preview-primary" disabled={Boolean(view)&&!d.launchOfferId} onClick={()=>{if(d.launchOfferId){addLaunchItem(d.id,d.launchOfferId);setNotice(bn?'কার্টে যোগ হয়েছে।':'Added to cart.');return}if(!view)setSelection({kind:'deal',id:d.id})}}>{bn?'গ্রুপে যোগ দিন':'Join Deal'}</button></div>
+       <button type="button" className="app-card-preview-primary" disabled={Boolean(view)&&!d.purchasable} onClick={()=>{if(d.launchOfferId){addLaunchItem(d.id,d.launchOfferId);setNotice(bn?'কার্টে যোগ হয়েছে।':'Added to cart.');return}if(!view)setSelection({kind:'deal',id:d.id})}}>{bn?'গ্রুপে যোগ দিন':'Join Deal'}</button></div>
      </div>
     </article>})}
   </div>:view?<div className="mhome-empty" data-empty="true"> </div>:<div className="mhome-empty">{bn?'এই খোঁজে গ্রুপ ডিল নেই।':'No Group Deals match your search.'}</div>

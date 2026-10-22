@@ -26,9 +26,12 @@ try{
  await page.goto(base+'/admin/products',{waitUntil:'networkidle'})
  const upload=page.getByRole('form',{name:'Quick Product Upload'})
  for(const [field,value] of Object.entries({name,category:'Rice',package_size:'1 kg',unit:'kg',sku:'SHARED-'+suffix}))await upload.locator('[name="'+field+'"]').fill(value)
+ await upload.locator('input[type="file"]').setInputFiles({name:'fictional-rice.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC','base64')})
+ await upload.getByText(/^Ready/).waitFor()
  await upload.getByRole('button',{name:'Save & activate product'}).click()
  await upload.getByText('Product saved and active',{exact:false}).waitFor()
  const product=await client.from('products').select('id,image_url').eq('sku',('SHARED-'+suffix).toUpperCase()).single();assert.ifError(product.error)
+ assert.ok(product.data.image_url?.includes('/product-images/'))
  const pid=product.data.id,offers={}
  for(const [kind,price] of [['SOLO','100'],['GROUP_DEAL','90'],['COMMUNITY_POOL','80']]){
   await page.goto(base+'/admin/offers',{waitUntil:'networkidle'})
@@ -40,10 +43,20 @@ try{
   await form.locator('[name="price:'+pid+'"]').fill(price)
   if(kind==='SOLO')await form.locator('[name="stock:'+pid+'"]').fill('10')
   await form.getByLabel('Publish on website').check()
+  if(kind==='SOLO'){
+   await form.locator('[name="closes_at"]').fill('2000-01-01T00:00')
+   await form.getByRole('button',{name:'Save offer',exact:true}).click()
+   await form.getByRole('alert').waitFor()
+   assert.equal(await form.locator('[name="title"]').inputValue(),'Fictional '+kind+' '+suffix)
+   assert.equal(await form.locator('[name="price:'+pid+'"]').inputValue(),price)
+   await form.locator('[name="closes_at"]').fill('')
+  }
   await form.getByRole('button',{name:'Save offer',exact:true}).click()
   await form.getByText('Offer published.',{exact:false}).waitFor()
   const saved=await client.from('simple_sale_offers').select('id').eq('title','Fictional '+kind+' '+suffix).single();assert.ifError(saved.error);offers[kind]=saved.data.id
  }
+ const feed=await client.rpc('get_public_simple_offers');assert.ifError(feed.error)
+ assert.ok(feed.data.filter(o=>Object.values(offers).includes(o.id)).every(o=>o.items[0].image_url===product.data.image_url))
  assert.equal((await client.from('launch_product_stock').select('available_quantity').eq('product_id',pid).single()).data.available_quantity,10)
  await page.goto(base+'/?q='+encodeURIComponent(name),{waitUntil:'networkidle'})
  const deal=page.locator('.app-card-preview-deal').filter({hasText:name})

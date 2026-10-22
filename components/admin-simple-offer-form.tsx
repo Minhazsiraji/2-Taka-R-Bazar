@@ -5,19 +5,19 @@ import {saveSimpleOffer} from '@/app/actions/simple-offers'
 type Product={id:string;name:string;package_size:string;image_url:string|null;available_quantity:number;price?:number;old_price?:number}
 type Saved={id:string;kind:string;community_id:string;title:string;published:boolean;closes_at:string|null;simple_sale_offer_items:{product_id:string;price:number;old_price:number}[]}
 export function AdminSimpleOfferForm({products,communities,offer}:{products:Product[];communities:{id:string;name:string}[];offer?:Saved}){
- const router=useRouter(),form=useRef<HTMLFormElement>(null)
+ const router=useRouter(),saving=useRef(false)
  const [selected,setSelected]=useState<string[]>(offer?.simple_sale_offer_items.map(p=>p.product_id)??[])
  const [status,setStatus]=useState(''),[error,setError]=useState(''),[pending,start]=useTransition()
  const [savedId,setSavedId]=useState(offer?.id??'')
- return <form ref={form} className="card grid min-w-0 gap-4" onSubmit={e=>{
-  e.preventDefault();if(pending)return;setError('');setStatus('')
+ return <form className="card grid min-w-0 gap-4" onSubmit={e=>{
+  e.preventDefault();if(saving.current||pending)return;saving.current=true;setError('');setStatus('')
   const fd=new FormData(e.currentTarget)
   fd.set('id',savedId)
   fd.set('items',JSON.stringify(selected.map(id=>({product_id:id,price:Number(fd.get('price:'+id)),old_price:Number(fd.get('old:'+id)||0),
    // Blank preserves the live shared balance, including orders placed since page load.
    available_quantity:String(fd.get('stock:'+id)??'').trim()||null}))))
   const closing=String(fd.get('closes_at')??'');if(closing)fd.set('closes_at',new Date(closing).toISOString())
-  start(async()=>{try{const result=await saveSimpleOffer(fd);if(!result.ok){setError(result.message);return}setSavedId(result.id??savedId);setStatus(result.message);router.refresh()}catch{setError('Could not save. Your entries are still here; retry.')}})
+  start(async()=>{try{const result=await saveSimpleOffer(fd);if(!result.ok){setError(result.message);return}setSavedId(result.id??savedId);setStatus(result.message);router.refresh()}catch{setError('Could not save. Your entries are still here; retry.')}finally{saving.current=false}})
  }} aria-label="Shared offer setup">
   <h2 className="section-title">{offer?'Edit offer':'Create offer'}</h2>
   {error&&<p role="alert" className="error">{error}</p>}{status&&<p role="status" className="success">{status}</p>}

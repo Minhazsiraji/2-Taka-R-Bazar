@@ -3,7 +3,7 @@ import {publishedLiveOffers,publishedLivePools,confirmedOfferPrice,validMoney,sa
 
 // Values only: all card and detail markup stays in the owner's approved templates.
 export type ApprovedProduct={id:string;name:string;nameBn:string;unit:string;photo:string;image?:string|null;price:number|null;oldPrice:number|null;stock:number|null;empty?:boolean;href?:string;purchasable?:boolean;launchOfferId?:string}
-export type ApprovedDeal={launchOfferId?:string;id:string;offerId?:string;price:number|null;reference?:number|null;joined:number;target:number;days:number|null;community?:string;empty?:boolean}
+export type ApprovedDeal={purchasable?:boolean;launchOfferId?:string;id:string;offerId?:string;price:number|null;reference?:number|null;joined:number;target:number;days:number|null;community?:string;empty?:boolean}
 export type ApprovedPool={launchOfferId?:string;id:string;label:string;labelBn:string;name:string;nameBn:string;products:readonly string[];joined:number;target:number;days:number|null;date:string;closesAt?:string|null;empty?:boolean;productCount?:number}
 export type ApprovedHomeView={products:ApprovedProduct[];lookup:ApprovedProduct[];deals:ApprovedDeal[];pools:ApprovedPool[]}
 export type ApprovedOffer={id:string;label:string;labelBn:string;price:number|null;kind:'solo'|'deal'|'pool';poolId?:string;empty?:boolean;purchasable?:boolean;launchOfferId?:string}
@@ -32,7 +32,7 @@ export function approvedHomeView(data:LiveHomepageData,area='',search=''):Approv
  }
  const q=search.trim().toLocaleLowerCase(),matches=(p:ApprovedProduct)=>!q||[p.name,p.nameBn,p.unit].some(s=>s.toLocaleLowerCase().includes(q))
  const products=[...map.values()].filter(matches).slice(0,6)
- const deals:ApprovedDeal[]=offers.filter(o=>o.offer_kind==='GROUP_DEAL'&&matches(map.get(o.product_id)!)).slice(0,6).map(o=>({id:o.product_id,offerId:o.offer_id,launchOfferId:o.launch_offer_id,price:confirmedOfferPrice(o),reference:o.reference_price,joined:o.buyer_count??0,target:o.next_threshold??0,days:remaining(o.closes_at),community:o.offer_title}))
+ const deals:ApprovedDeal[]=offers.filter(o=>o.offer_kind==='GROUP_DEAL'&&matches(map.get(o.product_id)!)).slice(0,6).map(o=>({id:o.product_id,offerId:o.offer_id,launchOfferId:o.launch_offer_id,purchasable:Boolean(o.launch_offer_id&&(stock(o)??0)>0),price:confirmedOfferPrice(o),reference:o.reference_price,joined:o.buyer_count??0,target:o.next_threshold??0,days:remaining(o.closes_at),community:o.offer_title}))
  const pools=publishedLivePools(data.pools,area).slice(0,2).map(p=>approvedPoolView(p).pool)
  for(const pool of pools)for(const id of pool.products)if(!map.has(id)){
   const item=publishedLivePools(data.pools,area).find(p=>p.id===pool.id)?.bundle.find(l=>l.offer.product_id===id)?.offer
@@ -69,7 +69,7 @@ export function approvedProductView(source:PublicLiveProduct,offerId?:string):Ap
  fields['Frequently asked question']={en:source.seo?.faqs?.[0]?.question_en??'',bn:source.seo?.faqs?.[0]?.question_bn??''}
  fields['Verified answer']={en:source.seo?.faqs?.[0]?.answer_en??'',bn:source.seo?.faqs?.[0]?.answer_bn??''}
  fields['Available areas']={en:[...new Set(source.offers.map(o=>o.offer_title).filter(Boolean))].join(', '),bn:[...new Set(source.offers.map(o=>o.offer_title).filter(Boolean))].join(', ')}
- return {initialOfferId:offers.some(o=>o.id===offerId)?offerId:undefined,product,offers,source,fields,community:source.offers.find(o=>o.offer_id===offerId)?.offer_title??solo?.offer_title??group?.offer_title??'',deal:group?{id:product.id,offerId:group.offer_id,launchOfferId:group.launch_offer_id,price:confirmedOfferPrice(group),joined:group.buyer_count??0,target:group.next_threshold??0,days:remaining(group.closes_at)}:undefined,
+ return {initialOfferId:offers.some(o=>o.id===offerId)?offerId:undefined,product,offers,source,fields,community:source.offers.find(o=>o.offer_id===offerId)?.offer_title??solo?.offer_title??group?.offer_title??'',deal:group?{id:product.id,offerId:group.offer_id,launchOfferId:group.launch_offer_id,purchasable:Boolean(group.launch_offer_id&&(stock(group)??0)>0),price:confirmedOfferPrice(group),joined:group.buyer_count??0,target:group.next_threshold??0,days:remaining(group.closes_at)}:undefined,
   group:group?{tiers:[{minimum:0,price:null},{minimum:0,price:confirmedOfferPrice(group),current:true},{minimum:group.next_threshold??0,price:validMoney(group.upcoming_price)}],current:{minimum:0,price:confirmedOfferPrice(group)},next:group.next_threshold?{minimum:group.next_threshold,price:validMoney(group.upcoming_price)}:null}:null}
 }
 export function approvedPoolView(source:PublicLivePool):{pool:ApprovedPool;lines:ApprovedPoolLine[]}{

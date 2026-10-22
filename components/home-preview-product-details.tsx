@@ -92,12 +92,12 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
       <h2>{t('Community progress','কমিউনিটির অগ্রগতি')}</h2>
       <div className="native-preview-split native-preview-small-row"><strong>👥 {n(deal.joined)}/{n(deal.target)} {t('joined','যুক্ত')}</strong><span data-empty={deal.days===null||undefined}>◷ {t('Ends in','শেষ হবে')} {n(deal.days??0)} {t('day(s)','দিনে')}</span></div>
       <div className="native-preview-progress" role="progressbar" aria-label={t('Group participation','গ্রুপের অংশগ্রহণ')}
-       aria-valuemin={0} aria-valuemax={deal.target} aria-valuenow={deal.joined}><span style={{width:(deal.target>0?Math.min(100,deal.joined/deal.target*100):0)+'%'}}/></div>
+       aria-valuemin={0} aria-valuemax={Math.max(1,deal.target,deal.joined)} aria-valuenow={deal.joined}><span style={{width:(deal.target>0?Math.min(100,deal.joined/deal.target*100):0)+'%'}}/></div>
       <p className="native-preview-muted">{t('Orders are reviewed manually. Staff confirm delivery charges and payment instructions.','অর্ডার ম্যানুয়ালি যাচাই করা হয়। টিম ডেলিভারি চার্জ ও পেমেন্ট নির্দেশনা নিশ্চিত করবে।')}</p>
      </DemoPanel>
      <div className="native-preview-actions">
       <Link className="native-preview-secondary" href={retailHref}>{t('Product Details','পণ্যের বিস্তারিত')}</Link>
-      <button className="native-preview-primary" type="button" disabled={Boolean(view)&&!deal.launchOfferId} onClick={()=>{if(deal.launchOfferId){addLaunchItem(product.id,deal.launchOfferId);setStatus(t('Added to cart.','কার্টে যোগ হয়েছে।'));return}setStatus(t('Preview Group Deal draft noted locally. No real join or order was placed.','ডেমো গ্রুপ ডিল নির্বাচন দেখানো হয়েছে। বাস্তব যোগদান বা অর্ডার হয়নি।'))}}>{deal.launchOfferId?t('Join Deal','গ্রুপে যোগ দিন'):t('Join Deal · Preview','গ্রুপে যোগ দিন · ডেমো')}</button>
+      <button className="native-preview-primary" type="button" disabled={Boolean(view)&&(!deal.launchOfferId||!offers.find(o=>o.id===deal.offerId)?.purchasable)} onClick={()=>{if(deal.launchOfferId){addLaunchItem(product.id,deal.launchOfferId);setStatus(t('Added to cart.','কার্টে যোগ হয়েছে।'));return}setStatus(t('Preview Group Deal draft noted locally. No real join or order was placed.','ডেমো গ্রুপ ডিল নির্বাচন দেখানো হয়েছে। বাস্তব যোগদান বা অর্ডার হয়নি।'))}}>{deal.launchOfferId?t('Join Deal','গ্রুপে যোগ দিন'):t('Join Deal · Preview','গ্রুপে যোগ দিন · ডেমো')}</button>
      </div>
      {!view&&<p className="native-preview-hint">{t('Demo only — no real order has been placed.','শুধু ডেমো — কোনো বাস্তব অর্ডার হয়নি।')}</p>}
      {status&&<p role="status" className="native-preview-status">{status}</p>}
