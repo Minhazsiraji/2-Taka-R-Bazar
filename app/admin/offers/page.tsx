@@ -8,7 +8,7 @@ export default async function Offers({searchParams}:{searchParams:Promise<{edit?
  const [products,areas,offers,legacy,stock]=await Promise.all([
   db.from('products').select('id,name,package_size,image_url').eq('active',true).eq('is_demo',false).order('name'),
   db.from('communities').select('id,name').eq('active',true).order('name'),
-  db.from('simple_sale_offers').select('id,kind,community_id,title,published,closes_at,simple_sale_offer_communities(community_id),simple_sale_offer_items(product_id,price,old_price)').order('updated_at',{ascending:false}),
+  db.from('simple_sale_offers').select('id,kind,community_id,title,published,closes_at,simple_sale_offer_communities(community_id),simple_sale_offer_items(product_id,price,old_price),simple_sale_offer_tiers(product_id,tier_no,buyer_threshold,unit_price)').order('updated_at',{ascending:false}),
   db.rpc('get_public_launch_catalog',{p_product_id:null}),
   db.from('launch_product_stock').select('product_id,available_quantity'),
  ])
