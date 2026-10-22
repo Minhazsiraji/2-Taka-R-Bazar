@@ -3,11 +3,12 @@ import {useRef,useState,useTransition} from 'react'
 import {useRouter} from 'next/navigation'
 import {saveSimpleOffer} from '@/app/actions/simple-offers'
 type Product={id:string;name:string;package_size:string;image_url:string|null;available_quantity:number;price?:number;old_price?:number}
-type Saved={id:string;kind:string;community_id:string;title:string;published:boolean;closes_at:string|null;simple_sale_offer_communities?:{community_id:string}[];simple_sale_offer_items:{product_id:string;price:number;old_price:number}[]}
+type Saved={id:string;kind:string;buyer_target?:number|null;community_id:string;title:string;published:boolean;closes_at:string|null;simple_sale_offer_communities?:{community_id:string}[];simple_sale_offer_items:{product_id:string;price:number;old_price:number}[]}
 export function AdminSimpleOfferForm({products,communities,offer}:{products:Product[];communities:{id:string;name:string}[];offer?:Saved}){
  const router=useRouter(),saving=useRef(false)
  const [selected,setSelected]=useState<string[]>(offer?.simple_sale_offer_items.map(p=>p.product_id)??[])
  const [selectedAreas,setSelectedAreas]=useState<string[]>(offer?(offer.simple_sale_offer_communities?.map(c=>c.community_id)??[offer.community_id]):[])
+ const [kind,setKind]=useState(offer?.kind??'SOLO')
  const [areaSearch,setAreaSearch]=useState('')
  const visibleAreas=communities.filter(c=>c.name.toLocaleLowerCase().includes(areaSearch.trim().toLocaleLowerCase()))
  const [status,setStatus]=useState(''),[error,setError]=useState(''),[pending,start]=useTransition()
@@ -27,9 +28,15 @@ export function AdminSimpleOfferForm({products,communities,offer}:{products:Prod
   <h2 className="section-title">{offer?'Edit offer':'Create offer'}</h2>
   {error&&<p role="alert" className="error">{error}</p>}{status&&<p role="status" className="success">{status}</p>}
   <div className="grid gap-3 sm:grid-cols-2">
-   <label><span className="label">Sale type</span><select name="kind" className="input" defaultValue={offer?.kind??'SOLO'}><option value="SOLO">Direct / Exclusive product</option><option value="GROUP_DEAL">Group Deal</option><option value="COMMUNITY_POOL">Community Pool</option></select></label>
+   <label><span className="label">Sale type</span><select name="kind" className="input" value={kind} onChange={e=>setKind(e.target.value)}><option value="SOLO">Direct / Exclusive product</option><option value="GROUP_DEAL">Group Deal</option><option value="COMMUNITY_POOL">Community Pool</option></select></label>
    <label><span className="label">Offer title</span><input className="input" name="title" required minLength={2} maxLength={180} defaultValue={offer?.title??''} placeholder="e.g. Weekly grocery offer"/></label>
   </div>
+  {kind!=='SOLO'&&<label><span className="label">Participation target · confirmed buyers</span>
+   <input className="input" name="buyer_target" type="number" min={kind==='GROUP_DEAL'?5:2} max="100000" step="1"
+    defaultValue={offer?.buyer_target??(kind==='GROUP_DEAL'?5:undefined)} required={kind==='GROUP_DEAL'}
+    placeholder={kind==='COMMUNITY_POOL'?'Optional Pool milestone':'5 minimum'}/>
+   <small className="muted block">Only admin-confirmed orders count. Cart additions and pending requests do not advance the progress bar. This is a participation goal, not a price-tier unlock.</small>
+  </label>}
   <fieldset className="grid min-w-0 gap-3">
    <legend className="mb-2 font-bold">Communities / areas · select one or more</legend>
    {selectedAreas.map(id=><input key={id} type="hidden" name="community_ids" value={id}/>)}
