@@ -124,9 +124,13 @@ try{
  const before=await decrease.boundingBox(),after=await increase.boundingBox()
  assert.ok(before&&after&&Math.abs(before.y-after.y)<8,'Cart quantity controls must remain horizontal on mobile')
  await increase.click()
- assert.equal((await cartQty.locator('output').innerText()).trim(),'2')
+ // Cart updates persist the commitment through a server action before updating local state.
+ // Do not assert immediately after the click: React updates only after the RPC resolves.
+ try{await cartQty.locator('output').getByText('2',{exact:true}).waitFor({timeout:15000})}
+ catch{throw Error('Cart increment did not persist: '+JSON.stringify({quantity:await cartQty.locator('output').innerText(),errors:await page.getByRole('alert').allInnerTexts()}))}
  await decrease.click()
- assert.equal((await cartQty.locator('output').innerText()).trim(),'1')
+ try{await cartQty.locator('output').getByText('1',{exact:true}).waitFor({timeout:15000})}
+ catch{throw Error('Cart decrement did not persist: '+JSON.stringify({quantity:await cartQty.locator('output').innerText(),errors:await page.getByRole('alert').allInnerTexts()}))}
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Cart must fit mobile viewport')
  const groupQty=await admin.from('simple_sale_commitment_items').select('quantity').eq('offer_id',offers.GROUP_DEAL).eq('customer_id',uid).eq('product_id',pid).single();assert.ifError(groupQty.error)
  assert.equal(groupQty.data.quantity,1,'Group Deal quantity is persistent after increment/decrement')
