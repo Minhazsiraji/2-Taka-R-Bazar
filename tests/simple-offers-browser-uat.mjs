@@ -120,7 +120,11 @@ try{
  await page.goto(base+'/preview-live/pool/'+offers.COMMUNITY_POOL,{waitUntil:'networkidle'})
  await page.getByRole('button',{name:'Increase '+name,exact:true}).click()
  await page.getByRole('button',{name:'Review Pool order',exact:false}).click()
- await page.waitForURL('**/cart')
+ const poolNavigation=await Promise.race([
+  page.waitForURL('**/cart',{timeout:15000}).then(()=>({navigated:true})).catch(()=>null),
+  page.locator('.native-preview-status').waitFor({timeout:15000}).then(async()=>({message:await page.locator('.native-preview-status').innerText()})).catch(()=>null)
+ ])
+ if(!poolNavigation?.navigated)throw Error('Pool join failed: '+JSON.stringify({result:poolNavigation,now:page.url(),visibleStatus:await page.locator('.native-preview-status').allInnerTexts(),clientErrors:errors}))
  assert.match(await page.locator('main').innerText(),/৳80/)
  await page.getByRole('link',{name:'Checkout / চেকআউট',exact:true}).click()
  await page.locator('[name="contact_name"]').fill('Fictional offer buyer')
