@@ -108,7 +108,7 @@ try{
  const allItems=[...firstPage.items,...secondPage.items]
  assert.equal(new Set(allItems.map(p=>p.product_id)).size,14,'Public pagination has no duplicates')
  assert.ok(allItems.every(p=>!ineligible.some(x=>x.id===p.product_id)))
- const firstLink=section.locator('article').first().getByRole('link',{name:/View details/i})
+ const firstLink=section.locator('article').first().locator('.app-card-preview-actions a')
  const detailsHref=await firstLink.getAttribute('href')
  assert.match(detailsHref??'',/^\/preview-live\/product\/[0-9a-f-]{36}$/)
  const toggle=page.locator('.market-flat-header .market-single-language')
