@@ -150,7 +150,9 @@ try{
  assert.equal((await client.from('launch_orders').select('fulfillment,address').eq('id',oid).single()).data.fulfillment,'pickup')
  assert.equal((await client.from('launch_order_items').select('offer_id').eq('order_id',oid).single()).data.offer_id,offers.COMMUNITY_POOL)
  assert.equal((await client.from('launch_product_stock').select('available_quantity').eq('product_id',pid).single()).data.available_quantity,9)
- await page.goto(base+'/checkout',{waitUntil:'networkidle'})
+ // A successful checkout intentionally clears the local cart. Add a fresh fictional purchase.
+ await page.evaluate(({productId,offerId})=>localStorage.setItem('2tbr-launch-cart-v1',JSON.stringify([{product_id:productId,offer_id:offerId,quantity:1}])),{productId:pid,offerId:offers.COMMUNITY_POOL})
+ await page.goto(base+'/checkout',{waitUntil:'domcontentloaded',timeout:60000})
  await page.locator('input[name="fulfillment"][value="home_delivery"]').check()
  await page.locator('textarea[name="address"]').fill('Fictional customer home, Road 2, Test Community')
  await page.locator('[name="contact_name"]').fill('Fictional home customer')
