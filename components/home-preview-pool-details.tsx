@@ -45,7 +45,7 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
  const units=selected.reduce((sum,line)=>sum+(quantities[line.product.id]??0),0)
  const total=(value:'opening'|'current'|'next')=>selected.some(line=>line.tiers[value]===null)?null:selected.reduce((sum,line)=>sum+(line.tiers[value]??0)*(quantities[line.product.id]??0),0)
  const retail=selected.some(line=>line.product.oldPrice===null)?null:selected.reduce((sum,line)=>sum+(line.product.oldPrice??0)*(quantities[line.product.id]??0),0)
- const basketTiers=wholePoolTierTotals(selected.map(({product,tiers})=>({retail:product.oldPrice,opening:tiers.opening,current:tiers.current,steps:tiers.steps??[]})),pool.joined)
+ const basketTiers=wholePoolTierTotals(selected.map(({product,tiers})=>({retail:product.oldPrice,opening:tiers.opening,current:tiers.current,quantity:quantities[product.id]??1,steps:tiers.steps??[]})),pool.joined)
  const starting=total('opening'),current=total('current'),next=view?basketTiers.next?.total??null:total('next')
  const potentialSaving=retail!==null&&current!==null?Math.round(Math.max(0,retail-current)*100)/100:null
  const endDate=()=>{

@@ -27,7 +27,7 @@ test('saved six-product Pool tiers show aggregate bundle price and savings, not 
  assert.equal(wholePoolTierTotals(lines,20).next,null)
 })
 test('customer-selected quantities determine Pool savings and every configured tier',()=>{
- const twoOil=[lines[0],lines[2],lines[2]]
+ const twoOil=[{...lines[0],quantity:1},{...lines[2],quantity:2}]
  const result=wholePoolTierTotals(twoOil,5)
  assert.equal(result.retail,3120)
  assert.deepEqual(Array.from(result.stages.map(t=>t.total)),[2810,2785,2740])
