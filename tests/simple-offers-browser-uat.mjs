@@ -14,6 +14,7 @@ const created=await admin.auth.admin.createUser({email,password,email_confirm:tr
 const uid=created.data.user.id
 assert.ifError((await admin.from('user_roles').insert({user_id:uid,role:'admin'})).error)
 assert.ifError((await admin.from('communities').insert([{id:cid,name:'Fictional offer area '+suffix,slug:'offer-area-'+suffix},{id:cid2,name:'Fictional second area '+suffix,slug:'offer-second-'+suffix},{id:cid3,name:'Fictional unselected area '+suffix,slug:'offer-other-'+suffix}])).error)
+assert.ifError((await admin.from('profiles').update({full_name:'Fictional shared-offer buyer',household_name:'Fictional household',phone:'017'+String(Math.floor(Math.random()*100000000)).padStart(8,'0'),community_id:cid,onboarding_completed_at:new Date().toISOString()}).eq('id',uid)).error)
 const jar=new Map()
 const client=createServerClient(api,key,{cookies:{getAll:()=>[...jar.values()],setAll:cs=>cs.forEach(c=>jar.set(c.name,c))}})
 assert.ifError((await client.auth.signInWithPassword({email,password})).error)
@@ -52,6 +53,15 @@ try{
   await form.locator('[name="title"]').fill('Fictional '+kind+' '+suffix)
   await form.getByLabel(name+' · 1 kg',{exact:false}).check()
   await form.locator('[name="price:'+pid+'"]').fill(price)
+  if(kind!=='SOLO'){
+   const tierCount=kind==='GROUP_DEAL'?3:2
+   await form.getByLabel('Number of tiers to offer').selectOption(String(tierCount))
+   for(let level=1;level<=tierCount;level++){
+    const target=kind==='GROUP_DEAL'?[3,5,10][level-1]:[2,4][level-1]
+    await form.locator('[name="threshold:'+level+'"]').fill(String(target))
+    await form.locator('[name="tier:'+level+':'+pid+'"]').fill(String(Number(price)-5*level))
+   }
+  }
   if(kind==='SOLO')await form.locator('[name="stock:'+pid+'"]').fill('10')
   await form.getByLabel('Publish on website').check()
   if(kind==='SOLO'){
