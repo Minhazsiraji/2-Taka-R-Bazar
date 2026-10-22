@@ -6,6 +6,7 @@ import {renderToStaticMarkup} from 'react-dom/server'
 import {loadSource} from './helpers/load-tsx.mjs'
 const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
 const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
+ '@/lib/launch-cart':{addLaunchItem:()=>{}},
  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
  '@/lib/home-card-preview-fixtures':fixtures,'./home-card-preview.css':{},
 })
@@ -36,7 +37,7 @@ test('Production cannot enable preview card fixtures, even with a populated real
  const preview=await loadSource('lib/public-demo-products.ts',{}, {NODE_ENV:'production',VERCEL_ENV:'preview'})
  assert.equal(preview.demoStorefrontEnabled(),true)
  const page=readFileSync('app/page.tsx','utf8')
- assert.ok(page.includes('previewCards={demoStorefrontEnabled()}'))
+ assert.ok(page.includes('previewCards={true}'))
  const home=readFileSync('components/mobile-marketplace-home.tsx','utf8')
  assert.ok(home.includes('previewCards=false'))
  const component=readFileSync('components/home-card-preview.tsx','utf8')
@@ -78,7 +79,8 @@ test('preview detail route resolves fixture links, preserves legacy demos and re
 test('Group and Exclusive details follow approved native display tiers, retail-only master and preview safety',async()=>{
  const parity=await loadSource('lib/preview-native-detail-data.ts',{'@/lib/home-card-preview-fixtures':fixtures})
  const {HomePreviewProductDetails}=await loadSource('components/home-preview-product-details.tsx',{
-  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
+  '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ 'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
   '@/components/public-header':{PublicHeader:()=>null},'@/components/public-footer':{PublicFooter:()=>null},
   '@/lib/use-storefront-language':{useStorefrontLanguage:language=>[language,()=>{}]},
   '@/lib/home-card-preview-fixtures':fixtures,

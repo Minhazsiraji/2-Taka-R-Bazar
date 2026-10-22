@@ -26,15 +26,17 @@ export default async function CommerceOrdersPage(){
  const {supabase,user}=await requireUser()
  // Separate customer-visible read models. Pilot booking is NOT a paid
  // Commerce order and must never create an order, inventory or Finance row here.
- const [commerce,pilot]=await Promise.all([
+ const [commerce,pilot,launch]=await Promise.all([
   supabase.rpc('commerce_orders_list',{p_staff:false}),
   supabase.from('pilot_booking_requests')
    .select('id,product_name,quantity,status,fulfillment_method,confirmed_unit_price,confirmed_delivery_fee,staff_note,created_at')
    .eq('customer_id',user.id).order('created_at',{ascending:false}).limit(50),
+  supabase.from('launch_orders').select('id,status,total_amount,payment_status,created_at').eq('customer_id',user.id).order('created_at',{ascending:false}).limit(50),
  ])
  const orders=(commerce.data??[]) as CommerceOrder[]
  const bookings=(pilot.data??[]) as PilotBooking[]
- return <CommerceFrame title="আমার অর্ডার ও বুকিং / My orders & bookings" error={commerce.error?'Commerce orders could not be loaded. Please try again.':undefined}>
+ return <CommerceFrame launch={Boolean(launch.data?.length)} title="আমার অর্ডার ও বুকিং / My orders & bookings" error={commerce.error?'Commerce orders could not be loaded. Please try again.':undefined}>
+{(launch.data??[]).map(o=><article className="glass-panel mb-4 rounded-3xl border border-white/80 p-5" key={o.id}><Link className="font-bold underline" href={'/launch-orders/'+o.id}>Order #{o.id.slice(0,8).toUpperCase()}</Link><p>{o.status} · {o.payment_status} · ৳{o.total_amount}</p></article>)}
   <section aria-labelledby="pilot-orders-heading" className="mb-6">
    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
     <div><h2 id="pilot-orders-heading" className="text-xl font-black">পাইলট বুকিং / Pilot bookings</h2>

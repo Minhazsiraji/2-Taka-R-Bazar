@@ -1,3 +1,4 @@
+import type {PublicVendorBookingProduct} from './public-vendor-booking'
 import type {StorefrontOffer} from '@/lib/storefront'
 import type {DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
@@ -12,7 +13,7 @@ export type PublicLivePool=DemoFeaturedPool
 export type PublicLiveProduct={
  id:string;name:string;nameBn:string;sku:string|null;unit:string;
  category:string;brand:string|null;image:string|null;alt:string;
- retail:number|null;description:string;descriptionBn:string;
+ retail:number|null;listingPrice?:number|null;listingStock?:number;listingOldPrice?:number;launchEnabled?:boolean;description:string;descriptionBn:string;
  seo:ProductSeoPublic|null;offers:PublicLiveOffer[];
 }
 export const validMoney=(v:unknown):number|null=>typeof v==='number'&&Number.isFinite(v)&&v>0?v:null
@@ -72,7 +73,7 @@ export function poolBasketTotals(lines:PublicLiveOffer[],qty:Record<string,numbe
   saving:retail!==null&&current!==null?Math.max(0,retail-current):null}
 }
 export type LiveHomepageData={
- offers:PublicLiveOffer[];pools:PublicLivePool[];
+ offers:PublicLiveOffer[];pools:PublicLivePool[];vendorProducts?:PublicVendorBookingProduct[];
  products:ShowcaseProduct[];catalog:PublishedCatalogProduct[]
 }
 export function hasPublishedLiveContent(data:LiveHomepageData){

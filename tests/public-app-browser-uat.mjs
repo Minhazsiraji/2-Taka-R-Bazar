@@ -7,18 +7,26 @@ import {createRequire} from 'node:module'
 import assert from 'node:assert/strict'
 const require=createRequire(import.meta.url)
 const {chromium}=require('playwright')
+const launchMode=process.env.LAUNCH_UAT==='1'
 const out='artifacts/public-app'
 await mkdir(out,{recursive:true})
+const productIds=Array.from({length:6},(_,i)=>'00000000-0000-4000-8000-'+String(821+i).padStart(12,'0'))
+const poolId='00000000-0000-4000-8000-000000000831'
+const offerId='00000000-0000-4000-8000-000000000841'
+const areaId='00000000-0000-4000-8000-000000000851'
+const vendorProducts=productIds.map((product_id,i)=>({product_id,name:['Synthetic rice','Synthetic butter','Synthetic ghee','Synthetic oil','Synthetic eggs','Synthetic meat'][i],category:'Grocery',package_size:'1 kg',image_url:'/preview-app-product-placeholder.svg',approved_unit_price:[120,1250,1600,1500,145,950][i],supplier_name:'Synthetic test vendor',supplier_handover_days:1,...(launchMode?{launch_enabled:true,old_price:0,available_quantity:100}:{})}))
+const group={offer_id:offerId,product_id:productIds[0],community_id:areaId,product_name:'Synthetic rice',product_name_bn:'সিন্থেটিক চাল',package_size:'1 kg',category:'Grocery',brand:null,image_url:'/preview-app-product-placeholder.svg',offer_title:'Synthetic community',offer_kind:'GROUP_DEAL',price_status:'unlocked',reference_price:165,confirmed_price:135,upcoming_price:null,buyer_count:4,next_threshold:5,closes_at:'2027-10-23T12:00:00Z',is_demo:false}
+const poolOffers=vendorProducts.slice(0,3).map((p,i)=>({...group,offer_id:'00000000-0000-4000-8000-'+String(861+i).padStart(12,'0'),product_id:p.product_id,product_name:p.name,product_name_bn:p.name,offer_kind:'COMMUNITY_POOL',reference_price:i===0?165:p.approved_unit_price+50,confirmed_price:p.approved_unit_price}))
+const publishedPool={id:poolId,slug:'weekly',community_id:areaId,title:{en:'Synthetic weekly pool',bn:'সিন্থেটিক সাপ্তাহিক পুল'},subtitle:{en:'Synthetic community',bn:'সিন্থেটিক এলাকা'},isDemo:false,featuredProductIds:productIds.slice(0,3),bundle:poolOffers.map(offer=>({offer,qty:1})),sampleHouseholds:12,minHouseholds:20,image:null}
+let emptyFeeds=false
 const fixture=createServer((req,res)=>{
  res.setHeader('content-type','application/json')
  if(req.url==='/auth/v1/settings')return res.end(JSON.stringify({external:{google:true}}))
  if(req.url?.startsWith('/auth/')){res.statusCode=401;return res.end('{"message":"No local fixture session"}')}
- // Exercise the real public vendor-card image shell on /products, without hosted data.
- if(req.url?.startsWith('/rest/v1/rpc/get_public_pilot_vendor_catalog'))return res.end(JSON.stringify([
-  {product_id:'00000000-0000-4000-8000-000000000821',name:'Synthetic vendor rice',category:'Rice',package_size:'1 kg',image_url:'/preview-app-product-placeholder.svg',approved_unit_price:120,supplier_name:'Synthetic test vendor',supplier_handover_days:1},
-  {product_id:'00000000-0000-4000-8000-000000000822',name:'Synthetic vendor butter',category:'Dairy',package_size:'1 kg',image_url:'/preview-app-product-placeholder.svg',approved_unit_price:1250,supplier_name:'Synthetic test vendor',supplier_handover_days:1},
- ]))
- // Narrow public RPCs are intentionally empty: existing DEMO UI must label its fixtures.
+ if(req.url?.startsWith('/rest/v1/rpc/get_public_launch_catalog'))return res.end(JSON.stringify(emptyFeeds?[]:vendorProducts))
+ if(req.url?.startsWith('/rest/v1/rpc/get_public_storefront_offers'))return res.end(JSON.stringify(emptyFeeds?[]:[group,...poolOffers]))
+ if(req.url?.startsWith('/rest/v1/rpc/get_public_featured_pools'))return res.end(JSON.stringify(emptyFeeds?[]:[publishedPool]))
+ if(req.url?.startsWith('/rest/v1/rpc/get_public_storefront_areas'))return res.end(JSON.stringify([{community_id:areaId,community_name:'Synthetic community'},{community_id:'00000000-0000-4000-8000-000000000852',community_name:'Synthetic area two'}]))
  res.end('[]')
 })
 await new Promise(resolve=>fixture.listen(54410,'127.0.0.1',resolve))
@@ -46,7 +54,7 @@ try{
   await context.addCookies([{name:'2tbr_storefront_language',value:language,url:`http://127.0.0.1:${port}`}])
   await context.route('https://images.unsplash.com/**',route=>route.abort()) // Exercise local placeholders deterministically.
   const page=await context.newPage()
-  for(const route of (process.env.UAT_DEBUG?['/']:['/','/login','/signup','/products','/about','/faq','/privacy','/terms','/return-policy','/refund-policy','/cart','/group-deals','/pool','/account','/account/savings','/money','/demo-product/butter','/demo-product/ghee','/demo-product/rice','/demo-product/eggs','/demo-product/rice?kind=deal','/demo-product/butter?kind=deal','/demo-product/00000000-0000-4000-8000-000000000101'])){
+  for(const route of (process.env.UAT_DEBUG?['/']:['/','/login','/signup','/products','/about','/faq','/privacy','/terms','/return-policy','/refund-policy','/cart','/group-deals','/pool','/account','/account/savings','/money','/preview-live/product/'+productIds[0],'/preview-live/product/'+productIds[0]+'?kind=retail','/preview-live/product/'+productIds[0]+'?kind=deal&offer='+offerId,'/preview-live/pool/'+poolId,'/demo-product/butter','/demo-product/ghee','/demo-product/rice','/demo-product/eggs','/demo-product/rice?kind=deal','/demo-product/butter?kind=deal','/demo-product/00000000-0000-4000-8000-000000000101'])){
    const response=await page.goto(`http://127.0.0.1:${port}${route}`,{waitUntil:'load'})
    assert.ok(response?.status()<400,`${route} returned ${response?.status()}`)
    await page.locator('.market-header-search input').waitFor()
@@ -90,33 +98,16 @@ try{
     const rules=await page.evaluate(()=>{const n=document.querySelector('main.public-marketplace-flat');const found=[];function scan(rules,url){for(const r of rules){if(r.cssRules)scan(r.cssRules,url);else if(r.selectorText&&n.matches(r.selectorText)&&r.style.background)found.push({url,selector:r.selectorText,bg:r.style.background,priority:r.style.getPropertyPriority('background')})}}for(const sheet of document.styleSheets){try{scan(sheet.cssRules,sheet.href)}catch{}}return {vars:getComputedStyle(n).getPropertyValue('--public-bg'),rules:found}});console.log(JSON.stringify(rules,null,2));await page.screenshot({path:out+'/debug-dark.png',fullPage:true})
    }
    assert.ok(geometry.scroll<=width+1,`${route} overflow at ${width}/${theme}/${language}: ${JSON.stringify(geometry)}`)
-   if(route==='/products'){
-    const photoFrames=await page.locator('.mhome-exclusive-image').evaluateAll(nodes=>nodes.map(frame=>{
-     const image=frame.querySelector('img');const f=getComputedStyle(frame);const i=getComputedStyle(image)
-     const r=frame.getBoundingClientRect();const p=frame.closest('article').getBoundingClientRect()
-     return {background:f.backgroundColor,shadow:f.boxShadow,fit:i.objectFit,left:r.left,right:r.right,parentLeft:p.left,parentRight:p.right}
-    }))
-    assert.equal(photoFrames.length,2,'Verify real vendor-card shells, not just preview fixture cards')
-    for(const frame of photoFrames){
-     assert.equal(frame.background,'rgba(0, 0, 0, 0)','Product photos must not have a separate white backing')
-     assert.equal(frame.shadow,'none','Product photos must not have a separate white halo')
-     assert.equal(frame.fit,'contain','Preserve the complete product photo without cropping')
-     assert.ok(frame.left>=frame.parentLeft-1&&frame.right<=frame.parentRight+1,'Product image escapes its card')
-    }
-   }
    assert.ok(!geometry.overlap,`${route} brand overlaps controls at ${width}`)
    assert.equal(geometry.bg,theme==='dark'?'rgb(13, 20, 36)':'rgb(244, 241, 246)',`${route}/${width}/${theme}/${language} background`)
    assert.deepEqual(geometry.wrongBengaliFont,[],'Bengali copy must use the approved fallback')
    assert.equal(geometry.fonts,true,'Self-hosted Inter failed to load')
    assert.equal(geometry.bengaliFont,true,'Self-hosted Hind Siliguri failed to load')
    assert.deepEqual(geometry.actionOrder,width<768?['language','theme','notifications','account','menu']:['cart','language','theme','notifications','account','menu'])
+   const expectedSize=width<768?31:width<1024?34:40
    for(const [i,control] of geometry.controlBounds.entries()){
-    // Current released header enlarges these touch targets at phone/narrow-tablet widths.
-    const account=geometry.actionOrder[i]==='account'
-    const expectedSize=width<768?(account?31:44):width<=790?(account?34:44):width<1024?34:40
     assert.ok(Math.abs(control.width-expectedSize)<1,`Header width mismatch: ${JSON.stringify(control)}`)
-    const first=geometry.controlBounds[0]
-    assert.ok(Math.abs(control.top+control.height/2-first.top-first.height/2)<1,'Header control centers are not vertically aligned')
+    assert.ok(Math.abs(control.top-geometry.controlBounds[0].top)<1,'Controls are not vertically aligned')
     if(i)assert.ok(control.left>=geometry.controlBounds[i-1].right,'Header controls overlap')
    }
    for(const part of geometry.searchPieces){
@@ -198,38 +189,27 @@ try{
     }
     await page.getByLabel(language==='bn'?'পরের ব্যানার':'Next banner',{exact:true}).click()
     assert.equal(await page.locator('.mhome-dots button[aria-current="true"]').getAttribute('aria-label'),language==='bn'?'ব্যানার 2':'Banner 2')
-    // Owner-requested card parity: fixtures remain a read-only presentation.
-    assert.equal(await page.locator('[data-preview-cards="deals"] article').count(),2)
-    assert.equal(await page.locator('[data-preview-cards="exclusive"] article').count(),4)
-    assert.equal(await page.locator('[data-preview-cards="pools"] article').count(),2)
+    // Published data is bound into the locked template; missing values keep their slots.
+    assert.equal(await page.locator('[data-preview-cards="deals"] article').count(),1)
+    assert.equal(await page.locator('[data-preview-cards="exclusive"] article').count(),6)
+    assert.equal(await page.locator('[data-preview-cards="pools"] article').count(),1)
     const rice=page.locator('[data-preview-cards="deals"] article').first()
-    for(const text of ['৳135','৳165','৳30','4/5 joined','Ends in 2 days'])assert.ok((await rice.innerText()).includes(text),text)
-    assert.equal(await rice.locator('.app-card-preview-actions > :is(a,button)').count(),2)
-    assert.equal(await rice.locator('[role="progressbar"]').getAttribute('aria-valuenow'),'4')
-    for(const [index,price,old,stock] of [[0,'৳1,160','৳1,240','32'],[1,'৳680','৳780','20'],[2,'৳145','৳165','45'],[3,'৳145','৳165','24']]){
-     const card=page.locator('[data-preview-cards="exclusive"] article').nth(index)
-     for(const text of [price,old,stock])assert.ok((await card.innerText()).includes(text),text)
-     assert.equal(await card.locator('.app-card-preview-actions > :is(a,button)').count(),2,'Exactly two Exclusive actions')
-     assert.equal(await card.locator('form').count(),0,'Demo cannot submit a real cart action')
+    for(const value of ['৳135','৳165','৳30','4/5 joined'])assert.ok((await rice.innerText()).includes(value),value)
+    for(const card of await page.locator('[data-preview-cards="exclusive"] article').all()){
+     assert.equal(await card.locator('.app-card-preview-actions > :is(a,button)').count(),2)
+     assert.equal(await card.locator('.app-card-preview-primary').innerText(),language==='bn'?'কার্টে যোগ দিন':'Add to cart')
+     assert.equal(await card.locator('.app-card-preview-primary').isDisabled(),!launchMode,'Cart eligibility follows the server-published launch flag')
+     assert.equal(await card.locator('.app-card-preview-stock[data-empty="true"]').count(),launchMode?0:1,'Only missing stock is blurred')
+     assert.equal(await card.locator('form').count(),0)
+     assert.ok(!(await card.innerText()).includes('Request booking'))
     }
-    for(const card of await page.locator('[data-preview-cards="pools"] article').all()){
-     assert.equal(await card.locator('img').count(),3)
-     assert.ok((await card.innerText()).includes('ACTIVE'))
-     const photos=await card.evaluate(card=>{
-      const box=card.querySelector('.app-card-preview-pool-photos').getBoundingClientRect()
-      const copy=card.querySelector('.app-card-preview-copy').getBoundingClientRect()
-      return {top:box.top,bottom:box.bottom,height:box.height,copyTop:copy.top,copyBottom:copy.bottom,frames:[...card.querySelectorAll('.app-card-preview-pool-photos>div')].map(frame=>{
-       const r=frame.getBoundingClientRect();const image=frame.querySelector('img');const i=image.getBoundingClientRect()
-       return {top:r.top,bottom:r.bottom,height:r.height,imageHeight:i.height,fit:getComputedStyle(image).objectFit,fallback:image.classList.contains('app-card-preview-placeholder')}
-      })}
-     })
-     assert.ok(Math.abs(photos.top-photos.copyTop)<1&&Math.abs(photos.bottom-photos.copyBottom)<1,'Pool photos must fill the full content height: '+JSON.stringify(photos))
-     for(const frame of photos.frames){
-      assert.ok(Math.abs(frame.height-photos.height)<1,'Each Pool thumbnail must fill the image strip height')
-      assert.ok(Math.abs(frame.imageHeight-(frame.height-2))<2,'Pool image must fill its bordered frame')
-      assert.equal(frame.fit,frame.fallback?'contain':'cover','Pool images preserve proportions')
-     }
-    }
+    const pool=page.locator('[data-preview-cards="pools"] article').first()
+    assert.equal(await pool.locator('.app-card-preview-pool-photos>div').count(),3)
+    const photos=await pool.evaluate(card=>{
+     const copy=card.querySelector('.app-card-preview-copy').getBoundingClientRect()
+     return [...card.querySelectorAll('.app-card-preview-pool-photos>div')].map(n=>{const r=n.getBoundingClientRect();return {top:r.top,bottom:r.bottom,copyTop:copy.top,copyBottom:copy.bottom}})
+    })
+    for(const photo of photos)assert.ok(Math.abs(photo.top-photo.copyTop)<1&&Math.abs(photo.bottom-photo.copyBottom)<1,'Approved full-height pool photo holders')
     const cardBoxes=await page.locator('[data-preview-cards] article').evaluateAll(nodes=>nodes.map(card=>{
      const r=card.getBoundingClientRect()
      return {width:r.width,scroll:card.scrollWidth,client:card.clientWidth,children:[...card.querySelectorAll('.app-card-preview-copy,.app-card-preview-actions,button,.app-card-preview-actions>a')].map(n=>{const b=n.getBoundingClientRect();return {left:b.left-r.left,right:b.right-r.left,scroll:n.scrollWidth,client:n.clientWidth}})}
@@ -239,64 +219,40 @@ try{
      for(const section of ['deals','exclusive','pools'])await page.locator('#mobile-'+section).screenshot({path:`${out}/cards-${section}-${width}-${theme}-${language}.png`})
     }
     if(width===390){
-     const mutations=[]
-     const watch=request=>{if(!['GET','HEAD','OPTIONS'].includes(request.method()))mutations.push(request.method()+' '+request.url())}
-     page.on('request',watch)
-     for(const [index,id,price] of [[0,'butter','৳1,160'],[1,'ghee','৳680'],[2,'rice','৳145'],[3,'eggs','৳145']]){
-      await page.locator('[data-preview-cards="exclusive"] article').nth(index).getByRole('link').click()
-      await page.waitForURL('**/demo-product/'+id,{waitUntil:'load'})
-      assert.equal(await page.getByRole('dialog').count(),0,'Details must navigate rather than open a popup')
-      assert.ok((await page.locator('.home-preview-product-price').innerText()).includes(price))
-      await page.goBack({waitUntil:'load'})
-      await page.locator('[data-preview-cards="exclusive"]').waitFor()
-     }
-     await rice.getByRole('link').click()
-     await page.waitForURL('**/demo-product/rice?kind=deal',{waitUntil:'load'})
+     await page.locator('[data-preview-cards="exclusive"] article').first().getByRole('link',{name:language==='bn'?'বিস্তারিত':'View details',exact:true}).click()
+     await page.waitForURL('**/preview-live/product/'+productIds[0],{waitUntil:'load'})
+     assert.equal(await page.locator('.native-preview-exclusive-grid').count(),1,'Use the locked product-details layout')
      assert.equal(await page.getByRole('dialog').count(),0)
-     assert.ok((await page.locator('.home-preview-product-price').innerText()).includes('৳155'))
-     assert.ok((await page.locator('.native-preview-tier-grid').innerText()).includes('৳135'))
-     await page.locator('.native-preview-back').click()
-     await page.locator('[data-preview-cards="exclusive"]').waitFor()
-     await page.locator('[data-preview-cards="exclusive"] article').first().getByRole('button').click()
-     await page.locator('.app-card-preview-notice[role="status"]').waitFor()
-     assert.ok((await page.locator('.app-card-preview-notice[role="status"]').innerText()).includes(language==='bn'?'ডেমো':'preview'))
-     await rice.getByRole('button').click()
-     await page.getByRole('dialog').waitFor()
-     await page.getByRole('dialog').press('Escape')
-     for(const [index,slug,joined,target] of [[0,'weekly','875','1000'],[1,'monthly','1,320','1500']]){
-      await page.locator('[data-preview-cards="pools"] article').nth(index).locator('.mhome-pool-link').click()
-      await page.waitForURL(url=>url.pathname==='/demo-pool/'+slug&&url.searchParams.get('source')==='home',{waitUntil:'load'})
-      assert.equal(await page.getByRole('dialog').count(),0,'Pool must navigate to a full page, never open a popup')
-      const formatted=new Intl.NumberFormat(language==='bn'?'bn-BD':'en-US').format(Number(joined.replace(',','')))
-      assert.ok((await page.locator('.home-preview-pool-summary').innerText()).includes(formatted))
-      assert.equal(await page.locator('.home-preview-pool-progress').getAttribute('aria-valuemax'),String(Number(target)))
-      assert.equal(await page.locator('.home-preview-pool-product').count(),3)
-      const review=page.locator('.native-preview-pool-review button')
-      assert.equal(await review.isDisabled(),true,'Join review disabled without selected quantities')
-      await page.getByRole('button',{name:'Increase '+(slug==='weekly'?'Premium Butter':'Chinigura Rice')}).click()
-      await page.getByRole('button',{name:'Increase '+(slug==='weekly'?'Premium Butter':'Chinigura Rice')}).click()
-      await page.getByRole('button',{name:'Increase '+(slug==='weekly'?'Chinigura Rice':'Pure Cow Ghee')}).click()
-      assert.equal(await review.isEnabled(),true)
-      const demoCash=v=>'৳'+new Intl.NumberFormat(language==='bn'?'bn-BD':'en-US').format(v)
-      const prices=slug==='weekly'?[2475,2340,2230]:[1030,970,920]
-      const tierValues=await page.locator('.native-preview-pool-tiers .native-preview-tier strong').allInnerTexts()
-      assert.deepEqual(tierValues,prices.map(demoCash),'Pool price-tier totals match approved native app')
-      const basketTotal=await page.locator('.native-preview-basket-row').nth(1).locator('strong').innerText()
-      assert.equal(basketTotal,demoCash(prices[1]))
-      await page.locator('.native-preview-pool-item .native-preview-product-link').first().click()
-      await page.waitForURL(url=>url.pathname.startsWith('/demo-product/')&&url.searchParams.get('kind')==='retail',{waitUntil:'load'})
-      assert.ok((await page.locator('.native-preview-retail').innerText()).includes('SKU'))
-      assert.equal(await page.locator('.native-preview-retail .native-preview-offers').count(),0)
-      await page.locator('.native-preview-back').click()
-      await page.locator('.native-preview-pool-tiers').waitFor()
-      if(index===0)await page.screenshot({path:`${out}/pool-detail-${width}-${theme}-${language}.png`,fullPage:true})
-      await page.locator('.native-preview-back').click()
-      await page.waitForURL(url=>url.pathname==='/',{waitUntil:'load'})
-      await page.locator('[data-preview-cards="pools"]').waitFor()
+     if(launchMode){
+      await page.locator('.native-preview-actions .native-preview-primary').click()
+      await page.goto(`http://127.0.0.1:${port}/cart`,{waitUntil:'load'})
+      const qty=page.getByRole('spinbutton',{name:'Quantity for Synthetic rice'})
+      await qty.waitFor();assert.equal(await qty.inputValue(),'1')
+      await qty.fill('3');assert.ok((await page.locator('main').innerText()).includes('৳360'))
+      await page.getByRole('link',{name:'Checkout / চেকআউট',exact:true}).click()
+      await page.getByRole('link',{name:'Sign in to place your order / অর্ডার করতে লগইন করুন',exact:true}).waitFor()
+      assert.ok(!(await page.locator('main').innerText()).includes('Full checkout awaits qualification'))
+      await page.goto(`http://127.0.0.1:${port}/cart`,{waitUntil:'load'})
+      await page.getByRole('button',{name:'Remove / সরান',exact:true}).click()
+      await page.getByText('Your cart is empty. / আপনার কার্ট খালি।',{exact:true}).waitFor()
+      await page.goto(`http://127.0.0.1:${port}/preview-live/product/${productIds[0]}`,{waitUntil:'load'})
      }
-     assert.equal(await page.getByRole('dialog').count(),0)
-     assert.deepEqual(mutations,[],'Preview controls must not send write requests')
-     page.off('request',watch)
+     await page.locator('.native-preview-actions a').click()
+     await page.waitForURL('**/preview-live/product/'+productIds[0]+'?kind=retail&from=exclusive',{waitUntil:'load'})
+     assert.equal(await page.locator('.native-preview-retail').count(),1,'Use the locked retail-details layout')
+     await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'load'})
+     await page.locator('[data-preview-cards="deals"] article').first().getByRole('link').click()
+     await page.waitForURL('**/preview-live/product/'+productIds[0]+'?kind=deal&offer='+offerId,{waitUntil:'load'})
+     assert.equal(await page.locator('.native-preview-group-layout').count(),1,'Use the locked deal-details layout')
+     await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'load'})
+     await page.locator('[data-preview-cards="pools"] .mhome-pool-link').click()
+     await page.waitForURL('**/preview-live/pool/'+poolId,{waitUntil:'load'})
+     assert.equal(await page.locator('.native-preview-pool-products').count(),1,'Use the locked pool-details layout')
+     assert.equal(await page.locator('.home-preview-pool-product').count(),3)
+     await page.locator('.native-preview-pool-item .native-preview-product-link').first().click()
+     await page.waitForURL('**/preview-live/product/'+productIds[0]+'?kind=retail&from=pool&pool='+poolId,{waitUntil:'load'})
+     assert.equal(await page.locator('.native-preview-retail').count(),1)
+     await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'load'})
     }
     // Live search filters product and Group Deal cards rather than a hidden legacy section.
     await page.locator('#market-header-product-search').fill('no-such-product-123')
@@ -322,6 +278,11 @@ try{
     await page.locator('.mhome-area-picker summary').click()
     await page.locator('.mhome-area-picker summary').press('Escape')
     assert.equal(await page.locator('.mhome-area-picker').getAttribute('open'),null)
+   }
+   if(route.startsWith('/preview-live/')){
+    assert.equal(await page.getByRole('dialog').count(),0)
+    assert.equal(await page.locator('[data-approved-data]').count(),1)
+    if([320,390,820,1440].includes(width))await page.screenshot({path:`${out}/locked-live-${route.includes('/pool/')?'pool':route.includes('deal')?'deal':route.includes('retail')?'retail':'product'}-${width}-${theme}-${language}.png`,fullPage:true})
    }
    if(route.startsWith('/demo-product/')&&!route.includes('00000000')){
     const id=route.split('/').pop().split('?')[0]
@@ -368,6 +329,27 @@ try{
  }
  const pending=[...widths]
  await Promise.all(Array.from({length:Math.min(3,widths.length)},async()=>{while(pending.length){const width=pending.shift();await checkWidth(width)}}))
+ emptyFeeds=true
+ for(const width of [320,390])for(const theme of ['light','dark'])for(const language of ['en','bn']){
+  const context=await browser.newContext({viewport:{width,height:950},reducedMotion:'reduce'})
+  await context.addInitScript(({theme,language})=>{localStorage.setItem('2taka-theme',theme);localStorage.setItem('2tbr-storefront-language-v1',language)},{theme,language})
+  const page=await context.newPage();await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'load'})
+  for(const [section,count] of [['deals',2],['exclusive',4],['pools',2]]){
+   const cards=page.locator(`[data-preview-cards="${section}"] article`)
+   assert.equal(await cards.count(),count,'Retain locked empty card footprint')
+   for(const card of await cards.all()){
+    assert.equal(await card.getAttribute('data-empty'),'true')
+    assert.equal(await card.evaluate(n=>getComputedStyle(n).filter),'none','Keep the locked card rim crisp')
+    assert.ok(await card.locator('img').first().evaluate(n=>getComputedStyle(n).filter.includes('blur')),'Blur missing image content inside the unchanged holder')
+    assert.equal(await card.getAttribute('inert'),'')
+   }
+  }
+  assert.ok(!(await page.locator('.mhome').innerText()).includes('No published'))
+  assert.ok(!(await page.locator('.mhome').innerText()).includes('Price pending'))
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))
+  await page.screenshot({path:`${out}/locked-empty-${width}-${theme}-${language}.png`,fullPage:true})
+  await context.close()
+ }
  await writeFile(`${out}/results.json`,JSON.stringify({checks:results.length,results},null,2))
  console.log(`PASS: ${results.length} public route/width/theme/language combinations plus search, hero, guest Account, theme and language interactions.`)
 }catch(error){

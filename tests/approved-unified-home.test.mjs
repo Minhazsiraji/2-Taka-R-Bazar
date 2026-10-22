@@ -41,7 +41,7 @@ test('savings cannot be sourced from demonstrations, raw catalog prices or pendi
 
 test('unpriced SEO-only products remain read-only and saved login, footer and catalog are preserved',()=>{
  assert.match(home,/bookable:false/)
- assert.match(home,/p\.bookable&&\(selectedArea\|\|p\.vendorOnDemand\)/)
+ assert.match(home,/p\.bookable&&selectedArea/)
  assert.doesNotMatch(home,/View Details \/ Ask for Price/)
  assert.match(home,/t\('View details','বিস্তারিত দেখুন'\)/)
  assert.match(home,/commerceId&&p\.available&&selectedArea/)

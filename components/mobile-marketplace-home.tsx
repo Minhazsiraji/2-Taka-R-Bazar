@@ -3,12 +3,11 @@
 import Link from 'next/link'
 import {PreviewHomeCards} from '@/components/home-card-preview'
 import {LivePreviewHomeCards} from '@/components/live-preview-home-cards'
-import {hasPublishedLiveContent} from '@/lib/approved-live-detail-data'
+import type {PublicVendorBookingProduct} from '@/lib/public-vendor-booking'
 import {useEffect,useRef,useState} from 'react'
 import {setCommerceCartItem} from '@/app/actions/commerce'
 import type {DemoFeaturedPool} from '@/lib/featured-pools'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
-import type {PublicVendorBookingProduct} from '@/lib/public-vendor-booking'
 import type {PublishedCatalogPage} from '@/lib/published-product-catalog'
 import type {StorefrontArea,StorefrontOffer} from '@/lib/storefront'
 import {formatPrice} from '@/lib/storefront'
@@ -23,9 +22,9 @@ type Props={
  onDetectArea:()=>void
  detectingArea:boolean
  offers:StorefrontOffer[]
+ vendorProducts?:PublicVendorBookingProduct[]
  products:ShowcaseProduct[]
  publishedProducts:PublishedCatalogPage
- vendorProducts?:PublicVendorBookingProduct[]
  pools:DemoFeaturedPool[]
  language:MarketplaceLanguage
  demoMode:boolean
@@ -76,8 +75,8 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
  // Data-only switch. The locked homepage markup and CSS are unchanged:
  // use demo fixtures until genuinely published public records exist.
- const livePreviewData={offers,pools,products,catalog:publishedProducts.items}
- const hasLivePreview=previewCards&&hasPublishedLiveContent(livePreviewData)
+ const livePreviewData={offers,pools,products,catalog:publishedProducts.items,vendorProducts}
+ const hasLivePreview=previewCards
  const [slide,setSlide]=useState(0)
  const areaPickerRef=useRef<HTMLDetailsElement>(null)
  const [clockNow,setClockNow]=useState<number|null>(null)
@@ -112,7 +111,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
  type HomeProduct={
   id:string;name:string;nameBn:string;package:string;image:string|null;
   price:number|null;oldPrice:number|null;stock:number|null;
-  demo:boolean;commerceId:string|null;available:boolean;bookable:boolean;href?:string;vendorOnDemand?:boolean
+  demo:boolean;commerceId:string|null;available:boolean;bookable:boolean;href?:string
  }
  const exclusive:HomeProduct[]=[]
  const unique=new Set<string>()
@@ -172,21 +171,6 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
    demo:false,commerceId:null,available:false,bookable:false,
    href:(language==='bn'?'/bn':'')+'/p/'+item.slug})
   unique.add(item.product_id)
- }
- // Owner-approved vendor-held listings: real photos and customer prices,
- // but staff must confirm each booking; never imply warehouse inventory.
- for(const v of vendorProducts){
-  if(unique.has(v.product_id))continue
-  if(query&&![v.name,v.category,v.supplier_name].some(x=>x.toLocaleLowerCase().includes(query)))continue
-  const price=Number(v.approved_unit_price)
-  if(!Number.isFinite(price)||price<=0)continue
-  exclusive.push({
-   id:v.product_id,name:v.name,nameBn:v.name,package:v.package_size,
-   image:v.image_url,price,oldPrice:null,stock:null,demo:false,
-   commerceId:null,available:false,bookable:true,
-   vendorOnDemand:true,href:'/vendor-products/'+v.product_id,
-  })
-  unique.add(v.product_id)
  }
  // A partially populated catalog must not drown out shoppable cards.
  // When no priced SOLO offer is published, show a truthful browse-only fallback.
@@ -325,8 +309,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
       {saving!=null&&<span className="mhome-save">{t('Save','সাশ্রয়')} {money(saving)}</span>}
       {p.demo?<span className="mhome-exclusive-availability">{t('DEMO · Not for sale','ডেমো · বিক্রির জন্য নয়')}</span>:
        p.stock!==null?<span className="mhome-exclusive-availability">{p.stock>0?t('In stock','স্টকে আছে'):t('Out of stock','স্টক শেষ')} · {p.stock.toLocaleString('en-BD')} {t('available','পিস উপলব্ধ')}</span>:
-       p.vendorOnDemand?<span className="mhome-exclusive-availability">{t('Vendor-held · supplier handover next day, subject to confirmation','ভেন্ডরের কাছে · নিশ্চিত হলে পরদিন সরবরাহ')}</span>:
-        p.price?<span className="mhome-exclusive-availability">{t('Stock confirmed at checkout','চেকআউটে স্টক নিশ্চিত হবে')}</span>:
+       p.price?<span className="mhome-exclusive-availability">{t('Stock confirmed at checkout','চেকআউটে স্টক নিশ্চিত হবে')}</span>:
        <span className="mhome-exclusive-availability">{t('View product information','পণ্যের তথ্য দেখুন')}</span>}
      </div>
      <div className="mhome-exclusive-actions">
@@ -337,7 +320,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
        <button className="mhome-cart-btn" type="submit">🛒 {t('Add to cart','কার্টে যোগ')}</button></form>:
        <button className="mhome-cart-btn" type="button" disabled aria-disabled="true">
         {p.stock===0?t('Out of stock','স্টক শেষ'):t('Add to cart','কার্টে যোগ')}</button>}
-      {p.bookable&&(selectedArea||p.vendorOnDemand)&&<Link className="mhome-book-link" href={'/pilot-book?product='+p.id}>{t('Request booking','বুকিং অনুরোধ করুন')} →</Link>}
+      {p.bookable&&selectedArea&&<Link className="mhome-book-link" href={'/pilot-book?product='+p.id}>{t('Book Product','পণ্য বুক করুন')} →</Link>}
       {p.price&&p.commerceId&&!selectedArea&&<a className="mhome-book-link" href="#your-community">{t('Select community to buy','কিনতে কমিউনিটি বাছুন')} →</a>}
 
      </div>

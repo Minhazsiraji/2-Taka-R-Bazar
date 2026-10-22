@@ -1,7 +1,6 @@
 import type {Metadata} from 'next'
 import {cookies} from 'next/headers'
 import {notFound} from 'next/navigation'
-import {demoStorefrontEnabled} from '@/lib/public-demo-products'
 import {loadLivePublishedProduct} from '@/lib/approved-live-detail-server'
 import {uuidPattern} from '@/lib/approved-live-detail-data'
 import {languageFromPreference,isValidLanguagePreference,STOREFRONT_LANGUAGE_COOKIE} from '@/lib/storefront-language'
@@ -11,7 +10,6 @@ export const metadata:Metadata={title:'Published product details — 2TBR Previe
 export default async function PreviewLiveProductPage({params,searchParams}:{
  params:Promise<{id:string}>;searchParams:Promise<{kind?:string;offer?:string;from?:string;pool?:string}>
 }){
- if(!demoStorefrontEnabled())notFound()
  const [{id},query,jar]=await Promise.all([params,searchParams,cookies()])
  if(!uuidPattern.test(id))notFound()
  const product=await loadLivePublishedProduct(id)

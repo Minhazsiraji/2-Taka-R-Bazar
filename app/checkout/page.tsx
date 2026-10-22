@@ -1,5 +1,8 @@
 import {FulfillmentChoice,type SavedDeliveryAddress} from '@/components/fulfillment-choice'
 import Link from 'next/link'
+import {loadLaunchCatalog} from '@/lib/launch-catalog'
+import {createClient} from '@/lib/supabase/server'
+import {LaunchCartCheckout} from '@/components/launch-cart-checkout'
 import {randomUUID} from 'node:crypto'
 import {CommerceFrame} from '@/components/commerce-frame'
 import {requireCommerceCustomer} from '@/lib/commerce/customer'
@@ -9,7 +12,7 @@ import {CURRENT_POLICY_VERSION} from '@/lib/legal'
 import {taka as formatPrice} from '@/lib/format'
 export const dynamic='force-dynamic'
 type Quote={id:string;expires_at:string;lines:Array<{item_id:string;name:string;quantity:number;unit_price:number}>;product_subtotal:number;delivery_fee:number;total_amount:number;fulfillment_method:string;delivery_address:string|null}
-export default async function CheckoutPage({searchParams}:{searchParams:Promise<{error?:string;step?:string;quote?:string}>}){const query=await searchParams;const {supabase,profile,isTestFixture}=await requireCommerceCustomer();if(!commerceEnabled())return <CommerceFrame title="চেকআউট / Checkout">
+export default async function CheckoutPage({searchParams}:{searchParams:Promise<{error?:string;step?:string;quote?:string}>}){const query=await searchParams;const launch=await loadLaunchCatalog();if(launch.some(p=>p.launch_enabled)){const db=await createClient();const {data:{user}}=await db.auth.getUser();return <CommerceFrame launch title="চেকআউট / Checkout"><LaunchCartCheckout checkout catalog={launch} authenticated={Boolean(user)} error={query.error}/></CommerceFrame>};const {supabase,profile,isTestFixture}=await requireCommerceCustomer();if(!commerceEnabled())return <CommerceFrame title="চেকআউট / Checkout">
  <section className="rounded-2xl border border-teal-300 p-5">
   <h2 className="text-xl font-black">Pilot booking is available / পাইলট বুকিং চালু</h2>
   <p className="mt-3 text-sm">Full checkout is still being qualified. You can request products now, and 2TBR staff will confirm quantity, price and delivery. No online payment will be collected at booking.</p>

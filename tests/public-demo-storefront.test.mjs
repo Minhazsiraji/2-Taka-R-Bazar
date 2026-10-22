@@ -35,7 +35,7 @@ test('illustrated sample product data only appears on Preview or in development'
  assert.match(fixtures,/DEMO_OFFERS/)
  assert.match(fixtures,/DEMO_SHOWCASE/)
  assert.match(fixtures,/is_demo:true/)
- assert.match(page,/demoStorefrontEnabled\(\)/)
+ assert.match(page,/const demoMode=false/)
  assert.match(market,/offer.is_demo/)
  assert.match(market,/disabled aria-disabled="true"/)
  assert.match(details,/if\(!demoStorefrontEnabled\(\)\)notFound\(\)/)

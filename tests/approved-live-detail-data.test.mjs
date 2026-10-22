@@ -5,6 +5,19 @@ import React from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 import {loadSource} from './helpers/load-tsx.mjs'
 const data=await loadSource('lib/approved-live-detail-data.ts')
+const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
+const parity=await loadSource('lib/preview-native-detail-data.ts',{'@/lib/home-card-preview-fixtures':fixtures})
+const viewData=await loadSource('lib/approved-card-view.ts',{'./approved-live-detail-data':data})
+const detailMocks={
+ '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ 'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
+ '@/components/public-header':{PublicHeader:()=>null},'@/components/public-footer':{PublicFooter:()=>null},
+ '@/lib/use-storefront-language':{useStorefrontLanguage:lang=>[lang,()=>{}]},
+ '@/lib/home-card-preview-fixtures':fixtures,'@/lib/preview-native-detail-data':parity,
+}
+const approvedCards=await loadSource('components/home-card-preview.tsx',detailMocks)
+const approvedProduct=await loadSource('components/home-preview-product-details.tsx',detailMocks)
+const approvedPool=await loadSource('components/home-preview-pool-details.tsx',detailMocks)
 const id='84f4f885-2247-483e-8b05-25ca8d47a168'
 const area='cccccccc-cccc-4ccc-8ccc-cccccccccccc'
 const base={offer_id:'dddddddd-dddd-4ddd-8ddd-dddddddddddd',product_id:id,community_id:area,
@@ -61,7 +74,9 @@ test('Pool basket correct with actual unique products, quantities, confirmed and
 })
 test('real preview cards use published UUID detail paths without redrawing accepted card classes',async()=>{
  const {LivePreviewHomeCards}=await loadSource('components/live-preview-home-cards.tsx',{
-  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
+  './home-card-preview':approvedCards,'@/lib/approved-card-view':viewData,
+  '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ 'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
   '@/lib/approved-live-detail-data':data,
   '@/lib/showcase-media':{publicShowcaseImageUrl:()=>true},
   './home-card-preview.css':{},
@@ -79,7 +94,9 @@ test('real preview cards use published UUID detail paths without redrawing accep
 })
 test('published client detail pages show the correct sections and no real writes',async()=>{
  const opts={
-  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
+  './home-preview-product-details':approvedProduct,'./home-preview-pool-details':approvedPool,'@/lib/approved-card-view':viewData,
+  '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ 'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
   '@/components/public-header':{PublicHeader:()=>null},
   '@/components/public-footer':{PublicFooter:()=>null},
   '@/lib/use-storefront-language':{useStorefrontLanguage:lang=>[lang,()=>{}]},
@@ -92,6 +109,7 @@ test('published client detail pages show the correct sections and no real writes
    product,kind,initialLanguage:'en',hasLanguageCookie:true}))
   assert.ok(html.includes(product.name))
   assert.ok(html.includes('href="/preview-live/product/'+id))
+  if(kind==='deal')assert.ok(html.includes('&amp;offer='+waiting.offer_id),'Keep the selected deal when opening product information')
   if(kind==='retail')for(const section of ['SEO','AEO','GEO','RICE-101','Published factual text'])assert.ok(html.includes(section))
  }
  const {LiveApprovedPoolDetails}=await loadSource('components/live-approved-pool-details.tsx',opts)
@@ -99,7 +117,8 @@ test('published client detail pages show the correct sections and no real writes
   pool:livePool,initialLanguage:'en',hasLanguageCookie:true}))
  assert.ok(pool.includes('Real Weekly Pool'))
  assert.ok(pool.includes('Increase Real Rice'))
- assert.ok(pool.includes('Next milestone not published'))
+ assert.ok(pool.includes('data-empty="true"'))
+ assert.ok(!pool.includes('Next milestone not published'))
  assert.ok(pool.includes('Review Join Pool'))
  for(const path of ['components/live-approved-product-details.tsx','components/live-approved-pool-details.tsx','lib/approved-live-detail-server.ts']){
   const source=readFileSync(path,'utf8')
@@ -107,7 +126,7 @@ test('published client detail pages show the correct sections and no real writes
  }
 })
 
-test('real-data preview routes reject invalid IDs and remain unavailable in Production',async()=>{
+test('released real-data routes reject invalid IDs and never substitute fixture products',async()=>{
  let enabled=true
  const mocks={
   'next/headers':{cookies:async()=>({get:()=>({value:'en'})})},
@@ -134,8 +153,8 @@ test('real-data preview routes reject invalid IDs and remain unavailable in Prod
  await assert.rejects(pp('rice'),/NOT_FOUND/)
  await assert.rejects(pool('weekly'),/NOT_FOUND/)
  enabled=false
- await assert.rejects(pp(product.id),/NOT_FOUND/)
- await assert.rejects(pool(livePool.id),/NOT_FOUND/)
+ assert.equal((await pp(product.id)).props.product.id,product.id)
+ assert.equal((await pool(livePool.id)).props.pool.id,livePool.id)
 })
 test('conflicting community retail benchmarks do not become a fabricated single market price',()=>{
  assert.equal(data.productFromPublicSources(id,[base,{...base,reference_price:170}],null,null).retail,null)

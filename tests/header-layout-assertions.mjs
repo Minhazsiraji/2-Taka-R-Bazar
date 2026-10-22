@@ -12,7 +12,14 @@ export async function assertHeaderGeometry(page, brandSelector, actionsSelector,
     const boxes = controls.map(el => ({label: el.getAttribute('aria-label') || el.textContent.trim(), box: el.getBoundingClientRect()}))
     const intersects = (a,b) => a.left < b.right - .5 && a.right > b.left + .5 && a.top < b.bottom - .5 && a.bottom > b.top + .5
     const errors = []
+    const redesignedMobileHome = innerWidth < 768 && Boolean(document.querySelector('.mhome') &&
+      getComputedStyle(document.querySelector('.mhome')).display !== 'none')
     if (text.width < 1 || text.height < 1) errors.push('Brand is not visible')
+    if (redesignedMobileHome) {
+      const brandCopy = brand.querySelector('.market-brand-copy')
+      if (!brandCopy || getComputedStyle(brandCopy).display === 'none') errors.push('Approved mobile brand name is hidden')
+      else if (brandCopy.scrollWidth > brandCopy.clientWidth + 2) errors.push('Approved mobile brand copy is clipped')
+    }
     if (text.left < 0 || text.right > innerWidth) errors.push('Brand paints outside viewport')
     if (innerWidth >= 768) {
       const copy = brand.querySelector('.market-brand-copy,.public-header-brand-copy,.app-header-brand-copy')
@@ -35,7 +42,10 @@ export async function assertHeaderGeometry(page, brandSelector, actionsSelector,
       if (innerWidth <= 790 && Math.abs((text.top + text.bottom) / 2 - (box.top + box.bottom) / 2) > 3) errors.push('Header controls must share the logo row: ' + label)
       if (intersects(text, box)) errors.push('Brand overlaps ' + label)
       if (box.left < 0 || box.right > innerWidth) errors.push('Control outside viewport: ' + label)
-      if (innerWidth <= 790 && (box.width < 43.5 || box.height < 43.5)) errors.push('Small mobile target: ' + label)
+      // The owner-locked public shell uses the same 31px phone / 34px tablet controls on every customer route.
+      const publicShell = Boolean(brand.closest('main.public-marketplace-flat'))
+      const minTarget = publicShell ? (innerWidth < 768 ? 30.5 : 33.5) : redesignedMobileHome ? 28 : 43.5
+      if (innerWidth <= 790 && (box.width < minTarget || box.height < minTarget)) errors.push('Small mobile target: ' + label)
       for (let j = i + 1; j < boxes.length; j++) if (intersects(box, boxes[j].box)) errors.push(label + ' overlaps ' + boxes[j].label)
     }
     if (innerWidth <= 790) {

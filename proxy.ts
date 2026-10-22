@@ -3,6 +3,7 @@ import { updateSession } from '@/lib/supabase/proxy'
 
 const NOINDEX_PREFIXES = [
   '/cart',
+  '/launch-orders',
   '/checkout',
   '/account',
   '/commerce',
