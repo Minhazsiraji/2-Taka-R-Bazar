@@ -70,12 +70,15 @@ export function approvedProductView(source:PublicLiveProduct,offerId?:string):Ap
  fields['Verified answer']={en:source.seo?.faqs?.[0]?.answer_en??'',bn:source.seo?.faqs?.[0]?.answer_bn??''}
  fields['Available areas']={en:[...new Set(source.offers.map(o=>o.offer_title).filter(Boolean))].join(', '),bn:[...new Set(source.offers.map(o=>o.offer_title).filter(Boolean))].join(', ')}
  return {initialOfferId:offers.some(o=>o.id===offerId)?offerId:undefined,product,offers,source,fields,community:source.offers.find(o=>o.offer_id===offerId)?.offer_title??solo?.offer_title??group?.offer_title??'',deal:group?{id:product.id,offerId:group.offer_id,launchOfferId:group.launch_offer_id,purchasable:Boolean(group.launch_offer_id&&(stock(group)??0)>0),price:confirmedOfferPrice(group),joined:group.buyer_count??0,target:group.next_threshold??0,days:remaining(group.closes_at)}:undefined,
-  group:group?{tiers:[{minimum:0,price:null},{minimum:0,price:confirmedOfferPrice(group),current:true},{minimum:group.next_threshold&&validMoney(group.upcoming_price)?group.next_threshold:0,price:validMoney(group.upcoming_price)}],current:{minimum:0,price:confirmedOfferPrice(group)},next:group.next_threshold&&validMoney(group.upcoming_price)?{minimum:group.next_threshold,price:validMoney(group.upcoming_price)}:null}:null}
+  group:group?{tiers:group.price_tiers?.length?group.price_tiers.map(t=>({...t,current:t.minimum===Math.max(0,...group.price_tiers!.filter(x=>x.minimum<=(group.buyer_count??0)).map(x=>x.minimum))})):
+   [{minimum:0,price:null},{minimum:0,price:confirmedOfferPrice(group),current:true},{minimum:group.next_threshold&&validMoney(group.upcoming_price)?group.next_threshold:0,price:validMoney(group.upcoming_price)}],
+   current:{minimum:group.price_tiers?.filter(t=>t.minimum<=(group.buyer_count??0)).at(-1)?.minimum??0,price:confirmedOfferPrice(group)},
+   next:group.next_threshold&&validMoney(group.upcoming_price)?{minimum:group.next_threshold,price:validMoney(group.upcoming_price)}:null}:null}
 }
 export function approvedPoolView(source:PublicLivePool):{pool:ApprovedPool;lines:ApprovedPoolLine[]}{
  const rows=source.bundle.filter(l=>l.offer&&!l.offer.is_demo&&!l.offer.commerce_synthetic)
  const dates=[...new Set(rows.map(l=>safeTime(l.offer.closes_at)).filter(Boolean))],date=dates.length===1?dates[0]:null
- const lines:ApprovedPoolLine[]=rows.map(({offer:o})=>({product:{id:o.product_id,name:o.product_name,nameBn:o.product_name_bn??o.product_name,unit:o.package_size,photo:'',image:o.image_url,price:confirmedOfferPrice(o),oldPrice:o.reference_price,stock:stock(o),purchasable:Boolean(o.launch_offer_id&&(stock(o)??0)>0),launchOfferId:o.launch_offer_id},tiers:{opening:null,current:confirmedOfferPrice(o),next:null}}))
+ const lines:ApprovedPoolLine[]=rows.map(({offer:o})=>({product:{id:o.product_id,name:o.product_name,nameBn:o.product_name_bn??o.product_name,unit:o.package_size,photo:'',image:o.image_url,price:confirmedOfferPrice(o),oldPrice:o.reference_price,stock:stock(o),purchasable:Boolean(o.launch_offer_id&&(stock(o)??0)>0),launchOfferId:o.launch_offer_id},tiers:{opening:validMoney(o.opening_price),current:confirmedOfferPrice(o),next:validMoney(o.upcoming_price)}}))
  const ids=source.featuredProductIds.filter(id=>lines.some(l=>l.product.id===id)).slice(0,3)
  if(!ids.length)ids.push(...lines.slice(0,3).map(l=>l.product.id))
  while(ids.length<3)ids.push('empty-pool-photo-'+source.id+'-'+ids.length)
