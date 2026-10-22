@@ -4,7 +4,7 @@ Mobile-first PWA for the first ~30–200 households in one/few nearby Savar comm
 
 ## Pilot Mode
 
-`PILOT_MODE` is centrally enabled for the first ~3–4 months. The existing subscription engine is preserved, but customer Membership navigation/billing CTAs are hidden, automatic subscription billing is dormant, and pool participation is not blocked by membership. Referral Coins accumulate but are not redeemed automatically.
+Pilot behaviour must be controlled by the current server-side business rules and database permissions. The abandoned front-end `PILOT_MODE` constant has been retired: it was not imported by the running application and must not be used as a substitute for published-offer, customer consent, finance or payment safeguards. Historical pilot details below document earlier planning; follow current approved workflows for production.
 
 ## Pilot business flow
 

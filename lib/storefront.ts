@@ -24,6 +24,8 @@ export type StorefrontOffer = {
   reference_price: number|null
   confirmed_price: number|null
   upcoming_price: number|null
+  opening_price?: number|null
+  price_tiers?: {minimum:number;price:number}[]
   buyer_count: number
   quantity_joined: number
   next_threshold: number|null

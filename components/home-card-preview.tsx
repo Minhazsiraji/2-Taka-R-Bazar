@@ -84,7 +84,7 @@ export function PreviewHomeCards({section,language,search,view,selectedArea=''}:
       <p className="app-card-preview-meta">{p.unit} · {view?(d.community||' '):'Savar DOHS'}</p></div>
       <div className="app-card-preview-price"><strong data-empty={d.price===null||undefined}>{showMoney(d.price)}</strong><s data-empty={reference===null||undefined}>{showMoney(reference)}</s></div>
       <span className="app-card-preview-save" data-empty={reference===null||d.price===null||undefined}>{bn?'সাশ্রয়':'Save'} {showMoney(reference!==null&&d.price!==null?Math.max(0,reference-d.price):null)}</span>
-      <div className="app-card-preview-deal-stats"><span>👥 {d.joined}{d.target>0||!d.launchOfferId?'/'+d.target:''} joined</span><span data-empty={d.days===null||undefined}>◷ Ends in {d.days??0} {d.days===1?'day':'days'}</span></div>
+      <div className="app-card-preview-deal-stats"><span>👥 {d.joined}{d.target>0||!d.launchOfferId?'/'+d.target:''} joined</span><span>{d.nextPrice!=null&&d.target>0?`${bn?'পরবর্তী':'Next'} ${d.target} → ${showMoney(d.nextPrice)}${d.reference!=null&&d.reference>0?` · ${bn?'সাশ্রয়':'Save'} ${showMoney(Math.max(0,d.reference-d.nextPrice))}`:''}`:view&&d.target>0?`${bn?'পরবর্তী লক্ষ্য':'Next target'}: ${d.target} · ${bn?'টিয়ার সাশ্রয় নির্ধারিত হয়নি':'Tier savings not set'}`:d.days!==null?`◷ ${view?(bn?'শেষ':'Ends in'):'Ends in'} ${d.days} ${d.days===1?'day':'days'}`:bn?'শেষের তারিখ নেই':'No end date set'}</span></div>
       <Progress value={d.joined} max={d.target} label={bn?'গ্রুপ অংশগ্রহণ':'Group participation'}/>
       <div className="app-card-preview-actions"><Link href={d.empty?'#':productHref(d.id,'deal')+(view&&d.offerId?'&offer='+d.offerId:'')+(view&&selectedArea?'&area='+encodeURIComponent(selectedArea):'')}>{bn?'বিস্তারিত':'View details'}</Link>
        <button type="button" className="app-card-preview-primary" disabled={Boolean(view)&&(!d.purchasable||joining===d.offerId)} onClick={async()=>{
@@ -94,7 +94,7 @@ export function PreviewHomeCards({section,language,search,view,selectedArea=''}:
           const result=await joinSimpleSaleDeal(d.offerId,d.id,selectedArea)
           if(result.ok){
            if(!readLaunchCart().some(i=>i.product_id===d.id&&i.offer_id===d.launchOfferId))addLaunchItem(d.id,d.launchOfferId)
-           setNotice(bn?'গ্রুপ ডিলে যোগ দিয়েছেন। কার্টে যোগ হয়েছে।':'Joined Group Deal and added to cart. Checkout is still required.')
+           setNotice(bn?'গ্রুপ ডিলে যোগ দিয়েছেন। চূড়ান্ত মূল্য ও ডেলিভারি চার্জ পরে জানানো হবে।':'Commitment recorded. Final tier price and delivery fee will be confirmed before payment. No order has been placed.')
            window.dispatchEvent(new Event('2tbr-notifications-refresh'))
            router.refresh()
           }else{
@@ -140,8 +140,8 @@ export function PreviewHomeCards({section,language,search,view,selectedArea=''}:
      <h3>{bn?pool.nameBn:pool.name}</h3>
      <p className="app-card-preview-meta">{bn?(pool.productCount??3)+' টি পণ্য · '+pool.joined.toLocaleString('en-BD')+' পরিবারের যুক্ত':(pool.productCount??3)+' products · '+pool.joined.toLocaleString('en-BD')+' households joined'}</p>
      <Progress value={pool.joined} max={pool.target} label={bn?'অংশগ্রহণের অগ্রগতি':'Household progress'}/>
-     <p className="app-card-preview-deadline" data-empty={pool.days===null||undefined}>◷ Commit ends in {pool.days??0} days · {pool.date}</p>
-     <div className="app-card-preview-pool-bottom"><span className="app-card-preview-next" data-empty={pool.target===0||undefined}>{bn?'পরবর্তী সাশ্রয় টিয়ার':'Next savings tier'}: {pool.target.toLocaleString('en-BD')}</span>
+     <p className="app-card-preview-deadline">{pool.days!==null?`◷ ${bn?'শেষ হতে':'Commit ends in'} ${pool.days} ${bn?'দিন':'days'} · ${pool.date}`:bn?'শেষের তারিখ দেওয়া নেই':'No closing date set'}</p>
+     <div className="app-card-preview-pool-bottom"><span className="app-card-preview-next">{pool.wholePoolNext?`${bn?'পরবর্তী':'Next'} ${pool.wholePoolNext.target} → ${bn?'সম্পূর্ণ পুল':'whole Pool'} ${showMoney(pool.wholePoolNext.total)}${pool.wholePoolNext.savings!==null?` · ${bn?'মোট সাশ্রয়':'total saving'} ${showMoney(pool.wholePoolNext.savings)}`:''}`:pool.target>0?`${bn?'পরবর্তী লক্ষ্য':'Next target'}: ${pool.target.toLocaleString('en-BD')} · ${bn?'আনলক মূল্য নির্ধারিত হয়নি':'Unlock price not configured'}`:bn?'টিয়ার নির্ধারিত হয়নি':'Tier not configured'}</span>
       <Link href={pool.empty?'#':view?'/preview-live/pool/'+pool.id:'/demo-pool/'+pool.id+'?source=home'} className="app-card-preview-primary mhome-pool-link">Explore Pool →</Link></div>
     </div>
    </article>)}
