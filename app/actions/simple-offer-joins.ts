@@ -19,6 +19,18 @@ export async function joinSimpleSaleDeal(offerId:string,productId:string,areaId=
  revalidatePath('/');revalidatePath('/notifications');revalidatePath('/preview-live/product/'+productId)
  return {ok:true,joined:Boolean(data),message:data?'Joined this Group Deal. Complete checkout to request an order; no payment was taken.':'Already joined. Your participation is counted once.'}
 }
+export async function joinSimpleSalePool(offerId:string,productIds:string[]):Promise<JoinResult>{
+ if(!uuid.test(offerId)||productIds.length<1||productIds.length>6||
+    new Set(productIds).size!==productIds.length||productIds.some(id=>!uuid.test(id)))
+  return failure('Selected products are not available in this Pool')
+ const db=await createClient()
+ const {data:{user}}=await db.auth.getUser()
+ if(!user)return failure('Sign in to join this Pool')
+ const {data,error}=await db.rpc('join_simple_sale_pool',{p_offer:offerId,p_products:productIds,p_area:null})
+ if(error)return failure(error.message)
+ revalidatePath('/');revalidatePath('/notifications');revalidatePath('/preview-live/pool/'+offerId)
+ return {ok:true,joined:Boolean(data),message:data?'Joined the Pool. Checkout is still required. No payment was taken.':'You are already counted in this Pool.'}
+}
 export async function leaveSimpleSaleDeal(offerId:string,productId:string):Promise<JoinResult>{
  if(!uuid.test(offerId)||!uuid.test(productId))return failure('This Group Deal is not available')
  const db=await createClient()
