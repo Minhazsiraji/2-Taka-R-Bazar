@@ -18,8 +18,8 @@ async function assertApprovedPoolLayout(page,width){
  const geometry=await card.evaluate(element=>{
   const bounds=x=>x.getBoundingClientRect()
   const cardBox=bounds(element)
-  const copyBox=bounds(element.querySelector('.mhome-pool-copy'))
-  const noteBox=bounds(element.querySelector('.mhome-pool-top'))
+  const copyBox=bounds(element.querySelector('.app-card-preview-copy,.mhome-pool-copy'))
+  const noteBox=bounds(element.querySelector('.app-card-preview-pool-top,.mhome-pool-top'))
   return {cardWidth:cardBox.width,cardHeight:cardBox.height,copyWidth:copyBox.width,
    copyTop:copyBox.top,noteBottom:noteBox.bottom,
    copyLeft:copyBox.left,cardLeft:cardBox.left,copyRight:copyBox.right,cardRight:cardBox.right,
@@ -87,10 +87,10 @@ try{
   if([768,820,1024].includes(width))await page.screenshot({path:'/tmp/2tbr-header-tablet-brand-'+width+'.png'})
   if(width===393)await page.screenshot({path:'/tmp/2tbr-header-storefront-guest.png',fullPage:true})
   assert.equal(await page.locator('.market-pool-demo-pill').count(),0)
-  assert.equal(await page.locator('.mhome-pool-photos a').first().getAttribute('href'),`/shop/${ids.product}?area=${ids.community}`)
+  assert.equal(await page.locator('.mhome-pool-card .mhome-pool-link').first().getAttribute('href'),`/preview-live/pool/${ids.pool}`)
   const poolText=await page.locator('.mhome-pool-card').first().innerText()
   assert.ok(!poolText.includes('নমুনা')&&!poolText.includes('DEMO'))
-  assert.ok(poolText.includes('Pending')||poolText.includes('অপেক্ষমাণ'),'Unpublished price remains pending')
+  assert.equal(await page.locator('.mhome-pool-card [data-empty="true"]').count()>0,true,'Missing Pool values keep the approved blurred slots')
   const dock=page.locator('.market-storefront-dock')
   assert.equal(await dock.isVisible(),width<768)
   if(width<768)assert.equal(await dock.evaluate(e=>getComputedStyle(e).position),'fixed')
@@ -111,11 +111,14 @@ try{
    await page.screenshot({path:'/tmp/2tbr-header-dock-storefront-footer.png'})
    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}))
   }
-  await page.locator('.mhome-pool-photos a').first().click()
-  await page.waitForURL(url=>url.pathname==='/shop/'+ids.product)
+  await page.locator('.mhome-pool-card .mhome-pool-link').first().click()
+  await page.waitForURL(url=>url.pathname==='/preview-live/pool/'+ids.pool)
+  await page.locator('.native-preview-product-link').first().click()
+  await page.waitForURL(url=>url.pathname==='/preview-live/product/'+ids.product)
   await page.getByRole('heading',{name:'Synthetic browser rice',exact:true,level:1}).waitFor()
   await assertCustomerChrome(page,width)
   assert.ok(!page.url().includes('/login'))
+  await page.goto('http://127.0.0.1:3000/shop/'+ids.product,{waitUntil:'load'})
   await page.getByRole('link',{name:'Sign in to join',exact:true}).click()
   await page.waitForURL(url=>url.pathname==='/login')
   assert.ok(page.url().includes('/login'))
