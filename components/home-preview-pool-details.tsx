@@ -131,7 +131,7 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
       <small>{tier.title}</small><strong data-empty={tier.value===null||undefined}>{view?cash(tier.value):units?cash(tier.value):'—'}</strong>
      </div>)}
     </div>
-    <p className="native-preview-hint">{units?t('Illustrative totals for selected quantities. All final prices require qualification and confirmation.','নির্বাচিত পরিমাণের নমুনা দাম। চূড়ান্ত মূল্য যাচাই ও নিশ্চিতকরণ সাপেক্ষ।'):
+    <p className="native-preview-hint">{pool.launchOfferId&&units?t('Totals for your selected quantities. Staff confirm delivery charges.','আপনার নির্বাচিত পরিমাণের মোট মূল্য। টিম ডেলিভারি চার্জ নিশ্চিত করবে।'):units?t('Illustrative totals for selected quantities. All final prices require qualification and confirmation.','নির্বাচিত পরিমাণের নমুনা দাম। চূড়ান্ত মূল্য যাচাই ও নিশ্চিতকরণ সাপেক্ষ।'):
      t('Select one or more products above to compare starting, current and next-tier prices.','শুরুর, বর্তমান ও পরবর্তী দামের তুলনায় ওপর থেকে এক বা একাধিক পণ্য বেছে নিন।')}</p>
    </section>
 
@@ -148,13 +148,13 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
     ].map(([label,value],i)=><div className="native-preview-split native-preview-basket-row" key={String(label)}>
      <span>{label}</span><strong data-empty={value===null||undefined} className={i===1?'native-preview-total':''}>{cash(value===null?null:Number(value))}</strong>
     </div>)}
-    <p className="native-preview-hint">{t('Excludes delivery fees. Your order requires manual staff approval.','ডেলিভারি চার্জ বাদে। অর্ডারের জন্য টিমের ম্যানুয়াল অনুমোদন প্রয়োজন।')}</p>
+    <p className="native-preview-hint">{pool.launchOfferId?t('Excludes delivery fees. Your order requires manual staff approval.','ডেলিভারি চার্জ বাদে। অর্ডারের জন্য টিমের ম্যানুয়াল অনুমোদন প্রয়োজন।'):t('Excludes delivery fees. No real stock, booking or payment occurs in demo.','ডেলিভারি চার্জ বাদে। ডেমোতে বাস্তব স্টক, বুকিং বা পেমেন্ট হয় না।')}</p>
    </section>
 
    <section className="native-preview-panel native-preview-pool-before">
     <h2>{t('Before you join','যোগদানের আগে জানুন')}</h2>
     <p>{t('Select only what you need. The final price, availability, deadline and delivery rules must be confirmed.','শুধু প্রয়োজনীয় পণ্য বেছে নিন। চূড়ান্ত দাম, প্রাপ্যতা, সময়সীমা ও ডেলিভারি নিশ্চিত করতে হবে।')}</p>
-    <p>{t('Review your selection in the cart and sign in at checkout to submit your order.','কার্টে নির্বাচন দেখুন এবং অর্ডার করতে চেকআউটে লগইন করুন।')}</p>
+    <p>{pool.launchOfferId?t('Review your selection in the cart and sign in at checkout to submit your order.','কার্টে নির্বাচন দেখুন এবং অর্ডার করতে চেকআউটে লগইন করুন।'):t('No order, Pool commitment or payment is created from this preview.','এই প্রিভিউ থেকে কোনো অর্ডার, পুলে যোগদান বা পেমেন্ট তৈরি হয় না।')}</p>
    </section>
    <div className="native-preview-pool-review" role="region" aria-label={t('Pool selection review','পুল নির্বাচন পর্যালোচনা')}>
     <div><small>{n(units)} {t('units selected','টি ইউনিট নির্বাচিত')}</small><strong>{cash(current)}</strong></div>
