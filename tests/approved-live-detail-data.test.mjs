@@ -9,8 +9,10 @@ const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
 const parity=await loadSource('lib/preview-native-detail-data.ts',{'@/lib/home-card-preview-fixtures':fixtures})
 const viewData=await loadSource('lib/approved-card-view.ts',{'./approved-live-detail-data':data})
 const detailMocks={
- '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ '@/lib/launch-cart':{addLaunchItem:()=>{},readLaunchCart:()=>[]},
  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
+ 'next/navigation':{useRouter:()=>({refresh:()=>{},push:()=>{}})},
+ '@/app/actions/simple-offer-joins':{joinSimpleSaleDeal:async()=>({ok:false})},
  '@/components/public-header':{PublicHeader:()=>null},'@/components/public-footer':{PublicFooter:()=>null},
  '@/lib/use-storefront-language':{useStorefrontLanguage:lang=>[lang,()=>{}]},
  '@/lib/home-card-preview-fixtures':fixtures,'@/lib/preview-native-detail-data':parity,

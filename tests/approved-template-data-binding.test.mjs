@@ -9,8 +9,10 @@ const data=await loadSource('lib/approved-live-detail-data.ts')
 const view=await loadSource('lib/approved-card-view.ts',{'./approved-live-detail-data':data})
 const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
 const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
- '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ '@/lib/launch-cart':{addLaunchItem:()=>{},readLaunchCart:()=>[]},
  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
+ 'next/navigation':{useRouter:()=>({refresh:()=>{},push:()=>{}})},
+ '@/app/actions/simple-offer-joins':{joinSimpleSaleDeal:async()=>({ok:false})},
  '@/lib/home-card-preview-fixtures':fixtures,
 })
 const vendor={product_id:'00000000-0000-4000-8000-000000000821',name:'Published rice',category:'Grocery',package_size:'1 kg',image_url:'https://example.test/rice.webp',approved_unit_price:120,supplier_name:'Public supplier',supplier_handover_days:1}

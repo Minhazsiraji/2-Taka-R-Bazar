@@ -8,7 +8,9 @@ import {loadSource} from './helpers/load-tsx.mjs'
 const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
 const link=({href,children,...props})=>React.createElement('a',{href,...props},children)
 const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
- '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ '@/lib/launch-cart':{addLaunchItem:()=>{},readLaunchCart:()=>[]},
+ 'next/navigation':{useRouter:()=>({refresh:()=>{},push:()=>{}})},
+ '@/app/actions/simple-offer-joins':{joinSimpleSaleDeal:async()=>({ok:false})},
  'next/link':link,
  '@/lib/home-card-preview-fixtures':fixtures,
  './home-card-preview.css':{},

@@ -6,7 +6,9 @@ import {renderToStaticMarkup} from 'react-dom/server'
 import {loadSource} from './helpers/load-tsx.mjs'
 const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
 const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
- '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ '@/lib/launch-cart':{addLaunchItem:()=>{},readLaunchCart:()=>[]},
+ 'next/navigation':{useRouter:()=>({refresh:()=>{},push:()=>{}})},
+ '@/app/actions/simple-offer-joins':{joinSimpleSaleDeal:async()=>({ok:false})},
  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
  '@/lib/home-card-preview-fixtures':fixtures,'./home-card-preview.css':{},
 })
@@ -79,7 +81,9 @@ test('preview detail route resolves fixture links, preserves legacy demos and re
 test('Group and Exclusive details follow approved native display tiers, retail-only master and preview safety',async()=>{
  const parity=await loadSource('lib/preview-native-detail-data.ts',{'@/lib/home-card-preview-fixtures':fixtures})
  const {HomePreviewProductDetails}=await loadSource('components/home-preview-product-details.tsx',{
-  '@/lib/launch-cart':{addLaunchItem:()=>{}},
+  '@/lib/launch-cart':{addLaunchItem:()=>{},readLaunchCart:()=>[]},
+  'next/navigation':{useRouter:()=>({refresh:()=>{},push:()=>{}})},
+  '@/app/actions/simple-offer-joins':{joinSimpleSaleDeal:async()=>({ok:false})},
  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
   '@/components/public-header':{PublicHeader:()=>null},'@/components/public-footer':{PublicFooter:()=>null},
   '@/lib/use-storefront-language':{useStorefrontLanguage:language=>[language,()=>{}]},

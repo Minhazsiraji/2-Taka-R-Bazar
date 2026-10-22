@@ -14,5 +14,5 @@ export function HeaderCartCount(){
   return()=>{window.removeEventListener('2tbr-cart-updated',refresh);window.removeEventListener('storage',refresh);window.removeEventListener('focus',refresh)}
  },[])
  if(!count)return null
- return <span className="notification-unread-badge absolute right-[-2px] top-[1px] inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-cyan-300 px-1 text-center text-[10px] font-black leading-none text-slate-950" aria-label={`${count} items in cart`}>{count>99?'99+':count}</span>
+ return <div className="notification-unread-badge absolute right-[-2px] top-[1px] inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-cyan-300 px-1 text-center text-[10px] font-black leading-none text-slate-950" aria-label={`${count} items in cart`}>{count>99?'99+':count}</div>
 }

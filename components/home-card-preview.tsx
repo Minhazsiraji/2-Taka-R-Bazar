@@ -2,7 +2,9 @@
 
 import {useEffect,useRef,useState} from 'react'
 import Link from 'next/link'
-import {addLaunchItem} from '@/lib/launch-cart'
+import {useRouter} from 'next/navigation'
+import {joinSimpleSaleDeal} from '@/app/actions/simple-offer-joins'
+import {addLaunchItem,readLaunchCart} from '@/lib/launch-cart'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {previewProducts,previewDeals,previewPools,previewPhoto,previewMoney as money} from '@/lib/home-card-preview-fixtures'
 import type {ApprovedProduct,ApprovedHomeView,ApprovedDeal,ApprovedPool} from '@/lib/approved-card-view'
@@ -51,6 +53,8 @@ function PreviewDialog({selection,language,onClose}:{selection:NonNullable<Selec
 }
 
 export function PreviewHomeCards({section,language,search,view,selectedArea=''}:Props){
+ const router=useRouter()
+ const [joining,setJoining]=useState('')
  const bn=language==='bn'
  const [selection,setSelection]=useState<Selection>(null)
  const [notice,setNotice]=useState('')
@@ -83,7 +87,26 @@ export function PreviewHomeCards({section,language,search,view,selectedArea=''}:
       <div className="app-card-preview-deal-stats"><span>👥 {d.joined}{d.target>0||!d.launchOfferId?'/'+d.target:''} joined</span><span data-empty={d.days===null||undefined}>◷ Ends in {d.days??0} {d.days===1?'day':'days'}</span></div>
       <Progress value={d.joined} max={d.target} label={bn?'গ্রুপ অংশগ্রহণ':'Group participation'}/>
       <div className="app-card-preview-actions"><Link href={d.empty?'#':productHref(d.id,'deal')+(view&&d.offerId?'&offer='+d.offerId:'')+(view&&selectedArea?'&area='+encodeURIComponent(selectedArea):'')}>{bn?'বিস্তারিত':'View details'}</Link>
-       <button type="button" className="app-card-preview-primary" disabled={Boolean(view)&&!d.purchasable} onClick={()=>{if(d.launchOfferId){addLaunchItem(d.id,d.launchOfferId);setNotice(bn?'কার্টে যোগ হয়েছে।':'Added to cart.');return}if(!view)setSelection({kind:'deal',id:d.id})}}>{bn?'গ্রুপে যোগ দিন':'Join Deal'}</button></div>
+       <button type="button" className="app-card-preview-primary" disabled={Boolean(view)&&(!d.purchasable||joining===d.offerId)} onClick={async()=>{
+        if(d.launchOfferId&&d.offerId){
+         setJoining(d.offerId)
+         try{
+          const result=await joinSimpleSaleDeal(d.offerId,d.id,selectedArea)
+          if(result.ok){
+           if(!readLaunchCart().some(i=>i.product_id===d.id&&i.offer_id===d.launchOfferId))addLaunchItem(d.id,d.launchOfferId)
+           setNotice(bn?'গ্রুপ ডিলে যোগ দিয়েছেন। কার্টে যোগ হয়েছে।':'Joined Group Deal and added to cart. Checkout is still required.')
+           window.dispatchEvent(new Event('2tbr-notifications-refresh'))
+           router.refresh()
+          }else{
+           setNotice(result.message)
+           if(result.code==='SIGN_IN')router.push('/login?next=%2F')
+          }
+         }catch{setNotice('Could not join this Group Deal. Please retry.')}
+         finally{setJoining('')}
+         return
+        }
+        if(!view)setSelection({kind:'deal',id:d.id})
+       }}>{bn?'গ্রুপে যোগ দিন':'Join Deal'}</button></div>
      </div>
     </article>})}
   </div>:view?<div className="mhome-empty" data-empty="true"> </div>:<div className="mhome-empty">{bn?'এই খোঁজে গ্রুপ ডিল নেই।':'No Group Deals match your search.'}</div>
