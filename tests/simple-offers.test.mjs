@@ -56,3 +56,15 @@ test('one multi-area offer appears once in each selected community and never in 
  const other=views.approvedHomeView({offers,pools,products:[],catalog:[],vendorProducts:adapters.simpleCartCatalog(shared)},'88888888-8888-4888-8888-888888888888')
  assert.ok([...other.products,...other.deals,...other.pools].every(p=>p.empty))
 })
+
+test('published deal progress uses configured thresholds and verified buyers, not cart activity',()=>{
+ const configured={...group,buyer_count:1,buyer_target:3,pending_buyers:2}
+ const offers=adapters.simpleStorefrontOffers([configured])
+ assert.equal(offers[0].buyer_count,1)
+ assert.equal(offers[0].next_threshold,3)
+ const home=views.approvedHomeView({offers,pools:[],products:[],catalog:[]},area,'','Area A')
+ assert.equal(home.deals[0].joined,1)
+ assert.equal(home.deals[0].target,3)
+ assert.equal(home.deals[0].community,'Community: Area A')
+ assert.equal(views.approvedHomeView({offers,pools:[],products:[],catalog:[]}).deals[0].community,'Community: All')
+})
