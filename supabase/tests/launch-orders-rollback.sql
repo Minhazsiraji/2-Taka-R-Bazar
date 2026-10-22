@@ -1,11 +1,22 @@
 -- Transactional launch qualification. Uses existing public listings, fictional
 -- customer identities, and ROLLBACK. No order, user, payment or stock persists.
 begin;
+create extension if not exists pgtap with schema extensions;
+select no_plan();
 do $$
-declare u uuid:=gen_random_uuid();other_u uuid:=gen_random_uuid();admin_u uuid;pid uuid;stock integer;price numeric;oid uuid;oid2 uuid;k uuid:=gen_random_uuid();blocked boolean;recipient uuid;
+declare u uuid:=gen_random_uuid();other_u uuid:=gen_random_uuid();admin_u uuid;pid uuid;stock integer;price numeric;oid uuid;oid2 uuid;k uuid:=gen_random_uuid();blocked boolean;recipient uuid;vendor uuid;
 begin
  select product_id,available_quantity,approved_unit_price into pid,stock,price from jsonb_to_recordset(public.get_public_launch_catalog(null)) as x(product_id uuid,available_quantity integer,approved_unit_price numeric) where available_quantity>=4 limit 1;
- if pid is null then raise exception 'This rollback test requires a published launch listing';end if;
+ if pid is null then
+  pid=gen_random_uuid();vendor=gen_random_uuid();admin_u=gen_random_uuid();stock=100;price=120;
+  insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) values(admin_u,'00000000-0000-0000-0000-000000000000','authenticated','authenticated','rollback-'||admin_u||'@example.invalid',now(),now());
+  insert into public.user_roles(user_id,role) values(admin_u,'admin');
+  insert into public.products(id,name,category,package_size,unit,sku,source_type,active,is_demo) values(pid,'Fictional launch rice','Rice','1 kg','kg','ROLLBACK-'||pid,'SUPPLIER_POOL',true,false);
+  insert into public.suppliers(id,business_name,active,reliability_status) values(vendor,'Fictional launch supplier',true,'unrated');
+  insert into public.supplier_products(supplier_id,product_id,active,relationship_type) values(vendor,pid,true,'vendor');
+  insert into public.vendor_offer_drafts(product_id,supplier_id,vendor_unit_cost,proposed_sale_price,updated_by,source_audit_id) values(pid,vendor,80,price,admin_u,1);
+  insert into public.pilot_vendor_product_listings(product_id,supplier_id,approved_unit_price,source_audit_id,published,approved_by,launch_enabled,available_quantity,old_price) values(pid,vendor,price,1,true,admin_u,true,stock,0);
+ end if;
  select approved_by into admin_u from public.pilot_vendor_product_listings where product_id=pid;
  insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at) values
  (u,'00000000-0000-0000-0000-000000000000','authenticated','authenticated','rollback-'||u||'@example.invalid',now(),now()),
@@ -42,5 +53,6 @@ begin
  if (select available_quantity from public.pilot_vendor_product_listings where product_id=pid)<>stock-2 then raise exception 'Cancellation did not restore exactly one reservation';end if;
  if has_table_privilege('authenticated','public.launch_orders','insert') or has_function_privilege('anon','public.launch_submit_order(jsonb,uuid,text,text,text,text,boolean)','execute') then raise exception 'Unexpected public write grant';end if;
 end $$;
-select 'PASS: authoritative prices, stock reservation, idempotency, capacity, RLS ownership, staff approval, manual payment claim, cancellation and grants' as launch_qualification;
+select ok(true,'Authoritative prices, reservation, idempotency, capacity, RLS, approval, manual reference, cancellation and grants');
+select * from finish();
 rollback;
