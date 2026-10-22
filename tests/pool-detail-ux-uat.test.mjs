@@ -13,7 +13,7 @@ test('home offers all products until selected area then filters strictly',()=>{
  assert.match(catalog,/browseCatalogOffers\(offers,\{area,mode,category,search\}\)/)
  assert.match(catalog,/!area\?<div className="market-product-actions/)
  assert.match(catalog,/selectArea\(offer.community_id\)/)
- assert.match(catalog,/categories=useMemo\(\(\)=>\[\.\.\.new Set\(offers\.filter\(o=>!area\|\|o\.community_id===area\)/)
+ assert.ok(catalog.includes('offers.filter(o=>!area||(o.community_ids??[o.community_id]).includes(area))'))
  assert.match(catalog,/getCommunityDemoFeaturedPools\(offers,area\)/)
 })
 test('selected demo Pool opens with only its chosen community package',()=>{

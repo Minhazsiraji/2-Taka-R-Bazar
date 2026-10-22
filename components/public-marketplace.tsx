@@ -40,12 +40,12 @@ export function PublicMarketplace({areas,offers,vendorProducts=[],authenticated=
  const [mode,setMode]=useState<'all'|'group'|'pool'>('all')
  const [category,setCategory]=useState('all')
  const activeArea=areas.find(a=>a.community_id===area)
- const categories=useMemo(()=>[...new Set(offers.filter(o=>!area||o.community_id===area).map(o=>o.category).filter(Boolean))].sort(),[offers,area])
+ const categories=useMemo(()=>[...new Set(offers.filter(o=>!area||(o.community_ids??[o.community_id]).includes(area)).map(o=>o.category).filter(Boolean))].sort(),[offers,area])
  // First visit: discover all products. After area selection: only that community's offers.
  // Server-side checkout must independently verify membership and delivery eligibility.
  const filtered=useMemo(()=>browseCatalogOffers(offers,{area,mode,category,search}),[offers,area,search,mode,category])
  const localOfferCount=filtered.length
- const heroPools=demoMode?getCommunityDemoFeaturedPools(offers,area):pools.filter(p=>!area||p.community_id===area)
+ const heroPools=demoMode?getCommunityDemoFeaturedPools(offers,area):pools.filter(p=>!area||(p.community_ids??[p.community_id]).includes(area))
  const groupHref=authenticated?'/group-deals':'/login?next=%2Fgroup-deals'
  const poolHref=authenticated?'/pool':'/login?next=%2Fpool'
  const useLocation=useCallback(()=>{

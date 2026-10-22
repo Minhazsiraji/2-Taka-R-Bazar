@@ -102,10 +102,10 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
   return()=>window.clearInterval(timer)
  },[])
  const query=search.trim().toLocaleLowerCase()
- const localOffers=offers.filter(o=>(!selectedArea||o.community_id===selectedArea)&&(
+ const localOffers=offers.filter(o=>(!selectedArea||(o.community_ids??[o.community_id]).includes(selectedArea))&&(
   !query||[o.product_name,o.product_name_bn,o.brand,o.category,o.offer_title].some(v=>(v??'').toLocaleLowerCase().includes(query))))
  const deals=localOffers.filter(o=>o.offer_kind==='GROUP_DEAL').slice(0,6)
- const poolRows=pools.filter(p=>!selectedArea||!p.community_id||p.community_id===selectedArea).slice(0,3)
+ const poolRows=pools.filter(p=>!selectedArea||!p.community_id||(p.community_ids??[p.community_id]).includes(selectedArea)).slice(0,3)
  // Show genuine checkout-ready SOLO offers first. SEO/showcase entries are read-only
  // fallbacks, never a source of made-up price, savings or inventory.
  type HomeProduct={

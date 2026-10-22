@@ -6,6 +6,7 @@ export type PublicVendorBookingProduct={
  offer_id?:string
  offer_title?:string
  offer_kind?:string
+ community_ids?:string[]
  community_id?:string
  available_quantity?:number
  old_price?:number

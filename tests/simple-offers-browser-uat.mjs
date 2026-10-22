@@ -8,12 +8,12 @@ const api=process.env.NEXT_PUBLIC_SUPABASE_URL??'',secret=process.env.LOCAL_SUPA
 const base=process.env.NEXT_PUBLIC_SITE_URL??'http://127.0.0.1:3000'
 if(new URL(api).hostname!=='127.0.0.1'||new URL(base).hostname!=='127.0.0.1'||!secret)throw Error('Disposable localhost only')
 const admin=createClient(api,secret,{auth:{persistSession:false,autoRefreshToken:false}})
-const suffix=randomUUID().slice(0,8),cid=randomUUID(),name='Fictional offer rice '+suffix
+const suffix=randomUUID().slice(0,8),cid=randomUUID(),cid2=randomUUID(),cid3=randomUUID(),name='Fictional offer rice '+suffix
 const email='shared-offer-'+suffix+'@example.invalid',password=randomUUID()+'Aa1!'
 const created=await admin.auth.admin.createUser({email,password,email_confirm:true});assert.ifError(created.error)
 const uid=created.data.user.id
 assert.ifError((await admin.from('user_roles').insert({user_id:uid,role:'admin'})).error)
-assert.ifError((await admin.from('communities').insert({id:cid,name:'Fictional offer area '+suffix,slug:'offer-area-'+suffix})).error)
+assert.ifError((await admin.from('communities').insert([{id:cid,name:'Fictional offer area '+suffix,slug:'offer-area-'+suffix},{id:cid2,name:'Fictional second area '+suffix,slug:'offer-second-'+suffix},{id:cid3,name:'Fictional unselected area '+suffix,slug:'offer-other-'+suffix}])).error)
 const jar=new Map()
 const client=createServerClient(api,key,{cookies:{getAll:()=>[...jar.values()],setAll:cs=>cs.forEach(c=>jar.set(c.name,c))}})
 assert.ifError((await client.auth.signInWithPassword({email,password})).error)
@@ -37,7 +37,18 @@ try{
   await page.goto(base+'/admin/offers',{waitUntil:'networkidle'})
   const form=page.getByRole('form',{name:'Shared offer setup'})
   await form.locator('[name="kind"]').selectOption(kind)
-  await form.locator('[name="community_id"]').selectOption(cid)
+  if(kind==='GROUP_DEAL'){
+   await form.getByRole('button',{name:'Select all',exact:true}).click()
+   assert.ok(await form.locator('input[name="community_ids"]').count()>=3)
+   await form.getByRole('button',{name:'Clear selection',exact:true}).click()
+   assert.equal(await form.locator('input[name="community_ids"]').count(),0)
+  }
+  await form.getByRole('searchbox',{name:'Search communities / areas'}).fill('Fictional offer area '+suffix)
+  await form.getByLabel('Fictional offer area '+suffix,{exact:true}).check()
+  await form.getByRole('searchbox',{name:'Search communities / areas'}).fill('Fictional second area '+suffix)
+  await form.getByLabel('Fictional second area '+suffix,{exact:true}).check()
+  assert.equal(await form.locator('input[name="community_ids"]').count(),2)
+  await form.getByRole('searchbox',{name:'Search communities / areas'}).fill('')
   await form.locator('[name="title"]').fill('Fictional '+kind+' '+suffix)
   await form.getByLabel(name+' · 1 kg',{exact:false}).check()
   await form.locator('[name="price:'+pid+'"]').fill(price)
@@ -49,13 +60,41 @@ try{
    await form.getByRole('alert').waitFor()
    assert.equal(await form.locator('[name="title"]').inputValue(),'Fictional '+kind+' '+suffix)
    assert.equal(await form.locator('[name="price:'+pid+'"]').inputValue(),price)
+   assert.equal(await form.locator('input[name="community_ids"]').count(),2)
    await form.locator('[name="closes_at"]').fill('')
+  }
+  if(kind==='COMMUNITY_POOL'){
+   for(const width of [393,820,1440]){
+    await page.setViewportSize({width,height:900})
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Offer form overflows at '+width)
+    await page.screenshot({path:'/tmp/2tbr-shared-offer-areas-'+width+'.png',fullPage:true})
+   }
+   await page.setViewportSize({width:393,height:852})
   }
   await form.getByRole('button',{name:'Save offer',exact:true}).click()
   await form.getByText('Offer published.',{exact:false}).waitFor()
   const saved=await client.from('simple_sale_offers').select('id').eq('title','Fictional '+kind+' '+suffix).single();assert.ifError(saved.error);offers[kind]=saved.data.id
  }
+ await page.goto(base+'/admin/offers?edit='+offers.COMMUNITY_POOL,{waitUntil:'networkidle'})
+ const editForm=page.getByRole('form',{name:'Shared offer setup'})
+ assert.equal(await editForm.getByLabel('Fictional offer area '+suffix,{exact:true}).isChecked(),true)
+ assert.equal(await editForm.getByLabel('Fictional second area '+suffix,{exact:true}).isChecked(),true)
+ assert.equal(await editForm.getByLabel('Fictional unselected area '+suffix,{exact:true}).isChecked(),false)
+ await editForm.getByRole('button',{name:'Save offer',exact:true}).click()
+ await editForm.getByText('Offer published.',{exact:false}).waitFor()
  const feed=await client.rpc('get_public_simple_offers');assert.ifError(feed.error)
+ const own=feed.data.filter(o=>Object.values(offers).includes(o.id))
+ assert.equal(own.length,3)
+ assert.ok(own.every(o=>o.community_ids.length===2&&o.community_ids.includes(cid)&&o.community_ids.includes(cid2)&&!o.community_ids.includes(cid3)))
+ for(const area of [cid,cid2,cid3]){
+  await page.evaluate(()=>localStorage.removeItem('2tbr-browsing-area-v1'))
+  await page.goto(base+'/?area='+area+'&q='+encodeURIComponent(name),{waitUntil:'networkidle'})
+  const count=await page.locator('.app-card-preview-deal').filter({hasText:name}).count()
+  assert.equal(count,area===cid3?0:1,'Deal community membership')
+  const poolCount=await page.locator('.app-card-preview-pool').filter({hasText:'Fictional COMMUNITY_POOL '+suffix}).count()
+  assert.equal(poolCount,area===cid3?0:1,'Pool community membership')
+ }
+ await page.evaluate(()=>localStorage.removeItem('2tbr-browsing-area-v1'))
  assert.ok(feed.data.filter(o=>Object.values(offers).includes(o.id)).every(o=>o.items[0].image_url===product.data.image_url))
  assert.equal((await client.from('launch_product_stock').select('available_quantity').eq('product_id',pid).single()).data.available_quantity,10)
  await page.goto(base+'/?q='+encodeURIComponent(name),{waitUntil:'networkidle'})
@@ -82,5 +121,5 @@ try{
  assert.equal((await client.from('launch_product_stock').select('available_quantity').eq('product_id',pid).single()).data.available_quantity,9)
  assert.deepEqual(errors,[])
  await page.screenshot({path:'/tmp/2tbr-shared-offer-order.png',fullPage:true})
- console.log('PASS upload once → create all three offers → Deal cart price → Pool selection replaces offer → server-priced manual order → shared stock')
+ console.log('PASS upload once → multi-area all three offers → search/select all/edit/retry → selected-area public browsing without duplicate cards → Deal cart price → Pool checkout → shared stock')
 }finally{await browser.close()}

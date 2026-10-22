@@ -16,6 +16,7 @@ export type DemoFeaturedPool={
  collection:{en:string;bn:string}
  isDemo:boolean
  id?:string
+ community_ids?:string[]
  community_id?:string
  livePricing?:{currentPrice:number|null;nextPrice:number|null;upcoming:number|null;householdsNeeded:number;soloPrice:number|null}
 }

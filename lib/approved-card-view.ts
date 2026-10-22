@@ -23,7 +23,7 @@ export function approvedHomeView(data:LiveHomepageData,area='',search=''):Approv
   map.set(p.id,p)
  }
  for(const p of data.vendorProducts??[]){
-  if(area&&p.community_id&&p.community_id!==area)continue
+  if(area&&p.community_id&&!(p.community_ids??[p.community_id]).includes(area))continue
   if(!uuidPattern.test(p.product_id)||!p.name?.trim()||!validMoney(p.approved_unit_price))continue
   const row=map.get(p.product_id)??{id:p.product_id,name:p.name,nameBn:p.name,unit:p.package_size,photo:'',image:p.image_url,price:null,oldPrice:null,stock:null}
   if(row.price===null)row.price=p.approved_unit_price

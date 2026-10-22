@@ -41,3 +41,18 @@ test('community filtering keeps another area Direct offer out of Exclusive cards
  const home=views.approvedHomeView({offers:adapters.simpleStorefrontOffers([direct]),pools:[],products:[],catalog:[],vendorProducts:adapters.simpleCartCatalog([direct])},'66666666-6666-4666-8666-666666666666')
  assert.ok(home.products.every(p=>p.empty))
 })
+
+test('one multi-area offer appears once in each selected community and never in other areas',()=>{
+ const second='77777777-7777-4777-8777-777777777777'
+ const shared=[direct,group,pool].map(o=>({...o,community_ids:[area,second],community_name:'Area A, Area B'}))
+ const offers=adapters.simpleStorefrontOffers(shared),pools=adapters.simpleFeaturedPools(shared)
+ for(const selected of ['',area,second]){
+  const home=views.approvedHomeView({offers,pools,products:[],catalog:[],vendorProducts:adapters.simpleCartCatalog(shared)},selected)
+  assert.equal(home.products.filter(p=>!p.empty).length,1)
+  assert.equal(home.deals.filter(p=>!p.empty).length,1)
+  assert.equal(home.pools.filter(p=>!p.empty).length,1)
+  assert.equal(home.deals[0].launchOfferId,group.id)
+ }
+ const other=views.approvedHomeView({offers,pools,products:[],catalog:[],vendorProducts:adapters.simpleCartCatalog(shared)},'88888888-8888-4888-8888-888888888888')
+ assert.ok([...other.products,...other.deals,...other.pools].every(p=>p.empty))
+})

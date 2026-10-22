@@ -21,11 +21,11 @@ export const priceText=(n:number|null,bn=false)=>n==null?(bn?'দাম প্�
 export const safeTime=(v:string|null|undefined)=>v&&Number.isFinite(new Date(v).getTime())?v:null
 export function publishedLiveOffers(offers:StorefrontOffer[],area=''){
  return offers.filter(o=>Boolean(o.product_id&&o.offer_id&&o.community_id)&&
-  !o.is_demo&&!o.commerce_synthetic&&(!area||o.community_id===area))
+  !o.is_demo&&!o.commerce_synthetic&&(!area||(o.community_ids??[o.community_id]).includes(area)))
 }
 export function publishedLivePools(pools:DemoFeaturedPool[],area=''){
  return pools.filter(p=>Boolean(p.id&&uuidPattern.test(p.id))&&!p.isDemo&&
-  (!area||p.community_id===area)&&Array.isArray(p.bundle)&&p.bundle.some(line=>line.offer&&!line.offer.is_demo&&!line.offer.commerce_synthetic))
+  (!area||(p.community_ids??[p.community_id]).includes(area))&&Array.isArray(p.bundle)&&p.bundle.some(line=>line.offer&&!line.offer.is_demo&&!line.offer.commerce_synthetic))
 }
 export function productFromPublicSources(id:string,offers:PublicLiveOffer[],seo:ProductSeoPublic|null,
  showcase:ShowcaseProduct|null):PublicLiveProduct|null{
