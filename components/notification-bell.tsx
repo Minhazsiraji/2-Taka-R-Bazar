@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import {createPortal} from 'react-dom'
+import {HeaderCartCount} from '@/components/header-cart-count'
 import {useEffect,useRef,useState} from 'react'
 import {usePathname} from 'next/navigation'
 import {HeaderActionIcon} from '@/components/header-action-icon'
@@ -9,6 +11,12 @@ type Status={authenticated:boolean;unread:number;latest:string|null}
 export function NotificationBell(){
  const pathname=usePathname()
  const [status,setStatus]=useState<Status>({authenticated:false,unread:0,latest:null})
+ const [cartTarget,setCartTarget]=useState<Element|null>(null)
+ useEffect(()=>{
+  const target=document.querySelector('.market-header-quick-cart')
+  if(target instanceof HTMLElement){target.style.position='relative';setCartTarget(target)}
+  else setCartTarget(null)
+ },[pathname])
  const previous=useRef<Status|null>(null)
  useEffect(()=>{
   const controller=new AbortController()
@@ -36,8 +44,8 @@ export function NotificationBell(){
   return()=>{controller.abort();window.clearInterval(timer);window.removeEventListener('focus',refresh);window.removeEventListener('2tbr-notifications-refresh',refresh);document.removeEventListener('visibilitychange',refresh)}
  },[pathname])
  const unread=status.unread
- return <Link href="/notifications" className="customer-notification-bell relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm" aria-label={unread?`${unread} unread notifications`:'Notifications'} title="Notifications">
+ return <>{cartTarget&&createPortal(<HeaderCartCount/>,cartTarget)}<Link href="/notifications" className="customer-notification-bell relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm" aria-label={unread?`${unread} unread notifications`:'Notifications'} title="Notifications">
   <HeaderActionIcon kind="bell"/>
   {unread>0&&<span className="notification-unread-badge absolute right-[-2px] top-[1px] inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-white bg-cyan-300 px-1 text-center text-[10px] font-black leading-none text-slate-950" aria-hidden="true">{unread>99?'99+':unread}</span>}
- </Link>
+ </Link></>
 }

@@ -13,7 +13,7 @@ const blank='\u00a0'
 export const emptyProduct=(id:string):ApprovedProduct=>({id,name:blank,nameBn:blank,unit:blank,photo:'',image:null,price:null,oldPrice:null,stock:null,empty:true})
 const remaining=(date:string|null|undefined)=>safeTime(date)?Math.max(0,Math.ceil((new Date(date!).getTime()-Date.now())/86400000)):null
 const stock=(o:PublicLiveOffer|undefined)=>o&&typeof o.commerce_available_quantity==='number'&&Number.isSafeInteger(o.commerce_available_quantity)&&o.commerce_available_quantity>=0?o.commerce_available_quantity:null
-export function approvedHomeView(data:LiveHomepageData,area='',search=''):ApprovedHomeView{
+export function approvedHomeView(data:LiveHomepageData,area='',search='',selectedAreaName=''):ApprovedHomeView{
  const offers=publishedLiveOffers(data.offers,area),map=new Map<string,ApprovedProduct>()
  for(const p of data.catalog)map.set(p.product_id,{id:p.product_id,name:p.title_en,nameBn:p.title_bn,unit:p.package_size,photo:'',image:p.image_url,price:null,oldPrice:null,stock:null})
  for(const p of data.products.filter(p=>!p.is_demo))if(!map.has(p.product_id))map.set(p.product_id,{id:p.product_id,name:p.name,nameBn:p.name_bn??p.name,unit:p.package_size,photo:'',image:p.image_url,price:null,oldPrice:null,stock:null})
@@ -32,7 +32,7 @@ export function approvedHomeView(data:LiveHomepageData,area='',search=''):Approv
  }
  const q=search.trim().toLocaleLowerCase(),matches=(p:ApprovedProduct)=>!q||[p.name,p.nameBn,p.unit].some(s=>s.toLocaleLowerCase().includes(q))
  const products=[...map.values()].filter(matches).slice(0,6)
- const deals:ApprovedDeal[]=offers.filter(o=>o.offer_kind==='GROUP_DEAL'&&matches(map.get(o.product_id)!)).slice(0,6).map(o=>({id:o.product_id,offerId:o.offer_id,launchOfferId:o.launch_offer_id,purchasable:Boolean(o.launch_offer_id&&(stock(o)??0)>0),price:confirmedOfferPrice(o),reference:o.reference_price,joined:o.buyer_count??0,target:o.next_threshold??0,days:remaining(o.closes_at),community:o.offer_title}))
+ const deals:ApprovedDeal[]=offers.filter(o=>o.offer_kind==='GROUP_DEAL'&&matches(map.get(o.product_id)!)).slice(0,6).map(o=>({id:o.product_id,offerId:o.offer_id,launchOfferId:o.launch_offer_id,purchasable:Boolean(o.launch_offer_id&&(stock(o)??0)>0),price:confirmedOfferPrice(o),reference:o.reference_price,joined:o.buyer_count??0,target:o.next_threshold??0,days:remaining(o.closes_at),community:'Community: '+(area&&selectedAreaName?selectedAreaName:'All')}))
  const pools=publishedLivePools(data.pools,area).slice(0,2).map(p=>approvedPoolView(p).pool)
  for(const pool of pools)for(const id of pool.products)if(!map.has(id)){
   const item=publishedLivePools(data.pools,area).find(p=>p.id===pool.id)?.bundle.find(l=>l.offer.product_id===id)?.offer

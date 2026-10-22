@@ -11,7 +11,7 @@ import './approved-data-state.css'
 
 type Product=ApprovedProduct
 type Selection={kind:'deal';id:string}|null
-type Props={section:'deals'|'exclusive'|'pools';language:MarketplaceLanguage;search:string;view?:ApprovedHomeView}
+type Props={section:'deals'|'exclusive'|'pools';language:MarketplaceLanguage;search:string;view?:ApprovedHomeView;selectedArea?:string}
 function Photo({product}:{product:Product}){
  const [failed,setFailed]=useState(false)
  const src=product.image!==undefined?product.image:previewPhoto(product.photo)
@@ -50,7 +50,7 @@ function PreviewDialog({selection,language,onClose}:{selection:NonNullable<Selec
  </dialog>
 }
 
-export function PreviewHomeCards({section,language,search,view}:Props){
+export function PreviewHomeCards({section,language,search,view,selectedArea=''}:Props){
  const bn=language==='bn'
  const [selection,setSelection]=useState<Selection>(null)
  const [notice,setNotice]=useState('')
@@ -82,7 +82,7 @@ export function PreviewHomeCards({section,language,search,view}:Props){
       <span className="app-card-preview-save" data-empty={reference===null||d.price===null||undefined}>{bn?'সাশ্রয়':'Save'} {showMoney(reference!==null&&d.price!==null?Math.max(0,reference-d.price):null)}</span>
       <div className="app-card-preview-deal-stats"><span>👥 {d.joined}{d.target>0||!d.launchOfferId?'/'+d.target:''} joined</span><span data-empty={d.days===null||undefined}>◷ Ends in {d.days??0} {d.days===1?'day':'days'}</span></div>
       <Progress value={d.joined} max={d.target} label={bn?'গ্রুপ অংশগ্রহণ':'Group participation'}/>
-      <div className="app-card-preview-actions"><Link href={d.empty?'#':productHref(d.id,'deal')+(view&&d.offerId?'&offer='+d.offerId:'')}>{bn?'বিস্তারিত':'View details'}</Link>
+      <div className="app-card-preview-actions"><Link href={d.empty?'#':productHref(d.id,'deal')+(view&&d.offerId?'&offer='+d.offerId:'')+(view&&selectedArea?'&area='+encodeURIComponent(selectedArea):'')}>{bn?'বিস্তারিত':'View details'}</Link>
        <button type="button" className="app-card-preview-primary" disabled={Boolean(view)&&!d.purchasable} onClick={()=>{if(d.launchOfferId){addLaunchItem(d.id,d.launchOfferId);setNotice(bn?'কার্টে যোগ হয়েছে।':'Added to cart.');return}if(!view)setSelection({kind:'deal',id:d.id})}}>{bn?'গ্রুপে যোগ দিন':'Join Deal'}</button></div>
      </div>
     </article>})}
