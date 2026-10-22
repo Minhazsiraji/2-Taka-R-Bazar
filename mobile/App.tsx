@@ -54,9 +54,9 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const auth=useNativeAuth();
  const cartOwner=useRef<string|undefined>(undefined);
  const [demo,setDemo]=useState(requestedDemo);
- const [products,setProducts]=useState<Product[]>(demoProducts);
- const [offers,setOffers]=useState<Offer[]>(demoOffers);
- const [pools,setPools]=useState<Pool[]>(demoPools);
+ const [products,setProducts]=useState<Product[]>(requestedDemo?demoProducts:[]);
+ const [offers,setOffers]=useState<Offer[]>(requestedDemo?demoOffers:[]);
+ const [pools,setPools]=useState<Pool[]>(requestedDemo?demoPools:[]);
  const [busy,setBusy]=useState(false);
  const theme=dark?palette.dark:palette.light;
  useEffect(()=>{
@@ -77,7 +77,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     if(!alive)return;
     setProducts(result.products);setOffers(result.offers);setPools([]);setDemo(false);
   }).catch(()=>{
-    if(alive){setDemo(true);Alert.alert('Live catalog unavailable','Showing clearly labeled demo products. No purchases are enabled.')}
+    if(alive){setProducts(demoProducts);setOffers(demoOffers);setPools(demoPools);setDemo(true);Alert.alert('Live catalog unavailable','Showing clearly labeled demo products. No purchases are enabled.')}
   }).finally(()=>{if(alive)setBusy(false)});
   return()=>{alive=false};
  },[]);
@@ -177,8 +177,8 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     <View style={{flex:1,justifyContent:'space-around'}}>
      <Text numberOfLines={2} style={{fontSize:12,fontWeight:'800',color:theme.text}}>{lang==='bn'?item.nameBn:item.name}</Text>
      <Text style={{fontSize:10,color:theme.muted}}>{item.unit}</Text>
-     <View style={{flexDirection:'row',alignItems:'center',gap:4,flexWrap:'wrap'}}><Text style={{fontSize:16,fontWeight:'900',color:theme.accent}}>{money(offer.price)}</Text><Text style={{fontSize:10,color:theme.muted,textDecorationLine:'line-through'}}>{money(item.referencePrice)}</Text></View>
-     <View>{pill(t.save+' '+money(customerSaving(item.referencePrice,offer.price)),true)}</View>
+     <View style={{flexDirection:'row',alignItems:'center',gap:4,flexWrap:'wrap'}}><Text style={{fontSize:16,fontWeight:'900',color:theme.accent}}>{money(offer.price)}</Text>{item.referencePrice>offer.price&&<Text style={{fontSize:10,color:theme.muted,textDecorationLine:'line-through'}}>{money(item.referencePrice)}</Text>}</View>
+     {item.referencePrice>offer.price&&<View>{pill(t.save+' '+money(customerSaving(item.referencePrice,offer.price)),true)}</View>}
      <Text numberOfLines={1} style={{fontSize:9,color:theme.muted}}>{t.stock} · {offer.stock||0} available</Text>
     </View>
    </View>
@@ -286,9 +286,9 @@ function Shop({fontsReady}:{fontsReady:boolean}){
      {title('PRODUCT INFORMATION',lang==='bn'?product.nameBn:product.name)}
      <Text style={{color:theme.muted,fontSize:11,marginBottom:9}}>{product.unit} · SKU {product.id}</Text>
      {panel(<>
-      <Text style={{color:theme.muted,fontWeight:'800',fontSize:12}}>Market retail reference price</Text>
+      <Text style={{color:theme.muted,fontWeight:'800',fontSize:12}}>{demo?'Market retail reference price':lang==='bn'?'প্রকাশিত বিক্রয়মূল্য':'Published selling price'}</Text>
       <Text style={{color:theme.accent,fontSize:29,fontWeight:'900',marginVertical:8}}>{money(product.referencePrice)}</Text>
-      <Text style={{color:theme.muted,fontSize:11}}>Retail reference only. Group Deal and Pool tier prices are not displayed on the individual product page.</Text>
+      <Text style={{color:theme.muted,fontSize:11}}>{demo?'Retail reference only. Group Deal and Pool tier prices are not displayed on the individual product page.':lang==='bn'?'ওয়েবসাইটে প্রকাশিত মূল্য। মোবাইল চেকআউট এখনো চালু হয়নি।':'Published website price. Mobile checkout is not yet available.'}</Text>
      </>)}
      {panel(<>
       <Text style={{color:theme.text,fontWeight:'900',fontSize:13,marginBottom:9}}>{lang==='bn'?'পণ্যের তথ্য':'Product information'}</Text>
@@ -328,15 +328,15 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   return <>{title('PRODUCT DETAILS',lang==='bn'?p.nameBn:p.name)}
     <ProductPhoto item={p} height={260}/>
     {panel(<><Text style={{color:theme.muted,marginBottom:8}}>{p.unit} · {offer.community}</Text>
-      <View style={styles.between}><Text style={{color:theme.accent,fontSize:27,fontWeight:'900'}}>{money(offer.price)}</Text><Text style={{textDecorationLine:'line-through',color:theme.muted}}>{money(p.referencePrice)}</Text></View>
-      <View style={{marginVertical:8,alignSelf:'flex-start'}}>{pill(t.save+' '+money(customerSaving(p.referencePrice,offer.price)),true)}</View>
+      <View style={styles.between}><Text style={{color:theme.accent,fontSize:27,fontWeight:'900'}}>{money(offer.price)}</Text>{p.referencePrice>offer.price&&<Text style={{textDecorationLine:'line-through',color:theme.muted}}>{money(p.referencePrice)}</Text>}</View>
+      {p.referencePrice>offer.price&&<View style={{marginVertical:8,alignSelf:'flex-start'}}>{pill(t.save+' '+money(customerSaving(p.referencePrice,offer.price)),true)}</View>}
 
       <Text style={{fontSize:12,fontWeight:'900',color:theme.text,marginBottom:5,marginTop:7}}>Same product · Available offers</Text>
       {all.map(o=><Pressable key={o.id} onPress={()=>setSelectedOffer(o)} style={[styles.priceOption,{borderColor:o.id===offer.id?theme.accent:theme.line}]}>
        <Text style={{color:theme.text,fontSize:12}}>{o.mode==='SOLO'?'Direct / Exclusive':o.mode==='GROUP_DEAL'?String(o.groupSize)+'-person Group Deal':'Community Pool'}</Text>
        <Text style={{color:theme.accent,fontSize:14,fontWeight:'900'}}>{money(o.price)}</Text>
       </Pressable>)}
-      <View style={{flexDirection:'row',gap:8,marginTop:10}}>{button(t.details,()=>link('/products/'+p.id),false)}{button(offer.mode==='SOLO'?t.add:t.join,()=>offer.mode==='SOLO'?add(offer):draftGroup(offer))}</View>
+      <View style={{flexDirection:'row',gap:8,marginTop:10}}>{button(t.details,()=>link((demo?'/products/':'/shop/')+p.id),false)}{button(offer.mode==='SOLO'?t.add:t.join,()=>offer.mode==='SOLO'?add(offer):draftGroup(offer))}</View>
       <Text style={{color:theme.muted,fontSize:10,marginTop:8}}>{demo?t.notice:'Native checkout is not enabled. Current website flows remain authoritative.'}</Text>
     </>)}
   </>;
