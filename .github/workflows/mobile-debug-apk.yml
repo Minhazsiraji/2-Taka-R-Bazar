@@ -1,0 +1,71 @@
+name: Android Standalone Test APK (non-production)
+on:
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-debug-apk.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: standalone-apk-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  assemble-standalone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      CI: '1'
+      EXPO_PUBLIC_DEMO_MODE: 'true'
+      EXPO_PUBLIC_NATIVE_AUTH_ENABLED: 'false'
+      EXPO_PUBLIC_NATIVE_GOOGLE_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Use hosted Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -d "$ANDROID_HOME"
+      - name: Install development dependencies
+        run: npm install --no-audit --no-fund
+      - name: Use internal debug-only app identifier
+        run: |
+          node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('app.json','utf8')); p.expo.android={...(p.expo.android||{}),package:'com.twotbr.internalpreview'}; fs.writeFileSync('app.json',JSON.stringify(p,null,2)+'\n');"
+      - name: Generate local Android native project (no release)
+        run: npx expo prebuild --platform android --non-interactive --no-install
+      - name: Verify internal APK signs with debug keystore only
+        run: |
+          # A release *variant* embeds Hermes/JS and assets for offline testing.
+          # This CI build is never eligible for Play production signing.
+          grep -q 'signingConfig signingConfigs.debug' android/app/build.gradle || {
+            echo 'STOP: release signing must explicitly use the debug keystore';
+            exit 1;
+          }
+      - name: Assemble standalone Android APK with embedded JS
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace
+      - name: Verify APK contains packaged JavaScript and demo app only
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          test -s "$APK" || { echo 'Missing release-variant internal APK'; exit 1; }
+          unzip -Z1 "$APK" | grep -Fx 'assets/index.android.bundle' ||
+            { echo 'APK missing bundled JS; will fail offline'; exit 1; }
+          echo 'Self-contained Android JS bundle verified.'
+      - name: Publish standalone internal APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 2tbr-android-standalone-offline-preview
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
