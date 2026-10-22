@@ -2,7 +2,9 @@
 
 import {useEffect,useRef,useState} from 'react'
 import Link from 'next/link'
-import {addLaunchItem} from '@/lib/launch-cart'
+import {addLaunchItem,readLaunchCart} from '@/lib/launch-cart'
+import {joinSimpleSaleDeal} from '@/app/actions/simple-offer-joins'
+import {useRouter} from 'next/navigation'
 import {PublicHeader} from '@/components/public-header'
 import {PublicFooter} from '@/components/public-footer'
 import {useStorefrontLanguage} from '@/lib/use-storefront-language'
@@ -30,6 +32,8 @@ function DemoPanel({children,className=''}:{children:React.ReactNode;className?:
  return <section className={'native-preview-panel '+className}>{children}</section>
 }
 export function HomePreviewProductDetails({product,deal,retail=false,from,poolId,initialLanguage,hasLanguageCookie,view}:Props){
+ const router=useRouter()
+ const [joining,setJoining]=useState(false)
  const money=(n:number|null)=>fixtureMoney(n??0)
  const [language,setLanguage]=useStorefrontLanguage(initialLanguage,hasLanguageCookie)
  const [chosen,setChosen]=useState(view?.initialOfferId??view?.offers.find(o=>o.kind==='solo')?.id??view?.offers[0]?.id??'solo')
@@ -98,7 +102,23 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
      </DemoPanel>
      <div className="native-preview-actions">
       <Link className="native-preview-secondary" href={retailHref}>{t('Product Details','পণ্যের বিস্তারিত')}</Link>
-      <button className="native-preview-primary" type="button" disabled={Boolean(view)&&(!deal.launchOfferId||!offers.find(o=>o.id===deal.offerId)?.purchasable)} onClick={()=>{if(deal.launchOfferId){addLaunchItem(product.id,deal.launchOfferId);setStatus(t('Added to cart.','কার্টে যোগ হয়েছে।'));return}setStatus(t('Preview Group Deal draft noted locally. No real join or order was placed.','ডেমো গ্রুপ ডিল নির্বাচন দেখানো হয়েছে। বাস্তব যোগদান বা অর্ডার হয়নি।'))}}>{deal.launchOfferId?t('Join Deal','গ্রুপে যোগ দিন'):t('Join Deal · Preview','গ্রুপে যোগ দিন · ডেমো')}</button>
+      <button className="native-preview-primary" type="button" disabled={joining||Boolean(view)&&(!deal.launchOfferId||!offers.find(o=>o.id===deal.offerId)?.purchasable)} onClick={async()=>{
+       if(deal.launchOfferId&&deal.offerId){
+        setJoining(true)
+        try{
+         const result=await joinSimpleSaleDeal(deal.offerId,product.id)
+         if(result.ok){
+          if(!readLaunchCart().some(i=>i.product_id===product.id&&i.offer_id===deal.launchOfferId))addLaunchItem(product.id,deal.launchOfferId)
+          setStatus(t('Joined Group Deal. Added to cart; checkout is still required.','গ্রুপ ডিলে যোগ দিয়েছেন। কার্টে যোগ হয়েছে; চেকআউট প্রয়োজন।'))
+          window.dispatchEvent(new Event('2tbr-notifications-refresh'))
+          router.refresh()
+         }else{setStatus(result.message);if(result.code==='SIGN_IN')router.push('/login?next=%2F')}
+        }catch{setStatus('Could not join. Please retry.')}
+        finally{setJoining(false)}
+        return
+       }
+       setStatus(t('Preview only. No real join or order was placed.','শুধু প্রিভিউ। কোনো বাস্তব যোগদান বা অর্ডার হয়নি।'))
+      }}>{deal.launchOfferId?t('Join Deal','গ্রুপে যোগ দিন'):t('Join Deal · Preview','গ্রুপে যোগ দিন · ডেমো')}</button>
      </div>
      {!view&&<p className="native-preview-hint">{t('Demo only — no real order has been placed.','শুধু ডেমো — কোনো বাস্তব অর্ডার হয়নি।')}</p>}
      {status&&<p role="status" className="native-preview-status">{status}</p>}

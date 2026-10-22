@@ -2,21 +2,33 @@
 import {useEffect,useState} from 'react'
 import Link from 'next/link'
 import {readLaunchCart,writeLaunchCart,type LaunchCartItem} from '@/lib/launch-cart'
+import {leaveSimpleSaleDeal} from '@/app/actions/simple-offer-joins'
 import type {PublicVendorBookingProduct} from '@/lib/public-vendor-booking'
 import {submitLaunchOrder} from '@/app/actions/launch-orders'
 import {useFormStatus} from 'react-dom'
 function Submit(){const {pending}=useFormStatus();return <button disabled={pending} type="submit" className="btn-primary w-full">{pending?'Submitting / পাঠানো হচ্ছে…':'Place order / অর্ডার দিন'}</button>}
 export function LaunchCartCheckout({catalog,checkout=false,authenticated=false,error}:{catalog:PublicVendorBookingProduct[];checkout?:boolean;authenticated?:boolean;error?:string}){
- const [items,setItems]=useState<LaunchCartItem[]>([]),[loaded,setLoaded]=useState(false),[request,setRequest]=useState('')
+ const [items,setItems]=useState<LaunchCartItem[]>([]),[loaded,setLoaded]=useState(false),[request,setRequest]=useState(''),[cartNotice,setCartNotice]=useState('')
  useEffect(()=>{setItems(readLaunchCart());setRequest(crypto.randomUUID());setLoaded(true)},[])
  const money=(v:number)=>'৳'+v.toLocaleString('en-BD')
- const change=(id:string,quantity:number)=>{const next=items.map(i=>i.product_id===id?{...i,quantity}:i).filter(i=>i.quantity>0);writeLaunchCart(next);setItems(next)}
+ const change=async(id:string,quantity:number)=>{
+  if(quantity===0){
+   const removing=items.find(item=>item.product_id===id)
+   if(removing?.offer_id){
+    const result=await leaveSimpleSaleDeal(removing.offer_id,id)
+    if(!result.ok){setCartNotice(result.message);return}
+    window.dispatchEvent(new Event('2tbr-notifications-refresh'))
+   }
+  }
+  const next=items.map(i=>i.product_id===id?{...i,quantity}:i).filter(i=>i.quantity>0)
+  writeLaunchCart(next);setItems(next);setCartNotice('')
+ }
  const lines=items.map(item=>({item,product:catalog.find(p=>p.product_id===item.product_id&&(!item.offer_id||p.offer_id===item.offer_id))}))
  const unavailable=lines.some(l=>!l.product?.launch_enabled||l.item.quantity>(l.product.available_quantity??0))
  const total=lines.reduce((s,l)=>s+(l.product?.approved_unit_price??0)*l.item.quantity,0)
  if(!loaded)return <p role="status">Loading / লোড হচ্ছে…</p>
  if(!items.length)return <section className="glass-panel rounded-3xl border border-white/80 p-5"><p>Your cart is empty. / আপনার কার্ট খালি।</p><Link className="btn-primary mt-4 inline-block" href="/#mobile-exclusive">Continue shopping / কেনাকাটা করুন</Link></section>
- return <>{error&&<p className="error mb-4" role="alert">{error}</p>}<section className="glass-panel rounded-3xl border border-white/80 p-5">
+ return <>{error&&<p className="error mb-4" role="alert">{error}</p>}{cartNotice&&<p className="error mb-4" role="alert">{cartNotice}</p>}<section className="glass-panel rounded-3xl border border-white/80 p-5">
  <h2 className="text-xl font-black">Your products / আপনার পণ্য</h2>
  <div className="mt-4 grid gap-4">{lines.map(({item,product:p})=><article key={item.product_id} className="glass-subpanel flex flex-wrap items-center gap-4 rounded-2xl border border-white/80 p-4">
  {p?.image_url&&<img src={p.image_url} width="72" height="72" alt={p.name} className="rounded-xl object-contain"/>}<div className="min-w-0 flex-1"><Link className="font-bold" href={'/preview-live/product/'+item.product_id+(item.offer_id?'?offer='+item.offer_id:'')}>{p?.name??'Unavailable product / অনুপলব্ধ পণ্য'}</Link><p>{p?.package_size} · {money(p?.approved_unit_price??0)}</p>{p?.offer_title&&<p className="text-sm">{p.offer_title}</p>}
