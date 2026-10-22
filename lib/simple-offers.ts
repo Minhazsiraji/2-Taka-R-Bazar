@@ -8,7 +8,7 @@ export function simpleStorefrontOffers(rows:SimpleOffer[]):StorefrontOffer[]{
  return rows.flatMap(o=>o.items.map(p=>({offer_id:o.id,offer_kind:o.kind,community_id:o.community_id,community_ids:o.community_ids??[o.community_id],
   product_id:p.product_id,product_name:p.name,brand:p.brand,category:p.category,package_size:p.package_size,unit:p.unit,image_url:p.image_url,
   offer_title:o.community_name,reference_price:p.old_price,confirmed_price:p.price,solo_price:o.kind==='SOLO'?p.price:null,
-  upcoming_price:null,buyer_count:o.buyer_count,quantity_joined:0,next_threshold:null,closes_at:o.closes_at,price_status:'final' as const,
+  upcoming_price:null,buyer_count:o.buyer_count,quantity_joined:0,next_threshold:Number.isInteger(o.buyer_target)&&Number(o.buyer_target)>0?Number(o.buyer_target):null,closes_at:o.closes_at,price_status:'final' as const,
   commerce_available_quantity:p.available_quantity,launch_offer_id:o.id,
  })))
 }

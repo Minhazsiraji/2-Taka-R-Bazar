@@ -252,7 +252,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
    <SectionHeading 
     title={t('Group Deals','গ্রুপ ডিল')} description={t('The more neighbours join, the better the price.','যত বেশি প্রতিবেশী, তত ভালো দাম।')}
     href="/group-deals" viewText={t('View all','সব দেখুন')}/>
-   {previewCards?(hasLivePreview?<LivePreviewHomeCards section="deals" language={language} search={search} selectedArea={selectedArea} data={livePreviewData}/>:<PreviewHomeCards section="deals" language={language} search={search}/>): deals.length?<div className="mhome-deal-list">{deals.map(d=>{
+   {previewCards?(hasLivePreview?<LivePreviewHomeCards section="deals" language={language} search={search} selectedArea={selectedArea} selectedAreaName={areas.find(a=>a.community_id===selectedArea)?.community_name??''} data={livePreviewData}/>:<PreviewHomeCards section="deals" language={language} search={search}/>): deals.length?<div className="mhome-deal-list">{deals.map(d=>{
     const confirmed=d.commerce_group_id?d.commerce_group_phase==='ready':d.price_status==='unlocked'||d.price_status==='final'
     const price=confirmed?money(d.confirmed_price):null
     const ended=Boolean(clockNow&&d.closes_at&&new Date(d.closes_at).getTime()<=clockNow)
@@ -295,7 +295,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
    <SectionHeading 
     title={t('Exclusive Products','এক্সক্লুসিভ পণ্য')} description={t('Handpicked essentials, great everyday value.','প্রতিদিনের প্রয়োজনীয় পণ্য, ভালো দাম।')}
     href="/products" viewText={t('View all','সব দেখুন')}/>
-   {previewCards?(hasLivePreview?<LivePreviewHomeCards section="exclusive" language={language} search={search} selectedArea={selectedArea} data={livePreviewData}/>:<PreviewHomeCards section="exclusive" language={language} search={search}/>): visibleExclusive.length?<div className="mhome-exclusive-grid">{visibleExclusive.map(p=>{
+   {previewCards?(hasLivePreview?<LivePreviewHomeCards section="exclusive" language={language} search={search} selectedArea={selectedArea} selectedAreaName={areas.find(a=>a.community_id===selectedArea)?.community_name??''} data={livePreviewData}/>:<PreviewHomeCards section="exclusive" language={language} search={search}/>): visibleExclusive.length?<div className="mhome-exclusive-grid">{visibleExclusive.map(p=>{
     const href=p.href??(p.demo?'/demo-product/'+p.id:'/products/'+p.id)
     const canCart=!p.demo&&p.stock!==0&&Boolean(p.commerceId&&p.available&&selectedArea&&p.price)
     const saving=p.oldPrice&&p.price&&p.oldPrice>p.price&&!p.demo?p.oldPrice-p.price:null
@@ -335,7 +335,7 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
     title={t('Community Pools','কমিউনিটি পুল')}
     description={t('Join a weekly, monthly or special community pool.','সাপ্তাহিক, মাসিক বা বিশেষ পুলে অংশ নিন।')}
     href="/pool" viewText={t('View all','সব দেখুন')}/>
-   {previewCards?(hasLivePreview?<LivePreviewHomeCards section="pools" language={language} search={search} selectedArea={selectedArea} data={livePreviewData}/>:<PreviewHomeCards section="pools" language={language} search={search}/>): poolRows.length?<div className="mhome-pool-list">{poolRows.map(p=>{
+   {previewCards?(hasLivePreview?<LivePreviewHomeCards section="pools" language={language} search={search} selectedArea={selectedArea} selectedAreaName={areas.find(a=>a.community_id===selectedArea)?.community_name??''} data={livePreviewData}/>:<PreviewHomeCards section="pools" language={language} search={search}/>): poolRows.length?<div className="mhome-pool-list">{poolRows.map(p=>{
     const target=Number.isSafeInteger(p.minHouseholds)&&p.minHouseholds>0?p.minHouseholds:null
     const progress=target?Math.round(Math.min(1,p.sampleHouseholds/target)*100):null
     const nextTier=p.livePricing?.householdsNeeded&&p.livePricing.householdsNeeded>0
