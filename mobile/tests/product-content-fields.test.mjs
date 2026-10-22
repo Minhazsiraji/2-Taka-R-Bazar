@@ -10,7 +10,10 @@ test('Product Brand is an optional master field; empty is not invented',()=>{
  assert.ok(app.includes('Product brand'));
  assert.ok(app.includes('productMissing(product.brand,lang)'));
  assert.ok(fields.includes("'Not provided yet'"));
- assert.ok(live.includes("typeof x.brand==='string'"));
+ // The six-product launch RPC publishes no verified brand; leave the optional field absent.
+ assert.ok(live.includes('projectPublishedLaunchProducts'));
+ const projection=readFileSync(new URL('../src/launch-catalog.mjs',import.meta.url),'utf8');
+ assert.doesNotMatch(projection,/brand:\s*['"]/);
 });
 test('SEO/AEO/GEO optional sections use admin fields and are expandable',()=>{
  for(const phrase of ['Description & specifications (SEO)','Questions & answers (AEO)','Local availability (GEO)'])assert.ok(fields.includes(phrase));

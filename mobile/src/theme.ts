@@ -49,10 +49,34 @@ export type AppTheme=typeof palette.light|typeof palette.dark;
 // Static, layout-neutral white highlights; no blur views or animated shadows.
 export const gloss={
  edge:'rgba(255,255,255,0.9)',
- rim:{borderColor:'rgba(255,255,255,0.9)',borderTopColor:'#FFFFFF',
-  boxShadow:'0 0 0 0.5px rgba(255,255,255,0.42), 0 1px 3px rgba(23,35,59,0.1)'},
- glass:{backgroundColor:'rgba(0,65,70,0.34)',
-  boxShadow:'inset 0 1px 2px rgba(255,255,255,0.32), 0 0 3px rgba(255,255,255,0.16)'},
+ // Android Fabric can rasterize CSS boxShadow over a translucent View as an
+ // opaque inner rectangle. Native color/edge highlights avoid that extra layer.
+ rim:{borderColor:'rgba(255,255,255,0.90)',borderTopColor:'#FFFFFF',
+  borderLeftColor:'rgba(255,255,255,0.88)',borderBottomColor:'rgba(255,255,255,0.64)',
+  borderRightColor:'rgba(255,255,255,0.84)'},
+ glass:{backgroundColor:'rgba(0,65,70,0.16)',borderColor:'rgba(255,255,255,0.9)',
+  borderTopColor:'#FFFFFF'},
  heroInk:{textShadowColor:'rgba(0,35,40,0.8)',textShadowOffset:{width:0,height:1},textShadowRadius:1},
  slogan:{light:brandV1.primary,dark:brandV1.accent}
+} as const;
+
+/**
+ * Owner-approved unified glass treatment for every interactive surface.
+ * Only color/edge/reflection changes here: no dimensions, content or routing.
+ * Inset surfaces are intentionally nearly clear, so nested cards no longer
+ * produce the unwanted opaque white/grey layer.
+ */
+export const glassSurfaces={
+ light:{
+  outer:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.23)',borderWidth:1},
+  inset:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.09)',borderWidth:1},
+  control:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.18)',borderWidth:1},
+  selected:{...gloss.rim,backgroundColor:'rgba(0,127,131,0.10)',borderWidth:1}
+ },
+ dark:{
+  outer:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.075)',borderWidth:1},
+  inset:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.035)',borderWidth:1},
+  control:{...gloss.rim,backgroundColor:'rgba(255,255,255,0.065)',borderWidth:1},
+  selected:{...gloss.rim,backgroundColor:'rgba(44,214,206,0.13)',borderWidth:1}
+ }
 } as const;
