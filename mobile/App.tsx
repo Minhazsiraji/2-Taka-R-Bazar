@@ -798,7 +798,7 @@ const styles=StyleSheet.create({
  badgeText:{color:'white',fontSize:9,fontWeight:'900'},
  search:{...gloss.rim,marginTop:8,borderRadius:30,paddingHorizontal:12,flexDirection:'row',alignItems:'center',gap:7,borderWidth:1},
  titleRow:{flexDirection:'row',alignItems:'flex-end',justifyContent:'space-between',marginTop:16,marginBottom:8},
- panel:{...gloss.rim,borderWidth:1,borderRadius:17,padding:10,marginBottom:9,shadowColor:brandV1.text,shadowOpacity:.04,shadowRadius:9,elevation:1},
+ panel:{...gloss.rim,borderWidth:1,borderRadius:17,padding:10,marginBottom:9},
  twoCol:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'space-between'},
  savingTile:{...gloss.rim,width:'23.9%',minHeight:60,paddingHorizontal:4,paddingVertical:6,borderRadius:12,alignItems:'center',justifyContent:'center',gap:4,borderWidth:1},
  savingsFour:{flexDirection:'row',alignItems:'stretch',justifyContent:'space-between',gap:4},
