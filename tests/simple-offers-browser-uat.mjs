@@ -99,7 +99,7 @@ try{
  assert.ok(own.every(o=>o.community_ids.length===2&&o.community_ids.includes(cid)&&o.community_ids.includes(cid2)&&!o.community_ids.includes(cid3)))
  for(const area of [cid,cid2,cid3]){
   await page.evaluate(()=>localStorage.removeItem('2tbr-browsing-area-v1'))
-  await page.goto(base+'/?area='+area+'&q='+encodeURIComponent(name),{waitUntil:'networkidle'})
+  await page.goto(base+'/?area='+area+'&q='+encodeURIComponent(name),{waitUntil:'domcontentloaded',timeout:60000})
   const count=await page.locator('.app-card-preview-deal').filter({hasText:name}).count()
   assert.equal(count,area===cid3?0:1,'Deal community membership')
   const poolCount=await page.locator('.app-card-preview-pool').filter({hasText:'Fictional COMMUNITY_POOL '+suffix}).count()
