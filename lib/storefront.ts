@@ -11,6 +11,7 @@ export type StorefrontOffer = {
   launch_offer_id?: string
   offer_id: string
   offer_kind: 'GROUP_DEAL'|'COMMUNITY_POOL'|'SOLO'
+  community_ids?: string[]
   community_id: string
   product_id: string
   product_name: string

@@ -52,3 +52,9 @@ test('unselected shoppers can discover, but cannot add cart items before choosin
  assert.match(market,/commerce_solo_id\?<form action=\{setCommerceCartItem\}/)
  assert.match(market,/commerce_group_id\?<form action=\{setCommerceCartItem\}/)
 })
+
+test('a multi-community offer is discoverable once in every selected area',()=>{
+ const offer={...mk('rice','DOHS'),community_ids:['DOHS','AMT']}
+ for(const area of ['','DOHS','AMT'])assert.deepEqual(browseCatalogOffers([offer],{area}).map(o=>o.product_id),['rice'])
+ assert.deepEqual(browseCatalogOffers([offer],{area:'NIR'}),[])
+})

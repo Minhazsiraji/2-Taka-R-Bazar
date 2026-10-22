@@ -7,8 +7,10 @@ export async function saveSimpleOffer(fd:FormData):Promise<{ok:boolean;message:s
  try{items=JSON.parse(String(fd.get('items')??'[]'))}catch{return {ok:false,message:'Choose products and enter their prices.'}}
  const closes=String(fd.get('closes_at')??'').trim()
  if(closes&&!Number.isFinite(Date.parse(closes)))return {ok:false,message:'Choose a valid closing date.'}
- const {data,error}=await supabase.rpc('admin_save_simple_offer',{
-  p_id:String(fd.get('id')??'')||null,p_kind:String(fd.get('kind')??''),p_community:String(fd.get('community_id')??''),
+ const communities=[...new Set(fd.getAll('community_ids').map(id=>String(id)).filter(Boolean))]
+ if(!communities.length)return {ok:false,message:'Select at least one community / area.'}
+ const {data,error}=await supabase.rpc('admin_save_simple_offer_areas',{
+  p_id:String(fd.get('id')??'')||null,p_kind:String(fd.get('kind')??''),p_communities:communities,
   p_title:String(fd.get('title')??'').trim(),p_items:items,p_published:fd.get('published')==='on',p_closes:closes||null,
  })
  if(error)return {ok:false,message:error.message}

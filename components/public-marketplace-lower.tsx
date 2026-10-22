@@ -39,9 +39,9 @@ function Heading({title,description}:{title:string;description?:string}) {
 }
 export function PublicMarketplaceLower({areas,offers,selectedArea,authenticated,onChooseArea,language,demoMode=false}:Props){
  const t=(en:string,bn:string)=>chooseText(language,en,bn)
- const inArea=offers.filter(o=>!selectedArea||o.community_id===selectedArea)
+ const inArea=offers.filter(o=>!selectedArea||(o.community_ids??[o.community_id]).includes(selectedArea))
  const popular=[...inArea].sort((a,b)=>Number(b.buyer_count)-Number(a.buyer_count)||Number(b.quantity_joined)-Number(a.quantity_joined)).filter(o=>Number(o.buyer_count)>0).slice(0,4)
- const areaCards=areas.map(area=>({...area,live:offers.filter(o=>o.community_id===area.community_id).length}))
+ const areaCards=areas.map(area=>({...area,live:offers.filter(o=>(o.community_ids??[o.community_id]).includes(area.community_id)).length}))
  return <div className="market-story" lang={language}>
   <section id="popular-nearby" className="market-story-section market-band"><div className="market-content">
    <Eyebrow>{demoMode?t('Illustrative design activity · DEMO','ডিজাইনের নমুনা · ডেমো'):t('Real local buying activity','স্থানীয় কেনাকাটার তথ্য')}</Eyebrow>
