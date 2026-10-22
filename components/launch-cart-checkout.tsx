@@ -32,7 +32,12 @@ export function LaunchCartCheckout({catalog,checkout=false,authenticated=false,e
  <h2 className="text-xl font-black">Your products / আপনার পণ্য</h2>
  <div className="mt-4 grid gap-4">{lines.map(({item,product:p})=><article key={item.product_id} className="glass-subpanel flex flex-wrap items-center gap-4 rounded-2xl border border-white/80 p-4">
  {p?.image_url&&<img src={p.image_url} width="72" height="72" alt={p.name} className="rounded-xl object-contain"/>}<div className="min-w-0 flex-1"><Link className="font-bold" href={'/preview-live/product/'+item.product_id+(item.offer_id?'?offer='+item.offer_id:'')}>{p?.name??'Unavailable product / অনুপলব্ধ পণ্য'}</Link><p>{p?.package_size} · {money(p?.approved_unit_price??0)}</p>{p?.offer_title&&<p className="text-sm">{p.offer_title}</p>}
- <label className="mt-2 inline-flex items-center gap-2">Quantity / পরিমাণ <input aria-label={'Quantity for '+(p?.name??item.product_id)} className="input w-20" type="number" min="1" max={Math.max(1,p?.available_quantity??100)} value={item.quantity} onChange={e=>{const q=Number(e.target.value);if(Number.isInteger(q)&&q>=1&&q<=100)change(item.product_id,q)}}/></label></div>
+ <div className="mt-2 flex flex-wrap items-center gap-2" role="group" aria-label={'Quantity for '+(p?.name??item.product_id)}>
+ <span>Quantity / পরিমাণ</span>
+ <button type="button" className="btn-secondary min-h-9 min-w-9 px-2" aria-label={'Decrease '+(p?.name??'product')+' quantity'} disabled={item.quantity<=1} onClick={()=>void change(item.product_id,item.quantity-1)}>−</button>
+ <output className="input flex min-h-9 min-w-12 items-center justify-center px-2 text-center" aria-live="polite">{item.quantity}</output>
+ <button type="button" className="btn-secondary min-h-9 min-w-9 px-2" aria-label={'Increase '+(p?.name??'product')+' quantity'} disabled={item.quantity>=Math.min(100,Math.max(0,p?.available_quantity??100))} onClick={()=>void change(item.product_id,item.quantity+1)}>+</button>
+ </div></div>
  <button className="btn-secondary" type="button" onClick={()=>change(item.product_id,0)}>Remove / সরান</button>
  </article>)}</div><p className="mt-5 text-xl font-black">Subtotal / পণ্যের মোট: {money(total)}</p>
  {unavailable&&<p className="error mt-3" role="alert">Some quantities are unavailable. Update your cart. / পরিমাণ পরিবর্তন করুন।</p>}
