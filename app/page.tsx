@@ -36,6 +36,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
   supabase.rpc('get_public_simple_offers'),
  ])
  const authenticated=Boolean(claims.data?.claims?.sub)
+ const nominatedArea=authenticated?(await supabase.rpc('get_my_community_summary')).data?.[0]?.community_id??'':''
  const savings=await getHomeSavingsSummary(authenticated)
  const realAreas=(areasRes.data??[]) as StorefrontArea[]
  const realOffers=await withCommerceOffers((offersRes.data??[]) as StorefrontOffer[])
@@ -64,6 +65,6 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
   {/* English is the first-visit default. A previously selected BN/EN cookie wins on reload. */}
-  <PublicMarketplace initialSearch={typeof q==='string'?q.slice(0,200):''} initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={[...(poolsRes.data??[]) as DemoFeaturedPool[],...simpleFeaturedPools(simple)]} featured={featured} publishedProducts={publishedProducts} vendorProducts={vendorProducts} savings={savings} demoMode={demoMode} previewCards={true} howLabelBn="কীভাবে কাজ করে"/>
+  <PublicMarketplace initialSearch={typeof q==='string'?q.slice(0,200):''} initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:areas.some(a=>a.community_id===nominatedArea)?nominatedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={[...(poolsRes.data??[]) as DemoFeaturedPool[],...simpleFeaturedPools(simple)]} featured={featured} publishedProducts={publishedProducts} vendorProducts={vendorProducts} savings={savings} demoMode={demoMode} previewCards={true} howLabelBn="কীভাবে কাজ করে"/>
  </main>
 }
