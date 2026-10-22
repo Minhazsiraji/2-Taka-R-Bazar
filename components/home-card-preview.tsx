@@ -2,6 +2,7 @@
 
 import {useEffect,useRef,useState} from 'react'
 import Link from 'next/link'
+import {addLaunchItem} from '@/lib/launch-cart'
 import type {MarketplaceLanguage} from '@/lib/storefront-language'
 import {previewProducts,previewDeals,previewPools,previewPhoto,previewMoney as money} from '@/lib/home-card-preview-fixtures'
 import type {ApprovedProduct,ApprovedHomeView,ApprovedDeal,ApprovedPool} from '@/lib/approved-card-view'
@@ -98,7 +99,8 @@ export function PreviewHomeCards({section,language,search,view}:Props){
      </div>
     </div>
     <div className="app-card-preview-actions"><Link href={p.empty?'#':productHref(p.id)}>{bn?'বিস্তারিত':'View details'}</Link>
-     <button className="app-card-preview-primary" type="button" disabled={Boolean(view)} onClick={()=>{
+     <button className="app-card-preview-primary" type="button" disabled={Boolean(view)&&!p.purchasable} onClick={()=>{
+      if(p.purchasable){addLaunchItem(p.id);setNotice(bn?'কার্টে যোগ হয়েছে।':'Added to cart.');return}
       const count=(basket[p.id]??0)+1;setBasket(previous=>({...previous,[p.id]:count}))
       setNotice(bn?'ডেমো ঝুড়িতে '+count+'টি যোগ হয়েছে। বাস্তব কার্ট পরিবর্তন হয়নি।':'Added '+count+' to the preview basket. Your real cart is unchanged.')
      }}>{bn?'কার্টে যোগ দিন':'Add to cart'}</button></div>

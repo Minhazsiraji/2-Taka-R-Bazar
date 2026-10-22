@@ -3,6 +3,9 @@
  * Selling price is an indicative pilot booking quote subject to staff confirmation.
  */
 export type PublicVendorBookingProduct={
+ available_quantity?:number
+ old_price?:number
+ launch_enabled?:boolean
  product_id:string
  name:string
  category:string

@@ -36,8 +36,8 @@ test('public catalog RPC exposes only owner-approved public display fields',()=>
  assert.match(migration,/where l\.published/)
 })
 
-test('live customer homepage and all-products page show genuine booking-only cards',()=>{
- assert.match(home,/get_public_pilot_vendor_catalog/)
+test('live customer homepage and all-products page reuse the approved cards with public catalog data',()=>{
+ assert.match(home,/get_public_launch_catalog/)
  assert.match(home,/vendorProducts=\{vendorProducts\}/)
  assert.match(publicMarket,/vendorProducts=\{vendorProducts\}/)
  assert.match(dataView,/data\.vendorProducts/)

@@ -7,13 +7,14 @@ import {createRequire} from 'node:module'
 import assert from 'node:assert/strict'
 const require=createRequire(import.meta.url)
 const {chromium}=require('playwright')
+const launchMode=process.env.LAUNCH_UAT==='1'
 const out='artifacts/public-app'
 await mkdir(out,{recursive:true})
 const productIds=Array.from({length:6},(_,i)=>'00000000-0000-4000-8000-'+String(821+i).padStart(12,'0'))
 const poolId='00000000-0000-4000-8000-000000000831'
 const offerId='00000000-0000-4000-8000-000000000841'
 const areaId='00000000-0000-4000-8000-000000000851'
-const vendorProducts=productIds.map((product_id,i)=>({product_id,name:['Synthetic rice','Synthetic butter','Synthetic ghee','Synthetic oil','Synthetic eggs','Synthetic meat'][i],category:'Grocery',package_size:'1 kg',image_url:'/preview-app-product-placeholder.svg',approved_unit_price:[120,1250,1600,1500,145,950][i],supplier_name:'Synthetic test vendor',supplier_handover_days:1}))
+const vendorProducts=productIds.map((product_id,i)=>({product_id,name:['Synthetic rice','Synthetic butter','Synthetic ghee','Synthetic oil','Synthetic eggs','Synthetic meat'][i],category:'Grocery',package_size:'1 kg',image_url:'/preview-app-product-placeholder.svg',approved_unit_price:[120,1250,1600,1500,145,950][i],supplier_name:'Synthetic test vendor',supplier_handover_days:1,...(launchMode?{launch_enabled:true,old_price:0,available_quantity:100}:{})}))
 const group={offer_id:offerId,product_id:productIds[0],community_id:areaId,product_name:'Synthetic rice',product_name_bn:'সিন্থেটিক চাল',package_size:'1 kg',category:'Grocery',brand:null,image_url:'/preview-app-product-placeholder.svg',offer_title:'Synthetic community',offer_kind:'GROUP_DEAL',price_status:'unlocked',reference_price:165,confirmed_price:135,upcoming_price:null,buyer_count:4,next_threshold:5,closes_at:'2027-10-23T12:00:00Z',is_demo:false}
 const poolOffers=vendorProducts.slice(0,3).map((p,i)=>({...group,offer_id:'00000000-0000-4000-8000-'+String(861+i).padStart(12,'0'),product_id:p.product_id,product_name:p.name,product_name_bn:p.name,offer_kind:'COMMUNITY_POOL',reference_price:i===0?165:p.approved_unit_price+50,confirmed_price:p.approved_unit_price}))
 const publishedPool={id:poolId,slug:'weekly',community_id:areaId,title:{en:'Synthetic weekly pool',bn:'সিন্থেটিক সাপ্তাহিক পুল'},subtitle:{en:'Synthetic community',bn:'সিন্থেটিক এলাকা'},isDemo:false,featuredProductIds:productIds.slice(0,3),bundle:poolOffers.map(offer=>({offer,qty:1})),sampleHouseholds:12,minHouseholds:20,image:null}
@@ -22,7 +23,7 @@ const fixture=createServer((req,res)=>{
  res.setHeader('content-type','application/json')
  if(req.url==='/auth/v1/settings')return res.end(JSON.stringify({external:{google:true}}))
  if(req.url?.startsWith('/auth/')){res.statusCode=401;return res.end('{"message":"No local fixture session"}')}
- if(req.url?.startsWith('/rest/v1/rpc/get_public_pilot_vendor_catalog'))return res.end(JSON.stringify(emptyFeeds?[]:vendorProducts))
+ if(req.url?.startsWith('/rest/v1/rpc/get_public_launch_catalog'))return res.end(JSON.stringify(emptyFeeds?[]:vendorProducts))
  if(req.url?.startsWith('/rest/v1/rpc/get_public_storefront_offers'))return res.end(JSON.stringify(emptyFeeds?[]:[group,...poolOffers]))
  if(req.url?.startsWith('/rest/v1/rpc/get_public_featured_pools'))return res.end(JSON.stringify(emptyFeeds?[]:[publishedPool]))
  if(req.url?.startsWith('/rest/v1/rpc/get_public_storefront_areas'))return res.end(JSON.stringify([{community_id:areaId,community_name:'Synthetic community'},{community_id:'00000000-0000-4000-8000-000000000852',community_name:'Synthetic area two'}]))
@@ -197,8 +198,8 @@ try{
     for(const card of await page.locator('[data-preview-cards="exclusive"] article').all()){
      assert.equal(await card.locator('.app-card-preview-actions > :is(a,button)').count(),2)
      assert.equal(await card.locator('.app-card-preview-primary').innerText(),language==='bn'?'কার্টে যোগ দিন':'Add to cart')
-     assert.equal(await card.locator('.app-card-preview-primary').isDisabled(),true,'Preview must not invent cart eligibility')
-     assert.equal(await card.locator('.app-card-preview-stock[data-empty="true"]').count(),1,'Unconfirmed stock is a blurred zero')
+     assert.equal(await card.locator('.app-card-preview-primary').isDisabled(),!launchMode,'Cart eligibility follows the server-published launch flag')
+     assert.equal(await card.locator('.app-card-preview-stock[data-empty="true"]').count(),launchMode?0:1,'Only missing stock is blurred')
      assert.equal(await card.locator('form').count(),0)
      assert.ok(!(await card.innerText()).includes('Request booking'))
     }
@@ -222,6 +223,20 @@ try{
      await page.waitForURL('**/preview-live/product/'+productIds[0],{waitUntil:'load'})
      assert.equal(await page.locator('.native-preview-exclusive-grid').count(),1,'Use the locked product-details layout')
      assert.equal(await page.getByRole('dialog').count(),0)
+     if(launchMode){
+      await page.locator('.native-preview-actions .native-preview-primary').click()
+      await page.goto(`http://127.0.0.1:${port}/cart`,{waitUntil:'load'})
+      const qty=page.getByRole('spinbutton',{name:'Quantity for Synthetic rice'})
+      await qty.waitFor();assert.equal(await qty.inputValue(),'1')
+      await qty.fill('3');assert.ok((await page.locator('main').innerText()).includes('৳360'))
+      await page.getByRole('link',{name:'Checkout / চেকআউট',exact:true}).click()
+      await page.getByRole('link',{name:'Sign in to place your order / অর্ডার করতে লগইন করুন',exact:true}).waitFor()
+      assert.ok(!(await page.locator('main').innerText()).includes('Full checkout awaits qualification'))
+      await page.goto(`http://127.0.0.1:${port}/cart`,{waitUntil:'load'})
+      await page.getByRole('button',{name:'Remove / সরান',exact:true}).click()
+      await page.getByText('Your cart is empty. / আপনার কার্ট খালি।',{exact:true}).waitFor()
+      await page.goto(`http://127.0.0.1:${port}/preview-live/product/${productIds[0]}`,{waitUntil:'load'})
+     }
      await page.locator('.native-preview-actions a').click()
      await page.waitForURL('**/preview-live/product/'+productIds[0]+'?kind=retail&from=exclusive',{waitUntil:'load'})
      assert.equal(await page.locator('.native-preview-retail').count(),1,'Use the locked retail-details layout')

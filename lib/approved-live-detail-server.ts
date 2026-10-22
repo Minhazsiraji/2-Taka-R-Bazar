@@ -17,7 +17,7 @@ export async function loadLivePublishedProduct(id:string):Promise<PublicLiveProd
   supabase.rpc('get_public_storefront_offers',{p_community_id:null}),
   supabase.rpc('get_public_own_product_showcase',{p_product_id:id,p_featured_only:false}),
   supabase.rpc('get_public_product_seo_slug_for_id',{p_product_id:id}),
-  supabase.rpc('get_public_pilot_vendor_catalog',{p_product_id:id}),
+  supabase.rpc('get_public_launch_catalog',{p_product_id:id}),
  ])
  const vendor=(vendorResult.error?[]:vendorResult.data??[]).find((p:PublicVendorBookingProduct)=>p.product_id===id) as PublicVendorBookingProduct|undefined
  if(rawOffers.error&&!vendor)return null
@@ -39,7 +39,7 @@ export async function loadLivePublishedProduct(id:string):Promise<PublicLiveProd
  }:null)
  if(!product)return null
  const candidates=[product.image,publicShowcase?.image_url,...(publicShowcase?.gallery_urls??[])]
- return {...product,listingPrice:vendor?.approved_unit_price??product.listingPrice??null,image:candidates.find(x=>x&&publicShowcaseImageUrl(x))??null}
+ return {...product,listingStock:vendor?.available_quantity,listingOldPrice:vendor?.old_price,launchEnabled:vendor?.launch_enabled,listingPrice:vendor?.approved_unit_price??product.listingPrice??null,image:candidates.find(x=>x&&publicShowcaseImageUrl(x))??null}
 }
 export async function loadLivePublishedPool(id:string):Promise<DemoFeaturedPool|null>{
  if(!uuidPattern.test(id))return null

@@ -9,6 +9,7 @@ const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
 const parity=await loadSource('lib/preview-native-detail-data.ts',{'@/lib/home-card-preview-fixtures':fixtures})
 const viewData=await loadSource('lib/approved-card-view.ts',{'./approved-live-detail-data':data})
 const detailMocks={
+ '@/lib/launch-cart':{addLaunchItem:()=>{}},
  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
  '@/components/public-header':{PublicHeader:()=>null},'@/components/public-footer':{PublicFooter:()=>null},
  '@/lib/use-storefront-language':{useStorefrontLanguage:lang=>[lang,()=>{}]},
@@ -74,7 +75,8 @@ test('Pool basket correct with actual unique products, quantities, confirmed and
 test('real preview cards use published UUID detail paths without redrawing accepted card classes',async()=>{
  const {LivePreviewHomeCards}=await loadSource('components/live-preview-home-cards.tsx',{
   './home-card-preview':approvedCards,'@/lib/approved-card-view':viewData,
-  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
+  '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ 'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
   '@/lib/approved-live-detail-data':data,
   '@/lib/showcase-media':{publicShowcaseImageUrl:()=>true},
   './home-card-preview.css':{},
@@ -93,7 +95,8 @@ test('real preview cards use published UUID detail paths without redrawing accep
 test('published client detail pages show the correct sections and no real writes',async()=>{
  const opts={
   './home-preview-product-details':approvedProduct,'./home-preview-pool-details':approvedPool,'@/lib/approved-card-view':viewData,
-  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
+  '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ 'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
   '@/components/public-header':{PublicHeader:()=>null},
   '@/components/public-footer':{PublicFooter:()=>null},
   '@/lib/use-storefront-language':{useStorefrontLanguage:lang=>[lang,()=>{}]},
@@ -123,7 +126,7 @@ test('published client detail pages show the correct sections and no real writes
  }
 })
 
-test('real-data preview routes reject invalid IDs and remain unavailable in Production',async()=>{
+test('released real-data routes reject invalid IDs and never substitute fixture products',async()=>{
  let enabled=true
  const mocks={
   'next/headers':{cookies:async()=>({get:()=>({value:'en'})})},
@@ -150,8 +153,8 @@ test('real-data preview routes reject invalid IDs and remain unavailable in Prod
  await assert.rejects(pp('rice'),/NOT_FOUND/)
  await assert.rejects(pool('weekly'),/NOT_FOUND/)
  enabled=false
- await assert.rejects(pp(product.id),/NOT_FOUND/)
- await assert.rejects(pool(livePool.id),/NOT_FOUND/)
+ assert.equal((await pp(product.id)).props.product.id,product.id)
+ assert.equal((await pool(livePool.id)).props.pool.id,livePool.id)
 })
 test('conflicting community retail benchmarks do not become a fabricated single market price',()=>{
  assert.equal(data.productFromPublicSources(id,[base,{...base,reference_price:170}],null,null).retail,null)

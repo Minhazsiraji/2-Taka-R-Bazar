@@ -29,7 +29,7 @@ export default async function PilotBookingInbox({searchParams}:Props){
    <p className="card-title">PILOT OPERATIONS · through 31 December 2026</p>
    <h1 className="mt-1 text-2xl font-black">Customer booking inbox</h1>
    <p className="muted mt-2">Customer requests, not paid Commerce orders. Contact promptly, confirm actual stock, agree the exact price and fees, then arrange delivery. Financial settlement must be recorded in the Finance workflow separately.</p>
-   <div className="mt-3 flex flex-wrap gap-3"><span className="chip">{pending} new requests</span><span className="chip">{bookings.length} recent bookings</span><Link className="btn-secondary" href="/admin/pilot-bookings">Refresh inbox</Link><Link className="btn-secondary" href="/admin/orders">Legacy orders</Link></div>
+   <div className="mt-3 flex flex-wrap gap-3"><span className="chip">{pending} new requests</span><span className="chip">{bookings.length} recent bookings</span><Link className="btn-secondary" href="/admin/pilot-bookings">Refresh inbox</Link><Link className="btn-primary" href="/admin/launch-orders">Customer orders</Link><Link className="btn-secondary" href="/admin/orders">Legacy orders</Link></div>
   </section>
   {sp.notice&&<p role="status" className="rounded-xl border border-teal-300 p-3">{sp.notice}</p>}
   {sp.error&&<p role="alert" className="error">{sp.error}</p>}

@@ -6,7 +6,6 @@ import {languageFromPreference,isValidLanguagePreference,STOREFRONT_LANGUAGE_COO
 import type {DemoFeaturedPool} from '@/lib/featured-pools'
 import type {Metadata} from 'next'
 import {createClient} from '@/lib/supabase/server'
-import {demoStorefrontEnabled} from '@/lib/public-demo-products'
 import {PublicMarketplace} from '@/components/public-marketplace'
 import {loadPublishedCatalogPage} from '@/lib/published-product-catalog-feed'
 import type {ShowcaseProduct} from '@/lib/showcase-media'
@@ -32,7 +31,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
   supabase.rpc('get_public_own_product_showcase',{p_product_id:null,p_featured_only:true}),
   supabase.rpc('get_public_featured_pools',{p_community_id:null}),
   loadPublishedCatalogPage(),
-  supabase.rpc('get_public_pilot_vendor_catalog',{p_product_id:null}),
+  supabase.rpc('get_public_launch_catalog',{p_product_id:null}),
  ])
  const authenticated=Boolean(claims.data?.claims?.sub)
  const savings=await getHomeSavingsSummary(authenticated)
@@ -62,6 +61,6 @@ export default async function Page({searchParams}:{searchParams:Promise<{area?:s
  return <main className="public-marketplace-flat min-h-screen bg-white text-black">
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema)}}/>
   {/* English is the first-visit default. A previously selected BN/EN cookie wins on reload. */}
-  <PublicMarketplace initialSearch={typeof q==='string'?q.slice(0,200):''} initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} publishedProducts={publishedProducts} vendorProducts={vendorProducts} savings={savings} demoMode={demoMode} previewCards={demoStorefrontEnabled()} howLabelBn="কীভাবে কাজ করে"/>
+  <PublicMarketplace initialSearch={typeof q==='string'?q.slice(0,200):''} initialLanguage={initialLanguage} hasLanguageCookie={isValidLanguagePreference(storedLanguage)} initialArea={areas.some(a=>a.community_id===requestedArea)?requestedArea:''} areas={areas} offers={offers} authenticated={authenticated} catalogAvailable={catalogAvailable} pools={(poolsRes.data??[]) as DemoFeaturedPool[]} featured={featured} publishedProducts={publishedProducts} vendorProducts={vendorProducts} savings={savings} demoMode={demoMode} previewCards={true} howLabelBn="কীভাবে কাজ করে"/>
  </main>
 }

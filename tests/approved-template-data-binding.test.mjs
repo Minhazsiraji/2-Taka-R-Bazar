@@ -9,6 +9,7 @@ const data=await loadSource('lib/approved-live-detail-data.ts')
 const view=await loadSource('lib/approved-card-view.ts',{'./approved-live-detail-data':data})
 const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
 const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
+ '@/lib/launch-cart':{addLaunchItem:()=>{}},
  'next/link':({href,children,...props})=>React.createElement('a',{href,...props},children),
  '@/lib/home-card-preview-fixtures':fixtures,
 })
@@ -63,3 +64,17 @@ test('live detail components delegate to the locked templates rather than altern
  assert.match(readFileSync('components/live-approved-pool-details.tsx','utf8'),/<HomePreviewPoolDetails/)
  assert.match(readFileSync('components/live-preview-home-cards.tsx','utf8'),/<PreviewHomeCards/)
 })
+
+ test('owner-authorized launch availability and optional zero old price use the existing card fields',()=>{
+ const rows=view.approvedHomeView({...empty,vendorProducts:[{...vendor,available_quantity:100,old_price:0,launch_enabled:true}]})
+ assert.equal(rows.products[0].stock,100)
+ assert.equal(rows.products[0].oldPrice,0)
+ assert.equal(rows.products[0].purchasable,true)
+ const html=render('exclusive',rows)
+ assert.ok(html.includes('In stock · 100 available'))
+ assert.ok(html.includes('<s>৳0</s>'))
+ assert.ok(!html.includes('disabled=""'))
+ assert.equal((html.match(/<button/g)||[]).length,1)
+ const soldOut=view.approvedHomeView({...empty,vendorProducts:[{...vendor,available_quantity:0,old_price:0,launch_enabled:true}]})
+ assert.equal(soldOut.products[0].purchasable,false)
+ })

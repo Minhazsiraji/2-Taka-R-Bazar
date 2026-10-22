@@ -13,7 +13,7 @@ export type PublicLivePool=DemoFeaturedPool
 export type PublicLiveProduct={
  id:string;name:string;nameBn:string;sku:string|null;unit:string;
  category:string;brand:string|null;image:string|null;alt:string;
- retail:number|null;listingPrice?:number|null;description:string;descriptionBn:string;
+ retail:number|null;listingPrice?:number|null;listingStock?:number;listingOldPrice?:number;launchEnabled?:boolean;description:string;descriptionBn:string;
  seo:ProductSeoPublic|null;offers:PublicLiveOffer[];
 }
 export const validMoney=(v:unknown):number|null=>typeof v==='number'&&Number.isFinite(v)&&v>0?v:null

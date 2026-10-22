@@ -2,6 +2,7 @@
 
 import {useEffect,useRef,useState} from 'react'
 import Link from 'next/link'
+import {addLaunchItem} from '@/lib/launch-cart'
 import {PublicHeader} from '@/components/public-header'
 import {PublicFooter} from '@/components/public-footer'
 import {useStorefrontLanguage} from '@/lib/use-storefront-language'
@@ -98,7 +99,7 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
       <Link className="native-preview-secondary" href={retailHref}>{t('Product Details','পণ্যের বিস্তারিত')}</Link>
       <button className="native-preview-primary" type="button" onClick={()=>setStatus(t('Preview Group Deal draft noted locally. No real join or order was placed.','ডেমো গ্রুপ ডিল নির্বাচন দেখানো হয়েছে। বাস্তব যোগদান বা অর্ডার হয়নি।'))}>{t('Join Deal · Preview','গ্রুপে যোগ দিন · ডেমো')}</button>
      </div>
-     <p className="native-preview-hint">{t('Demo only — no real order has been placed.','শুধু ডেমো — কোনো বাস্তব অর্ডার হয়নি।')}</p>
+     {!view&&<p className="native-preview-hint">{t('Demo only — no real order has been placed.','শুধু ডেমো — কোনো বাস্তব অর্ডার হয়নি।')}</p>}
      {status&&<p role="status" className="native-preview-status">{status}</p>}
     </div>
    </div>:retail?<div className="native-preview-retail">
@@ -151,12 +152,13 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
       </div>
       <div className="native-preview-actions">
        <Link href={retailHref} className="native-preview-secondary">{t('View details','বিস্তারিত দেখুন')}</Link>
-       <button type="button" className="native-preview-primary" disabled={Boolean(view)} onClick={()=>{
+       <button type="button" className="native-preview-primary" disabled={Boolean(view)&&!product.purchasable} onClick={()=>{
+        if(product.purchasable){addLaunchItem(product.id);setStatus(t('Added to cart.','কার্টে যোগ হয়েছে।'));return}
         if(selected?.kind==='solo'){setBasket(q=>q+1);setStatus(t('Added to the preview basket. Your real cart is unchanged.','ডেমো ঝুড়িতে যোগ হয়েছে। বাস্তব কার্ট অপরিবর্তিত।'))}
         else setStatus(t('Preview offer selected. No real Group Deal or Pool participation was created.','ডেমো অফার নির্বাচন হয়েছে। বাস্তব গ্রুপ বা পুলে যোগদান হয়নি।'))
        }}>{selected?.kind==='solo'?t('Add to Cart','কার্টে যোগ করুন'):t('Join · Preview','যোগ দিন · ডেমো')}</button>
       </div>
-      <p className="native-preview-hint">{t('Demo only — no real order has been placed.','শুধু ডেমো — কোনো বাস্তব অর্ডার হয়নি।')}</p>
+      {!view&&<p className="native-preview-hint">{t('Demo only — no real order has been placed.','শুধু ডেমো — কোনো বাস্তব অর্ডার হয়নি।')}</p>}
       {status&&<p role="status" className="native-preview-status">{status}{basket>0&&' · '+n(basket)+' '+t('items in preview basket','টি পণ্য ডেমো ঝুড়িতে')}</p>}
      </DemoPanel>
     </div>

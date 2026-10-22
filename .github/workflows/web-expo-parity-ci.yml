@@ -48,6 +48,7 @@ jobs:
         run: node tests/public-app-browser-uat.mjs
         env:
           VERCEL_ENV: preview
+          LAUNCH_UAT: 1
       - name: Upload public responsive evidence
         if: always()
         uses: actions/upload-artifact@v4

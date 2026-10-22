@@ -8,12 +8,14 @@ import {loadSource} from './helpers/load-tsx.mjs'
 const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
 const link=({href,children,...props})=>React.createElement('a',{href,...props},children)
 const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
+ '@/lib/launch-cart':{addLaunchItem:()=>{}},
  'next/link':link,
  '@/lib/home-card-preview-fixtures':fixtures,
  './home-card-preview.css':{},
 })
 const parity=await loadSource('lib/preview-native-detail-data.ts',{'@/lib/home-card-preview-fixtures':fixtures})
 const {HomePreviewPoolDetails}=await loadSource('components/home-preview-pool-details.tsx',{
+ '@/lib/launch-cart':{addLaunchItem:()=>{}},
  'next/link':link,
  '@/components/public-header':{PublicHeader:()=>null},
  '@/components/public-footer':{PublicFooter:()=>null},

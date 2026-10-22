@@ -2,7 +2,7 @@ import type {LiveHomepageData,PublicLiveProduct,PublicLivePool,PublicLiveOffer} 
 import {publishedLiveOffers,publishedLivePools,confirmedOfferPrice,validMoney,safeTime,uuidPattern} from './approved-live-detail-data'
 
 // Values only: all card and detail markup stays in the owner's approved templates.
-export type ApprovedProduct={id:string;name:string;nameBn:string;unit:string;photo:string;image?:string|null;price:number|null;oldPrice:number|null;stock:number|null;empty?:boolean;href?:string}
+export type ApprovedProduct={id:string;name:string;nameBn:string;unit:string;photo:string;image?:string|null;price:number|null;oldPrice:number|null;stock:number|null;empty?:boolean;href?:string;purchasable?:boolean}
 export type ApprovedDeal={id:string;offerId?:string;price:number|null;reference?:number|null;joined:number;target:number;days:number|null;community?:string;empty?:boolean}
 export type ApprovedPool={id:string;label:string;labelBn:string;name:string;nameBn:string;products:readonly string[];joined:number;target:number;days:number|null;date:string;closesAt?:string|null;empty?:boolean;productCount?:number}
 export type ApprovedHomeView={products:ApprovedProduct[];lookup:ApprovedProduct[];deals:ApprovedDeal[];pools:ApprovedPool[]}
@@ -26,6 +26,7 @@ export function approvedHomeView(data:LiveHomepageData,area='',search=''):Approv
   if(!uuidPattern.test(p.product_id)||!p.name?.trim()||!validMoney(p.approved_unit_price))continue
   const row=map.get(p.product_id)??{id:p.product_id,name:p.name,nameBn:p.name,unit:p.package_size,photo:'',image:p.image_url,price:null,oldPrice:null,stock:null}
   if(row.price===null)row.price=p.approved_unit_price
+  if(p.launch_enabled){row.stock=p.available_quantity??0;row.oldPrice=p.old_price??0;row.purchasable=(p.available_quantity??0)>0}
   map.set(row.id,row)
  }
  const q=search.trim().toLocaleLowerCase(),matches=(p:ApprovedProduct)=>!q||[p.name,p.nameBn,p.unit].some(s=>s.toLocaleLowerCase().includes(q))
@@ -47,11 +48,11 @@ export function approvedHomeView(data:LiveHomepageData,area='',search=''):Approv
 }
 export function approvedProductView(source:PublicLiveProduct,offerId?:string):ApprovedProductView{
  const solo=source.offers.find(o=>o.offer_kind==='SOLO'),group=source.offers.find(o=>o.offer_id===offerId&&o.offer_kind==='GROUP_DEAL')??source.offers.find(o=>o.offer_kind==='GROUP_DEAL')
- const product:ApprovedProduct={id:source.id,name:source.name,nameBn:source.nameBn,unit:source.unit,photo:'',image:source.image,price:solo?confirmedOfferPrice(solo):source.listingPrice??null,oldPrice:source.retail,stock:stock(solo)}
+ const product:ApprovedProduct={id:source.id,name:source.name,nameBn:source.nameBn,unit:source.unit,photo:'',image:source.image,price:solo?confirmedOfferPrice(solo):source.listingPrice??null,oldPrice:source.launchEnabled?(source.listingOldPrice??0):source.retail,stock:source.launchEnabled?(source.listingStock??0):stock(solo),purchasable:Boolean(source.launchEnabled&&(source.listingStock??0)>0)}
  const offers:ApprovedOffer[]=source.offers.map(o=>({id:o.offer_id,label:o.offer_kind==='SOLO'?'Direct / Exclusive':o.offer_kind==='GROUP_DEAL'?'Group Deal':'Community Pool',labelBn:o.offer_kind==='SOLO'?'সরাসরি / এক্সক্লুসিভ':o.offer_kind==='GROUP_DEAL'?'গ্রুপ ডিল':'কমিউনিটি পুল',price:confirmedOfferPrice(o),kind:o.offer_kind==='SOLO'?'solo':o.offer_kind==='GROUP_DEAL'?'deal':'pool'}))
  if(!offers.some(o=>o.kind==='solo')){
   const slot=offers.findIndex(o=>o.kind==='pool')
-  offers.splice(slot<0?offers.length:slot,0,{id:'solo',label:'Direct / Exclusive',labelBn:'সরাসরি / এক্সক্লুসিভ',price:product.price,kind:'solo',empty:true})
+  offers.splice(slot<0?offers.length:slot,0,{id:'solo',label:'Direct / Exclusive',labelBn:'সরাসরি / এক্সক্লুসিভ',price:product.price,kind:'solo',empty:!product.purchasable})
  }
  const specs=source.seo?.specs??{}
  const spec=(keys:string[])=>keys.map(k=>specs[k]).find(v=>typeof v==='string'&&v.trim())??''

@@ -43,7 +43,7 @@ test('all five storefront PR scopes are represented with safe publication gates'
  assert.ok(home.includes('get_public_featured_pools'))
  assert.ok(pub.includes('get_public_featured_pools'))
  // Do not turn on unaudited checkout or add real data from UI fixtures.
- assert.ok(home.includes('demoStorefrontEnabled()'))
+ assert.ok(home.includes('const demoMode=false'))
  assert.ok(site.includes('Smart shopping. Real savings!'))
  assert.ok(site.includes('একসাথে কিনি, কম দামে পাই!'))
 })
