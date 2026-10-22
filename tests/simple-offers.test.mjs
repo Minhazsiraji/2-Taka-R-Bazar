@@ -8,7 +8,7 @@ const pid='11111111-1111-4111-8111-111111111111',area='22222222-2222-4222-8222-2
 const item={product_id:pid,name:'Real loose rice',brand:null,category:'Rice',package_size:'1 kg',unit:'kg',image_url:'https://example.com/rice.jpg',price:100,old_price:0,available_quantity:10}
 const direct={id:'33333333-3333-4333-8333-333333333333',kind:'SOLO',community_id:area,community_name:'Area A',title:'Direct',closes_at:null,buyer_count:0,items:[item]}
 const group={...direct,id:'44444444-4444-4444-8444-444444444444',kind:'GROUP_DEAL',title:'Deal',items:[{...item,price:90}]}
-const pool={...direct,id:'55555555-5555-4555-8555-555555555555',kind:'COMMUNITY_POOL',title:'Pool',items:[{...item,price:80}]}
+const pool={...direct,id:'55555555-5555-4555-8555-555555555555',kind:'COMMUNITY_POOL',title:'Pool',items:[{...item,price:80,old_price:120}]}
 test('three offer kinds reuse the master image and shared availability with independent prices',()=>{
  const catalog=adapters.simpleCartCatalog([direct,group,pool])
  assert.deepEqual(Array.from(catalog,p=>p.approved_unit_price),[100,90,80])
@@ -33,6 +33,7 @@ test('product selector preserves requested Pool context and does not invent a Di
  const view=views.approvedProductView(source,pool.id)
  assert.equal(view.initialOfferId,pool.id)
  assert.equal(view.offers.find(o=>o.id===pool.id).price,80)
+ assert.equal(view.offers.find(o=>o.id===pool.id).oldPrice,120)
  assert.equal(view.offers.find(o=>o.id===pool.id).purchasable,true)
  assert.equal(view.offers.find(o=>o.kind==='solo').empty,true)
 })

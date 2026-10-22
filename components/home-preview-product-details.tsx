@@ -44,6 +44,7 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
  const offers:ApprovedOffer[]=view?.offers??previewAvailableOffers(product.id)
  const selected=offers.find(o=>o.id===chosen)??offers.find(o=>o.kind==='solo')??offers[0]
  const price=selected?.price??product.price
+ const oldPrice=selected?.oldPrice!==undefined?selected.oldPrice:product.oldPrice
  const productPath=view?'/preview-live/product/':'/demo-product/'
  const poolPath=view?'/preview-live/pool/':'/demo-pool/'
  const origin=from==='pool'&&poolId?poolPath+poolId+'?source=home':
@@ -140,8 +141,8 @@ export function HomePreviewProductDetails({product,deal,retail=false,from,poolId
      <div className="native-preview-exclusive-photo"><ProductPhoto product={product} alt={title} hero/></div>
      <DemoPanel className="native-preview-exclusive-card">
       <p className="native-preview-muted">{product.unit} · {view?view.community:'Savar DOHS'}</p>
-      <div className="home-preview-product-price native-preview-split-price"><strong data-empty={price===null||undefined}>{money(price)}</strong><s data-empty={product.oldPrice===null||undefined}>{money(product.oldPrice)}</s></div>
-      <span className="native-preview-saving" data-empty={product.oldPrice===null||price===null||undefined}>{t('Save','সাশ্রয়')} {money(Math.max(0,(product.oldPrice??0)-(price??0)))}</span>
+      <div className="home-preview-product-price native-preview-split-price"><strong data-empty={price===null||undefined}>{money(price)}</strong><s data-empty={oldPrice===null||undefined}>{money(oldPrice)}</s></div>
+      <span className="native-preview-saving" data-empty={oldPrice===null||price===null||undefined}>{t('Save','সাশ্রয়')} {money(Math.max(0,(oldPrice??0)-(price??0)))}</span>
       <h2>{t('Same product · Available offers','একই পণ্য · উপলব্ধ অফার')}</h2>
       <div className="native-preview-offers">
        {offers.map(o=><button type="button" key={o.id}
