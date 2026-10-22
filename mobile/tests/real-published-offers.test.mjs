@@ -62,3 +62,26 @@ test('real offers feed is public read-only, refreshed when foregrounded and orig
  assert.match(app,/glassSurfaces/);
  assert.match(app,/paddingBottom:screen==='pool'\?110:30/);
 });
+
+test('real published buyer goals drive progress, never pending or cart drafts',()=>{
+ const live=[
+  {...published[0],buyer_count:1,pending_buyers:2,buyer_target:5},
+  {...published[1],buyer_count:2,pending_buyers:3,buyer_target:10}
+ ];
+ const data=projectPublicSimpleOffers(live,base);
+ const deal=data.offers.find(x=>x.mode==='GROUP_DEAL');
+ assert.equal(deal.joined,1);
+ assert.equal(deal.pendingBuyers,2);
+ assert.equal(deal.groupSize,5);
+ assert.equal(data.pools[0].participants,2);
+ assert.equal(data.pools[0].nextTier,10);
+});
+test('live join actions hand off to authenticated website rather than local cart',()=>{
+ const app=readFileSync(new URL('../App.tsx',import.meta.url),'utf8');
+ assert.match(app,/function openPublishedOffer|const openPublishedOffer/);
+ assert.ok(app.includes('preview-live/product/'));
+ assert.match(app,/Join via Website/);
+ assert.ok(app.includes('demo?draftGroup(offer):openPublishedOffer(offer)'));
+ assert.ok(app.includes('demo?draftPool(pool,quantities):openPublishedPool(pool)'));
+ assert.ok(!app.includes('setOffers(pendingBuyers'));
+});

@@ -50,14 +50,14 @@ export function projectPublicSimpleOffers(payload,catalog){
    const id='public-deal:'+row.id;
    if(offerIds.has(id))continue;
    offers.push({id,productId:item.id,mode:'GROUP_DEAL',price:item.price,
-    phase:'waiting',joined:buyerCount,community,daysLeft:remaining});
+    phase:'waiting',joined:buyerCount,groupSize:boundedInt(row.buyer_target)||undefined,pendingBuyers:boundedInt(row.pending_buyers),community,daysLeft:remaining});
    offerIds.add(id);
   }else{
    if(poolIds.has(row.id))continue;
    poolIds.add(row.id);
    const title=safeString(row.title)||'Community Pool';
    const frequency=/month|মাস/i.test(title)?'monthly':/week|সাপ্তাহ/i.test(title)?'weekly':'special';
-   const nextTier=0; // no published milestone; never invent a threshold
+   const nextTier=boundedInt(row.buyer_target); // admin-configured participation goal; never fabricate tier prices
    pools.push({id:row.id,name:title,nameBn:title,frequency,
     productIds:realItems.map(x=>x.id),participants:buyerCount,nextTier,
     commitDaysLeft:remaining,commitEndsLabel:endLabel(row.closes_at)});

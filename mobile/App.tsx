@@ -128,6 +128,15 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  };
  const unreadNotices=notices.filter(item=>!item.read).length;
  const demoPreviewInfo=()=>Alert.alert(lang==='bn'?'ডেমো প্রিভিউ':'Demo preview',lang==='bn'?'কোনো আসল অর্ডার বা সাশ্রয়ের লেনদেন তৈরি হয়নি।':'No real order or savings transaction has been created.');
+ const openPublishedOffer=(o:Offer)=>{
+  const id=o.id.startsWith('public-deal:')?o.id.slice('public-deal:'.length):'';
+  if(!id||!/^[0-9a-f-]{36}$/i.test(id))return;
+  void Linking.openURL(SITE+'/preview-live/product/'+o.productId+'?kind=deal&offer='+id);
+ };
+ const openPublishedPool=(p:Pool)=>{
+  if(!/^[0-9a-f-]{36}$/i.test(p.id))return;
+  void Linking.openURL(SITE+'/preview-live/pool/'+p.id);
+ };
  const draftGroup=(o:Offer)=>{if(o.mode!=='GROUP_DEAL')return;setGroupDrafts(old=>({...old,[o.id]:(old[o.id]||0)+1}));setScreen('cart');};
  const draftPool=(pool:Pool,items:Record<string,number>)=>{const safe=Object.fromEntries(Object.entries(items).filter(([id,q])=>pool.productIds.includes(id)&&Number.isInteger(q)&&q>0&&q<=20));if(!Object.keys(safe).length)return;setPoolDrafts(old=>({...old,[pool.id]:safe}));setScreen('cart');};
  const demoNum=(n:number)=>new Intl.NumberFormat(lang==='bn'?'bn-BD':'en-US',{maximumFractionDigits:0}).format(n);
@@ -173,7 +182,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
      <View style={{flexDirection:'row',alignItems:'center',gap:6,flexWrap:'wrap'}}><Text style={{fontSize:21,fontWeight:'900',color:theme.accent}}>{money(offer.price)}</Text>{item.referencePrice>offer.price&&<Text style={{fontSize:11,color:theme.muted,textDecorationLine:'line-through'}}>{money(item.referencePrice)}</Text>}</View>
      {item.referencePrice>offer.price&&<View style={{alignSelf:'flex-start'}}>{pill(t.save+' '+money(customerSaving(item.referencePrice,offer.price)),true)}</View>}
      <View style={{flexDirection:'row',alignItems:'center',gap:5,flexWrap:'wrap'}}>
-  <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="people" size={14} color="#149be7"/><Text style={{color:theme.text,fontSize:10,fontWeight:'800'}}>{offer.joined||0}{offer.groupSize?'/'+offer.groupSize:''}</Text><Text style={{color:theme.muted,fontSize:9}}>joined</Text></View>
+  <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="people" size={14} color="#149be7"/><Text style={{color:theme.text,fontSize:10,fontWeight:'800'}}>{offer.joined||0}{offer.groupSize?'/'+offer.groupSize:''}</Text><Text style={{color:theme.muted,fontSize:9}}>confirmed{offer.pendingBuyers?' · '+offer.pendingBuyers+' pending':''}</Text></View>
   <View style={{flexDirection:'row',alignItems:'center',gap:3}}><Ionicons name="time-outline" size={14} color="#6385b1"/><Text style={{color:theme.muted,fontSize:9}}>{offer.daysLeft===undefined?'Deadline not set':'Ends in '+offer.daysLeft+' day'+(offer.daysLeft===1?'':'s')}</Text></View>
  </View>
      <View style={{height:5,...glass.inset,borderRadius:5,overflow:'hidden'}}><View style={{height:5,width:(ratio+'%') as `${number}%`,backgroundColor:theme.highlight}}/></View>
@@ -259,7 +268,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     <Text style={{fontSize:23,fontWeight:'900',color:theme.text}}>{lang==='bn'?product.nameBn:product.name}</Text>
     <Text style={{fontSize:11,color:theme.muted,marginVertical:4}}>{product.unit} · {offer.community} · SKU {product.id}</Text>
     {panel(<>
-     <Text style={{color:theme.muted,fontSize:11,fontWeight:'700'}}>Current qualifying tier · Price not final</Text>
+     <Text style={{color:theme.muted,fontSize:11,fontWeight:'700'}}>{demo?'Current qualifying tier · Price not final':'Published deal price · Confirm through website'}</Text>
      <Text style={{color:theme.accent,fontSize:29,fontWeight:'900',marginTop:4}}>{money(currentPrice)}</Text>
      <Text style={{color:theme.muted,fontSize:11,marginTop:4}}>Market retail: {money(product.referencePrice)}</Text>
      {tiers&&<Text style={{color:theme.accent,fontSize:11,fontWeight:'800',marginTop:5}}>Potential saving: {money(customerSaving(product.referencePrice,currentPrice))}</Text>}
@@ -279,15 +288,15 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     {panel(<>
       <Text style={{color:theme.text,fontWeight:'900',fontSize:13}}>Community progress</Text>
       <View style={[styles.between,{marginTop:9}]}>
-       <Text style={{color:theme.text,fontSize:11,fontWeight:'800'}}>👥 {offer.joined||0}{offer.groupSize?'/'+offer.groupSize:''} joined</Text>
+       <Text style={{color:theme.text,fontSize:11,fontWeight:'800'}}>👥 {offer.joined||0}{offer.groupSize?'/'+offer.groupSize:''} confirmed</Text>
        <Text style={{color:theme.muted,fontSize:10}}>◷ {offer.daysLeft===undefined?'Deadline not set':'Ends in '+offer.daysLeft+' day(s)'}</Text>
       </View>
       <View style={{...glass.inset,height:7,borderRadius:6,overflow:'hidden',marginVertical:9}}>
        <View style={{height:7,width:((offer.groupSize?Math.min(100,100*(offer.joined||0)/offer.groupSize):0)+'%') as any,backgroundColor:theme.accent,borderRadius:6}}/>
       </View>
-      <Text style={{color:theme.muted,fontSize:11}}>Qualified buyers and closing rules determine the final price. Below-minimum groups expire without payment.</Text>
+      <Text style={{color:theme.muted,fontSize:11}}>{demo?'Qualified buyers and closing rules determine the final price. Below-minimum groups expire without payment.':'Only admin-confirmed orders count as joined. Cart items and pending requests do not advance progress.'}</Text>
     </>)}
-    <View style={{flexDirection:'row',gap:8,marginBottom:10}}>{button('Product Details',()=>setScreen('retail'),false)}{button('Join Deal · Preview',()=>draftGroup(offer))}</View>
+    <View style={{flexDirection:'row',gap:8,marginBottom:10}}>{button('Product Details',()=>setScreen('retail'),false)}{button(demo?'Join Deal · Preview':'Join via Website',()=>demo?draftGroup(offer):openPublishedOffer(offer))}</View>
     <Text style={{fontSize:10,color:theme.muted,marginBottom:8}}>{t.notice}</Text>
    </>;
  }
@@ -457,7 +466,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
    </>)}
    <View style={{...glass.outer,borderRadius:12,padding:10,marginBottom:8,flexDirection:'row',alignItems:'center',gap:9}}>
     <View><Text style={{fontSize:10,color:theme.muted}}>{n(units)} {label('units selected','টি ইউনিট নির্বাচিত')}</Text><Text style={{fontSize:18,fontWeight:'900',color:theme.accent}}>{cash(current)}</Text></View>
-    <Pressable accessibilityRole="button" disabled={!units} onPress={()=>draftPool(pool,quantities)} style={{...glass.control,flex:1,paddingVertical:11,paddingHorizontal:7,borderRadius:10,backgroundColor:theme.accent,opacity:units?1:.35,alignItems:'center'}}><Text style={{fontSize:11,color:theme.onPrimary,fontWeight:'900'}}>{label('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো')} →</Text></Pressable>
+    <Pressable accessibilityRole="button" disabled={demo&&!units} onPress={()=>demo?draftPool(pool,quantities):openPublishedPool(pool)} style={{...glass.control,flex:1,paddingVertical:11,paddingHorizontal:7,borderRadius:10,backgroundColor:theme.accent,opacity:units||!demo?1:.35,alignItems:'center'}}><Text style={{fontSize:11,color:theme.onPrimary,fontWeight:'900'}}>{demo?label('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো'):label('Join Pool on Website','ওয়েবসাইটে পুলে যোগ দিন')} →</Text></Pressable>
    </View>
   </>;
  }
