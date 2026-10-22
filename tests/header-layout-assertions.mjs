@@ -42,7 +42,9 @@ export async function assertHeaderGeometry(page, brandSelector, actionsSelector,
       if (innerWidth <= 790 && Math.abs((text.top + text.bottom) / 2 - (box.top + box.bottom) / 2) > 3) errors.push('Header controls must share the logo row: ' + label)
       if (intersects(text, box)) errors.push('Brand overlaps ' + label)
       if (box.left < 0 || box.right > innerWidth) errors.push('Control outside viewport: ' + label)
-      const minTarget = redesignedMobileHome ? 28 : 43.5
+      // The owner-locked public shell uses the same 31px phone / 34px tablet controls on every customer route.
+      const publicShell = Boolean(brand.closest('main.public-marketplace-flat'))
+      const minTarget = publicShell ? (innerWidth < 768 ? 30.5 : 33.5) : redesignedMobileHome ? 28 : 43.5
       if (innerWidth <= 790 && (box.width < minTarget || box.height < minTarget)) errors.push('Small mobile target: ' + label)
       for (let j = i + 1; j < boxes.length; j++) if (intersects(box, boxes[j].box)) errors.push(label + ' overlaps ' + boxes[j].label)
     }
