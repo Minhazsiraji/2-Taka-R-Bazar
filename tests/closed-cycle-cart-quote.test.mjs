@@ -1,0 +1,40 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const cart=readFileSync('app/cart/page.tsx','utf8')
+const view=readFileSync('components/launch-cart-checkout.tsx','utf8')
+const notices=readFileSync('app/notifications/page.tsx','utf8')
+test('a signed-in customer receives their server-authoritative quote and shared-cycle status in the cart',()=>{
+ assert.match(cart,/from\('simple_sale_cycle_quotes'\)/)
+ assert.match(cart,/\.eq\('customer_id',user\.id\)/)
+ assert.match(cart,/simple_sale_cycle_quote_items\(product_id,quantity,unit_price\)/)
+ assert.match(cart,/from\('simple_sale_cycles'\)/)
+ assert.match(cart,/lockedQuotes=\{lockedQuotes\}/)
+ assert.match(cart,/openCommitments=\{openCommitments\}/)
+ assert.match(cart,/resolvedSharedItems=\{resolvedSharedItems\}/)
+ assert.match(cart,/sharedStateError=\{sharedStateError\}/)
+})
+test('closed shared quotes are displayed read-only without stale catalogue estimate, removal or premature payment',()=>{
+ assert.match(view,/data-testid="locked-community-quote"/)
+ assert.match(view,/Locked product amount: \{money\(q.product_total\)\}/)
+ assert.match(view,/Exact quoted total: \{money\(q.product_total\+q.delivery_fee\)\}/)
+ assert.match(view,/Community Deal \/ Pool closed — price locked/)
+ assert.match(view,/lockedQuotes\.map\(q=>/)
+ assert.match(view,/hiddenKeys\.has\(sharedKey\(item.offer_id,item.product_id\)\)/)
+ assert.match(view,/openKeys\.has\(sharedKey\(selected.offer_id,id\)\)&&quantity===0/)
+ assert.match(view,/Continue this locked Deal \/ Pool/)
+ assert.match(view,/Do not pay yet\.|do not pay yet/i)
+ assert.match(view,/const hasShared=lines\.some/)
+})
+test('terminal quotes are not accidentally turned into a new live cart order',()=>{
+ assert.match(cart,/\['verified','cancelled'\]/)
+ assert.match(view,/resolvedSharedItems/)
+ assert.match(view,/if\(!lines.length&&!lockedQuotes.length\)/)
+ assert.match(view,/openKeys\.has\(k\)/)
+})
+test('notification tap navigates reliably even if marking read fails',()=>{
+ assert.match(notices,/import Link from 'next\/link'/)
+ assert.match(notices,/href=\{safeNotificationHref\(note.href\)\}/)
+ assert.match(notices,/action=\{markNotificationRead\}/)
+ assert.doesNotMatch(notices,/action=\{openNotification\}/)
+})

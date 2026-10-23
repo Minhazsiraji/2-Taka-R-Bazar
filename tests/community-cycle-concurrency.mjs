@@ -86,6 +86,17 @@ await must(await svc.from('pilot_payment_recipients').insert({
  id:recipientId,method:'bkash',account_name:'Fictional bank account',account_number:'01700000000',
  active:true,configured_by:identities[0].id
 }),'fictional recipient')
+// A buyer may decline a deadline-closed quote at the starting or tier price
+// without choosing delivery, paying anything or creating an order.
+const declineQuote=await must(await svc.from('simple_sale_cycle_quotes').select('id,status,order_id').eq('cycle_id',closedA.id).eq('customer_id',identities[2].id).single(),'declinable quote')
+assert.equal(declineQuote.status,'awaiting_delivery')
+const decline=await buyers[1].rpc('customer_decide_simple_sale_quote',{
+ p_quote:declineQuote.id,p_decision:'cancel',p_name:null,p_phone:null,p_terms:false
+})
+assert.ifError(decline.error,'cancel closed quote without payment')
+const declined=await must(await svc.from('simple_sale_cycle_quotes').select('status,order_id').eq('id',declineQuote.id).single(),'declined quote')
+assert.equal(declined.status,'cancelled')
+assert.equal(declined.order_id,null)
 const byOwner=await must(await svc.from('simple_sale_cycle_quotes').select('id,product_total,status').eq('cycle_id',closedA.id).eq('customer_id',identities[1].id).single(),'locked quote')
 assert.equal(Number(byOwner.product_total),140)
 const quoteId=byOwner.id
@@ -112,6 +123,26 @@ try{
  await adminCtx.addCookies(await makeSession(0))
  await checkerCtx.addCookies(await makeSession(8))
  const customer=await customerCtx.newPage(),makerPage=await adminCtx.newPage(),checkerPage=await checkerCtx.newPage()
+ // After the community round closes the browser may still hold a stale
+ // opening-price cart selection. It must show the database-locked quote instead.
+ await customer.goto(base+'/cart',{waitUntil:'networkidle'})
+ await customer.evaluate(({product,offer})=>localStorage.setItem('2tbr-launch-cart-v1',
+   JSON.stringify([{product_id:product,offer_id:offer,quantity:1}])),{product,offer})
+ await customer.reload({waitUntil:'networkidle'})
+ const locked=customer.getByTestId('locked-community-quote')
+ await locked.waitFor({timeout:20000})
+ assert.match(await locked.innerText(),/Locked product amount:.*140/s)
+ assert.match(await locked.innerText(),/Not yet confirmed/)
+ assert.equal(await locked.getByRole('button',{name:/Remove|Decrease|Increase/}).count(),0,'Locked cart is read-only')
+ assert.equal(await customer.getByRole('link',{name:/Continue this locked Deal/}).count(),1)
+ assert.doesNotMatch(await locked.innerText(),/Current estimate.*160/s,'Old opening price cannot override locked quote')
+ // Navigation must not depend on a server-action read-status mutation.
+ await customer.goto(base+'/notifications',{waitUntil:'networkidle'})
+ const directNotice=customer.locator('a[href="/account/commitments"]').filter({hasText:/Deal closed|locked product amount/i}).first()
+ assert.equal(await directNotice.count(),1,'A customer notification directly links to their quote')
+ await directNotice.click()
+ await customer.waitForURL('**/account/commitments',{timeout:15000})
+ assert.equal(await customer.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()}).count(),1)
  await customer.goto(base+'/account/commitments',{waitUntil:'networkidle'})
  const accountCard=customer.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()})
  assert.equal(await accountCard.count(),1,'Buyer has exactly one matching final quote')
@@ -135,6 +166,20 @@ try{
  await staffCard.locator('input[name="delivery_fee"]').fill('30')
  await staffCard.getByRole('button',{name:'Publish complete quote'}).click()
  await awaitQuote('status,delivery_fee',r=>r.status==='quoted'&&Number(r.delivery_fee)===30,'Final delivery fee')
+ // A second identical delivery submission (e.g. stale tab or double click)
+ // must not revoke the staff's completed quote or create another notification.
+ const beforeRetry=await must(await svc.from('notifications').select('id').eq('user_id',identities[1].id).eq('kind','offer_quote'),'quote notice count')
+ assert.ifError((await buyers[0].rpc('customer_set_simple_sale_quote_delivery',{
+  p_quote:quoteId,p_fulfillment:'pickup',p_pickup_point:pickupId,p_home_address:null
+ })).error,'identical delivery retry')
+ const quotedAfterRetry=await awaitQuote('status,delivery_fee,quoted_by',r=>r.status==='quoted'&&Number(r.delivery_fee)===30&&Boolean(r.quoted_by),'Idempotent quoted fee')
+ assert.equal(quotedAfterRetry.status,'quoted')
+ const afterRetry=await must(await svc.from('notifications').select('id').eq('user_id',identities[1].id).eq('kind','offer_quote'),'idempotent notice count')
+ assert.equal(afterRetry.length,beforeRetry.length,'No duplicate final quote notification')
+ await customer.goto(base+'/cart',{waitUntil:'networkidle'})
+ const finalQuoteCart=customer.getByTestId('locked-community-quote')
+ assert.match(await finalQuoteCart.innerText(),/Exact quoted total:.*170/s)
+ assert.equal(await finalQuoteCart.getByRole('button',{name:/Remove/}).count(),0)
  await customer.goto(base+'/account/commitments',{waitUntil:'networkidle'})
  const quoted=customer.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()})
  assert.match(await quoted.innerText(),/Total:.*170/s,'Product + delivery fee shown')

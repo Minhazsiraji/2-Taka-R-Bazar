@@ -13,7 +13,9 @@ test('closed community notifications show the current customer-owned quote and n
  assert.match(page,/Transfer submitted/)
  assert.match(page,/No confirmed order has been created yet/)
  assert.match(page,/stage\?\.body\?\?note\.body/)
- assert.match(page,/action=\{openNotification\}/)
+ assert.match(page,/href=\{safeNotificationHref\(note\.href\)\}/)
+ assert.match(page,/action=\{markNotificationRead\}/)
+ assert.doesNotMatch(page,/action=\{openNotification\}/)
 })
 test('customer commitments explain no-tier closure and enforce payment after delivery',()=>{
  const page=readFileSync('app/account/commitments/page.tsx','utf8')

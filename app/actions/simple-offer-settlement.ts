@@ -23,7 +23,7 @@ export async function selectQuoteDelivery(fd:FormData){
   p_home_address:method==='home_delivery'?field(fd,'home_address'):null
  })
  if(error)fail(account,error.message)
- revalidatePath(account);revalidatePath(staff);redirect(account)
+ revalidatePath(account);revalidatePath(staff);redirect(account+'?delivery_saved=1')
 }
 export async function decideQuote(fd:FormData){
  const id=field(fd,'quote_id'),decision=field(fd,'decision')

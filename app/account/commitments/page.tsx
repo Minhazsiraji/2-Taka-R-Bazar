@@ -6,7 +6,7 @@ export const dynamic='force-dynamic'
 type Item={product_id:string;quantity:number;unit_price:number;retail_reference:number|null}
 type Quote={id:string;cycle_id:string;product_total:number;delivery_fee:number|null;fulfillment:string|null;pickup_point_id:string|null;home_address:string|null;status:string;order_id:string|null;simple_sale_cycle_quote_items:Item[]}
 const money=(n:number|null|undefined)=>n==null?'Pending':'৳'+Number(n).toLocaleString('en-BD',{maximumFractionDigits:2})
-export default async function Commitments({searchParams}:{searchParams:Promise<{error?:string}>}){
+export default async function Commitments({searchParams}:{searchParams:Promise<{error?:string;delivery_saved?:string}>}){
  const {supabase:db,user}=await requireUser(),params=await searchParams
  const [qr,cr,pr,mr,rr]=await Promise.all([
   db.from('simple_sale_cycle_quotes').select('id,cycle_id,product_total,delivery_fee,fulfillment,pickup_point_id,home_address,status,order_id,simple_sale_cycle_quote_items(product_id,quantity,unit_price,retail_reference)').eq('customer_id',user.id).order('created_at',{ascending:false}).limit(75),
@@ -34,6 +34,9 @@ export default async function Commitments({searchParams}:{searchParams:Promise<{
     <p className="font-bold">Complete final quote ready — accept or cancel</p>
     <p className="mt-1 text-sm">Review the product total plus delivery fee below. Only after you explicitly accept will official payment instructions appear.</p>
   </section>}
+  {params.delivery_saved==='1'&&<p className="glass-panel mb-4 rounded-xl border border-white/80 p-4" role="status">
+    Delivery preference saved / ডেলিভারি পছন্দ সংরক্ষিত হয়েছে। Staff will now confirm the delivery charge. No payment or order yet.
+  </p>}
   {(params.error||qr.error||cr.error||pr.error||mr.error||rr.error||names.error)&&<p role="alert" className="mb-4 rounded-xl border p-4">{params.error??'Some commitment details could not load. Do not pay until the entire quote is visible.'}</p>}
   <div className="grid gap-4">
   {quotes.map(q=>{const c=cycles.find(row=>row.id===q.cycle_id);const paymentMethods=paymentOptions.get(q.id)??[]
@@ -43,12 +46,19 @@ export default async function Commitments({searchParams}:{searchParams:Promise<{
     <ul className="my-3 text-sm">{q.simple_sale_cycle_quote_items.map(i=><li key={i.product_id}>{productName.get(i.product_id)??'Product'} · {i.quantity} × {money(i.unit_price)} = {money(i.quantity*Number(i.unit_price))}</li>)}</ul>
     <p>Locked product amount: <b>{money(q.product_total)}</b> · Delivery: <b>{money(q.delivery_fee)}</b> {q.delivery_fee===null?'(staff confirmation pending)':''}</p>
     {q.delivery_fee!==null&&<p className="text-lg font-black">Total: {money(Number(q.product_total)+Number(q.delivery_fee))}</p>}
+    {q.status==='awaiting_delivery'&&q.fulfillment&&<p className="mt-3 text-sm font-semibold" role="status">
+      {q.fulfillment==='pickup'?'Pickup point selected':'Home delivery address received'} — waiting for staff to confirm your delivery charge. You may update the preference before the fee is published; do not pay yet.
+    </p>}
     {q.status==='awaiting_delivery'&&<form action={selectQuoteDelivery} className="mt-3 grid gap-3">
      <input type="hidden" name="quote_id" value={q.id}/>
      <label>Delivery method<select className="input w-full" name="fulfillment" defaultValue={q.fulfillment??'pickup'}><option value="pickup">Community pickup / gate</option><option value="home_delivery">Home delivery</option></select></label>
      <label>Pickup location<select name="pickup_point_id" className="input w-full" defaultValue={q.pickup_point_id??''}><option value="">Select pickup point</option>{points.filter(p=>p.community_id===c?.community_id).map(p=><option key={p.id} value={p.id}>{p.name} — {p.address}</option>)}</select></label>
      <label>Home address<textarea name="home_address" className="input w-full" maxLength={350} defaultValue={q.home_address??''} placeholder="Holding, road, block, city"/></label>
-     <button className="btn-primary">Submit delivery preference</button>
+     <button className="btn-primary">{q.fulfillment?'Update delivery preference':'Submit delivery preference'}</button>
+    </form>}
+    {q.status==='awaiting_delivery'&&<form action={decideQuote} className="mt-2">
+      <input type="hidden" name="quote_id" value={q.id}/>
+      <button className="btn-secondary" name="decision" value="cancel">Cancel this closed-round quote without an order</button>
     </form>}
     {q.status==='quoted'&&<div className="mt-3 grid gap-3">
      <p className="text-sm">Final products and delivery are quoted. The price cannot change after acceptance. You may cancel without placing an order.</p>
