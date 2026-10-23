@@ -88,7 +88,7 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: |
-          psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "grant select on public.simple_sale_offer_joins to service_role; grant insert on public.pilot_payment_recipients to service_role;"
+          psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "grant select on public.simple_sale_offer_joins, public.launch_orders to service_role; grant insert on public.pilot_payment_recipients to service_role;"
       - name: Production-build storefront UAT against disposable synthetic DB
         shell: bash
         run: |
