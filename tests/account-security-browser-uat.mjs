@@ -507,13 +507,27 @@ try {
   assert.ok(delivered.some(n=>n.user_id===emailFixture.user.id))
   assert.ok(!delivered.some(n=>n.user_id===outsiderSignup.user.id))
   assert.ok(delivered.every(n=>n.priority==='high'&&n.href==='/notifications'))
-  await page.getByRole('button',{name:new RegExp(title)}).click()
-  const readForm=page.locator('form').filter({has:page.getByRole('heading',{name:title,exact:true})})
-  await readForm.getByText('• New',{exact:true}).waitFor({state:'hidden'})
+  // A notification link must navigate even if the read-status action fails.
+  const noticeRow=page.locator('.divide-y > div').filter({has:page.getByRole('heading',{name:title,exact:true})})
+  await noticeRow.getByRole('link',{name:new RegExp(title)}).click()
+  await page.waitForURL(url=>url.pathname==='/notifications',{timeout:15000})
+  const freshRow=page.locator('.divide-y > div').filter({has:page.getByRole('heading',{name:title,exact:true})})
+  await freshRow.getByRole('button',{name:'Mark this notification read'}).click()
+  await page.getByRole('heading',{name:title,exact:true}).waitFor()
+  await page.locator('.divide-y > div').filter({has:page.getByRole('heading',{name:title,exact:true})})
+    .getByText('• New',{exact:true}).waitFor({state:'hidden'})
   const ownReceipt=delivered.find(n=>n.user_id===emailFixture.user.id)
-  const {data:readReceipt}=await admin.from('notifications').select('read_at').eq('id',ownReceipt.id).single()
-  assert.ok(readReceipt.read_at)
-  await page.getByRole('button',{name:/Mark all read/}).click()
+  let readReceipt
+  for(let attempt=0;attempt<40;attempt++){
+   const result=await admin.from('notifications').select('read_at').eq('id',ownReceipt.id).single()
+   assert.ifError(result.error)
+   readReceipt=result.data
+   if(readReceipt.read_at)break
+   await new Promise(resolve=>setTimeout(resolve,200))
+  }
+  assert.ok(readReceipt.read_at,'The separate read action must persist after navigation')
+  if(await page.getByRole('button',{name:/Mark all read/}).count())
+   await page.getByRole('button',{name:/Mark all read/}).click()
   await page.waitForFunction(()=>!document.querySelector('.notification-unread-badge'),null,{timeout:25000})
   // The browser may optimistically hide the badge before the read RPC finishes.
   // Keep the strict zero-unread assertion, but wait for server-side convergence.
