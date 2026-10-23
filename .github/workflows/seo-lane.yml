@@ -1,0 +1,52 @@
+name: SEO and consented measurement
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/layout.tsx'
+      - 'app/privacy/page.tsx'
+      - 'app/robots.ts'
+      - 'app/sitemap.ts'
+      - 'components/consent-aware-analytics.tsx'
+      - 'components/public-seo-product-page.tsx'
+      - 'lib/marketing-events.ts'
+      - 'scripts/seo-health-check.mjs'
+      - 'tests/seo-health-check.test.mjs'
+      - 'tests/marketing-analytics.test.mjs'
+      - '.github/workflows/seo-lane.yml'
+  workflow_dispatch:
+    inputs:
+      live_crawl:
+        description: 'Run read-only public SEO smoke crawl of 2takarbazar.com'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  seo-measurement-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Run read-only SEO checks and consent tests
+        run: node --test tests/seo-health-check.test.mjs tests/marketing-analytics.test.mjs
+
+  public-crawl:
+    if: github.event_name == 'workflow_dispatch' && inputs.live_crawl
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Probe six public URLs without authentication, cookies or writes
+        run: node scripts/seo-health-check.mjs
