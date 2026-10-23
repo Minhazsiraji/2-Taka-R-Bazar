@@ -56,6 +56,10 @@ export default async function Commitments({searchParams}:{searchParams:Promise<{
      <label>Home address<textarea name="home_address" className="input w-full" maxLength={350} defaultValue={q.home_address??''} placeholder="Holding, road, block, city"/></label>
      <button className="btn-primary">{q.fulfillment?'Update delivery preference':'Submit delivery preference'}</button>
     </form>}
+    {q.status==='awaiting_delivery'&&<form action={decideQuote} className="mt-2">
+      <input type="hidden" name="quote_id" value={q.id}/>
+      <button className="btn-secondary" name="decision" value="cancel">Cancel this closed-round quote without an order</button>
+    </form>}
     {q.status==='quoted'&&<div className="mt-3 grid gap-3">
      <p className="text-sm">Final products and delivery are quoted. The price cannot change after acceptance. You may cancel without placing an order.</p>
      <form action={decideQuote} className="grid gap-2"><input type="hidden" name="quote_id" value={q.id}/><input type="hidden" name="decision" value="accept"/>
