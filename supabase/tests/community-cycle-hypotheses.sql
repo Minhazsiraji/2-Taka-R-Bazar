@@ -1,5 +1,7 @@
 -- Fictional, disposable-DB only. Fail-fast rollback harness.
 begin;
+create extension if not exists pgtap with schema extensions;
+select plan(1);
 do $tests$
 declare
  maker uuid:=gen_random_uuid();checker uuid:=gen_random_uuid();
@@ -20,7 +22,8 @@ begin
  (area_b,'Scenario Area B','scenario-b-'||area_b,true);
  for idx in 1..6 loop
   update public.profiles set community_id=case when idx=6 then area_b else area_a end,
-    onboarding_completed_at=now() where id=people[idx];
+    full_name='Scenario Customer '||idx,household_name='Hypothetical Household '||idx,
+    phone='0170000000'||idx,onboarding_completed_at=now() where id=people[idx];
   if not found then raise exception 'TEST PROFILE FIXTURE MISSING customer %',idx;end if;
  end loop;
  insert into public.products(id,name,category,package_size,unit,sku,source_type,active,is_demo)
@@ -170,4 +173,6 @@ begin
  then raise exception 'Direct quote writes exposed';end if;
  raise notice 'PASS: six fictional customers, two community cycles, target 3/5, new ID, immutable price, delivery, consent, payment, idempotency, expired B cancellation, no cross-account actions';
 end $tests$;
+select ok(true,'All fictional community cycle and payment exceptions passed');
+select * from finish();
 rollback;
