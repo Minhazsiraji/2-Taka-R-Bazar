@@ -8,7 +8,7 @@ declare admin_id uuid:=gen_random_uuid();
  gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid()];
  a uuid:=gen_random_uuid();b uuid:=gen_random_uuid();
  rice uuid:=gen_random_uuid();oil uuid:=gen_random_uuid();pool uuid;
- cycle_a uuid;cycle_b uuid;new_a uuid;quote_id uuid;idx int;blocked boolean;
+ cycle_a uuid;cycle_b uuid;new_a uuid;selected_quote uuid;idx int;blocked boolean;
  lines jsonb;
 begin
  insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at)
@@ -83,10 +83,10 @@ begin
  if (select locked_threshold from public.simple_sale_cycles where id=cycle_a)<>5
  or (select locked_threshold from public.simple_sale_cycles where id=cycle_b)<>0 then
   raise exception 'Pool close used global participation instead of community count';end if;
- select id into quote_id from public.simple_sale_cycle_quotes where cycle_id=cycle_a and customer_id=buyers[1];
- if (select product_total from public.simple_sale_cycle_quotes where id=quote_id)<>870 then
+ select id into selected_quote from public.simple_sale_cycle_quotes where cycle_id=cycle_a and customer_id=buyers[1];
+ if (select product_total from public.simple_sale_cycle_quotes where id=selected_quote)<>870 then
   raise exception 'Whole-Pool price wrong: expected 4*90 + 3*170 = 870';end if;
- if (select sum(quantity*retail_reference) from public.simple_sale_cycle_quote_items where quote_id=quote_id)<>1310 then
+ if (select sum(quantity*retail_reference) from public.simple_sale_cycle_quote_items where quote_id=selected_quote)<>1310 then
   raise exception 'Whole-Pool retail reference mismatch';end if;
  if (select product_total from public.simple_sale_cycle_quotes where cycle_id=cycle_b)<>100 then
   raise exception 'Unmet Pool tier must use baseline starting price';end if;
