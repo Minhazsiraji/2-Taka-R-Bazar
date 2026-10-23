@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { ConsentAwareAnalytics } from '@/components/consent-aware-analytics'
 
 export function PwaRegister() {
   useEffect(() => {
@@ -26,5 +27,7 @@ export function PwaRegister() {
     return () => clearTimeout(timeoutId)
   }, [])
 
-  return null
+  // Preserves the byte-locked RootLayout and approved storefront structure.
+  // Measurement is off by default and never loads optional scripts before consent.
+  return <ConsentAwareAnalytics />
 }
