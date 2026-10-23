@@ -86,6 +86,17 @@ await must(await svc.from('pilot_payment_recipients').insert({
  id:recipientId,method:'bkash',account_name:'Fictional bank account',account_number:'01700000000',
  active:true,configured_by:identities[0].id
 }),'fictional recipient')
+// A buyer may decline a deadline-closed quote at the starting or tier price
+// without choosing delivery, paying anything or creating an order.
+const declineQuote=await must(await svc.from('simple_sale_cycle_quotes').select('id,status,order_id').eq('cycle_id',closedA.id).eq('customer_id',identities[2].id).single(),'declinable quote')
+assert.equal(declineQuote.status,'awaiting_delivery')
+const decline=await buyers[1].rpc('customer_decide_simple_sale_quote',{
+ p_quote:declineQuote.id,p_decision:'cancel',p_name:null,p_phone:null,p_terms:false
+})
+assert.ifError(decline.error,'cancel closed quote without payment')
+const declined=await must(await svc.from('simple_sale_cycle_quotes').select('status,order_id').eq('id',declineQuote.id).single(),'declined quote')
+assert.equal(declined.status,'cancelled')
+assert.equal(declined.order_id,null)
 const byOwner=await must(await svc.from('simple_sale_cycle_quotes').select('id,product_total,status').eq('cycle_id',closedA.id).eq('customer_id',identities[1].id).single(),'locked quote')
 assert.equal(Number(byOwner.product_total),140)
 const quoteId=byOwner.id
