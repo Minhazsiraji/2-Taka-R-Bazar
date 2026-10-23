@@ -215,6 +215,18 @@ begin
  if not blocked then raise exception 'Verified transfer reference reused by another customer';end if;
  perform public.customer_submit_simple_sale_payment(quote_b,recipient,'SCENARIO-002');
  blocked=false;
+ begin perform public.admin_request_simple_sale_payment_correction(quote_b,'Invalid transfer reference needs replacement');
+ exception when others then blocked=true;end;
+ if not blocked then raise exception 'Customer impersonated payment reviewer';end if;
+ perform set_config('request.jwt.claim.sub',maker::text,true);
+ perform public.admin_request_simple_sale_payment_correction(quote_b,'No matching fictional receipt in bank records');
+ if (select status from public.simple_sale_cycle_quotes where id=quote_b)<>'accepted'
+  or (select payment_reference from public.simple_sale_cycle_quotes where id=quote_b) is not null
+  or (select count(*) from public.simple_sale_payment_review_events where quote_id=quote_b)<>1
+ then raise exception 'Payment correction did not reset and audit the unmatched reference';end if;
+ perform set_config('request.jwt.claim.sub',people[2]::text,true);
+ perform public.customer_submit_simple_sale_payment(quote_b,recipient,'SCENARIO-003');
+ blocked=false;
  begin perform public.customer_decide_simple_sale_quote(quote_b,'cancel');
  exception when others then blocked=true;end;
  if not blocked then raise exception 'Paid-looking transfer canceled without review';end if;
@@ -233,6 +245,20 @@ begin
   raise exception 'Valid verification failed after stock restored';end if;
  if (select available_quantity from public.launch_product_stock where product_id=p)<>97 then
   raise exception 'Two unit stock decrement incorrect';end if;
+ -- Customer can cancel an accepted quote before transfer is submitted.
+ select id into quote_b from public.simple_sale_cycle_quotes
+  where cycle_id=cycle_a and customer_id=people[3];
+ perform set_config('request.jwt.claim.sub',people[3]::text,true);
+ perform public.customer_set_simple_sale_quote_delivery(quote_b,'home_delivery',null,
+  'Hypothetical test house 3, Community A');
+ perform set_config('request.jwt.claim.sub',maker::text,true);
+ perform public.admin_quote_simple_sale_delivery(quote_b,25);
+ perform set_config('request.jwt.claim.sub',people[3]::text,true);
+ perform public.customer_decide_simple_sale_quote(quote_b,'accept','Scenario Buyer Three','01700000003',true);
+ perform public.customer_decide_simple_sale_quote(quote_b,'cancel',null,null,false);
+ if (select status from public.simple_sale_cycle_quotes where id=quote_b)<>'cancelled'
+ or exists(select 1 from public.launch_orders where customer_id=people[3])
+ then raise exception 'Accepted-but-unpaid quote cancellation created an order';end if;
  -- Expired B cannot affect A. B below first target gets base-price quote.
  perform private.close_simple_sale_cycle_impl(cycle_b,true);
  if (select locked_threshold from public.simple_sale_cycles where id=cycle_b)<>0 then

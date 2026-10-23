@@ -54,6 +54,14 @@ export async function quoteDeliveryFee(fd:FormData){
  if(error)fail(staff,error.message)
  revalidatePath(account);revalidatePath(staff);redirect(staff)
 }
+export async function requestPaymentCorrection(fd:FormData){
+ const id=field(fd,'quote_id'),reason=field(fd,'reason')
+ if(!uuid.test(id)||reason.length<10||reason.length>500)fail(staff,'Enter a clear reason (10–500 characters)')
+ const {supabase:db}=await requireAdmin()
+ const {error}=await db.rpc('admin_request_simple_sale_payment_correction',{p_quote:id,p_reason:reason})
+ if(error)fail(staff,error.message)
+ revalidatePath(account);revalidatePath(staff);redirect(staff)
+}
 export async function verifyQuotePayment(fd:FormData){
  const id=field(fd,'quote_id'),verified=Number(field(fd,'verified_amount'))
  if(!uuid.test(id)||fd.get('independent_confirmation')!=='on'||!Number.isFinite(verified)||verified<=0)fail(staff,'Independently verify the official transfer and exact received amount')

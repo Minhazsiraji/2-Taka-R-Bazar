@@ -8,13 +8,15 @@ type Quote={id:string;cycle_id:string;product_total:number;delivery_fee:number|n
 const money=(n:number|null|undefined)=>n==null?'Pending':'৳'+Number(n).toLocaleString('en-BD',{maximumFractionDigits:2})
 export default async function Commitments({searchParams}:{searchParams:Promise<{error?:string}>}){
  const {supabase:db,user}=await requireUser(),params=await searchParams
- const [qr,cr,pr,mr]=await Promise.all([
+ const [qr,cr,pr,mr,rr]=await Promise.all([
   db.from('simple_sale_cycle_quotes').select('id,cycle_id,product_total,delivery_fee,fulfillment,pickup_point_id,home_address,status,order_id,simple_sale_cycle_quote_items(product_id,quantity,unit_price,retail_reference)').eq('customer_id',user.id).order('created_at',{ascending:false}).limit(75),
   db.from('simple_sale_cycles').select('id,community_id,cycle_number,locked_threshold,status').order('opened_at',{ascending:false}).limit(120),
   db.from('pickup_points').select('id,community_id,name,address').eq('active',true).limit(120),
-  db.from('simple_sale_cycle_members').select('cycle_id').eq('customer_id',user.id).limit(120)
+  db.from('simple_sale_cycle_members').select('cycle_id').eq('customer_id',user.id).limit(120),
+  db.from('simple_sale_payment_review_events').select('quote_id,reason,created_at').order('created_at',{ascending:false}).limit(120)
  ])
  const quotes=(qr.data??[]) as Quote[]
+ const corrections=(rr.data??[]) as {quote_id:string;reason:string;created_at:string}[]
  const cycles=(cr.data??[]) as {id:string;community_id:string;cycle_number:number;locked_threshold:number|null;status:string}[]
  const points=(pr.data??[]) as {id:string;community_id:string;name:string;address:string}[]
  const accepted=quotes.filter(q=>q.status==='accepted')
@@ -24,7 +26,7 @@ export default async function Commitments({searchParams}:{searchParams:Promise<{
  const productName=new Map((names.data??[]).map(p=>[p.id,p.name]))
  return <CommerceFrame launch title="My Group Deals & Pools / আমার গ্রুপ ও পুল">
   <p className="mb-4 text-sm">Joining only saves your commitment; it does not create an order. At cycle closure, you receive the locked tier price. Choose collection or home delivery, wait for a confirmed delivery fee, accept the exact amount, then send your transfer reference. Only independently verified payment creates an order.</p>
-  {(params.error||qr.error||cr.error||pr.error||mr.error||names.error)&&<p role="alert" className="mb-4 rounded-xl border p-4">{params.error??'Some commitment details could not load. Do not pay until the entire quote is visible.'}</p>}
+  {(params.error||qr.error||cr.error||pr.error||mr.error||rr.error||names.error)&&<p role="alert" className="mb-4 rounded-xl border p-4">{params.error??'Some commitment details could not load. Do not pay until the entire quote is visible.'}</p>}
   <div className="grid gap-4">
   {quotes.map(q=>{const c=cycles.find(row=>row.id===q.cycle_id);const paymentMethods=paymentOptions.get(q.id)??[]
    return <article className="glass-panel rounded-3xl border border-white/80 p-4 sm:p-5" key={q.id}>
@@ -50,12 +52,14 @@ export default async function Commitments({searchParams}:{searchParams:Promise<{
      </form>
      <form action={decideQuote}><input type="hidden" name="quote_id" value={q.id}/><button className="btn-secondary" name="decision" value="cancel">Cancel without order</button></form>
     </div>}
+    {q.status==='accepted'&&corrections.some(c=>c.quote_id===q.id)&&<p role="alert" className="mt-3 rounded-xl border p-3 text-sm">Please correct your transfer reference: {corrections.find(c=>c.quote_id===q.id)?.reason}</p>}
     {q.status==='accepted'&&<form action={submitQuotePayment} className="mt-3 grid gap-3"><input type="hidden" name="quote_id" value={q.id}/>
       <p className="text-sm">Pay exactly {money(Number(q.product_total)+Number(q.delivery_fee))} to an official account. A submitted transaction ID is not proof of payment.</p>
       <label>Official account<select className="input w-full" name="recipient_id" required defaultValue=""><option value="">Select account</option>{paymentMethods.map(p=><option key={p.id} value={p.id}>{p.method.toUpperCase()} · {p.account_name} · {p.account_number} · {p.bank_name??''}</option>)}</select></label>
       <label>Transaction reference<input className="input w-full" name="reference" minLength={6} maxLength={80} required/></label>
       <button className="btn-primary">Submit transfer for independent checking</button>
     </form>}
+    {q.status==='accepted'&&<form action={decideQuote} className="mt-3"><input type="hidden" name="quote_id" value={q.id}/><button className="btn-secondary" name="decision" value="cancel">Cancel before payment transfer</button></form>}
     {q.status==='payment_submitted'&&<p className="mt-3 font-semibold">Transfer reference submitted. Staff verification is pending; no order has been created yet.</p>}
     {q.status==='verified'&&q.order_id&&<Link className="btn-primary mt-3 inline-flex" href={'/launch-orders/'+q.order_id}>View confirmed order</Link>}
     {q.status==='cancelled'&&<p className="mt-3">Cancelled; no order exists for this quote.</p>}

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import {requireAdmin} from '@/lib/auth'
 import {AdminShell} from '@/components/admin-shell'
-import {quoteDeliveryFee,verifyQuotePayment} from '@/app/actions/simple-offer-settlement'
+import {quoteDeliveryFee,verifyQuotePayment,requestPaymentCorrection} from '@/app/actions/simple-offer-settlement'
 export const dynamic='force-dynamic'
 type Item={product_id:string;quantity:number;unit_price:number}
 type Quote={id:string;cycle_id:string;customer_id:string;product_total:number;delivery_fee:number|null;fulfillment:string|null;pickup_point_id:string|null;home_address:string|null;payment_recipient_id:string|null;payment_reference:string|null;quoted_by:string|null;status:string;order_id:string|null;contact_name:string|null;contact_phone:string|null;created_at:string;simple_sale_cycle_quote_items:Item[]}
@@ -37,6 +37,7 @@ export default async function OfferSettlement({searchParams}:{searchParams:Promi
     {q.status==='payment_submitted'&&<section className="rounded-2xl border p-4">
      <p>Customer's declared transaction reference: <b>{q.payment_reference??'Missing'}</b></p>
      <p>Recipient account: <b>{recipientName.get(q.payment_recipient_id??'')??'Unknown'}</b></p>
+     <form action={requestPaymentCorrection} className="my-3 grid gap-2"><input type="hidden" name="quote_id" value={q.id}/><label>Unmatched transfer / incorrect reference reason<input type="text" className="input w-full" name="reason" required minLength={10} maxLength={500} placeholder="Explain why the transfer cannot be matched"/></label><button className="btn-secondary">Request corrected payment reference (no order)</button></form>
      {q.quoted_by===user.id?<p className="error">You prepared this quote. Another authorized staff member must independently verify the transfer.</p>:
      <form action={verifyQuotePayment} className="mt-3 grid gap-2"><input type="hidden" name="quote_id" value={q.id}/>
       <label>Amount actually received in the official account (৳)<input required type="number" name="verified_amount" min={0} step=".01" className="input w-full" placeholder={String(total)}/></label>
