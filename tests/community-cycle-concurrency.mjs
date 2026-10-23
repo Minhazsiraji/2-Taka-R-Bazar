@@ -89,6 +89,15 @@ await must(await svc.from('pilot_payment_recipients').insert({
 const byOwner=await must(await svc.from('simple_sale_cycle_quotes').select('id,product_total,status').eq('cycle_id',closedA.id).eq('customer_id',identities[1].id).single(),'locked quote')
 assert.equal(Number(byOwner.product_total),140)
 const quoteId=byOwner.id
+async function awaitQuote(fields,predicate,label){
+ let row
+ for(let attempt=0;attempt<50;attempt++){
+  row=await must(await svc.from('simple_sale_cycle_quotes').select(fields).eq('id',quoteId).single(),label)
+  if(predicate(row))return row
+  await new Promise(resolve=>setTimeout(resolve,200))
+ }
+ throw Error(label+' was not persisted: '+JSON.stringify(row))
+}
 async function makeSession(index){
  const jar=new Map(),auth=createServerClient(api,key,{
   cookies:{getAll:()=>[...jar.values()],setAll:list=>list.forEach(c=>jar.set(c.name,c))}
@@ -125,6 +134,7 @@ try{
  assert.equal(await staffCard.count(),1,'Staff can see customer quote')
  await staffCard.locator('input[name="delivery_fee"]').fill('30')
  await staffCard.getByRole('button',{name:'Publish complete quote'}).click()
+ await awaitQuote('status,delivery_fee',r=>r.status==='quoted'&&Number(r.delivery_fee)===30,'Final delivery fee')
  await customer.goto(base+'/account/commitments',{waitUntil:'networkidle'})
  const quoted=customer.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()})
  assert.match(await quoted.innerText(),/Total:.*170/s,'Product + delivery fee shown')
@@ -137,7 +147,7 @@ try{
  await accepted.locator('select[name="recipient_id"]').selectOption(recipientId)
  await accepted.locator('input[name="reference"]').fill('FICTIONAL-ONLY-'+sid)
  await accepted.getByRole('button',{name:'Submit transfer for independent checking'}).click()
- const submitted=await must(await svc.from('simple_sale_cycle_quotes').select('status,order_id').eq('id',quoteId).single(),'waiting transfer')
+ const submitted=await awaitQuote('status,order_id',r=>r.status==='payment_submitted','Waiting transfer')
  assert.equal(submitted.status,'payment_submitted');assert.equal(submitted.order_id,null)
  // Maker must not verify their own fee quote, even if a direct RPC is attempted.
  const makerAttempt=await creator.rpc('admin_verify_simple_sale_payment',{p_quote:quoteId,p_verified_amount:170,p_bank_confirmed:true})
@@ -148,7 +158,7 @@ try{
  await review.locator('input[name="verified_amount"]').fill('170')
  await review.locator('input[name="independent_confirmation"]').check()
  await review.getByRole('button',{name:'Verify transfer and create order once'}).click()
- const result=await must(await svc.from('simple_sale_cycle_quotes').select('status,order_id').eq('id',quoteId).single(),'verified quote')
+ const result=await awaitQuote('status,order_id',r=>r.status==='verified'&&Boolean(r.order_id),'Verified quote')
  assert.equal(result.status,'verified');assert.ok(result.order_id)
  const order=await must(await svc.from('launch_orders').select('id,status,total_amount,payment_status').eq('id',result.order_id).single(),'exact confirmed order')
  assert.equal(order.status,'confirmed');assert.equal(order.payment_status,'verified')
