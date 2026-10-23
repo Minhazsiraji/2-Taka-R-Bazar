@@ -62,7 +62,7 @@ export function buildVerifiedMetaPurchase(input: unknown): MetaPurchasePayload |
   if (e.source !== 'authoritative_finance_settlement' || e.state !== 'paid_confirmed' ||
     e.isDemo !== false || e.marketingConsentRecorded !== true ||
     typeof e.orderId !== 'string' || !UUID.test(e.orderId) || !positiveMoney(e.paidAmountBdt) ||
-    !Number.isInteger(e.confirmedAtUnix) || (e.confirmedAtUnix ?? 0) <= 0 ||
+    typeof e.confirmedAtUnix !== 'number' || !Number.isInteger(e.confirmedAtUnix) || e.confirmedAtUnix <= 0 ||
     (e.confirmedAtUnix ?? 0) > Math.floor(Date.now() / 1000) + 60 ||
     (e.confirmedAtUnix ?? 0) < Math.floor(Date.now() / 1000) - 6 * 86400 ||
     !Array.isArray(e.items) || e.items.length === 0 || e.items.length > 100) return null
