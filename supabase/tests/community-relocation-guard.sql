@@ -6,7 +6,7 @@ do $scenario$
 declare
   buyer uuid:=gen_random_uuid(); maker uuid:=gen_random_uuid();
   area_a uuid:=gen_random_uuid(); area_b uuid:=gen_random_uuid();
-  item_id uuid:=gen_random_uuid(); offer_id uuid; cycle_id uuid;
+  item_id uuid:=gen_random_uuid(); scenario_offer uuid; cycle_id uuid;
   rejected boolean; old_name text;
 begin
   insert into auth.users(id,instance_id,aud,role,email,created_at,updated_at)
@@ -25,18 +25,18 @@ begin
   insert into public.products(id,name,category,package_size,unit,sku,source_type,active,is_demo)
   values(item_id,'Synthetic butter','Dairy','1 kg','kg','MOVING-'||item_id,'SUPPLIER_POOL',true,false);
   perform set_config('request.jwt.claim.sub',maker::text,true);
-  offer_id:=public.admin_save_simple_offer_with_tiers(
+  scenario_offer:=public.admin_save_simple_offer_with_tiers(
     null,'GROUP_DEAL',array[area_a,area_b],'House relocation test',
     jsonb_build_array(jsonb_build_object('product_id',item_id,'price',100,
       'old_price',130,'available_quantity',100)),
     true,now()+interval '7 days',
     jsonb_build_array(jsonb_build_object('threshold',5,'prices',
       jsonb_build_array(jsonb_build_object('product_id',item_id,'price',90)))));
-  if offer_id is null then raise exception 'Cannot publish synthetic Deal';end if;
+  if scenario_offer is null then raise exception 'Cannot publish synthetic Deal';end if;
   perform set_config('request.jwt.claim.sub',buyer::text,true);
-  perform public.join_simple_sale_group_deal_quantified(offer_id,item_id,area_a,1);
+  perform public.join_simple_sale_group_deal_quantified(scenario_offer,item_id,area_a,1);
   select c.id into cycle_id from public.simple_sale_cycles c
-   where c.offer_id=offer_id and c.community_id=area_a and c.status='open';
+   where c.offer_id=scenario_offer and c.community_id=area_a and c.status='open';
   if cycle_id is null then raise exception 'Synthetic cycle not created';end if;
   rejected:=false;
   begin
@@ -45,7 +45,7 @@ begin
   if not rejected then raise exception 'Active commitment was transferred to another area';end if;
   if (select community_id from public.profiles where id=buyer)<>area_a then
     raise exception 'Rejected relocation changed the household anyway';end if;
-  perform public.leave_simple_sale_group_deal(offer_id,item_id);
+  perform public.leave_simple_sale_group_deal(scenario_offer,item_id);
   update public.profiles set community_id=area_b,address_hint='New Road, Test B',
     pickup_point_id=null where id=buyer;
   if (select community_id from public.profiles where id=buyer)<>area_b then
