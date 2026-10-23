@@ -13,6 +13,8 @@ on:
       - 'scripts/seo-health-check.mjs'
       - 'tests/seo-health-check.test.mjs'
       - 'tests/marketing-analytics.test.mjs'
+      - 'tests/meta-capi.test.mjs'
+      - 'lib/meta-capi-server.ts'
       - '.github/workflows/seo-lane.yml'
   workflow_dispatch:
     inputs:
@@ -35,8 +37,10 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
-      - name: Run read-only SEO checks and consent tests
-        run: node --test tests/seo-health-check.test.mjs tests/marketing-analytics.test.mjs
+      - name: Install locked dependencies for isolated source tests
+        run: npm ci --no-audit --no-fund
+      - name: Run SEO, consent and CAPI validation tests
+        run: node --test tests/seo-health-check.test.mjs tests/marketing-analytics.test.mjs tests/meta-capi.test.mjs
 
   public-crawl:
     if: github.event_name == 'workflow_dispatch' && inputs.live_crawl
