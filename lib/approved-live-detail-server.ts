@@ -1,5 +1,6 @@
 import 'server-only'
 import {simpleStorefrontOffers,simpleFeaturedPools,type SimpleOffer} from './simple-offers'
+import {scopeCommunityOffer,scopeCommunityPool} from './approved-card-view'
 import type {PublicVendorBookingProduct} from './public-vendor-booking'
 import {createClient} from '@/lib/supabase/server'
 import {withCommerceOffers} from '@/lib/commerce/storefront'
@@ -27,7 +28,9 @@ export async function loadLivePublishedProduct(id:string):Promise<PublicLiveProd
  let offers:StorefrontOffer[]=[]
  try{offers=await withCommerceOffers((rawOffers.data??[]) as StorefrontOffer[],id)}
  catch{offers=(rawOffers.data??[]) as StorefrontOffer[]}
- offers=publishedLiveOffers([...offers,...simple]).filter(o=>o.product_id===id)
+ const {data:membership}=await supabase.rpc('get_my_community_summary')
+ const selectedCommunity=membership?.[0]?.community_id??''
+ offers=publishedLiveOffers([...offers,...simple]).filter(o=>o.product_id===id).map(o=>scopeCommunityOffer(o,selectedCommunity))
  const slug=typeof slugResult.data==='string'?slugResult.data:''
  let seo:ProductSeoPublic|null=null
  if(!slugResult.error&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)&&slug.length<=120){
@@ -49,7 +52,9 @@ export async function loadLivePublishedPool(id:string):Promise<DemoFeaturedPool|
  const client=await createClient()
  const [legacy,simple]=await Promise.all([client.rpc('get_public_featured_pools',{p_community_id:null}),client.rpc('get_public_simple_offers')])
  const pools=[...(legacy.error?[]:legacy.data??[]) as DemoFeaturedPool[],...simpleFeaturedPools((simple.error?[]:simple.data??[]) as SimpleOffer[])]
- const found=publishedLivePools(pools).find(p=>p.id===id)
+ const {data:membership}=await client.rpc('get_my_community_summary')
+ const selectedCommunity=membership?.[0]?.community_id??''
+ const found=publishedLivePools(pools,selectedCommunity).map(p=>scopeCommunityPool(p,selectedCommunity)).find(p=>p.id===id)
  if(!found)return null
  const offerLines=found.bundle.filter(l=>l.offer&&!l.offer.is_demo&&!l.offer.commerce_synthetic)
   .map(line=>({...line,offer:{...line.offer,image_url:line.offer.image_url&&publicShowcaseImageUrl(line.offer.image_url)?line.offer.image_url:null}}))
