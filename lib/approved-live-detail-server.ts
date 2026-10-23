@@ -12,7 +12,7 @@ import {productFromPublicSources,publishedLiveOffers,publishedLivePools,uuidPatt
 
 /** Read-only public RPCs; no service-role access, private table or writes.
  * Fail closed on public-offer RPC errors: never substitute demo records for real ones. */
-export async function loadLivePublishedProduct(id:string):Promise<PublicLiveProduct|null>{
+export async function loadLivePublishedProduct(id:string,requestedArea?:string):Promise<PublicLiveProduct|null>{
  if(!uuidPattern.test(id))return null
  const supabase=await createClient()
  const [rawOffers,showcase,slugResult,vendorResult,simpleResult]=await Promise.all([
@@ -30,7 +30,14 @@ export async function loadLivePublishedProduct(id:string):Promise<PublicLiveProd
  catch{offers=(rawOffers.data??[]) as StorefrontOffer[]}
  const {data:membership}=await supabase.rpc('get_my_community_summary')
  const selectedCommunity=membership?.[0]?.community_id??''
- offers=publishedLiveOffers([...offers,...simple]).filter(o=>o.product_id===id).map(o=>scopeCommunityOffer(o,selectedCommunity))
+ const published=publishedLiveOffers([...offers,...simple]).filter(o=>o.product_id===id)
+ // A public area chosen on the homepage must remain visible on details for guests
+ // and accounts without onboarding. Authenticated members always see their own
+ // nominated community, which the database independently enforces when joining.
+ const viewedArea=selectedCommunity||(requestedArea&&uuidPattern.test(requestedArea)&&
+  published.some(o=>(o.community_ids??[o.community_id]).includes(requestedArea)&&
+   o.community_progress?.some(c=>c.community_id===requestedArea))?requestedArea:'')
+ offers=published.map(o=>scopeCommunityOffer(o,viewedArea))
  const slug=typeof slugResult.data==='string'?slugResult.data:''
  let seo:ProductSeoPublic|null=null
  if(!slugResult.error&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)&&slug.length<=120){
@@ -47,14 +54,18 @@ export async function loadLivePublishedProduct(id:string):Promise<PublicLiveProd
  const candidates=[product.image,publicShowcase?.image_url,...(publicShowcase?.gallery_urls??[])]
  return {...product,listingStock:vendor?.available_quantity,listingOldPrice:vendor?.old_price,launchEnabled:vendor?.launch_enabled,listingPrice:vendor?.approved_unit_price??product.listingPrice??null,image:candidates.find(x=>x&&publicShowcaseImageUrl(x))??null}
 }
-export async function loadLivePublishedPool(id:string):Promise<DemoFeaturedPool|null>{
+export async function loadLivePublishedPool(id:string,requestedArea?:string):Promise<DemoFeaturedPool|null>{
  if(!uuidPattern.test(id))return null
  const client=await createClient()
  const [legacy,simple]=await Promise.all([client.rpc('get_public_featured_pools',{p_community_id:null}),client.rpc('get_public_simple_offers')])
  const pools=[...(legacy.error?[]:legacy.data??[]) as DemoFeaturedPool[],...simpleFeaturedPools((simple.error?[]:simple.data??[]) as SimpleOffer[])]
  const {data:membership}=await client.rpc('get_my_community_summary')
  const selectedCommunity=membership?.[0]?.community_id??''
- const found=publishedLivePools(pools,selectedCommunity).map(p=>scopeCommunityPool(p,selectedCommunity)).find(p=>p.id===id)
+ const publicPools=publishedLivePools(pools,selectedCommunity)
+ const viewedArea=selectedCommunity||(requestedArea&&uuidPattern.test(requestedArea)&&
+  publicPools.some(p=>(p.community_ids??[p.community_id]).includes(requestedArea)&&
+   p.bundle.some(b=>b.offer.community_progress?.some(c=>c.community_id===requestedArea)))?requestedArea:'')
+ const found=publicPools.map(p=>scopeCommunityPool(p,viewedArea)).find(p=>p.id===id)
  if(!found)return null
  const offerLines=found.bundle.filter(l=>l.offer&&!l.offer.is_demo&&!l.offer.commerce_synthetic)
   .map(line=>({...line,offer:{...line.offer,image_url:line.offer.image_url&&publicShowcaseImageUrl(line.offer.image_url)?line.offer.image_url:null}}))

@@ -12,11 +12,12 @@ export default async function PreviewLiveProductPage({params,searchParams}:{
 }){
  const [{id},query,jar]=await Promise.all([params,searchParams,cookies()])
  if(!uuidPattern.test(id))notFound()
- const product=await loadLivePublishedProduct(id)
+ const requestedArea=typeof query.area==='string'&&uuidPattern.test(query.area)?query.area:undefined
+ const product=await loadLivePublishedProduct(id,requestedArea)
  if(!product)notFound()
  const kind=query.kind==='deal'?'deal':query.kind==='retail'?'retail':'exclusive'
  const saved=jar.get(STOREFRONT_LANGUAGE_COOKIE)?.value
- return <LiveApprovedProductDetails product={product} kind={kind} areaId={typeof query.area==='string'&&uuidPattern.test(query.area)?query.area:undefined}
+ return <LiveApprovedProductDetails product={product} kind={kind} areaId={requestedArea}
   selectedOfferId={typeof query.offer==='string'?query.offer:undefined}
   from={typeof query.from==='string'?query.from:undefined}
   poolId={typeof query.pool==='string'&&uuidPattern.test(query.pool)?query.pool:undefined}
