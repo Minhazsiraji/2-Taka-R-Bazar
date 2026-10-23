@@ -19,7 +19,7 @@ export function LaunchCartCheckout({catalog,checkout=false,authenticated=false,e
  const lockedKeys=new Set(lockedQuotes.flatMap(q=>q.items.map(i=>sharedKey(q.offer_id,i.product_id))))
  const openKeys=new Set(openCommitments.map(i=>sharedKey(i.offer_id,i.product_id)))
  const resolvedKeys=new Set(resolvedSharedItems.map(i=>sharedKey(i.offer_id,i.product_id)))
- const hiddenKeys=new Set([...lockedKeys,...[...resolvedKeys].filter(k=>!openKeys.has(k))])
+ const hiddenKeys=new Set([...lockedKeys,...resolvedKeys].filter(k=>!openKeys.has(k)))
  const nextAction=(status:string)=>status==='awaiting_delivery'
   ? 'Choose pickup or home delivery. Staff will quote the fee; do not pay yet.'
   : status==='quoted'
@@ -31,7 +31,7 @@ export function LaunchCartCheckout({catalog,checkout=false,authenticated=false,e
   // A cart removal is not consent to cancel a registered community commitment.
   // Commitment cancellation must be handled explicitly and audited.
   const selected=items.find(i=>i.product_id===id)
-  if(selected?.offer_id&&lockedKeys.has(sharedKey(selected.offer_id,id))){
+  if(selected?.offer_id&&lockedKeys.has(sharedKey(selected.offer_id,id))&&!openKeys.has(sharedKey(selected.offer_id,id))){
    setCartNotice('This community round is closed and the product price is locked. Review or cancel the original quote in My Group Deals & Pools; the cart cannot change it.');return
   }
   if(selected?.offer_id&&openKeys.has(sharedKey(selected.offer_id,id))&&quantity===0){
@@ -54,7 +54,7 @@ export function LaunchCartCheckout({catalog,checkout=false,authenticated=false,e
  const hasShared=lines.some(l=>l.product?.offer_kind==='GROUP_DEAL'||l.product?.offer_kind==='COMMUNITY_POOL')
  const pendingOffers=[...new Map(lines.filter(l=>l.item.offer_id&&(l.product?.offer_kind==='GROUP_DEAL'||l.product?.offer_kind==='COMMUNITY_POOL')).map(l=>[l.item.offer_id!,{id:l.item.offer_id!,title:l.product?.offer_title??l.product?.name??'Group commitment'}])).values()]
  if(!loaded)return <p role="status">Loading / লোড হচ্ছে…</p>
- if(!items.length&&!lockedQuotes.length)return <section className="glass-panel rounded-3xl border border-white/80 p-5"><p>Your cart is empty. / আপনার কার্ট খালি।</p><Link className="btn-primary mt-4 inline-block" href="/#mobile-exclusive">Continue shopping / কেনাকাটা করুন</Link></section>
+ if(!lines.length&&!lockedQuotes.length)return <section className="glass-panel rounded-3xl border border-white/80 p-5"><p>Your cart is empty. / আপনার কার্ট খালি।</p><Link className="btn-primary mt-4 inline-block" href="/#mobile-exclusive">Continue shopping / কেনাকাটা করুন</Link></section>
  return <>{error&&<p className="error mb-4" role="alert">{error}</p>}{cartNotice&&<p className="error mb-4" role="alert">{cartNotice}</p>}
  {sharedStateError&&<p role="alert" className="error mb-4">Unable to verify shared commitment status. Do not pay or edit a Group Deal until you refresh.</p>}
  {lockedQuotes.map(q=><section data-testid="locked-community-quote" key={q.quote_id} className="glass-panel mb-4 rounded-3xl border border-white/80 p-5">
