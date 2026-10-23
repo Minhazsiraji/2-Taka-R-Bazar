@@ -215,6 +215,51 @@ export async function completeOnboarding(formData: FormData) {
   redirect(destination+(destination.includes('?')?'&':'?')+'notice='+encodeURIComponent(notice))
 }
 
+export async function moveMyCommunity(formData: FormData) {
+  const {supabase,user}=await requireUser()
+  const parsed=z.object({
+    community_id:z.string().uuid(),
+    address_hint:z.string().trim().min(5).max(240),
+    confirm_move:z.literal('yes'),
+  }).safeParse({
+    community_id:getText(formData,'community_id'),
+    address_hint:getText(formData,'address_hint'),
+    confirm_move:getText(formData,'confirm_move'),
+  })
+  if(!parsed.success)
+    redirect('/profile?error=Choose+a+community,+enter+your+new+residence,+and+confirm+the+move.')
+  const {data:current,error:loadError}=await supabase.from('profiles')
+    .select('community_id,onboarding_completed_at').eq('id',user.id).single()
+  if(loadError||!current?.onboarding_completed_at||!current.community_id)redirect('/onboarding')
+  if(parsed.data.community_id===current.community_id)
+    redirect('/profile?error=Choose+a+different+community+from+your+current+home.')
+  const {data:destination,error:destinationError}=await supabase.from('communities')
+    .select('id,name').eq('id',parsed.data.community_id).eq('active',true).maybeSingle()
+  if(destinationError||!destination)redirect('/profile?error=Please+select+an+active+community.')
+  // The database trigger enforces the move gate again under the profile row lock,
+  // preventing direct API calls from bypassing open-cycle or unpaid-quote checks.
+  const {data:updated,error}=await supabase.from('profiles')
+    .update({community_id:destination.id,address_hint:parsed.data.address_hint,
+      pickup_point_id:null,google_maps_url:null})
+    .eq('id',user.id).eq('community_id',current.community_id)
+    .select('community_id').maybeSingle()
+  if(error){
+    const active=/active deal|pool commitment|unsettled|price quote/i.test(error.message)
+    const message=active
+      ? 'Resolve active Group Deal / Pool commitments or unsettled quotes before moving. Your participation remains in the original community.'
+      : 'Unable to change community. Check your new address and try again or contact Operations.'
+    redirect('/profile?error='+encodeURIComponent(message))
+  }
+  if(updated?.community_id!==destination.id)
+    redirect('/profile?error=Your+community+changed+in+another+session.+Refresh+and+try+again.')
+  revalidatePath('/','layout')
+  revalidatePath('/profile')
+  revalidatePath('/cart')
+  revalidatePath('/account/commitments')
+  revalidatePath('/notifications')
+  redirect('/profile?notice='+encodeURIComponent('Community updated to '+destination.name+'. Your login and previous orders are unchanged. Choose a new pickup point for future deliveries.'))
+}
+
 export async function updateProfile(formData: FormData) {
   const { supabase,user }=await requireUser(); const pickupPointId=getText(formData,'pickup_point_id')||null
   const { data:current }=await supabase.from('profiles').select('community_id').eq('id',user.id).single(); if(!current?.community_id) redirect('/onboarding')
