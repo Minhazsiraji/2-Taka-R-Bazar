@@ -91,7 +91,7 @@ export function PreviewHomeCards({section,language,search,view,selectedArea=''}:
         if(d.launchOfferId&&d.offerId){
          setJoining(d.offerId)
          try{
-          const result=await joinSimpleSaleDeal(d.offerId,d.id,selectedArea)
+          const result=await joinSimpleSaleDeal(d.offerId,d.id,selectedArea,d.cycleId)
           if(result.ok){
            if(!readLaunchCart().some(i=>i.product_id===d.id&&i.offer_id===d.launchOfferId))addLaunchItem(d.id,d.launchOfferId)
            setNotice(bn?'গ্রুপ ডিলে যোগ দিয়েছেন। চূড়ান্ত মূল্য ও ডেলিভারি চার্জ পরে জানানো হবে।':'Commitment recorded. Final tier price and delivery fee will be confirmed before payment. No order has been placed.')
