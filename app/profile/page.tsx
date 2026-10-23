@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { AppShell } from '@/components/app-shell'
 import { SubmitButton } from '@/components/submit-button'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { updateProfile, signOut } from '@/app/actions/auth'
+import { updateProfile, moveMyCommunity, signOut } from '@/app/actions/auth'
 import { requireOnboardedUser } from '@/lib/auth'
 import { LEGAL_LINKS } from '@/lib/legal'
 
@@ -11,9 +11,10 @@ export const dynamic = 'force-dynamic'
 export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
   const { user, profile, roles, supabase } = await requireOnboardedUser()
   const { error, notice } = await searchParams
-  const [{ data: community }, { data: points }] = await Promise.all([
+  const [{ data: community }, { data: points }, { data: availableCommunities }] = await Promise.all([
     supabase.from('communities').select('name').eq('id', profile.community_id).single(),
     supabase.from('pickup_points').select('id,name').eq('community_id', profile.community_id).eq('active', true),
+    supabase.from('communities').select('id,name').eq('active',true).order('sort_order'),
   ])
 
   const isSuperAdmin=roles.has('super_admin')
@@ -35,6 +36,22 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       <label><span className="label">Google Maps share URL</span><input className="input" type="url" name="google_maps_url" defaultValue={profile.google_maps_url ?? ''} /></label>
       <SubmitButton>Save profile</SubmitButton>
     </form>
+
+    <section className="card cx-glass-card p-4">
+      <div className="card-title">Change community / কমিউনিটি পরিবর্তন</div>
+      <p className="muted mt-2 text-sm">Moving house? Keep this account and its order history. Your previous community's active Deal/Pool participation must be left or settled before moving. Existing purchases keep their original delivery details.</p>
+      <form action={moveMyCommunity} className="mt-4 grid gap-4">
+        <label><span className="label">New community / নতুন কমিউনিটি</span><select className="input" name="community_id" defaultValue="" required>
+          <option value="" disabled>Choose your new community</option>
+          {availableCommunities?.filter(c=>c.id!==profile.community_id).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+        </select></label>
+        <label><span className="label">New building / road / landmark</span><input className="input" name="address_hint" minLength={5} maxLength={240} placeholder="Your new residence or nearby landmark" required /></label>
+        <label className="flex items-start gap-3 text-sm"><input type="checkbox" name="confirm_move" value="yes" required className="mt-1" />
+          <span>I confirm my household has moved to this community. My active shared commitments must be resolved first. / আমি নতুন কমিউনিটিতে বাসা পরিবর্তনের বিষয়টি নিশ্চিত করছি।</span>
+        </label>
+        <SubmitButton>Confirm community change / কমিউনিটি পরিবর্তন করুন</SubmitButton>
+      </form>
+    </section>
 
     <section className="card cx-glass-card p-4">
       <div className="card-title">App preferences</div>
