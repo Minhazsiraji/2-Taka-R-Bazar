@@ -181,8 +181,17 @@ export async function completeOnboarding(formData: FormData) {
     google_maps_url:getText(formData,'google_maps_url')
   }
   const parsed = onboardingSchema.safeParse(payload); if (!parsed.success) redirect('/onboarding?error=Please+check+the+required+profile+fields')
-  const { error } = await supabase.from('profiles').update({ full_name:parsed.data.full_name, phone, household_name:parsed.data.household_name, community_id:parsed.data.community_id, pickup_point_id:null, address_hint:parsed.data.address_hint||null, google_maps_url:parsed.data.google_maps_url||null, onboarding_completed_at:new Date().toISOString() }).eq('id',user.id)
-  if (error) redirect(`/onboarding?error=${encodeURIComponent(error.message)}`)
+  const {data:updatedProfile,error} = await supabase.from('profiles').update({ full_name:parsed.data.full_name, phone, household_name:parsed.data.household_name, community_id:parsed.data.community_id, pickup_point_id:null, address_hint:parsed.data.address_hint||null, google_maps_url:parsed.data.google_maps_url||null, onboarding_completed_at:new Date().toISOString() }).eq('id',user.id).select('id').maybeSingle()
+  if (error) {
+    const duplicatePhone=error.code==='23505'&&/profiles_phone_key|phone/i.test([error.message,error.details].join(' '))
+    const message=duplicatePhone
+      ? 'This mobile number is already registered to another account. Sign in to that account, or use a different number that belongs to you.'
+      : error.code==='23505'
+        ? 'An account with these details already exists. Please sign in to your original account or contact support.'
+        : 'Household setup could not be saved. Please check your details and try again.'
+    redirect('/onboarding?error='+encodeURIComponent(message))
+  }
+  if (!updatedProfile) redirect('/onboarding?error=Your+account+profile+was+not+found.+Please+sign+out+and+sign+in+again.')
 
   const referralCode=cookieStore.get('bp_ref_code')?.value
   if(referralCode) await supabase.rpc('apply_referral_code',{p_code:referralCode})
