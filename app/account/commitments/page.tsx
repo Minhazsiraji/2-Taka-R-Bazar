@@ -25,15 +25,23 @@ export default async function Commitments({searchParams}:{searchParams:Promise<{
  const names=await db.from('products').select('id,name').in('id',[...new Set(quotes.flatMap(q=>q.simple_sale_cycle_quote_items.map(i=>i.product_id))), '00000000-0000-0000-0000-000000000000'])
  const productName=new Map((names.data??[]).map(p=>[p.id,p.name]))
  return <CommerceFrame launch title="My Group Deals & Pools / আমার গ্রুপ ও পুল">
-  <p className="mb-4 text-sm">Joining only saves your commitment; it does not create an order. At cycle closure, you receive the locked tier price. Choose collection or home delivery, wait for a confirmed delivery fee, accept the exact amount, then send your transfer reference. Only independently verified payment creates an order.</p>
+  <p className="mb-4 text-sm">Joining only saves your commitment; it does not create an order. At cycle closure, the product price is locked (the starting price applies if no discount tier was reached). Choose collection or delivery, wait for staff to confirm its fee, accept the exact final total, then pay the official recipient. Only independently verified payment creates an order.</p>
+  {quotes.some(q=>q.status==='awaiting_delivery')&&<section className="glass-panel mb-4 rounded-2xl p-4" role="status">
+    <p className="font-bold">Your community Deal / Pool closed — choose your delivery now / ডেলিভারি বাছুন</p>
+    <p className="mt-1 text-sm">Your product prices are locked. Choose a community pickup point or home delivery for each quote below. Staff will add the delivery charge; do not make payment yet.</p>
+  </section>}
+  {quotes.some(q=>q.status==='quoted')&&<section className="glass-panel mb-4 rounded-2xl p-4" role="status">
+    <p className="font-bold">Complete final quote ready — accept or cancel</p>
+    <p className="mt-1 text-sm">Review the product total plus delivery fee below. Only after you explicitly accept will official payment instructions appear.</p>
+  </section>}
   {(params.error||qr.error||cr.error||pr.error||mr.error||rr.error||names.error)&&<p role="alert" className="mb-4 rounded-xl border p-4">{params.error??'Some commitment details could not load. Do not pay until the entire quote is visible.'}</p>}
   <div className="grid gap-4">
   {quotes.map(q=>{const c=cycles.find(row=>row.id===q.cycle_id);const paymentMethods=paymentOptions.get(q.id)??[]
    return <article className="glass-panel rounded-3xl border border-white/80 p-4 sm:p-5" key={q.id}>
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-bold">Cycle #{c?.cycle_number??'—'} · {q.id.slice(0,8).toUpperCase()}</h2><strong>{q.status.replaceAll('_',' ')}</strong></div>
-    <p className="text-xs opacity-70">Community cycle {q.cycle_id.slice(0,8)} · Unlock target: {c?.locked_threshold??0} people</p>
+    <p className="text-xs opacity-70">Community cycle {q.cycle_id.slice(0,8)} · {c?.locked_threshold ? `Unlocked tier: ${c.locked_threshold} households` : 'No discount tier unlocked: starting product price applies'}</p>
     <ul className="my-3 text-sm">{q.simple_sale_cycle_quote_items.map(i=><li key={i.product_id}>{productName.get(i.product_id)??'Product'} · {i.quantity} × {money(i.unit_price)} = {money(i.quantity*Number(i.unit_price))}</li>)}</ul>
-    <p>Locked product amount: <b>{money(q.product_total)}</b> · Delivery: <b>{money(q.delivery_fee)}</b></p>
+    <p>Locked product amount: <b>{money(q.product_total)}</b> · Delivery: <b>{money(q.delivery_fee)}</b> {q.delivery_fee===null?'(staff confirmation pending)':''}</p>
     {q.delivery_fee!==null&&<p className="text-lg font-black">Total: {money(Number(q.product_total)+Number(q.delivery_fee))}</p>}
     {q.status==='awaiting_delivery'&&<form action={selectQuoteDelivery} className="mt-3 grid gap-3">
      <input type="hidden" name="quote_id" value={q.id}/>
