@@ -62,7 +62,7 @@ export async function verifyQuotePayment(fd:FormData){
  const {supabase:db}=await requireAdmin()
  const {data:quote,error:quoteError}=await db.from('simple_sale_cycle_quotes').select('product_total,delivery_fee,status').eq('id',id).single()
  if(quoteError||quote?.status!=='payment_submitted'||quote.delivery_fee===null||Math.round((Number(quote.product_total)+Number(quote.delivery_fee))*100)!==Math.round(verified*100))fail(staff,'The verified transfer amount must match the accepted final total')
- const {data,error}=await db.rpc('admin_verify_simple_sale_payment',{p_quote:id})
+ const {data,error}=await db.rpc('admin_verify_simple_sale_payment',{p_quote:id,p_verified_amount:verified,p_bank_confirmed:true})
  if(error)fail(staff,error.message)
  revalidatePath(account);revalidatePath(staff);revalidatePath('/admin/launch-orders')
  redirect(staff+'?verified='+encodeURIComponent(String(data)))

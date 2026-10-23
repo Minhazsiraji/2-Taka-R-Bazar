@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import {randomUUID} from 'node:crypto'
 import {createClient} from '@supabase/supabase-js'
+import {createServerClient} from '@supabase/ssr'
+import {chromium} from 'playwright'
 const api=process.env.NEXT_PUBLIC_SUPABASE_URL??''
 const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY??''
 const secret=process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY??''
@@ -70,3 +72,85 @@ const quotes=await must(await svc.from('simple_sale_cycle_quotes').select('produ
 assert.equal(quotes.length,5)
 assert.ok(quotes.every(q=>Number(q.product_total)===140))
 console.log('PASS parallel 7 customers: independent A 5/5 B 2/5; exactly five locked quotes; new A UUID empty')
+
+
+// Browser UAT: six fictional customers + maker/checker roles, with NO real bank transfer.
+// Guard: this is disposable localhost-only. All auth and payment records are test fixtures.
+const base=process.env.NEXT_PUBLIC_SITE_URL??'http://127.0.0.1:3000'
+if(new URL(base).hostname!=='127.0.0.1')throw Error('Browser UAT must run only against local website')
+const pickupId=randomUUID(),recipientId=randomUUID()
+await must(await svc.from('pickup_points').insert({
+ id:pickupId,community_id:a,name:'Parallel Test Gate',address:'Synthetic avenue, mock community gate',active:true
+}),'test gate')
+await must(await svc.from('pilot_payment_recipients').insert({
+ id:recipientId,method:'bkash',account_name:'Fictional bank account',account_number:'01700000000',
+ active:true,configured_by:identities[0].id
+}),'fictional recipient')
+const byOwner=await must(await svc.from('simple_sale_cycle_quotes').select('id,product_total,status').eq('cycle_id',closedA.id).eq('customer_id',identities[1].id).single(),'locked quote')
+assert.equal(Number(byOwner.product_total),140)
+const quoteId=byOwner.id
+async function makeSession(index){
+ const jar=new Map(),auth=createServerClient(api,key,{
+  cookies:{getAll:()=>[...jar.values()],setAll:list=>list.forEach(c=>jar.set(c.name,c))}
+ })
+ await must(await auth.auth.signInWithPassword({email:identities[index].email,password:identities[index].password}),'browser sign in')
+ return [...jar.values()].filter(c=>c.value).map(c=>({name:c.name,value:c.value,url:base,sameSite:'Lax',secure:false}))
+}
+const browser=await chromium.launch({headless:true})
+try{
+ const customerCtx=await browser.newContext(),adminCtx=await browser.newContext(),checkerCtx=await browser.newContext()
+ await customerCtx.addCookies(await makeSession(1))
+ await adminCtx.addCookies(await makeSession(0))
+ await checkerCtx.addCookies(await makeSession(8))
+ const customer=await customerCtx.newPage(),makerPage=await adminCtx.newPage(),checkerPage=await checkerCtx.newPage()
+ await customer.goto(base+'/account/commitments',{waitUntil:'networkidle'})
+ const accountCard=customer.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()})
+ assert.equal(await accountCard.count(),1,'Buyer has exactly one matching final quote')
+ assert.match(await accountCard.innerText(),/Locked product amount:.*140/s)
+ await accountCard.locator('select[name="fulfillment"]').selectOption('pickup')
+ await accountCard.locator('select[name="pickup_point_id"]').selectOption(pickupId)
+ await accountCard.getByRole('button',{name:'Submit delivery preference'}).click()
+ await accountCard.getByText('Awaiting quote',{exact:false}).waitFor({timeout:16000})
+ let q=await must(await svc.from('simple_sale_cycle_quotes').select('status,fulfillment,pickup_point_id').eq('id',quoteId).single(),'pickup persisted')
+ assert.equal(q.fulfillment,'pickup');assert.equal(q.pickup_point_id,pickupId)
+ await makerPage.goto(base+'/admin/offer-settlement',{waitUntil:'networkidle'})
+ const staffCard=makerPage.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()})
+ assert.equal(await staffCard.count(),1,'Staff can see customer quote')
+ await staffCard.locator('input[name="delivery_fee"]').fill('30')
+ await staffCard.getByRole('button',{name:'Publish complete quote'}).click()
+ await customer.goto(base+'/account/commitments',{waitUntil:'networkidle'})
+ const quoted=customer.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()})
+ assert.match(await quoted.innerText(),/Total:.*170/s,'Product + delivery fee shown')
+ await quoted.locator('input[name="contact_name"]').fill('Fictional buyer')
+ await quoted.locator('input[name="contact_phone"]').fill('01700000101')
+ await quoted.locator('input[name="terms"]').check()
+ await quoted.getByRole('button',{name:'Accept ৳170'}).click()
+ await customer.getByText('Pay exactly',{exact:false}).waitFor({timeout:16000})
+ const accepted=customer.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()})
+ await accepted.locator('select[name="recipient_id"]').selectOption(recipientId)
+ await accepted.locator('input[name="reference"]').fill('FICTIONAL-ONLY-'+sid)
+ await accepted.getByRole('button',{name:'Submit transfer for independent checking'}).click()
+ const submitted=await must(await svc.from('simple_sale_cycle_quotes').select('status,order_id').eq('id',quoteId).single(),'waiting transfer')
+ assert.equal(submitted.status,'payment_submitted');assert.equal(submitted.order_id,null)
+ // Maker must not verify their own fee quote, even if a direct RPC is attempted.
+ const makerAttempt=await creator.rpc('admin_verify_simple_sale_payment',{p_quote:quoteId,p_verified_amount:170,p_bank_confirmed:true})
+ assert.ok(makerAttempt.error,'Quote maker cannot approve fictional payment')
+ await checkerPage.goto(base+'/admin/offer-settlement',{waitUntil:'networkidle'})
+ const review=checkerPage.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()})
+ assert.equal(await review.count(),1)
+ await review.locator('input[name="verified_amount"]').fill('170')
+ await review.locator('input[name="independent_confirmation"]').check()
+ await review.getByRole('button',{name:'Verify transfer and create order once'}).click()
+ const result=await must(await svc.from('simple_sale_cycle_quotes').select('status,order_id').eq('id',quoteId).single(),'verified quote')
+ assert.equal(result.status,'verified');assert.ok(result.order_id)
+ const order=await must(await svc.from('launch_orders').select('id,status,total_amount,payment_status').eq('id',result.order_id).single(),'exact confirmed order')
+ assert.equal(order.status,'confirmed');assert.equal(order.payment_status,'verified')
+ assert.equal(Number(order.total_amount),170)
+ assert.equal((await count(openA.id)),0,'New cycle not affected by closing previous')
+ const reviewer=createClient(api,key,{auth:{persistSession:false,autoRefreshToken:false}})
+ await must(await reviewer.auth.signInWithPassword({email:identities[8].email,password:identities[8].password}),'reviewer sign in')
+ assert.equal(await must(await reviewer.rpc('admin_verify_simple_sale_payment',{p_quote:quoteId,p_verified_amount:170,p_bank_confirmed:true}),'repeat payment verification'),result.order_id,'No duplicate order')
+ await customer.goto(base+'/account/commitments',{waitUntil:'networkidle'})
+ assert.equal(await customer.getByRole('link',{name:'View confirmed order'}).count(),1)
+ console.log('PASS fictional browser settlement: pickup, delivery quote, exact consent, transfer submitted, independent approval, 1 confirmed order, replay-safe')
+}finally{await browser.close()}

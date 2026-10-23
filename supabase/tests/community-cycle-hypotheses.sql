@@ -156,13 +156,23 @@ begin
  perform public.customer_submit_simple_sale_payment(quote_a,recipient,'SCENARIO-001');
  perform set_config('request.jwt.claim.sub',maker::text,true);
  blocked=false;
- begin perform public.admin_verify_simple_sale_payment(quote_a);
+ begin perform public.admin_verify_simple_sale_payment(quote_a,160,true);
  exception when others then blocked=true;end;
  if not blocked then raise exception 'Quote maker verified own transfer';end if;
  perform set_config('request.jwt.claim.sub',checker::text,true);
- order_id:=public.admin_verify_simple_sale_payment(quote_a);
+ if to_regprocedure('public.admin_verify_simple_sale_payment(uuid)') is not null
+ then raise exception 'Unsafe old one-argument transfer-verification RPC is still public';end if;
+ blocked=false;
+ begin perform public.admin_verify_simple_sale_payment(quote_a,159,true);
+ exception when others then blocked=true;end;
+ if not blocked then raise exception 'Incorrect received amount was accepted';end if;
+ blocked=false;
+ begin perform public.admin_verify_simple_sale_payment(quote_a,160,false);
+ exception when others then blocked=true;end;
+ if not blocked then raise exception 'Unattested transfer verification accepted';end if;
+ order_id:=public.admin_verify_simple_sale_payment(quote_a,160,true);
  if order_id is null then raise exception 'No confirmed order after independent verification';end if;
- if public.admin_verify_simple_sale_payment(quote_a)<>order_id then
+ if public.admin_verify_simple_sale_payment(quote_a,160,true)<>order_id then
   raise exception 'Repeated verification duplicated order';end if;
  if (select count(*) from public.launch_orders where id=order_id)<>1 then
   raise exception 'Order not unique';end if;
@@ -206,14 +216,14 @@ begin
  update public.launch_product_stock set available_quantity=0 where product_id=p;
  perform set_config('request.jwt.claim.sub',checker::text,true);
  blocked=false;
- begin perform public.admin_verify_simple_sale_payment(quote_b);
+ begin perform public.admin_verify_simple_sale_payment(quote_b,315,true);
  exception when others then blocked=true;end;
  if not blocked then raise exception 'Created unfulfillable order despite stock shortage';end if;
  if (select status from public.simple_sale_cycle_quotes where id=quote_b)<>'payment_submitted'
   or (select q.order_id from public.simple_sale_cycle_quotes q where q.id=quote_b) is not null
  then raise exception 'Stock shortage corrupted pending payment';end if;
  update public.launch_product_stock set available_quantity=99 where product_id=p;
- if public.admin_verify_simple_sale_payment(quote_b) is null then
+ if public.admin_verify_simple_sale_payment(quote_b,315,true) is null then
   raise exception 'Valid verification failed after stock restored';end if;
  if (select available_quantity from public.launch_product_stock where product_id=p)<>97 then
   raise exception 'Two unit stock decrement incorrect';end if;
