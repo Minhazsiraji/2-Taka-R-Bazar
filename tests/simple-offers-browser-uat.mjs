@@ -142,6 +142,8 @@ try{
   page.locator('.native-preview-status').waitFor({timeout:15000}).then(async()=>({message:await page.locator('.native-preview-status').innerText()})).catch(()=>null)
  ])
  if(!poolNavigation?.navigated)throw Error('Pool join failed: '+JSON.stringify({result:poolNavigation,now:page.url(),visibleStatus:await page.locator('.native-preview-status').allInnerTexts(),clientErrors:errors}))
+ // Router navigation completes before the client cart has hydrated; wait for real Pool pricing.
+ await page.locator('main').getByText(/৳80/).first().waitFor({timeout:20000})
  assert.match(await page.locator('main').innerText(),/৳80/)
  const poolQty=await admin.from('simple_sale_commitment_items').select('quantity').eq('offer_id',offers.COMMUNITY_POOL).eq('customer_id',uid).eq('product_id',pid).single();assert.ifError(poolQty.error)
  assert.equal(poolQty.data.quantity,1,'Pool commitment quantity saved before any checkout')
