@@ -112,6 +112,26 @@ try{
  await adminCtx.addCookies(await makeSession(0))
  await checkerCtx.addCookies(await makeSession(8))
  const customer=await customerCtx.newPage(),makerPage=await adminCtx.newPage(),checkerPage=await checkerCtx.newPage()
+ // After the community round closes the browser may still hold a stale
+ // opening-price cart selection. It must show the database-locked quote instead.
+ await customer.goto(base+'/cart',{waitUntil:'networkidle'})
+ await customer.evaluate(({product,offer})=>localStorage.setItem('2tbr-launch-cart-v1',
+   JSON.stringify([{product_id:product,offer_id:offer,quantity:1}])),{product,offer})
+ await customer.reload({waitUntil:'networkidle'})
+ const locked=customer.getByTestId('locked-community-quote')
+ await locked.waitFor({timeout:20000})
+ assert.match(await locked.innerText(),/Locked product amount:.*140/s)
+ assert.match(await locked.innerText(),/Not yet confirmed/)
+ assert.equal(await locked.getByRole('button',{name:/Remove|Decrease|Increase/}).count(),0,'Locked cart is read-only')
+ assert.equal(await customer.getByRole('link',{name:/Continue this locked Deal/}).count(),1)
+ assert.doesNotMatch(await locked.innerText(),/Current estimate.*160/s,'Old opening price cannot override locked quote')
+ // Navigation must not depend on a server-action read-status mutation.
+ await customer.goto(base+'/notifications',{waitUntil:'networkidle'})
+ const directNotice=customer.locator('a[href="/account/commitments"]').filter({hasText:/Deal closed|locked product amount/i}).first()
+ assert.equal(await directNotice.count(),1,'A customer notification directly links to their quote')
+ await directNotice.click()
+ await customer.waitForURL('**/account/commitments',{timeout:15000})
+ assert.equal(await customer.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()}).count(),1)
  await customer.goto(base+'/account/commitments',{waitUntil:'networkidle'})
  const accountCard=customer.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()})
  assert.equal(await accountCard.count(),1,'Buyer has exactly one matching final quote')
