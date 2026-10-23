@@ -155,6 +155,20 @@ try{
  await staffCard.locator('input[name="delivery_fee"]').fill('30')
  await staffCard.getByRole('button',{name:'Publish complete quote'}).click()
  await awaitQuote('status,delivery_fee',r=>r.status==='quoted'&&Number(r.delivery_fee)===30,'Final delivery fee')
+ // A second identical delivery submission (e.g. stale tab or double click)
+ // must not revoke the staff's completed quote or create another notification.
+ const beforeRetry=await must(await svc.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',identities[1].id).eq('kind','offer_quote'),'quote notice count')
+ assert.ifError((await buyers[0].rpc('customer_set_simple_sale_quote_delivery',{
+  p_quote:quoteId,p_fulfillment:'pickup',p_pickup_point:pickupId,p_home_address:null
+ })).error,'identical delivery retry')
+ const quotedAfterRetry=await awaitQuote('status,delivery_fee,quoted_by',r=>r.status==='quoted'&&Number(r.delivery_fee)===30&&Boolean(r.quoted_by),'Idempotent quoted fee')
+ assert.equal(quotedAfterRetry.status,'quoted')
+ const afterRetry=await must(await svc.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',identities[1].id).eq('kind','offer_quote'),'idempotent notice count')
+ assert.equal(afterRetry.length,beforeRetry.length,'No duplicate final quote notification')
+ await customer.goto(base+'/cart',{waitUntil:'networkidle'})
+ const finalQuoteCart=customer.getByTestId('locked-community-quote')
+ assert.match(await finalQuoteCart.innerText(),/Exact quoted total:.*170/s)
+ assert.equal(await finalQuoteCart.getByRole('button',{name:/Remove/}).count(),0)
  await customer.goto(base+'/account/commitments',{waitUntil:'networkidle'})
  const quoted=customer.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()})
  assert.match(await quoted.innerText(),/Total:.*170/s,'Product + delivery fee shown')
