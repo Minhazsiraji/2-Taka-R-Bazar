@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 
-test('closed community round notifications show authenticated customer quote amount and next step',()=>{
+test('closed community notifications show the current customer-owned quote and next step',()=>{
  const page=readFileSync('app/notifications/page.tsx','utf8')
  assert.match(page,/\.eq\('customer_id',user\.id\)/)
  assert.match(page,/community_quote\|shared_quote_ready/)
@@ -15,12 +15,12 @@ test('closed community round notifications show authenticated customer quote amo
  assert.match(page,/stage\?\.body\?\?note\.body/)
  assert.match(page,/action=\{openNotification\}/)
 })
-test('customer commitments explain deadline with no tier and show progressive consent gates',()=>{
+test('customer commitments explain no-tier closure and enforce payment after delivery',()=>{
  const page=readFileSync('app/account/commitments/page.tsx','utf8')
  assert.match(page,/starting price applies if no discount tier was reached/)
  assert.match(page,/No discount tier unlocked: starting product price applies/)
  assert.match(page,/choose your delivery now/)
  assert.match(page,/Complete final quote ready/)
- assert.match(page,/Do not make payment yet/)
+ assert.match(page,/do not make payment yet/i)
  assert.match(page,/Only independently verified payment creates an order/)
 })
