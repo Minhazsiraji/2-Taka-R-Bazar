@@ -167,7 +167,6 @@ begin
   insert into public.simple_sale_cycles(offer_id,community_id,cycle_number,closes_at)
   values(c.offer_id,c.community_id,c.cycle_number+1,
    case when c.closes_at is null then null
-    when c.closes_at>now() then c.closes_at
     else now()+greatest(interval '1 day',least(interval '30 days',
       coalesce(c.closes_at-c.opened_at,interval '7 days'))) end)
   returning id into reopening;

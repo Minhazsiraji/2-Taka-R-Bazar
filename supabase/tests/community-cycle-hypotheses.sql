@@ -63,6 +63,21 @@ begin
  perform set_config('request.jwt.claim.sub',people[2]::text,true);
  if public.join_simple_sale_group_deal_quantified(offer,p,area_a,2) then
   raise exception 'Duplicate join counted as a new household';end if;
+ -- Canceling before closure removes the household AND leaves a clean rejoin path.
+ if not public.leave_simple_sale_group_deal(offer,p) then raise exception 'Open cycle leave rejected';end if;
+ if (select count(*) from public.simple_sale_cycle_members where cycle_id=cycle_a)<>1
+  or (select count(*) from public.simple_sale_cycle_items where cycle_id=cycle_a)<>1
+ then raise exception 'Leaving left phantom participants';end if;
+ perform public.join_simple_sale_group_deal_quantified(offer,p,area_a,2);
+ if (select count(*) from public.simple_sale_cycle_members where cycle_id=cycle_a)<>2
+ then raise exception 'Rejoining did not restore one household';end if;
+ -- No admin can secretly change promised tier pricing mid-cycle.
+ perform set_config('request.jwt.claim.sub',maker::text,true);
+ blocked=false;
+ begin update public.simple_sale_offer_tiers set unit_price=120
+  where offer_id=offer and product_id=p and buyer_threshold=3;
+ exception when others then blocked=true;end;
+ if not blocked then raise exception 'Admin modified active promised price';end if;
  perform set_config('request.jwt.claim.sub',people[6]::text,true);
  perform public.join_simple_sale_group_deal_quantified(offer,p,area_b,1);
  select id into cycle_b from public.simple_sale_cycles
