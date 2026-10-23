@@ -23,7 +23,7 @@ test('relocation is bound to signed-in profile and clears stale pickup and locat
  assert.doesNotMatch(move,/service_role|supabaseAdmin|\bdelete\(/)
 })
 test('database protects active commitments, accepted quotes, and maintains private move audit',()=>{
- const sql=source('supabase/migrations/20261023095240_safe_household_community_relocation.sql')
+ const sql=source('supabase/migrations/20261023131000_safe_household_community_relocation.sql')
  for(const marker of ['simple_sale_cycle_members','simple_sale_offer_joins','group_deal_commitments','simple_sale_cycle_quotes','private.profile_community_move_audit','new.pickup_point_id:=null','new.google_maps_url:=null','security definer set search_path', 'validate_cycle_member_current_community'])
    assert.ok(sql.includes(marker),marker)
  assert.match(sql,/revoke all on private\.profile_community_move_audit from public, anon, authenticated/)
