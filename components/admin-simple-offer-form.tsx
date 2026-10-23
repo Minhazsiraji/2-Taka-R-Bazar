@@ -86,7 +86,7 @@ export function AdminSimpleOfferForm({products,communities,offer}:{products:Prod
     </div>}
    </div>})}
   </fieldset>
-  <label><span className="label">Closing time (optional · your local time)</span><input className="input" type="datetime-local" name="closes_at" defaultValue={offer?.closes_at?new Date(new Date(offer.closes_at).getTime()-new Date(offer.closes_at).getTimezoneOffset()*60000).toISOString().slice(0,16):''}/></label>
+  <label><span className="label">Closing time (optional · shared Deals/Pools default to 7 days)</span><input className="input" type="datetime-local" name="closes_at" defaultValue={offer?.closes_at?new Date(new Date(offer.closes_at).getTime()-new Date(offer.closes_at).getTimezoneOffset()*60000).toISOString().slice(0,16):''}/></label>
   <label className="flex items-center gap-2"><input type="checkbox" name="published" defaultChecked={offer?.published??false}/>Publish on website</label>
   <p className="muted text-sm">Orders use these prices and go to manual approval. Images come from the master product. Stock is shared across all three sale types and selected areas.</p>
   <button type="submit" className="btn-primary" disabled={pending||!selected.length||!selectedAreas.length} aria-busy={pending}>{pending?'Saving…':'Save offer'}</button>

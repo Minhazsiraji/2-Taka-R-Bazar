@@ -16,7 +16,8 @@ export async function saveSimpleOffer(fd:FormData):Promise<{ok:boolean;message:s
   return {ok:false,message:'Choose 1, 2 or 3 price tiers with people targets.'}
  const {data,error}=await supabase.rpc('admin_save_simple_offer_with_tiers',{
   p_id:String(fd.get('id')??'')||null,p_kind:kind,p_communities:communities,
-  p_title:String(fd.get('title')??'').trim(),p_items:items,p_published:fd.get('published')==='on',p_closes:closes||null,
+  p_title:String(fd.get('title')??'').trim(),p_items:items,p_published:fd.get('published')==='on',
+  p_closes:closes||(kind==='SOLO'?null:new Date(Date.now()+7*24*60*60*1000).toISOString()),
   p_tiers:tiers,
  })
  if(error)return {ok:false,message:error.message}

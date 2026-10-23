@@ -46,6 +46,12 @@ begin
    jsonb_build_object('threshold',20,'prices',jsonb_build_array(
     jsonb_build_object('product_id',product_id,'price',75)))));
  if scenario_offer is null then raise exception 'Synthetic Pool failed to publish';end if;
+ -- Simulate a direct RPC caller omitting a closing date: every open cycle must get one.
+ update public.simple_sale_cycles set closes_at=null
+ where offer_id=scenario_offer and status='open';
+ if exists(select 1 from public.simple_sale_cycles where offer_id=scenario_offer and status='open'
+  and (closes_at is null or closes_at>now()+interval '8 days')) then
+  raise exception 'Undated shared cycle was not assigned its automatic closing window';end if;
  for i in 1..24 loop
   perform set_config('request.jwt.claim.sub',people[i]::text,true);
   perform public.join_simple_sale_pool_quantified(scenario_offer,
