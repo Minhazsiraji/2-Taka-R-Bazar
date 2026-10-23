@@ -195,7 +195,7 @@ begin
  exception when others then blocked=true;end;
  if not blocked then raise exception 'Created unfulfillable order despite stock shortage';end if;
  if (select status from public.simple_sale_cycle_quotes where id=quote_b)<>'payment_submitted'
-  or (select order_id from public.simple_sale_cycle_quotes where id=quote_b) is not null
+  or (select q.order_id from public.simple_sale_cycle_quotes q where q.id=quote_b) is not null
  then raise exception 'Stock shortage corrupted pending payment';end if;
  update public.launch_product_stock set available_quantity=99 where product_id=p;
  if public.admin_verify_simple_sale_payment(quote_b) is null then
