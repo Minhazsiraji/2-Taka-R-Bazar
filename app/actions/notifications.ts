@@ -18,6 +18,18 @@ export async function openNotification(formData: FormData) {
   redirect(href)
 }
 
+export async function markNotificationRead(formData: FormData) {
+ const {supabase,user}=await requireOnboardedUser()
+ const id=String(formData.get('notification_id')??'')
+ if(!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(id))redirect('/notifications')
+ const {data}=await supabase.from('notifications').select('id').eq('user_id',user.id).eq('id',id).maybeSingle()
+ if(!data)redirect('/notifications')
+ const {error}=await supabase.rpc('mark_notification_read',{p_notification_id:id})
+ if(error)redirect('/notifications?error=Could+not+mark+notification+read')
+ revalidatePath('/notifications')
+ redirect('/notifications')
+}
+
 export async function markAllNotificationsRead() {
   const { supabase } = await requireOnboardedUser()
   const {error}=await supabase.rpc('mark_all_notifications_read')
