@@ -110,9 +110,16 @@ try{
  await accountCard.locator('select[name="fulfillment"]').selectOption('pickup')
  await accountCard.locator('select[name="pickup_point_id"]').selectOption(pickupId)
  await accountCard.getByRole('button',{name:'Submit delivery preference'}).click()
- await customer.waitForLoadState('networkidle')
- let q=await must(await svc.from('simple_sale_cycle_quotes').select('status,fulfillment,pickup_point_id').eq('id',quoteId).single(),'pickup persisted')
- assert.equal(q.fulfillment,'pickup');assert.equal(q.pickup_point_id,pickupId)
+ // A React server-action click can return before the database transaction finishes.
+ // Poll actual persisted data instead of assuming immediate DOM/navigation completion.
+ let q
+ for(let attempt=0;attempt<50;attempt++){
+  q=await must(await svc.from('simple_sale_cycle_quotes').select('status,fulfillment,pickup_point_id').eq('id',quoteId).single(),'pickup persisted')
+  if(q.fulfillment==='pickup'&&q.pickup_point_id===pickupId)break
+  await new Promise(resolve=>setTimeout(resolve,200))
+ }
+ if(q.fulfillment!=='pickup'||q.pickup_point_id!==pickupId)
+  throw Error('Pickup not saved after server action: '+JSON.stringify({quote:q,url:customer.url(),page:await customer.locator('main').innerText()}))
  await makerPage.goto(base+'/admin/offer-settlement',{waitUntil:'networkidle'})
  const staffCard=makerPage.locator('article').filter({hasText:quoteId.slice(0,8).toUpperCase()})
  assert.equal(await staffCard.count(),1,'Staff can see customer quote')
