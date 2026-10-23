@@ -12,6 +12,8 @@ export type StorefrontOffer = {
   offer_id: string
   offer_kind: 'GROUP_DEAL'|'COMMUNITY_POOL'|'SOLO'
   community_ids?: string[]
+  community_progress?: {community_id:string;cycle_id:string|null;buyer_count:number;closes_at:string|null}[]
+  cycle_id?: string|null
   community_id: string
   product_id: string
   product_name: string
