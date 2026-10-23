@@ -281,7 +281,7 @@ begin
  end if;
  return new_member;
 end $$;
-revoke all on function private.join_simple_sale_cycle_impl(uuid,jsonb,uuid) from public,anon,authenticated,service_role;
+revoke all on function private.join_simple_sale_cycle_impl(uuid,jsonb,uuid,uuid) from public,anon,authenticated,service_role;
 
 create or replace function public.join_simple_sale_group_deal_quantified(p_offer uuid,p_product uuid,p_area uuid,p_quantity integer)
 returns boolean language plpgsql security definer set search_path='' as $$
