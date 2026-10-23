@@ -40,6 +40,12 @@ const sections = [
     bodyBn: <p>Hosting, authentication, communication, analytics, payment বা অন্যান্য platform function চালাতে সহায়তাকারী service provider তথ্য প্রক্রিয়া করতে পারে। Supplier-facing workflow-এ সংশ্লিষ্ট operational কাজের জন্য যতটুকু household-level information প্রয়োজন তার বেশি দেখানো আমাদের উদ্দেশ্য নয়।</p>,
   },
   {
+    titleEn: 'Optional analytics and advertising measurement',
+    titleBn: 'ঐচ্ছিক অ্যানালিটিক্স ও বিজ্ঞাপনের পরিমাপ',
+    bodyEn: <p>We only load optional Google Analytics 4 or Meta Pixel measurement after you actively choose the relevant consent. You can choose analytics only, allow analytics and marketing, or reject both. We use aggregated shopping activity to improve the service and measure promotions; we do not intentionally transmit passwords, phone numbers, precise locations, payment credentials or delivery addresses in analytics events. You can reopen Privacy choices to change or withdraw your decision. Essential account, security and order processing do not depend on optional tracking.</p>,
+    bodyBn: <p>আপনার স্পষ্ট অনুমতি ছাড়া Google Analytics 4 বা Meta Pixel-এর ঐচ্ছিক ট্র্যাকিং চালু করা হয় না। আপনি শুধু অ্যানালিটিক্স অনুমোদন, অ্যানালিটিক্স ও মার্কেটিং উভয় অনুমোদন, অথবা উভয় প্রত্যাখ্যান করতে পারেন। সেবার উন্নয়ন ও প্রচারণার ফল বুঝতে সামগ্রিক কেনাকাটার তথ্য ব্যবহৃত হতে পারে; অ্যানালিটিক্স ইভেন্টে পাসওয়ার্ড, ফোন নম্বর, নির্ভুল অবস্থান, পেমেন্ট তথ্য বা ডেলিভারির ঠিকানা ইচ্ছাকৃতভাবে পাঠানো হয় না। Privacy choices থেকে সিদ্ধান্ত পরিবর্তন বা প্রত্যাহার করা যাবে। অপরিহার্য নিরাপত্তা ও অর্ডার কার্যক্রম ঐচ্ছিক ট্র্যাকিংয়ের উপর নির্ভর করে না।</p>,
+  },
+  {
     titleEn: 'Retention and account records',
     titleBn: 'তথ্য সংরক্ষণ ও অ্যাকাউন্ট রেকর্ড',
     bodyEn: <p>Different records may need different retention periods for operations, accounting, fraud prevention, dispute handling, security and legal compliance. We aim to keep information only for as long as it remains reasonably needed for those purposes.</p>,
