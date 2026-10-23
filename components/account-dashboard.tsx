@@ -10,7 +10,8 @@ import type {MarketplaceLanguage} from '@/lib/storefront-language'
 type Props={name:string;communityName:string;needsSetup:boolean;operations:boolean;superAdmin:boolean;pickup:boolean;initialLanguage:MarketplaceLanguage;hasLanguageCookie:boolean}
 const tools=[
  {href:'/account/orders',icon:'▤',en:'Orders & bookings',bn:'অর্ডার ও বুকিং',detail:'Track pilot bookings, orders, collection and delivery.',detailBn:'পাইলট বুকিং, অর্ডার, সংগ্রহ ও ডেলিভারি দেখুন।'},
- {href:'/cart',icon:'▣',en:'Cart & commitments',bn:'কার্ট ও প্রতিশ্রুতি',detail:'Review your basket and waiting commitments.',detailBn:'কার্ট ও অপেক্ষমাণ প্রতিশ্রুতি দেখুন।'},
+ {href:'/cart',icon:'▣',en:'Shopping cart',bn:'শপিং কার্ট',detail:'Review selected products and quantities.',detailBn:'নির্বাচিত পণ্য ও পরিমাণ দেখুন।'},
+ {href:'/account/commitments',icon:'◷',en:'Deal & Pool commitments',bn:'ডিল ও পুল কমিটমেন্ট',detail:'Final quotes, delivery options, payment confirmation and cancellation.',detailBn:'চূড়ান্ত দাম, ডেলিভারি, পেমেন্ট ও বাতিল দেখুন।'},
  {href:'/account/addresses',icon:'⌖',en:'Addresses',bn:'ঠিকানা',detail:'Manage your delivery and pickup details.',detailBn:'ডেলিভারি ও সংগ্রহের ঠিকানা দেখুন।'},
  {href:'/profile',icon:'⌂',en:'Community & profile',bn:'কমিউনিটি ও প্রোফাইল',detail:'View your household and community details.',detailBn:'পরিবার ও কমিউনিটির তথ্য দেখুন।'},
  {href:'/account/savings',icon:'↗',en:'Savings report',bn:'সাশ্রয়ের রিপোর্ট',detail:'See verified savings from your purchases.',detailBn:'কেনাকাটার যাচাইকৃত সাশ্রয় দেখুন।'},

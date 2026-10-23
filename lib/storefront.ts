@@ -12,6 +12,8 @@ export type StorefrontOffer = {
   offer_id: string
   offer_kind: 'GROUP_DEAL'|'COMMUNITY_POOL'|'SOLO'
   community_ids?: string[]
+  community_progress?: {community_id:string;cycle_id:string|null;buyer_count:number;closes_at:string|null}[]
+  cycle_id?: string|null
   community_id: string
   product_id: string
   product_name: string
@@ -24,6 +26,8 @@ export type StorefrontOffer = {
   reference_price: number|null
   confirmed_price: number|null
   upcoming_price: number|null
+  opening_price?: number|null
+  price_tiers?: {minimum:number;price:number}[]
   buyer_count: number
   quantity_joined: number
   next_threshold: number|null

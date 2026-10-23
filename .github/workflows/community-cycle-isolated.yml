@@ -1,0 +1,30 @@
+name: Community cycle isolated hypothetical UAT
+on:
+  push:
+    branches: [feat/community-cycle-settlement-oct23]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-lifecycle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+      - name: Start disposable Supabase
+        run: supabase start
+      - name: Replay schema from scratch
+        run: |
+          set -euo pipefail
+          supabase db reset
+          PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "select cron.alter_job(job_id := jobid, active := false) from cron.job;"
+      - name: Six fictional customers — independent community cycle and payment exceptions
+        env:
+          PGPASSWORD: postgres
+        run: psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f supabase/tests/community-cycle-hypotheses.sql
+      - name: Stop disposable database
+        if: always()
+        run: supabase stop --no-backup

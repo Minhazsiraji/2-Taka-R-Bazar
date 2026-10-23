@@ -1,20 +1,42 @@
 import type {LiveHomepageData,PublicLiveProduct,PublicLivePool,PublicLiveOffer} from './approved-live-detail-data'
 import {publishedLiveOffers,publishedLivePools,confirmedOfferPrice,validMoney,safeTime,uuidPattern} from './approved-live-detail-data'
+import {wholePoolTierTotals,type WholePoolStage} from './whole-pool-tier-totals'
 
 // Values only: all card and detail markup stays in the owner's approved templates.
 export type ApprovedProduct={id:string;name:string;nameBn:string;unit:string;photo:string;image?:string|null;price:number|null;oldPrice:number|null;stock:number|null;empty?:boolean;href?:string;purchasable?:boolean;launchOfferId?:string}
-export type ApprovedDeal={purchasable?:boolean;launchOfferId?:string;id:string;offerId?:string;price:number|null;reference?:number|null;joined:number;target:number;days:number|null;community?:string;empty?:boolean}
-export type ApprovedPool={launchOfferId?:string;id:string;label:string;labelBn:string;name:string;nameBn:string;products:readonly string[];joined:number;target:number;days:number|null;date:string;closesAt?:string|null;empty?:boolean;productCount?:number}
+export type ApprovedDeal={purchasable?:boolean;launchOfferId?:string;cycleId?:string|null;id:string;offerId?:string;price:number|null;reference?:number|null;nextPrice?:number|null;joined:number;target:number;days:number|null;community?:string;empty?:boolean}
+export type ApprovedPool={launchOfferId?:string;cycleId?:string|null;id:string;label:string;labelBn:string;name:string;nameBn:string;products:readonly string[];joined:number;target:number;nextMinPrice?:number|null;nextMaxSaving?:number|null;wholePoolRetail?:number|null;wholePoolCurrent?:number|null;wholePoolNext?:WholePoolStage|null;wholePoolStages?:WholePoolStage[];days:number|null;date:string;closesAt?:string|null;empty?:boolean;productCount?:number}
 export type ApprovedHomeView={products:ApprovedProduct[];lookup:ApprovedProduct[];deals:ApprovedDeal[];pools:ApprovedPool[]}
 export type ApprovedOffer={oldPrice?:number|null;id:string;label:string;labelBn:string;price:number|null;kind:'solo'|'deal'|'pool';poolId?:string;empty?:boolean;purchasable?:boolean;launchOfferId?:string}
 export type ApprovedProductView={initialOfferId?:string;product:ApprovedProduct;deal?:ApprovedDeal;offers:ApprovedOffer[];group:{tiers:{minimum:number;price:number|null;current?:boolean}[];current:{minimum:number;price:number|null};next:{minimum:number;price:number|null}|null}|null;source:PublicLiveProduct;community:string;fields:Record<string,{en:string;bn:string}>}
-export type ApprovedPoolLine={product:ApprovedProduct;tiers:{opening:number|null;current:number|null;next:number|null}}
+export type ApprovedPoolLine={product:ApprovedProduct;tiers:{opening:number|null;current:number|null;next:number|null;steps?:{minimum:number;price:number}[]}}
 const blank='\u00a0'
 export const emptyProduct=(id:string):ApprovedProduct=>({id,name:blank,nameBn:blank,unit:blank,photo:'',image:null,price:null,oldPrice:null,stock:null,empty:true})
 const remaining=(date:string|null|undefined)=>safeTime(date)?Math.max(0,Math.ceil((new Date(date!).getTime()-Date.now())/86400000)):null
 const stock=(o:PublicLiveOffer|undefined)=>o&&typeof o.commerce_available_quantity==='number'&&Number.isSafeInteger(o.commerce_available_quantity)&&o.commerce_available_quantity>=0?o.commerce_available_quantity:null
+/** Project one selected community's OPEN cycle into the unchanged approved cards. */
+export function scopeCommunityOffer(o:PublicLiveOffer,area:string):PublicLiveOffer{
+ if(o.offer_kind==='SOLO'||!o.community_progress?.length)return o
+ const state=area?o.community_progress.find(x=>x.community_id===area):null
+ const n=state?.buyer_count??0
+ const steps=[...(o.price_tiers??[])].sort((a,b)=>a.minimum-b.minimum)
+ const earned=steps.filter(x=>x.minimum<=n).at(-1)
+ const next=steps.find(x=>x.minimum>n)
+ return {...o,buyer_count:n,cycle_id:state?.cycle_id??null,
+  confirmed_price:earned?.price??o.opening_price??o.confirmed_price,
+  upcoming_price:next?.price??null,next_threshold:next?.minimum??null,
+  closes_at:state?.closes_at??o.closes_at,
+  price_status:earned?'unlocked':'pending_final_price'}
+}
+export function scopeCommunityPool(p:PublicLivePool,area:string):PublicLivePool{
+ if(!p.bundle.some(b=>b.offer.community_progress?.length))return p
+ const bundle=p.bundle.map(row=>({...row,offer:scopeCommunityOffer(row.offer,area)}))
+ const joined=bundle[0]?.offer.buyer_count??0,next=bundle[0]?.offer.next_threshold??null
+ return {...p,bundle,sampleHouseholds:joined,
+  livePricing:p.livePricing?{...p.livePricing,upcoming:next,householdsNeeded:next==null?0:Math.max(0,next-joined)}:undefined}
+}
 export function approvedHomeView(data:LiveHomepageData,area='',search='',selectedAreaName=''):ApprovedHomeView{
- const offers=publishedLiveOffers(data.offers,area),map=new Map<string,ApprovedProduct>()
+ const offers=publishedLiveOffers(data.offers,area).map(o=>scopeCommunityOffer(o,area)),map=new Map<string,ApprovedProduct>()
  for(const p of data.catalog)map.set(p.product_id,{id:p.product_id,name:p.title_en,nameBn:p.title_bn,unit:p.package_size,photo:'',image:p.image_url,price:null,oldPrice:null,stock:null})
  for(const p of data.products.filter(p=>!p.is_demo))if(!map.has(p.product_id))map.set(p.product_id,{id:p.product_id,name:p.name,nameBn:p.name_bn??p.name,unit:p.package_size,photo:'',image:p.image_url,price:null,oldPrice:null,stock:null})
  for(const o of offers){
@@ -32,8 +54,8 @@ export function approvedHomeView(data:LiveHomepageData,area='',search='',selecte
  }
  const q=search.trim().toLocaleLowerCase(),matches=(p:ApprovedProduct)=>!q||[p.name,p.nameBn,p.unit].some(s=>s.toLocaleLowerCase().includes(q))
  const products=[...map.values()].filter(matches).slice(0,6)
- const deals:ApprovedDeal[]=offers.filter(o=>o.offer_kind==='GROUP_DEAL'&&matches(map.get(o.product_id)!)).slice(0,6).map(o=>({id:o.product_id,offerId:o.offer_id,launchOfferId:o.launch_offer_id,purchasable:Boolean(o.launch_offer_id&&(stock(o)??0)>0),price:confirmedOfferPrice(o),reference:o.reference_price,joined:o.buyer_count??0,target:o.next_threshold??0,days:remaining(o.closes_at),community:'Community: '+(area&&selectedAreaName?selectedAreaName:'All')}))
- const pools=publishedLivePools(data.pools,area).slice(0,2).map(p=>approvedPoolView(p).pool)
+ const deals:ApprovedDeal[]=offers.filter(o=>o.offer_kind==='GROUP_DEAL'&&matches(map.get(o.product_id)!)).slice(0,6).map(o=>({id:o.product_id,offerId:o.offer_id,launchOfferId:o.launch_offer_id,cycleId:o.cycle_id,purchasable:Boolean(o.launch_offer_id&&(stock(o)??0)>0),price:confirmedOfferPrice(o)??validMoney(o.opening_price),reference:validMoney(o.reference_price),nextPrice:validMoney(o.upcoming_price),joined:o.buyer_count??0,target:o.next_threshold??0,days:remaining(o.closes_at),community:'Community: '+(area&&selectedAreaName?selectedAreaName:'All')}))
+ const pools=publishedLivePools(data.pools,area).map(p=>scopeCommunityPool(p,area)).slice(0,2).map(p=>approvedPoolView(p).pool)
  for(const pool of pools)for(const id of pool.products)if(!map.has(id)){
   const item=publishedLivePools(data.pools,area).find(p=>p.id===pool.id)?.bundle.find(l=>l.offer.product_id===id)?.offer
   map.set(id,item?{id,name:item.product_name,nameBn:item.product_name_bn??item.product_name,unit:item.package_size,photo:'',image:item.image_url,price:confirmedOfferPrice(item),oldPrice:validMoney(item.reference_price),stock:null}:emptyProduct(id))
@@ -49,8 +71,8 @@ export function approvedHomeView(data:LiveHomepageData,area='',search='',selecte
 }
 export function approvedProductView(source:PublicLiveProduct,offerId?:string):ApprovedProductView{
  const solo=source.offers.find(o=>o.offer_kind==='SOLO'&&o.launch_offer_id)??source.offers.find(o=>o.offer_kind==='SOLO'),group=source.offers.find(o=>o.offer_id===offerId&&o.offer_kind==='GROUP_DEAL')??source.offers.find(o=>o.offer_kind==='GROUP_DEAL')
- const product:ApprovedProduct={launchOfferId:solo?.launch_offer_id,id:source.id,name:source.name,nameBn:source.nameBn,unit:source.unit,photo:'',image:source.image,price:solo?confirmedOfferPrice(solo):source.listingPrice??null,oldPrice:solo?.launch_offer_id?solo.reference_price:source.launchEnabled?(source.listingOldPrice??0):source.retail,stock:solo?.launch_offer_id?stock(solo):source.launchEnabled?(source.listingStock??0):stock(solo),purchasable:Boolean((solo?.launch_offer_id&&(stock(solo)??0)>0)||source.launchEnabled&&(source.listingStock??0)>0)}
- const offers:ApprovedOffer[]=source.offers.map(o=>({id:o.offer_id,label:o.offer_kind==='SOLO'?'Direct / Exclusive':o.offer_kind==='GROUP_DEAL'?'Group Deal':'Community Pool',labelBn:o.offer_kind==='SOLO'?'সরাসরি / এক্সক্লুসিভ':o.offer_kind==='GROUP_DEAL'?'গ্রুপ ডিল':'কমিউনিটি পুল',price:confirmedOfferPrice(o),oldPrice:o.reference_price,purchasable:Boolean(o.launch_offer_id&&(stock(o)??0)>0),launchOfferId:o.launch_offer_id,kind:o.offer_kind==='SOLO'?'solo':o.offer_kind==='GROUP_DEAL'?'deal':'pool'}))
+ const product:ApprovedProduct={launchOfferId:solo?.launch_offer_id,id:source.id,name:source.name,nameBn:source.nameBn,unit:source.unit,photo:'',image:source.image,price:solo?confirmedOfferPrice(solo):source.listingPrice??null,oldPrice:validMoney(source.retail)??validMoney(solo?.reference_price)??validMoney(source.listingOldPrice),stock:solo?.launch_offer_id?stock(solo):source.launchEnabled?(source.listingStock??0):stock(solo),purchasable:Boolean((solo?.launch_offer_id&&(stock(solo)??0)>0)||source.launchEnabled&&(source.listingStock??0)>0)}
+ const offers:ApprovedOffer[]=source.offers.map(o=>({id:o.offer_id,label:o.offer_kind==='SOLO'?'Direct / Exclusive':o.offer_kind==='GROUP_DEAL'?'Group Deal':'Community Pool',labelBn:o.offer_kind==='SOLO'?'সরাসরি / এক্সক্লুসিভ':o.offer_kind==='GROUP_DEAL'?'গ্রুপ ডিল':'কমিউনিটি পুল',price:confirmedOfferPrice(o)??validMoney(o.opening_price),oldPrice:o.reference_price,purchasable:Boolean(o.launch_offer_id&&(stock(o)??0)>0),launchOfferId:o.launch_offer_id,kind:o.offer_kind==='SOLO'?'solo':o.offer_kind==='GROUP_DEAL'?'deal':'pool'}))
  if(!offers.some(o=>o.kind==='solo')){
   const slot=offers.findIndex(o=>o.kind==='pool')
   offers.splice(slot<0?offers.length:slot,0,{id:'solo',label:'Direct / Exclusive',labelBn:'সরাসরি / এক্সক্লুসিভ',price:product.price,kind:'solo',purchasable:product.purchasable,launchOfferId:product.launchOfferId,empty:!product.purchasable})
@@ -69,15 +91,21 @@ export function approvedProductView(source:PublicLiveProduct,offerId?:string):Ap
  fields['Frequently asked question']={en:source.seo?.faqs?.[0]?.question_en??'',bn:source.seo?.faqs?.[0]?.question_bn??''}
  fields['Verified answer']={en:source.seo?.faqs?.[0]?.answer_en??'',bn:source.seo?.faqs?.[0]?.answer_bn??''}
  fields['Available areas']={en:[...new Set(source.offers.map(o=>o.offer_title).filter(Boolean))].join(', '),bn:[...new Set(source.offers.map(o=>o.offer_title).filter(Boolean))].join(', ')}
- return {initialOfferId:offers.some(o=>o.id===offerId)?offerId:undefined,product,offers,source,fields,community:source.offers.find(o=>o.offer_id===offerId)?.offer_title??solo?.offer_title??group?.offer_title??'',deal:group?{id:product.id,offerId:group.offer_id,launchOfferId:group.launch_offer_id,purchasable:Boolean(group.launch_offer_id&&(stock(group)??0)>0),price:confirmedOfferPrice(group),joined:group.buyer_count??0,target:group.next_threshold??0,days:remaining(group.closes_at)}:undefined,
-  group:group?{tiers:[{minimum:0,price:null},{minimum:0,price:confirmedOfferPrice(group),current:true},{minimum:group.next_threshold&&validMoney(group.upcoming_price)?group.next_threshold:0,price:validMoney(group.upcoming_price)}],current:{minimum:0,price:confirmedOfferPrice(group)},next:group.next_threshold&&validMoney(group.upcoming_price)?{minimum:group.next_threshold,price:validMoney(group.upcoming_price)}:null}:null}
+ return {initialOfferId:offers.some(o=>o.id===offerId)?offerId:undefined,product,offers,source,fields,community:source.offers.find(o=>o.offer_id===offerId)?.offer_title??solo?.offer_title??group?.offer_title??'',deal:group?{id:product.id,offerId:group.offer_id,launchOfferId:group.launch_offer_id,cycleId:group.cycle_id,purchasable:Boolean(group.launch_offer_id&&(stock(group)??0)>0),price:confirmedOfferPrice(group)??validMoney(group.opening_price),nextPrice:validMoney(group.upcoming_price),joined:group.buyer_count??0,target:group.next_threshold??0,days:remaining(group.closes_at)}:undefined,
+  group:group?{tiers:group.price_tiers?.length?group.price_tiers.map(t=>({...t,current:t.minimum===Math.max(0,...group.price_tiers!.filter(x=>x.minimum<=(group.buyer_count??0)).map(x=>x.minimum))})):
+   [{minimum:0,price:null},{minimum:0,price:confirmedOfferPrice(group),current:true},{minimum:group.next_threshold&&validMoney(group.upcoming_price)?group.next_threshold:0,price:validMoney(group.upcoming_price)}],
+   current:{minimum:group.price_tiers?.filter(t=>t.minimum<=(group.buyer_count??0)).at(-1)?.minimum??0,price:confirmedOfferPrice(group)??validMoney(group.opening_price)},
+   next:group.next_threshold&&validMoney(group.upcoming_price)?{minimum:group.next_threshold,price:validMoney(group.upcoming_price)}:null}:null}
 }
 export function approvedPoolView(source:PublicLivePool):{pool:ApprovedPool;lines:ApprovedPoolLine[]}{
  const rows=source.bundle.filter(l=>l.offer&&!l.offer.is_demo&&!l.offer.commerce_synthetic)
  const dates=[...new Set(rows.map(l=>safeTime(l.offer.closes_at)).filter(Boolean))],date=dates.length===1?dates[0]:null
- const lines:ApprovedPoolLine[]=rows.map(({offer:o})=>({product:{id:o.product_id,name:o.product_name,nameBn:o.product_name_bn??o.product_name,unit:o.package_size,photo:'',image:o.image_url,price:confirmedOfferPrice(o),oldPrice:o.reference_price,stock:stock(o),purchasable:Boolean(o.launch_offer_id&&(stock(o)??0)>0),launchOfferId:o.launch_offer_id},tiers:{opening:null,current:confirmedOfferPrice(o),next:null}}))
+ const lines:ApprovedPoolLine[]=rows.map(({offer:o})=>({product:{id:o.product_id,name:o.product_name,nameBn:o.product_name_bn??o.product_name,unit:o.package_size,photo:'',image:o.image_url,price:confirmedOfferPrice(o),oldPrice:o.reference_price,stock:stock(o),purchasable:Boolean(o.launch_offer_id&&(stock(o)??0)>0),launchOfferId:o.launch_offer_id},tiers:{opening:validMoney(o.opening_price),current:confirmedOfferPrice(o)??validMoney(o.opening_price),next:validMoney(o.upcoming_price),steps:o.price_tiers??[]}}))
+ const allTiers=wholePoolTierTotals(lines.map(l=>({retail:validMoney(l.product.oldPrice),opening:l.tiers.opening,current:l.tiers.current,steps:l.tiers.steps??[]})),source.sampleHouseholds??0)
+ const nextPrices=lines.map(l=>validMoney(l.tiers.next)).filter((v):v is number=>v!==null)
+ const nextSavings=lines.map(l=>l.product.oldPrice!==null&&l.tiers.next!==null?Math.max(0,Math.round((l.product.oldPrice-l.tiers.next)*100)/100):null).filter((v):v is number=>v!==null)
  const ids=source.featuredProductIds.filter(id=>lines.some(l=>l.product.id===id)).slice(0,3)
  if(!ids.length)ids.push(...lines.slice(0,3).map(l=>l.product.id))
  while(ids.length<3)ids.push('empty-pool-photo-'+source.id+'-'+ids.length)
- return {pool:{launchOfferId:rows[0]?.offer.launch_offer_id,id:source.id??'',label:source.slug==='weekly'?'Weekly Pool':source.slug==='monthly'?'Monthly Pool':'Special Pool',labelBn:source.slug==='weekly'?'মার্কেটিং পুল':source.slug==='monthly'?'মাসিক পুল':'বিশেষ পুল',name:source.title.en??blank,nameBn:source.title.bn??source.title.en??blank,products:ids,joined:source.sampleHouseholds??0,target:source.livePricing?.upcoming??0,days:remaining(date),closesAt:date,date:date?new Date(date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):blank,productCount:rows.length},lines}
+ return {pool:{launchOfferId:rows[0]?.offer.launch_offer_id,cycleId:rows[0]?.offer.cycle_id,id:source.id??'',label:source.slug==='weekly'?'Weekly Pool':source.slug==='monthly'?'Monthly Pool':'Special Pool',labelBn:source.slug==='weekly'?'মার্কেটিং পুল':source.slug==='monthly'?'মাসিক পুল':'বিশেষ পুল',name:source.title.en??blank,nameBn:source.title.bn??source.title.en??blank,products:ids,joined:source.sampleHouseholds??0,target:source.livePricing?.upcoming??0,nextMinPrice:nextPrices.length?Math.min(...nextPrices):null,nextMaxSaving:nextSavings.length?Math.max(...nextSavings):null,wholePoolRetail:allTiers.retail,wholePoolCurrent:allTiers.current,wholePoolNext:allTiers.next,wholePoolStages:allTiers.stages,days:remaining(date),closesAt:date,date:date?new Date(date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):blank,productCount:rows.length},lines}
 }

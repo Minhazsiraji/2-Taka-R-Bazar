@@ -6,6 +6,7 @@ import {renderToStaticMarkup} from 'react-dom/server'
 import {loadSource} from './helpers/load-tsx.mjs'
 
 const fixtures=await loadSource('lib/home-card-preview-fixtures.ts')
+const wholePool=await loadSource('lib/whole-pool-tier-totals.ts')
 const link=({href,children,...props})=>React.createElement('a',{href,...props},children)
 const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
  '@/lib/launch-cart':{addLaunchItem:()=>{},readLaunchCart:()=>[]},
@@ -17,13 +18,16 @@ const {PreviewHomeCards}=await loadSource('components/home-card-preview.tsx',{
 })
 const parity=await loadSource('lib/preview-native-detail-data.ts',{'@/lib/home-card-preview-fixtures':fixtures})
 const {HomePreviewPoolDetails}=await loadSource('components/home-preview-pool-details.tsx',{
- '@/lib/launch-cart':{addLaunchItem:()=>{}},
+ '@/lib/launch-cart':{addLaunchItem:()=>{},addLaunchItems:()=>true,readLaunchCart:()=>[]},
+ 'next/navigation':{useRouter:()=>({refresh:()=>{},push:()=>{}})},
+ '@/app/actions/simple-offer-joins':{joinSimpleSalePool:async()=>({ok:false})},
  'next/link':link,
  '@/components/public-header':{PublicHeader:()=>null},
  '@/components/public-footer':{PublicFooter:()=>null},
  '@/lib/use-storefront-language':{useStorefrontLanguage:language=>[language,()=>{}]},
  '@/lib/home-card-preview-fixtures':fixtures,
  '@/lib/preview-native-detail-data':parity,
+ '@/lib/whole-pool-tier-totals':wholePool,
  './home-preview-pool-details.css':{},'./home-preview-native-details.css':{},
 })
 

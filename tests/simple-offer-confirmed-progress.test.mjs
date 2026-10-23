@@ -1,33 +1,47 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
-const migration=readFileSync(new URL('../supabase/migrations/20261022084050_simple_offer_confirmed_progress.sql',import.meta.url),'utf8');
-const action=readFileSync(new URL('../app/actions/simple-offers.ts',import.meta.url),'utf8');
-const form=readFileSync(new URL('../components/admin-simple-offer-form.tsx',import.meta.url),'utf8');
-const read=readFileSync(new URL('../lib/simple-offers.ts',import.meta.url),'utf8');
-test('confirmed count never includes draft carts or pending requests',()=>{
- assert.match(migration,/ord\.status='confirmed'/);
- assert.match(migration,/ord\.status='requested'/);
- assert.match(migration,/count\(distinct ord\.customer_id\)/);
- assert.match(migration,/'buyer_count',counts\.buyers/);
- assert.match(migration,/'pending_buyers',counts\.pending_buyers/);
- assert.match(migration,/'buyer_target',o\.buyer_target/);
- assert.doesNotMatch(migration,/localStorage|cart-updated/);
-});
-test('published buyer targets have the approved minimum and no fabricated Pool milestone',()=>{
- assert.match(migration,/UPDATE public\.simple_sale_offers SET buyer_target=5/);
- assert.match(migration,/WHERE kind='GROUP_DEAL' AND buyer_target IS NULL/);
- assert.match(migration,/p_kind='GROUP_DEAL' AND \(p_target IS NULL OR p_target NOT BETWEEN 5 AND 100000\)/);
- assert.match(migration,/p_kind='SOLO' AND p_target IS NOT NULL/);
- assert.match(form,/Participation target · confirmed buyers/);
- assert.match(form,/required=\{kind==='GROUP_DEAL'\}/);
- assert.match(read,/buyer_target\?:number\|null/);
-});
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const baseline=readFileSync('supabase/migrations/20261022084050_simple_offer_confirmed_progress.sql','utf8')
+const tiers=readFileSync('supabase/migrations/20261022163000_configurable_offer_tiers.sql','utf8')
+const action=readFileSync('app/actions/simple-offers.ts','utf8')
+const form=readFileSync('components/admin-simple-offer-form.tsx','utf8')
+const read=readFileSync('lib/simple-offers.ts','utf8')
+test('legacy participation goal remains compatible with qualified buyers and published offers',()=>{
+ assert.match(baseline,/ord\.status='confirmed'/)
+ assert.match(baseline,/'buyer_count',counts\.buyers/)
+ assert.match(tiers,/select j\.customer_id from public\.simple_sale_offer_joins/)
+ assert.match(tiers,/status='active'/)
+ assert.match(tiers,/ord\.status='confirmed'/)
+ assert.match(tiers,/ord\.status='requested'/)
+ assert.doesNotMatch(tiers,/localStorage|cart-updated/)
+})
+test('owner selects 1–3 real priced tiers in both Group Deal and Pool forms',()=>{
+ assert.match(form,/Number of tiers to offer/)
+ assert.match(form,/value=\{1\}>1 tier/)
+ assert.match(form,/value=\{2\}>2 tiers/)
+ assert.match(form,/value=\{3\}>3 tiers/)
+ assert.match(form,/tier:\x27\+level/)
+ assert.match(form,/threshold:\x27\+level/)
+ assert.match(read,/buyer_target\?:number\|null/)
+ assert.match(tiers,/threshold<\(case when p_kind='GROUP_DEAL' then 3 else 2 end\)/)
+ assert.match(tiers,/Tier targets must increase/)
+ assert.match(tiers,/Later tier prices cannot increase/)
+})
 test('admin save is atomic and respects existing community and price checks',()=>{
- assert.match(action,/admin_save_simple_offer_with_target/);
- assert.match(action,/p_target:kind==='SOLO'\?null:buyerTarget/);
- assert.match(migration,/oid:=public\.admin_save_simple_offer_areas\(/);
- assert.match(migration,/private\.has_role\(u,'super_admin'\)/);
- assert.match(migration,/REVOKE ALL ON FUNCTION public\.admin_save_simple_offer_with_target/);
- assert.match(migration,/GRANT EXECUTE ON FUNCTION public\.admin_save_simple_offer_with_target[^;]*TO authenticated/);
-});
+ assert.match(action,/admin_save_simple_offer_with_tiers/)
+ assert.match(action,/p_tiers:tiers/)
+ assert.match(tiers,/oid:=public\.admin_save_simple_offer_areas\(/)
+ assert.match(tiers,/private\.has_role\(u,'super_admin'\)/)
+ assert.match(tiers,/revoke all on function public\.admin_save_simple_offer_with_tiers/)
+ assert.match(tiers,/grant execute on function public\.admin_save_simple_offer_with_tiers[^;]* to authenticated/)
+ assert.match(tiers,/This offer has joined customers or orders/)
+})
+test('published server-quoted prices follow earned tiers, never invent the next discount',()=>{
+ assert.match(tiers,/t\.buyer_threshold<=counts\.buyers/)
+ assert.match(tiers,/t\.buyer_threshold>counts\.buyers/)
+ assert.match(tiers,/'price',coalesce/)
+ assert.match(tiers,/'base_price',i\.price/)
+ assert.match(tiers,/'next_price'/)
+ assert.match(tiers,/'tiers'/)
+ assert.match(read,/upcoming_price:p\.next_price/)
+})
