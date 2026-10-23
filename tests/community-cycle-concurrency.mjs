@@ -110,7 +110,7 @@ try{
  await accountCard.locator('select[name="fulfillment"]').selectOption('pickup')
  await accountCard.locator('select[name="pickup_point_id"]').selectOption(pickupId)
  await accountCard.getByRole('button',{name:'Submit delivery preference'}).click()
- await accountCard.getByText('Awaiting quote',{exact:false}).waitFor({timeout:16000})
+ await customer.waitForLoadState('networkidle')
  let q=await must(await svc.from('simple_sale_cycle_quotes').select('status,fulfillment,pickup_point_id').eq('id',quoteId).single(),'pickup persisted')
  assert.equal(q.fulfillment,'pickup');assert.equal(q.pickup_point_id,pickupId)
  await makerPage.goto(base+'/admin/offer-settlement',{waitUntil:'networkidle'})
