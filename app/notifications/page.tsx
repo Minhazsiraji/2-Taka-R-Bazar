@@ -1,7 +1,9 @@
+import Link from 'next/link'
+import {safeNotificationHref} from '@/lib/notification-links.mjs'
 import {NotificationInboxRefresh} from '@/components/notification-inbox-refresh'
 import { AppShell } from '@/components/app-shell'
 import { PushNotificationManager } from '@/components/push-notification-manager'
-import { markAllNotificationsRead, openNotification } from '@/app/actions/notifications'
+import { markAllNotificationsRead, markNotificationRead } from '@/app/actions/notifications'
 import { requireOnboardedUser } from '@/lib/auth'
 
 function formatDate(value: string) {
@@ -86,11 +88,9 @@ export default async function NotificationsPage({searchParams}:{searchParams:Pro
                 const quote=quoteId?quoteById.get(quoteId):undefined
                 const stage=quote?nextStep(quote):null
                 return (
-                <form action={openNotification} key={note.id} className={note.read_at ? 'bg-transparent' : 'bg-amber-50/30'}>
-                  <input type="hidden" name="notification_id" value={note.id} />
-                  <button
-                    className="block w-full appearance-none !rounded-none !border-0 !bg-transparent px-4 py-4 text-left !shadow-none outline-none transition-colors hover:!bg-slate-50/10 focus-visible:!bg-slate-50/10 sm:px-5"
-                    style={{ borderRadius: 0, border: 0, boxShadow: 'none', backgroundImage: 'none' }}
+                <div key={note.id} className={note.read_at ? 'bg-transparent' : 'bg-amber-50/30'}>
+                  <Link href={safeNotificationHref(note.href)}
+                    className="block w-full px-4 py-4 text-left transition-colors hover:bg-white/10 focus-visible:bg-white/10 sm:px-5"
                   >
                     <div className="flex items-start gap-3">
                       <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${note.read_at ? 'bg-slate-200' : note.priority === 'high' ? 'bg-rose-500' : 'bg-amber-400'}`} />
@@ -104,8 +104,9 @@ export default async function NotificationsPage({searchParams}:{searchParams:Pro
                         <div className="mt-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-400"><span>{String(note.kind).replaceAll('_', ' ')}</span>{!note.read_at && <span>• New</span>}</div>
                       </div>
                     </div>
-                  </button>
-                </form>
+                  </Link>
+                  {!note.read_at&&<form action={markNotificationRead} className="px-4 pb-3 sm:px-5"><input type="hidden" name="notification_id" value={note.id}/><button type="submit" className="text-xs font-semibold underline underline-offset-2">Mark this notification read</button></form>}
+                </div>
               )})}
             </div>
           )}
