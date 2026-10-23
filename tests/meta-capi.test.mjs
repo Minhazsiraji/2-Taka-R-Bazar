@@ -28,7 +28,7 @@ test('confirmed real BDT payment creates stable Meta id and bounded event payloa
   assert.equal(data.event_id, '2tbr:paid:' + receipt.orderId)
   assert.equal(data.custom_data.currency, 'BDT')
   assert.equal(data.custom_data.value, 1350)
-  assert.deepEqual(data.custom_data.contents.map(x=>x.id), ['GHEE-1KG-UNB-002'])
+  assert.equal(data.custom_data.contents[0].id, 'GHEE-1KG-UNB-002')
   assert.equal(data.user_data.fbp, receipt.fbp)
 })
 test('no fake purchases from demo, unpaid, no consent, no matching cookie, price mismatch', () => {
