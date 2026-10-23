@@ -28,7 +28,6 @@ import './marketplace-mobile-approved.css'
 import './marketplace-expo-parity.css'
 import './public-app-design.css'
 import { PwaRegister } from '@/components/pwa-register'
-import { ConsentAwareAnalytics } from '@/components/consent-aware-analytics'
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE_EN, SITE_URL } from '@/lib/site'
 
 const themeInitScript = `
@@ -88,6 +87,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <meta name="theme-color" content="#e7e2e8" />
       <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
     </head>
-    <body className="site-glass-root"><PwaRegister /><ConsentAwareAnalytics />{children}</body>
+    <body className="site-glass-root"><PwaRegister />{children}</body>
   </html>
 }
