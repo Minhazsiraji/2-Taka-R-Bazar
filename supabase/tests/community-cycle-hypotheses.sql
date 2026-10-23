@@ -116,6 +116,12 @@ begin
  if (select product_total from public.simple_sale_cycle_quotes
      where cycle_id=cycle_a and customer_id=people[2])<>280 then
   raise exception 'Two-unit quote incorrect';end if;
+ -- Quantity cannot be changed after the previous price snapshot has closed.
+ perform set_config('request.jwt.claim.sub',people[1]::text,true);
+ blocked=false;
+ begin perform public.set_simple_sale_commitment_quantity(offer,p,4);
+ exception when others then blocked=true;end;
+ if not blocked then raise exception 'Closed cycle quantity update accepted';end if;
  -- A delayed retry of the previous 4-argument join must NOT silently join the new cycle.
  perform set_config('request.jwt.claim.sub',people[5]::text,true);
  blocked=false;
