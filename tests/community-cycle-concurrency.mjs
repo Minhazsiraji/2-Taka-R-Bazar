@@ -9,13 +9,13 @@ const svc=createClient(api,secret,{auth:{persistSession:false,autoRefreshToken:f
 const sid=randomUUID().slice(0,8),a=randomUUID(),b=randomUUID(),product=randomUUID()
 async function must(result,label){assert.ifError(result.error,label);return result.data}
 const identities=[]
-for(let i=0;i<8;i++){
+for(let i=0;i<9;i++){
  const email='scenario-'+sid+'-'+i+'@example.invalid',password='NotReal-'+randomUUID()+'A1!'
  const response=await svc.auth.admin.createUser({email,password,email_confirm:true})
  const user=(await must(response,'create fictional account')).user
  identities.push({id:user.id,email,password})
 }
-await must(await svc.from('user_roles').insert({user_id:identities[0].id,role:'admin'}),'admin')
+await must(await svc.from('user_roles').insert([{user_id:identities[0].id,role:'admin'},{user_id:identities[8].id,role:'admin'}]),'two independent admins')
 await must(await svc.from('communities').insert([
  {id:a,name:'Parallel A '+sid,slug:'parallel-a-'+sid},
  {id:b,name:'Parallel B '+sid,slug:'parallel-b-'+sid}
