@@ -3,13 +3,13 @@ import type {DemoFeaturedPool} from './featured-pools'
 import type {PublicVendorBookingProduct} from './public-vendor-booking'
 
 export type SimpleOfferItem={product_id:string;name:string;brand:string|null;category:string;package_size:string;unit:string;image_url:string|null;price:number;old_price:number;available_quantity:number;base_price?:number;next_threshold?:number|null;next_price?:number|null;tiers?:{minimum:number;price:number}[]}
-export type SimpleOffer={id:string;kind:'SOLO'|'GROUP_DEAL'|'COMMUNITY_POOL';community_ids?:string[];community_id:string;community_name:string;title:string;closes_at:string|null;items:SimpleOfferItem[];buyer_count:number;pending_buyers?:number;buyer_target?:number|null}
+export type SimpleOffer={id:string;kind:'SOLO'|'GROUP_DEAL'|'COMMUNITY_POOL';community_ids?:string[];community_id:string;community_name:string;title:string;closes_at:string|null;items:SimpleOfferItem[];buyer_count:number;pending_buyers?:number;buyer_target?:number|null;community_progress?:{community_id:string;cycle_id:string|null;buyer_count:number;closes_at:string|null}[]}
 export function simpleStorefrontOffers(rows:SimpleOffer[]):StorefrontOffer[]{
  return rows.flatMap(o=>o.items.map(p=>({offer_id:o.id,offer_kind:o.kind,community_id:o.community_id,community_ids:o.community_ids??[o.community_id],
   product_id:p.product_id,product_name:p.name,brand:p.brand,category:p.category,package_size:p.package_size,unit:p.unit,image_url:p.image_url,
   offer_title:o.community_name,reference_price:p.old_price,confirmed_price:p.price,solo_price:o.kind==='SOLO'?p.price:null,
   opening_price:p.base_price??p.price,price_tiers:p.tiers??[],upcoming_price:p.next_price??null,buyer_count:o.buyer_count,quantity_joined:0,next_threshold:p.next_threshold??(Number.isInteger(o.buyer_target)&&Number(o.buyer_target)>o.buyer_count?Number(o.buyer_target):null),closes_at:o.closes_at,price_status:'final' as const,
-  commerce_available_quantity:p.available_quantity,launch_offer_id:o.id,
+  commerce_available_quantity:p.available_quantity,launch_offer_id:o.id,community_progress:o.community_progress??[],
  })))
 }
 export function simpleFeaturedPools(rows:SimpleOffer[]):DemoFeaturedPool[]{
