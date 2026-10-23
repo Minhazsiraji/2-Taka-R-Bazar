@@ -83,6 +83,12 @@ jobs:
         run: |
           psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -Atc "select pg_get_constraintdef(oid) from pg_constraint where conrelid='public.product_seo_media'::regclass and conname='product_seo_media_url_check'" | grep -Fq '^https://'
           psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "ALTER TABLE public.product_seo_media DROP CONSTRAINT product_seo_media_url_check; ALTER TABLE public.product_seo_media ADD CONSTRAINT product_seo_media_url_check CHECK (length(url)<=1200 AND (url LIKE 'https://%' OR url LIKE 'http://127.0.0.1:%/storage/v1/object/public/product-images/%'));"
+      # Only temporary local PostgreSQL test privileges, never a production migration.
+      - name: Grant fictional fixture access to trusted service role in disposable DB
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "grant select on public.simple_sale_offer_joins to service_role; grant insert on public.pilot_payment_recipients to service_role;"
       - name: Production-build storefront UAT against disposable synthetic DB
         shell: bash
         run: |
