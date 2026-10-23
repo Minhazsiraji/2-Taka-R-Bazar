@@ -172,11 +172,11 @@ begin
  end loop;
  insert into public.launch_orders
   (customer_id,request_key,payload_hash,contact_name,contact_phone,address,
-   fulfillment,status,subtotal,delivery_fee,total_amount,payment_status,
+   fulfillment,status,subtotal,delivery_fee,payment_status,
    recipient_id,payment_reference,reviewed_by,staff_note)
  values(q.customer_id,q.id,md5('community_quote:'||q.id::text),q.contact_name,
   q.contact_phone,left(delivery_address,350),q.fulfillment,'confirmed',
-  q.product_total,q.delivery_fee,q.product_total+q.delivery_fee,
+  q.product_total,q.delivery_fee,
   'verified',q.payment_recipient_id,q.payment_reference,u,
   'Locked community quote accepted; independently verified transfer')
  returning id into order_uuid;

@@ -109,6 +109,7 @@ jobs:
           for UAT_SCRIPT in tests/storefront-browser-uat.mjs tests/account-security-browser-uat.mjs tests/product-seo-browser-uat.mjs tests/pilot-booking-public-smoke.mjs tests/simple-offers-browser-uat.mjs; do
             node "$UAT_SCRIPT" || UAT_FAILED=1
           done
+          node tests/community-cycle-concurrency.mjs || UAT_FAILED=1
           exit "$UAT_FAILED"
       - name: Upload synthetic account and header screenshots
         if: always()
