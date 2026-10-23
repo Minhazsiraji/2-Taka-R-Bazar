@@ -195,7 +195,7 @@ end $$;
 revoke all on function private.close_due_simple_sale_cycles_impl() from public,anon,authenticated,service_role;
 
 -- Strict authenticated join. Pool counts a household once, irrespective of products/quantities.
-create or replace function private.join_simple_sale_cycle_impl(p_offer uuid,p_lines jsonb,p_area uuid)
+create or replace function private.join_simple_sale_cycle_impl(p_offer uuid,p_lines jsonb,p_area uuid,p_expected_cycle uuid default null)
 returns boolean language plpgsql security definer set search_path='' as $$
 declare u uuid:=auth.uid(); nominee uuid; c public.simple_sale_cycles%rowtype;
  o public.simple_sale_offers%rowtype; item jsonb; prod uuid; qty integer;
@@ -229,6 +229,14 @@ begin
    where offer_id=p_offer and community_id=nominee and status='open' for update;
  end if;
  if c.id is null then raise exception 'No open cycle is available';end if;
+ if exists(select 1 from public.simple_sale_cycle_members m
+   join public.simple_sale_cycles prior on prior.id=m.cycle_id
+   where m.customer_id=u and prior.offer_id=p_offer and prior.id<>c.id)
+   and p_expected_cycle is distinct from c.id then
+    raise exception 'Refresh and explicitly join the new community cycle';
+ end if;
+ if p_expected_cycle is not null and p_expected_cycle<>c.id then
+  raise exception 'This offer cycle has changed. Refresh before joining';end if;
  if o.kind='GROUP_DEAL' and jsonb_array_length(p_lines)<>1 then raise exception 'Group Deal allows one product';end if;
  for item in select value from jsonb_array_elements(p_lines) loop
   if jsonb_typeof(item->'quantity')<>'number' or jsonb_typeof(item->'product_id')<>'string' or
@@ -290,6 +298,20 @@ revoke all on function public.join_simple_sale_group_deal_quantified(uuid,uuid,u
  public.join_simple_sale_pool_quantified(uuid,jsonb,uuid) from public,anon,authenticated,service_role;
 grant execute on function public.join_simple_sale_group_deal_quantified(uuid,uuid,uuid,integer),
  public.join_simple_sale_pool_quantified(uuid,jsonb,uuid) to authenticated;
+create or replace function public.join_simple_sale_group_deal_quantified(p_offer uuid,p_product uuid,p_area uuid,p_quantity integer,p_expected_cycle uuid)
+returns boolean language plpgsql security definer set search_path='' as $$
+begin
+ return private.join_simple_sale_cycle_impl(p_offer,jsonb_build_array(jsonb_build_object('product_id',p_product,'quantity',p_quantity)),p_area,p_expected_cycle);
+end $$;
+create or replace function public.join_simple_sale_pool_quantified(p_offer uuid,p_lines jsonb,p_area uuid,p_expected_cycle uuid)
+returns boolean language plpgsql security definer set search_path='' as $$
+begin
+ return private.join_simple_sale_cycle_impl(p_offer,p_lines,p_area,p_expected_cycle);
+end $$;
+revoke all on function public.join_simple_sale_group_deal_quantified(uuid,uuid,uuid,integer,uuid),
+ public.join_simple_sale_pool_quantified(uuid,jsonb,uuid,uuid) from public,anon,authenticated,service_role;
+grant execute on function public.join_simple_sale_group_deal_quantified(uuid,uuid,uuid,integer,uuid),
+ public.join_simple_sale_pool_quantified(uuid,jsonb,uuid,uuid) to authenticated;
 -- Revoke legacy writes which cannot assign a cycle and can corrupt per-community counters.
 revoke execute on function public.join_simple_sale_group_deal(uuid,uuid,uuid),
  public.join_simple_sale_pool(uuid,uuid[],uuid) from public,anon,authenticated;

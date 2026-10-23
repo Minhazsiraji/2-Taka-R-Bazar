@@ -199,10 +199,10 @@ begin
  end loop;
  update public.simple_sale_cycle_quotes set status='verified',payment_verified_by=u,
   payment_verified_at=now(),order_id=order_uuid,updated_at=now() where id=q.id;
- insert into public.notifications(user_id,kind,title,body,href,priority,dedupe_key,order_id)
+ insert into public.notifications(user_id,kind,title,body,href,priority,dedupe_key)
  values(q.customer_id,'shared_order_verified','Payment verified — order confirmed',
   'Your payment has been checked and the order was created at the locked price.',
-  '/launch-orders/'||order_uuid::text,'normal','shared_order:'||q.id::text,order_uuid)
+  '/launch-orders/'||order_uuid::text,'normal','shared_order:'||q.id::text)
  on conflict(user_id,dedupe_key) do nothing;
  return order_uuid;
 end $$;

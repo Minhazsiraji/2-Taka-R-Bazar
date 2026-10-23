@@ -101,9 +101,16 @@ begin
  if (select product_total from public.simple_sale_cycle_quotes
      where cycle_id=cycle_a and customer_id=people[2])<>280 then
   raise exception 'Two-unit quote incorrect';end if;
- -- Joining again is explicitly new cycle; old quote is immutable.
+ -- A delayed retry of the previous 4-argument join must NOT silently join the new cycle.
+ perform set_config('request.jwt.claim.sub',people[5]::text,true);
+ blocked=false;
+ begin perform public.join_simple_sale_group_deal_quantified(offer,p,area_a,1);
+ exception when others then blocked=true;end;
+ if not blocked or (select count(*) from public.simple_sale_cycle_members where cycle_id=cycle_a2)<>0
+ then raise exception 'Stale retry polluted a new cycle';end if;
+ -- A deliberate rejoin must explicitly select the fresh community cycle UUID.
  perform set_config('request.jwt.claim.sub',people[1]::text,true);
- perform public.join_simple_sale_group_deal_quantified(offer,p,area_a,1);
+ perform public.join_simple_sale_group_deal_quantified(offer,p,area_a,1,cycle_a2);
  if (select count(*) from public.simple_sale_cycle_members where cycle_id=cycle_a2)<>1 then
   raise exception 'New community cycle missing new commitment';end if;
  if (select product_total from public.simple_sale_cycle_quotes where id=quote_a)<>140 then
@@ -148,6 +155,53 @@ begin
   raise exception 'Incorrect product + delivery total';end if;
  if (select available_quantity from public.launch_product_stock where product_id=p)<>99 then
   raise exception 'Shared-stock decrement not exactly once';end if;
+ -- A different customer cannot reuse an already verified payment reference.
+ perform set_config('request.jwt.claim.sub',people[2]::text,true);
+ select id into quote_b from public.simple_sale_cycle_quotes
+  where cycle_id=cycle_a and customer_id=people[2];
+ blocked=false;
+ begin perform public.admin_quote_simple_sale_delivery(quote_b,-1);
+ exception when others then blocked=true;end;
+ if not blocked then raise exception 'Ordinary customer issued own delivery quote';end if;
+ perform public.customer_set_simple_sale_quote_delivery(quote_b,'home_delivery',null,
+   'Synthetic Home, Road Four, Area A');
+ perform set_config('request.jwt.claim.sub',maker::text,true);
+ blocked=false;
+ begin perform public.admin_quote_simple_sale_delivery(quote_b,-1);
+ exception when others then blocked=true;end;
+ if not blocked then raise exception 'Negative delivery charge accepted';end if;
+ perform public.admin_quote_simple_sale_delivery(quote_b,35);
+ perform set_config('request.jwt.claim.sub',people[2]::text,true);
+ perform public.customer_decide_simple_sale_quote(quote_b,'accept','Scenario Buyer Two',
+  '01700000002',true);
+ blocked=false;
+ begin perform public.customer_set_simple_sale_quote_delivery(quote_b,'pickup',point,null);
+ exception when others then blocked=true;end;
+ if not blocked then raise exception 'Post-acceptance delivery tampered';end if;
+ blocked=false;
+ begin perform public.customer_submit_simple_sale_payment(quote_b,recipient,'SCENARIO-001');
+ exception when others then blocked=true;end;
+ if not blocked then raise exception 'Verified transfer reference reused by another customer';end if;
+ perform public.customer_submit_simple_sale_payment(quote_b,recipient,'SCENARIO-002');
+ blocked=false;
+ begin perform public.customer_decide_simple_sale_quote(quote_b,'cancel');
+ exception when others then blocked=true;end;
+ if not blocked then raise exception 'Paid-looking transfer canceled without review';end if;
+ -- Simulate a supplier stock failure between payment submission and verification.
+ update public.launch_product_stock set available_quantity=0 where product_id=p;
+ perform set_config('request.jwt.claim.sub',checker::text,true);
+ blocked=false;
+ begin perform public.admin_verify_simple_sale_payment(quote_b);
+ exception when others then blocked=true;end;
+ if not blocked then raise exception 'Created unfulfillable order despite stock shortage';end if;
+ if (select status from public.simple_sale_cycle_quotes where id=quote_b)<>'payment_submitted'
+  or (select order_id from public.simple_sale_cycle_quotes where id=quote_b) is not null
+ then raise exception 'Stock shortage corrupted pending payment';end if;
+ update public.launch_product_stock set available_quantity=99 where product_id=p;
+ if public.admin_verify_simple_sale_payment(quote_b) is null then
+  raise exception 'Valid verification failed after stock restored';end if;
+ if (select available_quantity from public.launch_product_stock where product_id=p)<>97 then
+  raise exception 'Two unit stock decrement incorrect';end if;
  -- Expired B cannot affect A. B below first target gets base-price quote.
  perform private.close_simple_sale_cycle_impl(cycle_b,true);
  if (select locked_threshold from public.simple_sale_cycles where id=cycle_b)<>0 then
