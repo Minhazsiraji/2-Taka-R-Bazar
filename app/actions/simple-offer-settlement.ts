@@ -55,9 +55,13 @@ export async function quoteDeliveryFee(fd:FormData){
  revalidatePath(account);revalidatePath(staff);redirect(staff)
 }
 export async function verifyQuotePayment(fd:FormData){
- const id=field(fd,'quote_id')
- if(!uuid.test(id))fail(staff,'Invalid quote')
+ const id=field(fd,'quote_id'),verified=Number(field(fd,'verified_amount'))
+ if(!uuid.test(id)||fd.get('independent_confirmation')!=='on'||!Number.isFinite(verified)||verified<=0)fail(staff,'Independently verify the official transfer and exact received amount')
+ const amount=field(fd,'verified_amount')
+ if(!/^\d{1,7}(?:\.\d{1,2})?$/.test(amount))fail(staff,'Enter the exact verified amount')
  const {supabase:db}=await requireAdmin()
+ const {data:quote,error:quoteError}=await db.from('simple_sale_cycle_quotes').select('product_total,delivery_fee,status').eq('id',id).single()
+ if(quoteError||quote?.status!=='payment_submitted'||quote.delivery_fee===null||Math.round((Number(quote.product_total)+Number(quote.delivery_fee))*100)!==Math.round(verified*100))fail(staff,'The verified transfer amount must match the accepted final total')
  const {data,error}=await db.rpc('admin_verify_simple_sale_payment',{p_quote:id})
  if(error)fail(staff,error.message)
  revalidatePath(account);revalidatePath(staff);revalidatePath('/admin/launch-orders')
