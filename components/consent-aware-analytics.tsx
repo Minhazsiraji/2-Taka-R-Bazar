@@ -114,6 +114,7 @@ export function ConsentAwareAnalytics() {
   const [choicesOpen, setChoicesOpen] = useState(false)
   const gaPage = useRef<string | null>(null)
   const metaPage = useRef<string | null>(null)
+  const lastProductView = useRef<string | null>(null)
 
   useEffect(() => {
     if (!CAN_RUN) return
@@ -138,6 +139,17 @@ export function ConsentAwareAnalytics() {
     if (hasMeta && metaPage.current !== pathname) {
       trackPageView(pathname, false, true)
       metaPage.current = pathname
+    }
+    // This marker only appears on separately approved, public SEO product pages.
+    // Informational products do not imply a checkout, price or completed purchase.
+    const itemId = document.querySelector<HTMLElement>('main[data-analytics-item-id]')?.dataset.analyticsItemId
+    const normalized = normalizeMarketingEvent({ name: 'view_item', item_id: itemId })
+    if (normalized && (hasGa || hasMeta)) {
+      const key = pathname + ':' + normalized.item_id
+      if (lastProductView.current !== key) {
+        trackProductEvent(normalized, hasGa, hasMeta)
+        lastProductView.current = key
+      }
     }
   }, [consent, pathname, ready])
 
