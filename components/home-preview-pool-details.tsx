@@ -178,7 +178,7 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
        }
        setJoining(true)
        try{
-        const result=await joinSimpleSalePool(pool.launchOfferId,chosen.map(i=>({product_id:i.product_id,quantity:i.quantity})))
+        const result=await joinSimpleSalePool(pool.launchOfferId,chosen.map(i=>({product_id:i.product_id,quantity:i.quantity})),pool.cycleId)
         if(!result.ok){setStatus(result.message);if(result.code==='SIGN_IN')router.push('/login?next=%2F');return}
         const added=addLaunchItems(chosen)
         if(!added){setStatus(t('Review your cart before adding these products.','পণ্য যোগ করার আগে কার্ট দেখুন।'));return}
