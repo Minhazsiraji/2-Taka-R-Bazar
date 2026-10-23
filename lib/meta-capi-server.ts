@@ -107,7 +107,7 @@ export function buildVerifiedMetaPurchase(input: unknown): MetaPurchasePayload |
 export async function sendVerifiedMetaPurchase(
   evidence: unknown,
   outbox: MetaOutbox,
-  transport: typeof fetch = fetch,
+  transport?: typeof fetch,
 ): Promise<SendResult> {
   if (process.env.META_CAPI_ENABLED !== 'true') return 'disabled'
   const pixel = process.env.META_CAPI_PIXEL_ID
@@ -118,7 +118,7 @@ export async function sendVerifiedMetaPurchase(
   if (!data) return 'ineligible'
   if (!await outbox.claim(data.event_id)) return 'already_claimed'
   try {
-    const response = await transport('https://graph.facebook.com/' + version + '/' + pixel + '/events', {
+    const response = await (transport ?? fetch)('https://graph.facebook.com/' + version + '/' + pixel + '/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ data: [data], access_token: token }),
