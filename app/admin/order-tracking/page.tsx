@@ -65,7 +65,10 @@ export default async function OrderTracking({searchParams}:{searchParams:Promise
    href:status==='verified'&&q.order_id?'/launch-orders/'+q.order_id:'/admin/offer-settlement',
    action:status==='verified'&&q.order_id?'View confirmed order':'Open settlement'}
  })
- const directItems:Tracking[]=direct.map(o=>{
+ // Verified shared quotes already correspond to launch orders. Do not count or
+ // display those orders as a separate Direct purchase in the unified tracker.
+ const sharedOrderIds=new Set(quotes.map(q=>q.order_id).filter((id):id is string=>Boolean(id)))
+ const directItems:Tracking[]=direct.filter(o=>!sharedOrderIds.has(o.id)).map(o=>{
   const stage:Tracking['stage']=o.status==='cancelled'?'cancelled':
     o.status==='requested'||o.status==='confirmed'&&o.payment_status==='submitted'?'staff':
     o.payment_status==='verified'?'complete':'customer'
