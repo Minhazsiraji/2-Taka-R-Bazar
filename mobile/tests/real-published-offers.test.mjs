@@ -76,12 +76,18 @@ test('real published buyer goals drive progress, never pending or cart drafts',(
  assert.equal(data.pools[0].participants,2);
  assert.equal(data.pools[0].nextTier,10);
 });
-test('live join actions hand off to authenticated website rather than local cart',()=>{
+test('real Deals and Pools require native verified identity before server-authoritative commitment',()=>{
  const app=readFileSync(new URL('../App.tsx',import.meta.url),'utf8');
- assert.match(app,/function openPublishedOffer|const openPublishedOffer/);
- assert.ok(app.includes('preview-live/product/'));
- assert.match(app,/Join via Website/);
- assert.ok(app.includes('demo?draftGroup(offer):openPublishedOffer(offer)'));
- assert.ok(app.includes('demo?draftPool(pool,quantities):openPublishedPool(pool)'));
- assert.ok(!app.includes('setOffers(pendingBuyers'));
+ const api=readFileSync(new URL('../src/customer/api.ts',import.meta.url),'utf8');
+ assert.match(app,/const openPublishedOffer/);
+ assert.match(app,/const openPublishedPool/);
+ assert.match(app,/if\(!auth\.user\)\{setScreen\('signIn'\);return\}/);
+ assert.match(app,/joinCustomerDeal\(id,o\.productId,null\)/);
+ assert.match(app,/joinCustomerPool\(p\.id,lines,null\)/);
+ assert.match(app,/demo\?draftGroup\(offer\):openPublishedOffer\(offer\)/);
+ assert.match(app,/demo\?draftPool\(pool,quantities\):openPublishedPool\(pool\)/);
+ assert.match(api,/join_simple_sale_group_deal_quantified/);
+ assert.match(api,/join_simple_sale_pool_quantified/);
+ assert.match(api,/await client\.auth\.getUser\(\)/);
+ assert.doesNotMatch(api,/service_role|private\.has_role|admin_/);
 });
