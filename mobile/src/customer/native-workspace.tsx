@@ -19,9 +19,9 @@ const makeUuid=()=>{
  const hex=Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');
  return [hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');
 };
-export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,products,onSignIn,onCart,onClearCart,onNavigate}:{
+export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,products,onSignIn,onStartOnboarding,onCart,onClearCart,onNavigate}:{
  pane:Pane;userId:string|null;lang:Language;theme:AppTheme;cart:Record<string,number>;offers:Offer[];products:Product[];
- onSignIn:()=>void;onCart:()=>void;onClearCart:()=>void;onNavigate:(pane:Pane)=>void
+ onSignIn:()=>void;onStartOnboarding:()=>void;onCart:()=>void;onClearCart:()=>void;onNavigate:(pane:Pane)=>void
 }){
  const [snapshot,setSnapshot]=useState<CustomerSnapshot|null>(null);
  const [loading,setLoading]=useState(false),[saving,setSaving]=useState(false);
@@ -109,7 +109,8 @@ export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,prod
    {btn(t('Orders','অর্ডার')+' · '+ownOrders.length,()=>onNavigate('orders'))}
    {btn(t('Verified savings','যাচাইকৃত সাশ্রয়'),()=>onNavigate('savings'))}
    {btn(t('Notifications','নোটিফিকেশন')+' · '+snapshot.notifications.filter(n=>!n.read_at).length,()=>onNavigate('notifications'))}
-   {btn(t('Community settings','কমিউনিটি সেটিংস'),()=>onNavigate('community'))}
+   {!snapshot.communityId&&btn(t('Complete household & community setup','পরিবার ও কমিউনিটি সেটআপ সম্পন্ন করুন'),onStartOnboarding)}
+   {btn(t('Community settings','কমিউনিটি সেটিংস'),()=>snapshot.communityId?onNavigate('community'):onStartOnboarding())}
    {btn(t('Privacy policy','গোপনীয়তা নীতি'),()=>void Linking.openURL('https://2takarbazar.com/privacy'))}
    {btn(t('Request permanent account deletion','অ্যাকাউন্ট স্থায়ীভাবে মুছতে অনুরোধ'),()=>
     Alert.alert(t('Delete your entire account?','আপনার অ্যাকাউন্ট মুছে ফেলবেন?'),
