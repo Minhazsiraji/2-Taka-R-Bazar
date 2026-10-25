@@ -1,13 +1,10 @@
-// Production package IDs are isolated from the existing OTA-enabled internal preview.
-// Do not rename the existing Expo project or preview package.
+// Store identifiers are static in app.json so EAS can validate without interactive credentials.
+// Preserve the old Android preview identity only when deliberately opting into that legacy profile.
 module.exports=({config})=>{
- if(!['production','2tbr-customer-qa'].includes(process.env.EAS_BUILD_PROFILE))return config;
- return {
-  ...config,
-  version:'1.0.0',
-  icon:'./assets/store-icon.png',
-  android:{...config.android,package:'com.twotbr.marketplace',versionCode:1},
-  ios:{...config.ios,bundleIdentifier:'com.twotbr.marketplace',buildNumber:'1'},
-  extra:{...config.extra,releaseStage:process.env.EAS_BUILD_PROFILE==='production'?'store-candidate':'customer-qa'}
+ if(process.env.EAS_BUILD_PROFILE==='2tbr-internal-preview')return {
+  ...config,version:'0.1.1',
+  android:{...config.android,package:'com.twotbr.internalpreview'},
+  extra:{...config.extra,releaseStage:'development'}
  };
+ return config;
 };
