@@ -14,7 +14,7 @@ const daysRemaining=iso=>{
 const endLabel=iso=>iso&&!Number.isNaN(Date.parse(iso))?
  new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}):undefined;
 
-export function projectPublicSimpleOffers(payload,catalog){
+export function projectPublicSimpleOffers(payload,catalog,selectedCommunityId=null){
  if(!Array.isArray(payload))throw new Error('Invalid public simple offers payload');
  const products=[...catalog.products], offers=[...catalog.offers], pools=[];
  const known=new Map(products.map(p=>[p.id,p]));
@@ -42,7 +42,15 @@ export function projectPublicSimpleOffers(payload,catalog){
    realItems.push({id,price,stock:boundedInt(item.available_quantity)});
   }
   if(realItems.length!==row.items.length)continue; // never show incomplete published offer
-  const buyerCount=boundedInt(row.buyer_count);
+  const progress=Array.isArray(row.community_progress)
+   ?row.community_progress.find(p=>p.community_id===(selectedCommunityId||row.community_id))??row.community_progress[0]
+   :null;
+  // The public aggregate buyer_count can intentionally be zero across all areas.
+  // The actual per-community open cycle is authoritative when published.
+  const buyerCount=boundedInt(progress?.buyer_count??row.buyer_count);
+  const cycleId=UUID.test(String(progress?.cycle_id??''))?progress.cycle_id:undefined;
+  const communityId=UUID.test(String(progress?.community_id??''))?progress.community_id:
+   UUID.test(String(row.community_id??''))?row.community_id:undefined;
   const remaining=daysRemaining(row.closes_at);
   if(row.kind==='GROUP_DEAL'){
    if(realItems.length!==1)continue; // native Group Deal detail is single-product
@@ -50,7 +58,7 @@ export function projectPublicSimpleOffers(payload,catalog){
    const id='public-deal:'+row.id;
    if(offerIds.has(id))continue;
    offers.push({id,productId:item.id,mode:'GROUP_DEAL',price:item.price,
-    phase:'waiting',joined:buyerCount,groupSize:boundedInt(row.buyer_target)||undefined,pendingBuyers:boundedInt(row.pending_buyers),community,daysLeft:remaining});
+    phase:'waiting',joined:buyerCount,communityId,cycleId,groupSize:boundedInt(row.buyer_target)||undefined,pendingBuyers:boundedInt(row.pending_buyers),community,daysLeft:remaining});
    offerIds.add(id);
   }else{
    if(poolIds.has(row.id))continue;
@@ -58,7 +66,7 @@ export function projectPublicSimpleOffers(payload,catalog){
    const title=safeString(row.title)||'Community Pool';
    const frequency=/month|মাস/i.test(title)?'monthly':/week|সাপ্তাহ/i.test(title)?'weekly':'special';
    const nextTier=boundedInt(row.buyer_target); // admin-configured participation goal; never fabricate tier prices
-   pools.push({id:row.id,name:title,nameBn:title,frequency,
+   pools.push({id:row.id,name:title,nameBn:title,frequency,communityId,cycleId,
     productIds:realItems.map(x=>x.id),participants:buyerCount,nextTier,
     commitDaysLeft:remaining,commitEndsLabel:endLabel(row.closes_at)});
    for(const item of realItems){
