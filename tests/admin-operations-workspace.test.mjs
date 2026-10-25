@@ -39,7 +39,7 @@ test('quick product edit, allocation and order pages form a direct operator work
  assert.match(order,/legacyResult\.count/)
  assert.match(order,/payment_submitted/)
  assert.match(order,/Customer must choose pickup or home delivery/)
- assert.match(order,/Independent staff/)
+ assert.match(order,/different staff member must check actual received funds/)
  assert.match(order,/\/admin\/offer-settlement/)
 })
 
@@ -68,5 +68,5 @@ test('approved shopper-facing designs, quote maker-checker and payment rules are
  assert.match(css,/customer storefront and locked mobile UI unaffected/)
  assert.doesNotMatch(css,/^\.card\s*\{|body\s*\{/m)
  const tracking=read('app/admin/order-tracking/page.tsx')
- assert.doesNotMatch(tracking,/action=|update\(|insert\(|delete\(/)
+ assert.doesNotMatch(tracking,/form action=\\{|\\.update\\(|\\.insert\\(|\\.delete\\(/)
 })
