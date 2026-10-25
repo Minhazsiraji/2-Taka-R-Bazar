@@ -1,0 +1,36 @@
+/* Only the owner-approved homepage hero background swaps from a still to
+   the same silent eight-second cart loop bundled in the Expo app.
+   All hero dimensions, ink, controls, buttons and other page styles stay locked. */
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-hero .mhome-hero-video{
+ position:absolute!important;
+ inset:0!important;
+ z-index:0;
+ display:block;
+ width:100%!important;
+ height:100%!important;
+ max-width:none!important;
+ max-height:none!important;
+ object-fit:cover;
+ pointer-events:none;
+ border:0;
+ border-radius:inherit;
+}
+body.site-glass-root main.public-marketplace-flat .mhome .mhome-hero .mhome-hero-video-tint{
+ position:absolute;
+ inset:0;
+ z-index:0;
+ pointer-events:none;
+ border-radius:inherit;
+ background:linear-gradient(90deg,rgba(0,62,68,.28),transparent 68%);
+}
+@media(min-width:768px){
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-hero .mhome-hero-video{
+  object-fit:fill;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-hero .mhome-hero-video,
+ body.site-glass-root main.public-marketplace-flat .mhome .mhome-hero .mhome-hero-video-tint{
+  display:none!important;
+ }
+}
