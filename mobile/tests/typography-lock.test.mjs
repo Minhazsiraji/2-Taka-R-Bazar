@@ -101,8 +101,8 @@ test('Bell opens real local demo notification inbox without an Alert placeholder
  const notices=app.slice(app.indexOf('function Notifications(){'),app.indexOf('function Menu(){'));
  assert.ok(app.includes("case 'notifications':return <Notifications/>"));
  assert.ok(app.includes("headerAction('notifications-outline',openNotifications,unreadNotices)"));
- assert.ok(app.includes("const unreadNotices=notices.filter(item=>!item.read).length"));
- assert.ok(app.includes("setNotices(old=>old.map(item=>item.read?item:{...item,read:true}))"));
+ assert.ok(app.includes("const unreadNotices=demo?notices.filter(item=>!item.read).length:nativeUnread"));
+ assert.ok(app.includes("if(demo)setNotices(old=>old.map(item=>item.read?item:{...item,read:true}))"));
  assert.ok(app.includes("pushDemoNotice("));
  assert.ok(app.includes("setNotices([])"));
  assert.ok(app.includes("No order or payment was created."));
