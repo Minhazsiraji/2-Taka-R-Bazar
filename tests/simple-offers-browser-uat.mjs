@@ -242,5 +242,38 @@ try{
  assert.equal((await admin.from('simple_sale_commitment_items').select('customer_id',{count:'exact',head:true}).eq('offer_id',offers.GROUP_DEAL)).count,6)
  console.log('PASS six fictional users: Area A reaches 5/5 and closes, then reopens with a distinct empty cycle. Area B retains 1/3 without unlocking.')
  await page.screenshot({path:'/tmp/2tbr-shared-offer-order.png',fullPage:true})
+ // Live admin workspace on the disposable browser database, not real users.
+ await page.goto(base+'/admin',{waitUntil:'networkidle'})
+ await page.getByRole('heading',{name:'Operations dashboard'}).waitFor()
+ const focusedMenu=page.getByRole('navigation',{name:'Admin operations'})
+ for(const target of ['Products','Inventory','Deals & Pools','Settlement','Order tracking']){
+  assert.equal(await focusedMenu.getByRole('link',{name:new RegExp('^'+target)}).count(),1,'Focused admin nav '+target)
+ }
+ await page.goto(base+'/admin/order-tracking',{waitUntil:'networkidle'})
+ await page.getByRole('heading',{name:'One place to track every order'}).waitFor()
+ assert.match(await page.locator('main').innerText(),/Customer must choose pickup or home delivery|Waiting on customer/)
+ const syntheticSupplier=randomUUID()
+ assert.ifError((await admin.from('suppliers').insert({id:syntheticSupplier,business_name:'Synthetic admin stock '+suffix,active:true,reliability_status:'unrated'})).error)
+ assert.ifError((await admin.from('supplier_products').insert({supplier_id:syntheticSupplier,product_id:pid,active:true,relationship_type:'vendor'})).error)
+ assert.ifError((await admin.from('vendor_offer_drafts').insert({product_id:pid,supplier_id:syntheticSupplier,vendor_unit_cost:50,proposed_sale_price:100,updated_by:uid,source_audit_id:1})).error)
+ assert.ifError((await admin.from('pilot_vendor_product_listings').insert({product_id:pid,supplier_id:syntheticSupplier,approved_unit_price:100,source_audit_id:1,published:true,approved_by:uid,launch_enabled:true,available_quantity:25,old_price:130})).error)
+ await page.goto(base+'/admin/inventory',{waitUntil:'networkidle'})
+ await page.getByRole('heading',{name:'Pilot inventory & availability'}).waitFor()
+ const stockCard=page.locator('article.card').filter({hasText:'SHARED-'+suffix})
+ await stockCard.getByText('Sellable allocation:').waitFor()
+ await stockCard.locator('[name="available_quantity"]').fill('32')
+ await stockCard.locator('[name="reason"]').fill('Synthetic supplier confirms 32 available units')
+ await stockCard.getByRole('button',{name:'Save allocation'}).click()
+ await page.getByText('Pilot availability updated and audit reason recorded',{exact:false}).waitFor({timeout:20000})
+ const stocked=await admin.from('pilot_vendor_product_listings').select('available_quantity,approved_unit_price').eq('product_id',pid).single()
+ assert.ifError(stocked.error)
+ assert.equal(stocked.data.available_quantity,32)
+ assert.equal(Number(stocked.data.approved_unit_price),100,'Availability edit must not change price')
+ for(const width of [393,820,1440]){
+  await page.setViewportSize({width,height:900})
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Admin inventory overflow at '+width)
+  await page.screenshot({path:'/tmp/2tbr-admin-inventory-'+width+'.png',fullPage:true})
+ }
+ console.log('PASS admin unified navigation → live Deal order tracker → audited inventory edit → mobile/tablet/desktop design')
  console.log('PASS upload once → multi-area offers → Deal and Pool commitments → no premature orders or stock deduction → cross-community six-person test')
 }finally{await browser.close()}
