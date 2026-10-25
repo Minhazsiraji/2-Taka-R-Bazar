@@ -10,7 +10,7 @@ test('every admin screen continues to use shared locked glass shell, with focuse
  const nav=read('components/admin-navigation.tsx')
  assert.match(shell,/admin-workspace-shell/)
  assert.match(shell,/<AdminNavigation\/>/)
- assert.match(shell,/<FinanceGlassParity\/>/)
+ assert.ok(shell.includes('<FinanceGlassParity />'))
  assert.match(css,/\.admin-workspace-shell/)
  assert.match(css,/var\(--gloss-rim/)
  assert.match(read('app/admin/layout.tsx'),/import '\.\.\/admin-workspace\.css'/)
