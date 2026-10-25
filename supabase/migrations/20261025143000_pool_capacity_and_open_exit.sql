@@ -24,7 +24,8 @@ begin
  rewritten:=replace(rewritten,'Choose 1–6 products','Choose 1–20 Pool products');
  execute rewritten;
  -- The existing GROUP_DEAL=one-product constraint remains in that function.
-end $pool_capacity$;
+end;
+$pool_capacity$;
 
 -- Atomic full-basket withdrawal while a Pool round is still OPEN.
 -- This does not modify a closed round's immutable quote or prior order.
@@ -61,7 +62,8 @@ begin
   '/account/commitments','normal','pool_leave:'||pool_cycle::text||':'||u::text)
  on conflict(user_id,dedupe_key) do update set read_at=null,created_at=now();
  return true;
-end $pool_leave$;
+end;
+$pool_leave$;
 revoke all on function public.leave_simple_sale_pool(uuid)
  from public,anon,authenticated,service_role;
 grant execute on function public.leave_simple_sale_pool(uuid) to authenticated;
