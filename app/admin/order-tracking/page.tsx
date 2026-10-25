@@ -5,16 +5,16 @@ import {requireAdmin} from '@/lib/auth'
 export const dynamic='force-dynamic'
 type SharedQuote={
  id:string;cycle_id:string;customer_id:string;status:string;product_total:number;delivery_fee:number|null;
- fulfillment:string|null;contact_name:string|null;contact_phone:string|null;order_id:string|null;
+ fulfillment:string|null;contact_name:string|null;contact_phone:string|null;payment_reference:string|null;order_id:string|null;
  created_at:string;simple_sale_cycle_quote_items:{product_id:string;quantity:number;unit_price:number}[]
 }
 type DirectOrder={
- id:string;status:string;payment_status:string;contact_name:string;contact_phone:string;
+ id:string;status:string;payment_status:string;contact_name:string;contact_phone:string;payment_reference:string|null;
  address:string;fulfillment:string;subtotal:number;delivery_fee:number;total_amount:number;
  created_at:string;launch_order_items:{product_name:string;quantity:number;unit_price:number}[]
 }
 type Tracking={
- id:string;created_at:string;lane:'deal'|'pool'|'direct';title:string;customer:string;
+ id:string;created_at:string;lane:'deal'|'pool'|'direct';title:string;customer:string;contactPhone:string|null;transactionRef:string|null;
  status:string;stage:'staff'|'customer'|'complete'|'cancelled';
  guidance:string;productTotal:number;deliveryFee:number|null;total:number|null;
  lines:string[];href:string;action:string;cycle?:string
@@ -26,8 +26,8 @@ export default async function OrderTracking({searchParams}:{searchParams:Promise
  const sp=await searchParams
  const {supabase:db}=await requireAdmin()
  const [quotesResult,directResult,legacyResult]=await Promise.all([
-  db.from('simple_sale_cycle_quotes').select('id,cycle_id,customer_id,status,product_total,delivery_fee,fulfillment,contact_name,contact_phone,order_id,created_at,simple_sale_cycle_quote_items(product_id,quantity,unit_price)').order('created_at',{ascending:false}).limit(150),
-  db.from('launch_orders').select('id,status,payment_status,contact_name,contact_phone,address,fulfillment,subtotal,delivery_fee,total_amount,created_at,launch_order_items(product_name,quantity,unit_price)').order('created_at',{ascending:false}).limit(150),
+  db.from('simple_sale_cycle_quotes').select('id,cycle_id,customer_id,status,product_total,delivery_fee,fulfillment,contact_name,contact_phone,payment_reference,order_id,created_at,simple_sale_cycle_quote_items(product_id,quantity,unit_price)').order('created_at',{ascending:false}).limit(150),
+  db.from('launch_orders').select('id,status,payment_status,contact_name,contact_phone,payment_reference,address,fulfillment,subtotal,delivery_fee,total_amount,created_at,launch_order_items(product_name,quantity,unit_price)').order('created_at',{ascending:false}).limit(150),
   db.from('orders').select('id',{head:true,count:'exact'}),
  ])
  const quotes=(quotesResult.data??[]) as SharedQuote[]
@@ -58,7 +58,7 @@ export default async function OrderTracking({searchParams}:{searchParams:Promise
   const productTotal=Number(q.product_total),fee=q.delivery_fee===null?null:Number(q.delivery_fee)
   return {id:q.id,created_at:q.created_at,lane:offer?.kind==='COMMUNITY_POOL'?'pool':'deal',
    title:offer?.title??'Community Deal / Pool',
-   customer:q.contact_name??('Customer '+q.customer_id.slice(0,8)),
+   customer:q.contact_name??('Customer '+q.customer_id.slice(0,8)),contactPhone:q.contact_phone,transactionRef:q.payment_reference,
    status,stage,guidance,productTotal,deliveryFee:fee,total:fee===null?null:productTotal+fee,
    cycle:'Round '+(c?.cycle_number??'?')+' · '+(communityById.get(c?.community_id??'')??'Community'),
    lines:q.simple_sale_cycle_quote_items.map(i=>(productsById.get(i.product_id)??'Product')+' × '+i.quantity+' @ '+money(Number(i.unit_price))),
@@ -71,7 +71,7 @@ export default async function OrderTracking({searchParams}:{searchParams:Promise
     o.payment_status==='verified'?'complete':'customer'
   return {
    id:o.id,created_at:o.created_at,lane:'direct',title:'Direct order',
-   customer:o.contact_name??'Customer',status:o.status+' · '+o.payment_status,
+   customer:o.contact_name??'Customer',contactPhone:o.contact_phone,transactionRef:o.payment_reference,status:o.status+' · '+o.payment_status,
    stage,guidance:stage==='staff'?(o.status==='requested'?'Admin must review order and delivery fee.':'Verify actual received transfer before marking paid.')
     :stage==='customer'?'Waiting for customer action or payment.':stage==='complete'?'Payment verified.':'Cancelled',
    productTotal:Number(o.subtotal),deliveryFee:Number(o.delivery_fee),total:Number(o.total_amount),
@@ -84,7 +84,7 @@ export default async function OrderTracking({searchParams}:{searchParams:Promise
  const lane=['deal','pool','direct'].includes(sp.lane??'')?sp.lane:'all'
  const stage=['staff','customer','complete','cancelled'].includes(sp.stage??'')?sp.stage:'all'
  const rows=all.filter(r=>(lane==='all'||r.lane===lane)&&(stage==='all'||r.stage===stage)&&
-  (!needle||[r.id,r.customer,r.title,r.status,r.cycle??'',...r.lines].some(x=>x.toLocaleLowerCase().includes(needle))))
+  (!needle||[r.id,r.customer,r.contactPhone??'',r.transactionRef??'',r.title,r.status,r.cycle??'',...r.lines].some(x=>x.toLocaleLowerCase().includes(needle))))
  const fail=quotesResult.error||directResult.error||cycles.error||offers.error||products.error||communities.error
  const n=(state:Tracking['stage'])=>all.filter(x=>x.stage===state).length
  return <AdminShell><div className="grid gap-4">
@@ -126,7 +126,7 @@ export default async function OrderTracking({searchParams}:{searchParams:Promise
      <div className="min-w-0 flex-1">
       <p className="card-title">{r.lane==='deal'?'Group Deal':r.lane==='pool'?'Community Pool':'Direct order'} · {stamp(r.created_at)}</p>
       <h2 className="text-lg font-bold">{r.title} · #{r.id.slice(0,8).toUpperCase()}</h2>
-      <p className="muted">{r.customer}{r.cycle?' · '+r.cycle:''}</p>
+      <p className="muted">{r.customer}{r.contactPhone?' · '+r.contactPhone:''}{r.cycle?' · '+r.cycle:''}</p>
      </div>
      <span className="chip">{r.status.replaceAll('_',' ')}</span>
     </div>
