@@ -17,6 +17,8 @@ test('every admin screen continues to use shared locked glass shell, with focuse
  for(const path of ['/admin/products','/admin/inventory','/admin/offers','/admin/offer-settlement','/admin/order-tracking'])
    assert.ok(nav.includes(path),path)
  assert.match(nav,/Advanced \/ legacy tools/)
+ for(const path of ['/admin/finance-attribution','/admin/finance-customers','/admin/payment-recipients'])
+   assert.ok(nav.includes(path),'Historical admin route missing from grouped navigation: '+path)
  assert.match(nav,/aria-current=\{active\(item\.href\)\?'page':undefined\}/)
 })
 
