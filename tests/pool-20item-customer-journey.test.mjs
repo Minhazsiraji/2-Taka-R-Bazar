@@ -1,0 +1,50 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const read=p=>readFileSync(p,'utf8')
+
+test('Pool supports up to 20 selected products across admin, server, database, UI and local cart',()=>{
+ const admin=read('components/admin-simple-offer-form.tsx')
+ const joins=read('app/actions/simple-offer-joins.ts')
+ const pool=read('components/home-preview-pool-details.tsx')
+ const cart=read('lib/launch-cart.ts')
+ const sql=read('supabase/migrations/20261025143000_pool_capacity_and_open_exit.sql')
+ assert.match(admin,/kind==='COMMUNITY_POOL'\?20:6/)
+ assert.match(joins,/productIds.length>20/)
+ assert.match(pool,/Your cart can hold 20 different products/)
+ assert.match(pool,/addLaunchItems\(chosen,\{replaceExisting:true\}\)/)
+ assert.match(cart,/\.slice\(0,20\)/)
+ assert.match(cart,/\.size>20/)
+ assert.match(cart,/options\.replaceExisting/)
+ assert.match(sql,/jsonb_array_length\(p_items\) not between 1 and case when/)
+ assert.match(sql,/jsonb_array_length\(p_lines\) not between 1 and 20/)
+ assert.match(sql,/Group Deal allows one product|GROUP_DEAL|existing GROUP_DEAL/)
+})
+
+test('Pool membership may be withdrawn before closure, preserving closed quotes and other members',()=>{
+ const actions=read('app/actions/simple-offer-joins.ts')
+ const account=read('app/account/commitments/page.tsx')
+ const sql=read('supabase/migrations/20261025143000_pool_capacity_and_open_exit.sql')
+ assert.match(actions,/export async function leavePoolCommitment/)
+ assert.match(actions,/\.rpc\('leave_simple_sale_pool'/)
+ assert.match(account,/action=\{leavePoolCommitment\}/)
+ assert.match(account,/Leave open Pool without order/)
+ assert.match(sql,/and cy\.status='open'/)
+ assert.match(sql,/delete from public\.simple_sale_cycle_members/)
+ assert.match(sql,/delete from public\.simple_sale_cycle_items/)
+ assert.match(sql,/update public\.simple_sale_offer_joins set status='cancelled'/)
+ assert.match(sql,/grant execute on function public\.leave_simple_sale_pool\(uuid\) to authenticated/)
+ assert.doesNotMatch(sql,/delete from public\.simple_sale_cycle_quotes|delete from public\.launch_orders/)
+})
+
+test('Pool end-to-end 20-SKU SQL fixture remains rollback only and checks maker-checker',()=>{
+ const s=read('supabase/tests/pool-multi-item-full-lifecycle.sql')
+ assert.match(s,/begin;/)
+ assert.match(s,/rollback;/)
+ assert.match(s,/for i in 1\.\.20 loop/)
+ assert.match(s,/expected_cycle|cycle_next/)
+ assert.match(s,/leave_simple_sale_pool/)
+ assert.match(s,/Pool stock was not deducted exactly once/)
+ assert.match(s,/admin_verify_simple_sale_payment\(first_quote,1700,true\)/)
+ assert.match(s,/No-tier Pool customer quote wrong/)
+})
