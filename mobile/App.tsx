@@ -133,11 +133,25 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const openPublishedOffer=(o:Offer)=>{
   const id=o.id.startsWith('public-deal:')?o.id.slice('public-deal:'.length):'';
   if(!id||!/^[0-9a-f-]{36}$/i.test(id))return;
-  void Linking.openURL(SITE+'/preview-live/product/'+o.productId+'?kind=deal&offer='+id);
+  if(!auth.user){setScreen('signIn');return}
+  Alert.alert('Join this Group Deal?','This records a real commitment. Final price and delivery come after closure; no payment or order yet.',
+   [{text:'Back',style:'cancel'},{text:'Join',onPress:()=>{void (async()=>{try{
+    await joinCustomerDeal(id,o.productId,null);
+    Alert.alert('Commitment saved','Wait for the final tier and delivery quote; no payment or order has been created.');
+    setScreen('commitments');
+   }catch(err){Alert.alert('Unable to join',err instanceof Error?err.message:'Please retry.')}})()}}]);
  };
  const openPublishedPool=(p:Pool)=>{
   if(!/^[0-9a-f-]{36}$/i.test(p.id))return;
-  void Linking.openURL(SITE+'/preview-live/pool/'+p.id);
+  if(!auth.user){setScreen('signIn');return}
+  const lines=Object.entries(poolQuantities[p.id]??{}).filter(([id,q])=>p.productIds.includes(id)&&q>0).map(([product_id,quantity])=>({product_id,quantity}));
+  if(!lines.length){Alert.alert('Select Pool items','Choose at least one product and quantity.');return}
+  Alert.alert('Join this Community Pool?','A real commitment will be recorded. Accept the final price only after the round closes.',
+   [{text:'Back',style:'cancel'},{text:'Join',onPress:()=>{void (async()=>{try{
+    await joinCustomerPool(p.id,lines,null);
+    Alert.alert('Pool commitment saved','No order or payment has been created.');
+    setScreen('commitments');
+   }catch(err){Alert.alert('Unable to join Pool',err instanceof Error?err.message:'Please retry.')}})()}}]);
  };
  const draftGroup=(o:Offer)=>{if(o.mode!=='GROUP_DEAL')return;setGroupDrafts(old=>({...old,[o.id]:(old[o.id]||0)+1}));setScreen('cart');};
  const draftPool=(pool:Pool,items:Record<string,number>)=>{const safe=Object.fromEntries(Object.entries(items).filter(([id,q])=>pool.productIds.includes(id)&&Number.isInteger(q)&&q>0&&q<=20));if(!Object.keys(safe).length)return;setPoolDrafts(old=>({...old,[pool.id]:safe}));setScreen('cart');};
