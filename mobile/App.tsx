@@ -70,8 +70,15 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   if(!auth.ready)return;
   const owner=auth.user?.id??'guest';
   if(cartOwner.current!==undefined&&cartOwner.current!==owner){
-   setCart({});setGroupDrafts({});setPoolDrafts({});setPoolQuantities({});setNotices([]);
-   setSelectedOffer(null);setSelectedPool(null);setScreen('account');
+   const guestToCustomer=cartOwner.current==='guest'&&!!auth.user&&!requestedDemo&&Object.values(cart).some(q=>q>0);
+   setGroupDrafts({});setPoolDrafts({});setPoolQuantities({});setNotices([]);
+   setSelectedOffer(null);setSelectedPool(null);
+   if(guestToCustomer){
+    Alert.alert('Continue with your selected products?',
+     'Your guest cart contains direct products only. You can review them after sign-in or start with an empty cart. No order is placed automatically.',
+     [{text:'Start empty',style:'cancel',onPress:()=>{setCart({});setScreen('account')}},
+      {text:'Review cart',onPress:()=>setScreen('cart')}]);
+   }else{setCart({});setScreen('account')}
   }
   cartOwner.current=owner;
  },[auth.ready,auth.user?.id]);
