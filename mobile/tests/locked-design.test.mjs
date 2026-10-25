@@ -30,9 +30,11 @@ test('hero uses original four website message pairs and permanent slogans',()=>{
  assert.match(app,/একসাথে কিনি, কম দামে পাই!/);
 });
 test('savings and cart cannot silently behave like paid verified orders',()=>{
- assert.match(app,/demo\?money\(demoSavings.thisMonth\):'—'/);
+ assert.ok(app.includes("demo?money(demoSavings.thisMonth):homeVerifiedSavings?.this_month"));
+ assert.ok(app.includes("client.rpc('get_my_savings_summary')"));
+ assert.ok(app.includes("homeVerifiedSavings?.community!=null"));
  assert.match(app,/No real order or savings transaction has been created/);
- assert.match(app,/cartLineCount\(cart\)/);
+ assert.ok(app.includes('cartLineCount(cart)'));
 });
 
 test('Group Deal card visibly shows a people icon and deadline clock',()=>{
@@ -106,7 +108,7 @@ test('Pool product selections, total and retail navigation are isolated from app
  for(const token of ['changePoolQty','poolQuantities','Potential savings','Current estimated Pool total','Total at next tier','Product Details','Review Join Pool · Demo']){
   assert.ok(app.includes(token),token);
  }
- assert.ok(app.includes("disabled={demo&&!units} onPress={()=>demo?draftPool(pool,quantities):openPublishedPool(pool)}"));
+ assert.ok(app.includes("disabled={!units} onPress={()=>demo?draftPool(pool,quantities):openPublishedPool(pool)}"));
  assert.ok(app.includes("offer.mode==='POOL'&&selectedPool?'pool'"));
  const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
  assert.ok(home.includes('{Hero()}'));

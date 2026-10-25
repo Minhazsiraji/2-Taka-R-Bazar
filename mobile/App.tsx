@@ -16,9 +16,13 @@ import {loadPublicCatalog} from './src/live';
 import {productInfoSections,productMissing} from './src/product-content';
 import {useNativeAuth} from './src/auth/use-native-auth';
 import {NativeSignIn} from './src/auth/native-sign-in';
+import {NativeCustomerRegistration} from './src/auth/native-register';
+import {NativeCustomerWorkspace} from './src/customer/native-workspace';
+import {joinCustomerDeal,joinCustomerPool} from './src/customer/api';
+import {nativeClient} from './src/auth/client';
 
 type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
-type Screen=Tab|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'notifications'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
+type Screen=Tab|'signUp'|'onboarding'|'community'|'commitments'|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'notifications'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
 type PreviewNotice={id:number;enTitle:string;bnTitle:string;enBody:string;bnBody:string;read:boolean};
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
@@ -50,6 +54,8 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const [orderFilter,setOrderFilter]=useState<'all'|'active'|'completed'|'cancelled'>('all');
  const [selectedOrderId,setSelectedOrderId]=useState<string|null>(null);
  const [notices,setNotices]=useState<PreviewNotice[]>([]);
+ const [nativeUnread,setNativeUnread]=useState(0);
+ const [homeVerifiedSavings,setHomeVerifiedSavings]=useState<{this_month:number|null;previous_month:number|null;lifetime:number|null;community:number|null}|null>(null);
  const noticeSerial=useRef(0);
  const auth=useNativeAuth();
  const cartOwner=useRef<string|undefined>(undefined);
@@ -65,8 +71,15 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   if(!auth.ready)return;
   const owner=auth.user?.id??'guest';
   if(cartOwner.current!==undefined&&cartOwner.current!==owner){
-   setCart({});setGroupDrafts({});setPoolDrafts({});setPoolQuantities({});setNotices([]);
-   setSelectedOffer(null);setSelectedPool(null);setScreen('account');
+   const guestToCustomer=cartOwner.current==='guest'&&!!auth.user&&!requestedDemo&&Object.values(cart).some(q=>q>0);
+   setGroupDrafts({});setPoolDrafts({});setPoolQuantities({});setNotices([]);
+   setSelectedOffer(null);setSelectedPool(null);
+   if(guestToCustomer){
+    Alert.alert('Continue with your selected products?',
+     'Your guest cart contains direct products only. You can review them after sign-in or start with an empty cart. No order is placed automatically.',
+     [{text:'Start empty',style:'cancel',onPress:()=>{setCart({});setScreen('account')}},
+      {text:'Review cart',onPress:()=>setScreen('cart')}]);
+   }else{setCart({});setScreen('account')}
   }
   cartOwner.current=owner;
  },[auth.ready,auth.user?.id]);
@@ -79,10 +92,10 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     if(!alive)return;
     setProducts(result.products);setOffers(result.offers);setPools(result.pools);setDemo(false);
   }).catch(()=>{
-    if(alive){setProducts(demoProducts);setOffers(demoOffers);setPools(demoPools);setDemo(true);Alert.alert('Live catalog unavailable','Showing clearly labeled demo products. No purchases are enabled.')}
+    if(alive){setProducts([]);setOffers([]);setPools([]);setDemo(false);Alert.alert('Catalog unavailable','Connect to the internet; live mode never shows synthetic product prices.')}
   }).finally(()=>{if(alive)setBusy(false)});
   return()=>{alive=false};
- },[]);
+ },[auth.ready,auth.user?.id]);
  useEffect(()=>{
   if(requestedDemo)return;
   const subscription=AppState.addEventListener('change',state=>{
@@ -112,7 +125,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   setNotices(old=>[{id,enTitle,bnTitle,enBody,bnBody,read:false},...old].slice(0,20));
  };
  const add=(offer:Offer)=>{
-  if(!demo){Alert.alert('Checkout not enabled','Live mobile purchasing requires separate qualification. Continue via the current website.');return}
+  if(!demo){updateCart(offer.id,1);setScreen('cart');return}
   updateCart(offer.id,1);
   const product=byId(offer.productId);
   pushDemoNotice(
@@ -123,19 +136,65 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   );
  };
  const openNotifications=()=>{
-  setNotices(old=>old.map(item=>item.read?item:{...item,read:true}));
+  if(demo)setNotices(old=>old.map(item=>item.read?item:{...item,read:true}));
   setScreen('notifications');
  };
- const unreadNotices=notices.filter(item=>!item.read).length;
+ const unreadNotices=demo?notices.filter(item=>!item.read).length:nativeUnread;
+ useEffect(()=>{
+  if(demo||!auth.user?.id){setHomeVerifiedSavings(null);return}
+  const client=nativeClient();if(!client)return;
+  let mounted=true;
+  const fetchSavings=async()=>{
+   const {data,error}=await client.rpc('get_my_savings_summary');
+   if(!mounted)return;
+   const raw=Array.isArray(data)?data[0]:null;
+   if(error||!raw||typeof raw!=='object'){setHomeVerifiedSavings(null);return}
+   const valid=(value:unknown)=>value!==null&&value!==undefined&&Number.isFinite(Number(value))&&Number(value)>=0?Number(value):null;
+   setHomeVerifiedSavings({
+    this_month:valid(raw.month_verified_saving),previous_month:null,
+    lifetime:valid(raw.lifetime_verified_saving),community:null
+   });
+  };
+  void fetchSavings();
+  const listener=AppState.addEventListener('change',state=>{if(state==='active')void fetchSavings()});
+  return()=>{mounted=false;listener.remove()};
+ },[auth.user?.id,demo,screen]);
+ useEffect(()=>{
+  if(demo||!auth.user?.id){setNativeUnread(0);return}
+  const client=nativeClient();if(!client)return;
+  let alive=true;
+  const check=async()=>{
+   const {count,error}=await client.from('notifications').select('id',{count:'exact',head:true})
+    .eq('user_id',auth.user!.id).is('read_at',null);
+   if(alive&&!error)setNativeUnread(count??0);
+  };
+  void check();
+  const subscription=AppState.addEventListener('change',state=>{if(state==='active')void check()});
+  return()=>{alive=false;subscription.remove()};
+ },[demo,auth.user?.id,screen]);
  const demoPreviewInfo=()=>Alert.alert(lang==='bn'?'ডেমো প্রিভিউ':'Demo preview',lang==='bn'?'কোনো আসল অর্ডার বা সাশ্রয়ের লেনদেন তৈরি হয়নি।':'No real order or savings transaction has been created.');
  const openPublishedOffer=(o:Offer)=>{
   const id=o.id.startsWith('public-deal:')?o.id.slice('public-deal:'.length):'';
   if(!id||!/^[0-9a-f-]{36}$/i.test(id))return;
-  void Linking.openURL(SITE+'/preview-live/product/'+o.productId+'?kind=deal&offer='+id);
+  if(!auth.user){setScreen('signIn');return}
+  Alert.alert('Join this Group Deal?','This records a real commitment. Final price and delivery come after closure; no payment or order yet.',
+   [{text:'Back',style:'cancel'},{text:'Join',onPress:()=>{void (async()=>{try{
+    await joinCustomerDeal(id,o.productId,o.communityId??null,o.cycleId);
+    Alert.alert('Commitment saved','Wait for the final tier and delivery quote; no payment or order has been created.');
+    setScreen('commitments');
+   }catch(err){Alert.alert('Unable to join',err instanceof Error?err.message:'Please retry.')}})()}}]);
  };
  const openPublishedPool=(p:Pool)=>{
   if(!/^[0-9a-f-]{36}$/i.test(p.id))return;
-  void Linking.openURL(SITE+'/preview-live/pool/'+p.id);
+  if(!auth.user){setScreen('signIn');return}
+  const lines=Object.entries(poolQuantities[p.id]??{}).filter(([id,q])=>p.productIds.includes(id)&&q>0).map(([product_id,quantity])=>({product_id,quantity}));
+  if(!lines.length){Alert.alert('Select Pool items','Choose at least one product and quantity.');return}
+  Alert.alert('Join this Community Pool?','A real commitment will be recorded. Accept the final price only after the round closes.',
+   [{text:'Back',style:'cancel'},{text:'Join',onPress:()=>{void (async()=>{try{
+    await joinCustomerPool(p.id,lines,p.communityId??null,p.cycleId);
+    Alert.alert('Pool commitment saved','No order or payment has been created.');
+    setScreen('commitments');
+   }catch(err){Alert.alert('Unable to join Pool',err instanceof Error?err.message:'Please retry.')}})()}}]);
  };
  const draftGroup=(o:Offer)=>{if(o.mode!=='GROUP_DEAL')return;setGroupDrafts(old=>({...old,[o.id]:(old[o.id]||0)+1}));setScreen('cart');};
  const draftPool=(pool:Pool,items:Record<string,number>)=>{const safe=Object.fromEntries(Object.entries(items).filter(([id,q])=>pool.productIds.includes(id)&&Number.isInteger(q)&&q>0&&q<=20));if(!Object.keys(safe).length)return;setPoolDrafts(old=>({...old,[pool.id]:safe}));setScreen('cart');};
@@ -163,10 +222,10 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  </Pressable>;
  function Savings({home=false}:{home?:boolean}={}){return panel(<><View style={styles.between}><Text style={{fontSize:16,fontWeight:'900',color:theme.text}}>▥  {t.savings}</Text><Pressable onPress={()=>setScreen('savings')}><Text style={{color:theme.accent,fontSize:12}}>{t.viewReport} ›</Text></Pressable></View>
   <View style={styles.savingsFour}>
-   {savingTile(t.thisMonth,demo?money(demoSavings.thisMonth):'—','calendar-outline')}
-   {savingTile(t.lastMonth,demo?money(demoSavings.lastMonth):'—','time-outline')}
-   {savingTile(t.lifetime,demo?money(demoSavings.lifetime):'—','star-outline')}
-   {savingTile(t.communityTotal,demo?money(demoSavings.community):'—','people-outline')}
+   {savingTile(t.thisMonth,demo?money(demoSavings.thisMonth):homeVerifiedSavings?.this_month!=null?money(homeVerifiedSavings.this_month!):'—','calendar-outline')}
+   {savingTile(t.lastMonth,demo?money(demoSavings.lastMonth):homeVerifiedSavings?.previous_month!=null?money(homeVerifiedSavings.previous_month!):'—','time-outline')}
+   {savingTile(t.lifetime,demo?money(demoSavings.lifetime):homeVerifiedSavings?.lifetime!=null?money(homeVerifiedSavings.lifetime!):'—','star-outline')}
+   {savingTile(t.communityTotal,demo?money(demoSavings.community):homeVerifiedSavings?.community!=null?money(homeVerifiedSavings.community!):'—','people-outline')}
   </View>{!home&&<Text style={{color:theme.muted,fontSize:10,marginTop:7}}>{demo?'Illustrative only · Verified savings after eligible completion.':t.notEarned}</Text>}
  </>)}
  function DealCard({offer}:{offer:Offer}){
@@ -223,7 +282,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  }
  const Hero=()=><MotionHero lang={lang} dark={dark} small={small} frameStyle={styles.hero} onExplore={()=>onTab('deals')}/>;
  function Home(){return <>
-  <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>Savar DOHS⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
+  <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>{group[0]?.community??solo[0]?.community??(demo?'Savar DOHS':'All areas')}⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
   {Hero()}<View style={{marginTop:7}}><Savings home/></View>
   {title('',t.groups,()=>onTab('deals'))}{group.slice(0,2).map(o=><DealCard key={o.id} offer={o}/>)}
   {title('',t.exclusive,()=>onTab('exclusive'))}
@@ -296,7 +355,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
       </View>
       <Text style={{color:theme.muted,fontSize:11}}>{demo?'Qualified buyers and closing rules determine the final price. Below-minimum groups expire without payment.':'Only admin-confirmed orders count as joined. Cart items and pending requests do not advance progress.'}</Text>
     </>)}
-    <View style={{flexDirection:'row',gap:8,marginBottom:10}}>{button('Product Details',()=>setScreen('retail'),false)}{button(demo?'Join Deal · Preview':'Join via Website',()=>demo?draftGroup(offer):openPublishedOffer(offer))}</View>
+    <View style={{flexDirection:'row',gap:8,marginBottom:10}}>{button('Product Details',()=>setScreen('retail'),false)}{button(demo?'Join Deal · Preview':'Join Deal',()=>demo?draftGroup(offer):openPublishedOffer(offer))}</View>
     <Text style={{fontSize:10,color:theme.muted,marginBottom:8}}>{t.notice}</Text>
    </>;
  }
@@ -457,16 +516,16 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     {sumRow(label('Current estimated Pool total','বর্তমান পুলের আনুমানিক মূল্য'),current,true)}
     {sumRow(label('Potential savings','সম্ভাব্য সাশ্রয়'),Math.max(0,retail-current))}
     {pool.nextTier?sumRow(label('Total at next tier','পরবর্তী স্তরে মোট মূল্য'),next):<Text style={{color:theme.muted,fontSize:11}}>Next-tier price not published</Text>}
-    <Text style={{fontSize:10,color:theme.muted,marginTop:9}}>{label('Excludes delivery fees. No real stock, booking or payment occurs in demo.','ডেলিভারি চার্জ বাদে। ডেমোতে আসল স্টক, বুকিং বা পেমেন্ট হয় না।')}</Text>
+    <Text style={{fontSize:10,color:theme.muted,marginTop:9}}>{demo?label('Excludes delivery fees. No real stock, booking or payment occurs in demo.','ডেলিভারি চার্জ বাদে। ডেমোতে আসল স্টক, বুকিং বা পেমেন্ট হয় না।'):label('Estimate excludes delivery. Joining is a commitment, not an order or payment.','ডেলিভারি ছাড়া আনুমানিক মূল্য। যোগদান মানেই অর্ডার বা পেমেন্ট নয়।')}</Text>
    </>)}
    {panel(<>
     <Text style={{fontSize:12,color:theme.text,fontWeight:'900'}}>{label('Before you join','যোগদানের আগে জানুন')}</Text>
     <Text style={{fontSize:11,lineHeight:17,color:theme.muted,marginTop:7}}>{label('Select only what you need. The final price, availability, deadline and delivery rules must be confirmed.','শুধু প্রয়োজনীয় পণ্য নিন। মূল্য, স্টক, সময় ও ডেলিভারি নিশ্চিত করতে হবে।')}</Text>
-    <Text style={{fontSize:11,lineHeight:17,color:theme.muted,marginTop:7}}>{label('No order, Pool commitment or payment is created from this preview.','ডেমোতে কোনো অর্ডার, পুলে যোগদান বা পেমেন্ট হয় না।')}</Text>
+    <Text style={{fontSize:11,lineHeight:17,color:theme.muted,marginTop:7}}>{demo?label('No order, Pool commitment or payment is created from this preview.','ডেমোতে কোনো অর্ডার, পুলে যোগদান বা পেমেন্ট হয় না।'):label('Join confirms your Pool commitment. Final total is accepted after the round closes.','পুলে যোগ দিলে আপনার অংশগ্রহণ নিশ্চিত হবে। বন্ধ হওয়ার পর চূড়ান্ত দাম মেনে নেবেন।')}</Text>
    </>)}
    <View style={{...glass.outer,borderRadius:12,padding:10,marginBottom:8,flexDirection:'row',alignItems:'center',gap:9}}>
     <View><Text style={{fontSize:10,color:theme.muted}}>{n(units)} {label('units selected','টি ইউনিট নির্বাচিত')}</Text><Text style={{fontSize:18,fontWeight:'900',color:theme.accent}}>{cash(current)}</Text></View>
-    <Pressable accessibilityRole="button" disabled={demo&&!units} onPress={()=>demo?draftPool(pool,quantities):openPublishedPool(pool)} style={{...glass.control,flex:1,paddingVertical:11,paddingHorizontal:7,borderRadius:10,backgroundColor:theme.accent,opacity:units||!demo?1:.35,alignItems:'center'}}><Text style={{fontSize:11,color:theme.onPrimary,fontWeight:'900'}}>{demo?label('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো'):label('Join Pool on Website','ওয়েবসাইটে পুলে যোগ দিন')} →</Text></Pressable>
+    <Pressable accessibilityRole="button" disabled={!units} onPress={()=>demo?draftPool(pool,quantities):openPublishedPool(pool)} style={{...glass.control,flex:1,paddingVertical:11,paddingHorizontal:7,borderRadius:10,backgroundColor:theme.accent,opacity:units?1:.35,alignItems:'center'}}><Text style={{fontSize:11,color:theme.onPrimary,fontWeight:'900'}}>{demo?label('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো'):label('Join Pool','পুলে যোগ দিন')} →</Text></Pressable>
    </View>
   </>;
  }
@@ -549,10 +608,10 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     <View style={styles.between}><Text style={{fontSize:11,color:theme.muted}}>{text('Direct subtotal','সরাসরি পণ্যের মূল্য')}</Text><Text style={{fontSize:19,fontWeight:'900',color:theme.accent}}>{demoMoney(subtotal)}</Text></View>
     <Text style={{fontSize:11,color:theme.muted,marginTop:9}}>{text('Delivery fee is determined after address confirmation.','ঠিকানা নিশ্চিতের পর ডেলিভারি চার্জ নির্ধারিত হবে।')}</Text>
     <Text style={{fontSize:10,color:theme.muted,marginTop:7}}>{text('Pending Group Deal and Pool totals are not payable or included in this amount.','গ্রুপ ডিল ও পুলের অপেক্ষমাণ মূল্য এই মোটে অন্তর্ভুক্ত নয়।')}</Text>
-    <Pressable accessibilityRole="button" disabled={!direct.length} onPress={()=>setScreen('checkout')} style={{...glass.control,backgroundColor:theme.accent,opacity:direct.length?1:0.38,borderRadius:10,padding:12,marginTop:12,alignItems:'center'}}><Text style={{color:theme.onPrimary,fontSize:12,fontWeight:'900'}}>{text('Review direct checkout · Demo','সরাসরি চেকআউট · ডেমো')} →</Text></Pressable>
+    <Pressable accessibilityRole="button" disabled={!direct.length} onPress={()=>setScreen('checkout')} style={{...glass.control,backgroundColor:theme.accent,opacity:direct.length?1:0.38,borderRadius:10,padding:12,marginTop:12,alignItems:'center'}}><Text style={{color:theme.onPrimary,fontSize:12,fontWeight:'900'}}>{demo?text('Review direct checkout · Demo','সরাসরি চেকআউট · ডেমো'):text('Review direct checkout','সরাসরি চেকআউট দেখুন')} →</Text></Pressable>
     {!direct.length&&<Text style={{fontSize:10,color:theme.muted,marginTop:7}}>{text('Add an Exclusive Product before checkout.','চেকআউটের আগে বিশেষ পণ্য যোগ করুন।')}</Text>}
    </>)}
-   <Text style={{fontSize:10,color:theme.muted,marginBottom:12}}>{t.notice} {text('No stock is held and no transaction is created.','কোনো স্টক সংরক্ষণ বা লেনদেন হয় না।')}</Text>
+   <Text style={{fontSize:10,color:theme.muted,marginBottom:12}}>{demo?t.notice+' '+text('No stock is held and no transaction is created.','কোনো স্টক সংরক্ষণ বা লেনদেন হয় না।'):text('Final product and delivery charges require confirmation. Deals and Pools are not payable while open.','পণ্য ও ডেলিভারি চার্জ নিশ্চিত হওয়ার আগে ডিল/পুলের মূল্য পরিশোধযোগ্য নয়।')}</Text>
   </>;
  }
  function Checkout(){
@@ -748,6 +807,12 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  </>}
  function Menu(){return <>{title('EXPLORE', '2TBR Menu')}{[['My Orders','orders'],['Savings','savings'],['My Account','account'],['Community Pools','pools'],['Group Deals','deals']].map(([text,destination])=><Pressable key={text} onPress={()=>setScreen(destination as Screen)} style={[styles.menuRow,glass.outer]}><Text style={{color:theme.text}}>{text}</Text></Pressable>)}<Footer/></>}
  function body(){
+ if(!demo&&['account','community','commitments','orders','savings','notifications','checkout'].includes(screen)){
+  const pane=screen==='account'?'overview':screen as 'community'|'commitments'|'orders'|'savings'|'notifications'|'checkout';
+  return <NativeCustomerWorkspace pane={pane} userId={auth.user?.id??null} lang={lang} theme={theme}
+   cart={cart} offers={offers} products={products} onSignIn={()=>setScreen('signIn')} onStartOnboarding={()=>setScreen('onboarding')} onSignOut={()=>auth.signOut()} onCart={()=>setScreen('cart')}
+   onClearCart={()=>setCart({})} onNavigate={dest=>setScreen(dest==='overview'?'account':dest)}/>;
+ }
  switch(screen){
  // Render these hook-free helpers directly so theme/slide changes do not remount the video.
  case 'home':return Home();
@@ -755,9 +820,12 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  case 'exclusive':return <>{title('CURATED FOR YOU',t.exclusive)}<View style={styles.twoCol}>{solo.map(o=><ExclusiveCard key={o.id} offer={o}/>)}</View></>;
  case 'pools':return <>{title('BUY TOGETHER',t.pools)}{pools.map(p=><PoolCard key={p.id} pool={p}/>)}</>;
  case 'cart':return <Cart/>;
+ case 'commitments':return <Account/>;
  case 'checkout':return <Checkout/>;
  case 'account':return <Account/>;
- case 'signIn':return <NativeSignIn auth={auth} lang={lang} theme={theme} onSuccess={()=>setScreen('account')}/>;
+ case 'signIn':return <NativeSignIn auth={auth} lang={lang} theme={theme} onSuccess={()=>setScreen('account')} onSignUp={()=>setScreen('signUp')}/>;
+ case 'signUp':return <NativeCustomerRegistration lang={lang} theme={theme} mode="signUp" onDone={()=>setScreen('onboarding')} onBack={()=>setScreen('signIn')}/>;
+ case 'onboarding':return <NativeCustomerRegistration lang={lang} theme={theme} mode="onboarding" onDone={()=>setScreen('account')} onBack={()=>setScreen('account')}/>;
  case 'orders':return <Orders/>;
  case 'orderDetail':return <OrderDetail/>;
  case 'savings':return <SavingsReport/>;
@@ -789,7 +857,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   </View>
   {busy&&<Text style={{textAlign:'center',color:theme.accent,fontSize:11}}>Loading public product catalog…</Text>}
   <ScrollView key={screen} style={{flex:1}} keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingHorizontal:12,paddingTop:4,paddingBottom:screen==='pool'?110:30}}>
-   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='orderDetail'?setScreen('orders'):screen==='checkout'?setScreen('cart'):screen==='orders'||screen==='savings'||screen==='signIn'?setScreen('account'):screen==='notifications'?onTab('home'):screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
+   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='orderDetail'?setScreen('orders'):screen==='checkout'?setScreen('cart'):screen==='orders'||screen==='savings'||screen==='signIn'||screen==='commitments'?setScreen('account'):screen==='notifications'?onTab('home'):screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
    {body()}
   </ScrollView>
   <View style={[styles.bottom,{...glass.outer,borderTopWidth:1}]}>

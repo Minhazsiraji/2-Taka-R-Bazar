@@ -1,12 +1,19 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url);
+const appConfig=require('../app.config.cjs');
 import { checkPreviewConfiguration, DEMO_FLAGS } from '../scripts/eas-preview-preflight.mjs';
 const read = name => JSON.parse(readFileSync(new URL('../' + name, import.meta.url), 'utf8'));
 function fixture() {
   const app=read('app.json'), pkg=read('package.json'), eas=read('eas.json');
   app.expo.extra={...app.expo.extra,eas:{projectId:'ab58cc05-7f1e-42ad-9e7f-9b5b13c91dc4'}};
   app.expo.updates={url:'https://u.expo.dev/ab58cc05-7f1e-42ad-9e7f-9b5b13c91dc4'};
+  const previous=process.env.EAS_BUILD_PROFILE;
+  process.env.EAS_BUILD_PROFILE='2tbr-internal-preview';
+  try{app.expo=appConfig({config:app.expo});}
+  finally{if(previous===undefined)delete process.env.EAS_BUILD_PROFILE;else process.env.EAS_BUILD_PROFILE=previous;}
   return {app,pkg,eas};
 }
 test('the isolated EAS profile and explicit DEMO gates accept a valid project link', () => {

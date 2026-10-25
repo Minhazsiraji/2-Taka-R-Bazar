@@ -1,0 +1,38 @@
+name: 2TBR native customer release checks
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-customer-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Customer-only regression tests
+        run: npm test
+      - name: Native TypeScript
+        run: npm run typecheck
+      - name: Store candidate preflight checks
+        run: node scripts/store-candidate-preflight.mjs
+      - name: Store release preflight (no signing or submission)
+        run: node scripts/store-release-preflight.mjs
+      - name: Expo native config static validation
+        run: npx expo config --type public --json > /tmp/2tbr-expo-public-config.json
+      - name: Build Android bundle without publishing
+        run: npx expo export --platform android --output-dir /tmp/2tbr-android-bundle
+      - name: Build iOS bundle without publishing
+        run: npx expo export --platform ios --output-dir /tmp/2tbr-ios-bundle

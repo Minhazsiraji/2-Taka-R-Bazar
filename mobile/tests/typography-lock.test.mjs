@@ -93,7 +93,7 @@ test('Approved hero image is bundled locally and has no older illustration or CD
 
 test('Android device edge safe area has one owner without lateral insets',()=>{
  const config=JSON.parse(readFileSync(new URL('../app.json',import.meta.url),'utf8'));
- assert.equal(config.expo.android.edgeToEdgeEnabled,false);
+ assert.equal(config.expo.android.edgeToEdgeEnabled,undefined,'Expo 57 rejects this legacy field; RN SafeAreaView owns the edge behavior');
  assert.ok(app.includes("edges={['top','bottom']}"));
  assert.ok(!app.includes("edges={['top','left','right','bottom']}"));
 });
@@ -101,8 +101,8 @@ test('Bell opens real local demo notification inbox without an Alert placeholder
  const notices=app.slice(app.indexOf('function Notifications(){'),app.indexOf('function Menu(){'));
  assert.ok(app.includes("case 'notifications':return <Notifications/>"));
  assert.ok(app.includes("headerAction('notifications-outline',openNotifications,unreadNotices)"));
- assert.ok(app.includes("const unreadNotices=notices.filter(item=>!item.read).length"));
- assert.ok(app.includes("setNotices(old=>old.map(item=>item.read?item:{...item,read:true}))"));
+ assert.ok(app.includes("const unreadNotices=demo?notices.filter(item=>!item.read).length:nativeUnread"));
+ assert.ok(app.includes("if(demo)setNotices(old=>old.map(item=>item.read?item:{...item,read:true}))"));
  assert.ok(app.includes("pushDemoNotice("));
  assert.ok(app.includes("setNotices([])"));
  assert.ok(app.includes("No order or payment was created."));

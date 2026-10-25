@@ -5,7 +5,7 @@ import type {Language} from '../content';
 import type {AppTheme} from '../theme';
 import {useNativeAuth} from './use-native-auth';
 
-export function NativeSignIn({auth,lang,theme,onSuccess}:{auth:ReturnType<typeof useNativeAuth>;lang:Language;theme:AppTheme;onSuccess:()=>void}){
+export function NativeSignIn({auth,lang,theme,onSuccess,onSignUp}:{auth:ReturnType<typeof useNativeAuth>;lang:Language;theme:AppTheme;onSuccess:()=>void;onSignUp:()=>void}){
  const [phone,setPhone]=useState('');
  const [password,setPassword]=useState('');
  const label=(en:string,bn:string)=>lang==='bn'?bn:en;
@@ -29,8 +29,9 @@ export function NativeSignIn({auth,lang,theme,onSuccess}:{auth:ReturnType<typeof
    <TextInput accessibilityLabel="Password" secureTextEntry textContentType="password" autoCapitalize="none" value={password} onChangeText={setPassword} placeholder={label('Password','পাসওয়ার্ড')} placeholderTextColor={theme.muted} style={field}/>
    {action(auth.busy?label('Signing in…','লগইন হচ্ছে…'):label('Sign in with mobile','মোবাইল দিয়ে লগইন'),()=>{void beginPhone()},!auth.ready||auth.busy||!phone||!password,true)}
    {action(label('Continue with Google','Google দিয়ে লগইন')+(auth.googleEnabled?'':' · '+label('Setup required','সেটআপ প্রয়োজন')),()=>{void beginGoogle()},!auth.googleEnabled||auth.busy,false)}
+   {action(label('New customer? Create an account','নতুন ক্রেতা? অ্যাকাউন্ট তৈরি করুন'),onSignUp,auth.busy,false)}
    <Text style={{fontSize:11,color:theme.muted,marginTop:12,lineHeight:17}}>{label('Google requires the approved twotbr://auth/callback redirect and a native development build. Link Google to an existing account on the website first; do not create a duplicate account.','Google এর জন্য নিরাপদ রিডিরেক্ট ও ডেভেলপমেন্ট বিল্ড প্রয়োজন। আগে ওয়েবসাইটে Google অ্যাকাউন্ট যুক্ত করুন।')}</Text>
   </View>
-  <Text style={{fontSize:11,color:theme.muted,marginTop:12}}>{label('After sign-in, the order history and savings shown here remain demo data pending customer-scoped backend verification.','লগইনের পরও গ্রাহক-নিরাপত্তা যাচাই না হওয়া পর্যন্ত অর্ডার ও সাশ্রয় ডেমো তথ্য থাকবে।')}</Text>
+  <Text style={{fontSize:11,color:theme.muted,marginTop:12}}>{label('Your orders, Deals, Pools and savings are loaded securely from your verified customer account.','লগইনের পর আপনার অর্ডার, ডিল, পুল ও সাশ্রয়ের তথ্য অ্যাকাউন্ট থেকে দেখানো হবে।')}</Text>
  </View>;
 }
