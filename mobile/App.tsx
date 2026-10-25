@@ -55,7 +55,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const [selectedOrderId,setSelectedOrderId]=useState<string|null>(null);
  const [notices,setNotices]=useState<PreviewNotice[]>([]);
  const [nativeUnread,setNativeUnread]=useState(0);
- const [homeVerifiedSavings,setHomeVerifiedSavings]=useState<{this_month:number;previous_month:number;lifetime:number;community:number|null}|null>(null);
+ const [homeVerifiedSavings,setHomeVerifiedSavings]=useState<{this_month:number|null;previous_month:number|null;lifetime:number|null;community:number|null}|null>(null);
  const noticeSerial=useRef(0);
  const auth=useNativeAuth();
  const cartOwner=useRef<string|undefined>(undefined);
@@ -145,14 +145,14 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   const client=nativeClient();if(!client)return;
   let mounted=true;
   const fetchSavings=async()=>{
-   const {data,error}=await client.rpc('store_home_savings');
+   const {data,error}=await client.rpc('get_my_savings_summary');
    if(!mounted)return;
-   if(error||!data||typeof data!=='object'||Array.isArray(data)){setHomeVerifiedSavings(null);return}
-   const raw=data as Record<string,unknown>;
-   const num=(key:string)=>Number.isFinite(Number(raw[key]))?Math.max(0,Number(raw[key])):0;
+   const raw=Array.isArray(data)?data[0]:null;
+   if(error||!raw||typeof raw!=='object'){setHomeVerifiedSavings(null);return}
+   const valid=(value:unknown)=>value!==null&&value!==undefined&&Number.isFinite(Number(value))&&Number(value)>=0?Number(value):null;
    setHomeVerifiedSavings({
-    this_month:num('this_month'),previous_month:num('previous_month'),
-    lifetime:num('lifetime'),community:raw.community==null?null:num('community')
+    this_month:valid(raw.month_verified_saving),previous_month:null,
+    lifetime:valid(raw.lifetime_verified_saving),community:null
    });
   };
   void fetchSavings();
