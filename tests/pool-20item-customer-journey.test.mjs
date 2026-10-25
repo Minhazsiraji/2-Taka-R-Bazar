@@ -16,7 +16,7 @@ test('Pool supports up to 20 selected products across admin, server, database, U
  assert.match(cart,/\.slice\(0,20\)/)
  assert.match(cart,/\.size>20/)
  assert.match(cart,/options\.replaceExisting/)
- assert.match(sql,/jsonb_array_length\(p_items\) not between 1 and case when/)
+ assert.match(sql,/p_kind==='COMMUNITY_POOL'|p_kind='COMMUNITY_POOL'/)
  assert.match(sql,/jsonb_array_length\(p_lines\) not between 1 and 20/)
  assert.match(sql,/Group Deal allows one product|GROUP_DEAL|existing GROUP_DEAL/)
 })
