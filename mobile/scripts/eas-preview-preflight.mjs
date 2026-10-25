@@ -7,6 +7,8 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url);
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const PREVIEW_CHANNEL = '2tbr-internal-preview';
@@ -43,7 +45,12 @@ export function checkPreviewConfiguration(app, pkg, eas, environment) {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const readJson = name => JSON.parse(readFileSync(join(ROOT, name), 'utf8'));
-  const errors = checkPreviewConfiguration(readJson('app.json'), readJson('package.json'), readJson('eas.json'), process.env);
+  const app=readJson('app.json');
+  const previous=process.env.EAS_BUILD_PROFILE;
+  process.env.EAS_BUILD_PROFILE=PREVIEW_CHANNEL;
+  try { app.expo=require('../app.config.cjs')({config:app.expo}); }
+  finally { if(previous===undefined)delete process.env.EAS_BUILD_PROFILE; else process.env.EAS_BUILD_PROFILE=previous; }
+  const errors = checkPreviewConfiguration(app, readJson('package.json'), readJson('eas.json'), process.env);
   if (errors.length) {
     console.error('2TBR PREVIEW BLOCKED (no update/build attempted):\n- ' + errors.join('\n- '));
     process.exitCode = 1;
