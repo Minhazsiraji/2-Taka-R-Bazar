@@ -1,7 +1,6 @@
 import {nativeClient} from '../auth/client';
 
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const money=(v:unknown)=>Number.isFinite(Number(v))?Number(v):0;
 const safeId=(value:string)=>{if(!uuid.test(value))throw new Error('Invalid identifier');return value};
 const errorMessage=(error:{message?:string}|null)=>error?.message||'Request failed. Please try again.';
 
@@ -87,11 +86,11 @@ export async function setQuoteDelivery(id:string,method:'pickup'|'home_delivery'
  });
 }
 export async function decideCustomerQuote(id:string,decision:'accept'|'cancel',name:string,phone:string,terms:boolean){
- if(decision==='accept'&&(!terms||name.trim().length<2||!/^(\\+?[0-9]{10,15})$/.test(phone.replace(/\\s/g,''))))
+ if(decision==='accept'&&(!terms||name.trim().length<2||!/^\+?[0-9]{10,15}$/.test(phone.replace(/\s/g,''))))
   throw new Error('Confirm your full name, mobile number, and accepted total');
  await rpc('customer_decide_simple_sale_quote',{
   p_quote:safeId(id),p_decision:decision,p_name:decision==='accept'?name.trim():null,
-  p_phone:decision==='accept'?phone.replace(/\\s/g,''):null,p_terms:decision==='accept'&&terms
+  p_phone:decision==='accept'?phone.replace(/\s/g,''):null,p_terms:decision==='accept'&&terms
  });
 }
 export async function getQuotePayees(id:string):Promise<OfficialPayee[]>{
@@ -110,18 +109,25 @@ export async function markAllCustomerNotifications(){
 }
 export async function submitDirectCustomerOrder(items:{product_id:string;quantity:number}[],
  key:string,name:string,phone:string,method:'pickup'|'home_delivery',pickupPoint:string|null,address:string,terms:boolean){
- if(!terms||items.length<1||items.length>20||new Set(items.map(i=>i.product_id)).size!==items.length||
+ if(!terms||items.length<1||items.length>6||new Set(items.map(i=>i.product_id)).size!==items.length||
   items.some(i=>!uuid.test(i.product_id)||!Number.isInteger(i.quantity)||i.quantity<1||i.quantity>100))
   throw new Error('Review all direct product quantities and accept the terms');
- if(name.trim().length<2||!/^(\\+?[0-9]{10,15})$/.test(phone.replace(/\\s/g,'')))throw new Error('A valid contact name and phone are required');
+ if(name.trim().length<2||!/^\+?[0-9]{10,15}$/.test(phone.replace(/\s/g,'')))throw new Error('A valid contact name and phone are required');
  const {client,user}=await signedIn();
- const actualAddress=method==='home_delivery'?address.trim():(()=>{
+ let actualAddress=address.trim();
+ if(method==='pickup'){
   if(!pickupPoint)throw new Error('Select your community pickup point');
-  return 'Community pickup: '+pickupPoint;
- })();
+  const [profile,point]=await Promise.all([
+   client.from('profiles').select('community_id').eq('id',user.id).maybeSingle(),
+   client.from('pickup_points').select('id,community_id,name,address').eq('id',safeId(pickupPoint)).eq('active',true).maybeSingle()
+  ]);
+  if(profile.error||point.error||!profile.data?.community_id||!point.data||
+   profile.data.community_id!==point.data.community_id)throw new Error('Pickup point does not belong to your selected community');
+  actualAddress='Community pickup: '+point.data.name+' — '+point.data.address;
+ }
  if(actualAddress.length<10||actualAddress.length>350)throw new Error('Enter a complete fulfillment address');
  return rpc<string>('launch_submit_order',{
-  p_items:items,p_request_key:safeId(key),p_name:name.trim(),p_phone:phone.replace(/\\s/g,''),
+  p_items:items,p_request_key:safeId(key),p_name:name.trim(),p_phone:phone.replace(/\s/g,''),
   p_address:actualAddress,p_method:method,p_terms:true
  });
 }
