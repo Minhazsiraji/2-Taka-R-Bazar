@@ -45,7 +45,7 @@ export default async function OfferSettlement({searchParams}:{searchParams:Promi
       <button className="btn-primary">Verify transfer and create order once</button>
      </form>}
     </section>}
-    {q.status==='verified'&&q.order_id&&<Link className="btn-secondary inline-flex" href={'/launch-orders/'+q.order_id}>Confirmed order #{q.order_id.slice(0,8)}</Link>}
+    {q.status==='verified'&&q.order_id&&<Link className="btn-secondary inline-flex" href={'/admin/launch-orders?order='+q.order_id}>Confirmed order #{q.order_id.slice(0,8)}</Link>}
    </article>})}
    {!quotes.length&&!qr.error&&<p className="card">No closed community offers awaiting settlement.</p>}
   </div>
