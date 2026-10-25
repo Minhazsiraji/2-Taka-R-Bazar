@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.120.0
       - name: Start disposable Supabase
