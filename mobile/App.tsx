@@ -19,6 +19,7 @@ import {NativeSignIn} from './src/auth/native-sign-in';
 import {NativeCustomerRegistration} from './src/auth/native-register';
 import {NativeCustomerWorkspace} from './src/customer/native-workspace';
 import {joinCustomerDeal,joinCustomerPool} from './src/customer/api';
+import {nativeClient} from './src/auth/client';
 
 type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
 type Screen=Tab|'signUp'|'onboarding'|'community'|'commitments'|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'notifications'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
@@ -53,6 +54,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const [orderFilter,setOrderFilter]=useState<'all'|'active'|'completed'|'cancelled'>('all');
  const [selectedOrderId,setSelectedOrderId]=useState<string|null>(null);
  const [notices,setNotices]=useState<PreviewNotice[]>([]);
+ const [nativeUnread,setNativeUnread]=useState(0);
  const noticeSerial=useRef(0);
  const auth=useNativeAuth();
  const cartOwner=useRef<string|undefined>(undefined);
@@ -126,10 +128,23 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   );
  };
  const openNotifications=()=>{
-  setNotices(old=>old.map(item=>item.read?item:{...item,read:true}));
+  if(demo)setNotices(old=>old.map(item=>item.read?item:{...item,read:true}));
   setScreen('notifications');
  };
- const unreadNotices=notices.filter(item=>!item.read).length;
+ const unreadNotices=demo?notices.filter(item=>!item.read).length:nativeUnread;
+ useEffect(()=>{
+  if(demo||!auth.user?.id){setNativeUnread(0);return}
+  const client=nativeClient();if(!client)return;
+  let alive=true;
+  const check=async()=>{
+   const {count,error}=await client.from('notifications').select('id',{count:'exact',head:true})
+    .eq('user_id',auth.user!.id).is('read_at',null);
+   if(alive&&!error)setNativeUnread(count??0);
+  };
+  void check();
+  const subscription=AppState.addEventListener('change',state=>{if(state==='active')void check()});
+  return()=>{alive=false;subscription.remove()};
+ },[demo,auth.user?.id,screen]);
  const demoPreviewInfo=()=>Alert.alert(lang==='bn'?'ডেমো প্রিভিউ':'Demo preview',lang==='bn'?'কোনো আসল অর্ডার বা সাশ্রয়ের লেনদেন তৈরি হয়নি।':'No real order or savings transaction has been created.');
  const openPublishedOffer=(o:Offer)=>{
   const id=o.id.startsWith('public-deal:')?o.id.slice('public-deal:'.length):'';
