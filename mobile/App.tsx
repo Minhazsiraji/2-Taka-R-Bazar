@@ -16,11 +16,12 @@ import {loadPublicCatalog} from './src/live';
 import {productInfoSections,productMissing} from './src/product-content';
 import {useNativeAuth} from './src/auth/use-native-auth';
 import {NativeSignIn} from './src/auth/native-sign-in';
+import {NativeCustomerRegistration} from './src/auth/native-register';
 import {NativeCustomerWorkspace} from './src/customer/native-workspace';
 import {joinCustomerDeal,joinCustomerPool} from './src/customer/api';
 
 type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
-type Screen=Tab|'commitments'|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'notifications'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
+type Screen=Tab|'signUp'|'onboarding'|'commitments'|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'notifications'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
 type PreviewNotice={id:number;enTitle:string;bnTitle:string;enBody:string;bnBody:string;read:boolean};
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
@@ -780,7 +781,9 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  case 'commitments':return <Account/>;
  case 'checkout':return <Checkout/>;
  case 'account':return <Account/>;
- case 'signIn':return <NativeSignIn auth={auth} lang={lang} theme={theme} onSuccess={()=>setScreen('account')}/>;
+ case 'signIn':return <NativeSignIn auth={auth} lang={lang} theme={theme} onSuccess={()=>setScreen('account')} onSignUp={()=>setScreen('signUp')}/>;
+ case 'signUp':return <NativeCustomerRegistration lang={lang} theme={theme} mode="signUp" onDone={()=>setScreen('onboarding')} onBack={()=>setScreen('signIn')}/>;
+ case 'onboarding':return <NativeCustomerRegistration lang={lang} theme={theme} mode="onboarding" onDone={()=>setScreen('account')} onBack={()=>setScreen('account')}/>;
  case 'orders':return <Orders/>;
  case 'orderDetail':return <OrderDetail/>;
  case 'savings':return <SavingsReport/>;
