@@ -55,6 +55,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  const [selectedOrderId,setSelectedOrderId]=useState<string|null>(null);
  const [notices,setNotices]=useState<PreviewNotice[]>([]);
  const [nativeUnread,setNativeUnread]=useState(0);
+ const [homeVerifiedSavings,setHomeVerifiedSavings]=useState<{this_month:number;previous_month:number;lifetime:number;community:number|null}|null>(null);
  const noticeSerial=useRef(0);
  const auth=useNativeAuth();
  const cartOwner=useRef<string|undefined>(undefined);
@@ -140,6 +141,25 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  };
  const unreadNotices=demo?notices.filter(item=>!item.read).length:nativeUnread;
  useEffect(()=>{
+  if(demo||!auth.user?.id){setHomeVerifiedSavings(null);return}
+  const client=nativeClient();if(!client)return;
+  let mounted=true;
+  const fetchSavings=async()=>{
+   const {data,error}=await client.rpc('store_home_savings');
+   if(!mounted)return;
+   if(error||!data||typeof data!=='object'||Array.isArray(data)){setHomeVerifiedSavings(null);return}
+   const raw=data as Record<string,unknown>;
+   const num=(key:string)=>Number.isFinite(Number(raw[key]))?Math.max(0,Number(raw[key])):0;
+   setHomeVerifiedSavings({
+    this_month:num('this_month'),previous_month:num('previous_month'),
+    lifetime:num('lifetime'),community:raw.community==null?null:num('community')
+   });
+  };
+  void fetchSavings();
+  const listener=AppState.addEventListener('change',state=>{if(state==='active')void fetchSavings()});
+  return()=>{mounted=false;listener.remove()};
+ },[auth.user?.id,demo,screen]);
+ useEffect(()=>{
   if(demo||!auth.user?.id){setNativeUnread(0);return}
   const client=nativeClient();if(!client)return;
   let alive=true;
@@ -202,10 +222,10 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  </Pressable>;
  function Savings({home=false}:{home?:boolean}={}){return panel(<><View style={styles.between}><Text style={{fontSize:16,fontWeight:'900',color:theme.text}}>▥  {t.savings}</Text><Pressable onPress={()=>setScreen('savings')}><Text style={{color:theme.accent,fontSize:12}}>{t.viewReport} ›</Text></Pressable></View>
   <View style={styles.savingsFour}>
-   {savingTile(t.thisMonth,demo?money(demoSavings.thisMonth):'—','calendar-outline')}
-   {savingTile(t.lastMonth,demo?money(demoSavings.lastMonth):'—','time-outline')}
-   {savingTile(t.lifetime,demo?money(demoSavings.lifetime):'—','star-outline')}
-   {savingTile(t.communityTotal,demo?money(demoSavings.community):'—','people-outline')}
+   {savingTile(t.thisMonth,demo?money(demoSavings.thisMonth):homeVerifiedSavings?.this_month!=null?money(homeVerifiedSavings.this_month!):'—','calendar-outline')}
+   {savingTile(t.lastMonth,demo?money(demoSavings.lastMonth):homeVerifiedSavings?.previous_month!=null?money(homeVerifiedSavings.previous_month!):'—','time-outline')}
+   {savingTile(t.lifetime,demo?money(demoSavings.lifetime):homeVerifiedSavings?.lifetime!=null?money(homeVerifiedSavings.lifetime!):'—','star-outline')}
+   {savingTile(t.communityTotal,demo?money(demoSavings.community):homeVerifiedSavings?.community!=null?money(homeVerifiedSavings.community!):'—','people-outline')}
   </View>{!home&&<Text style={{color:theme.muted,fontSize:10,marginTop:7}}>{demo?'Illustrative only · Verified savings after eligible completion.':t.notEarned}</Text>}
  </>)}
  function DealCard({offer}:{offer:Offer}){
