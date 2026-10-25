@@ -88,7 +88,9 @@ jobs:
         env:
           PGPASSWORD: postgres
         run: |
-          psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "grant select on public.simple_sale_offer_joins, public.launch_orders to service_role; grant insert on public.pilot_payment_recipients to service_role;"
+          # Browser fixtures create a *fictional* supplier/listing in this disposable
+          # localhost DB only. Never grant these writes in a hosted migration.
+          psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "grant select on public.simple_sale_offer_joins, public.launch_orders to service_role; grant insert on public.pilot_payment_recipients to service_role; grant select, insert on public.suppliers, public.supplier_products, public.vendor_offer_drafts, public.pilot_vendor_product_listings to service_role;"
       - name: Production-build storefront UAT against disposable synthetic DB
         shell: bash
         run: |
@@ -127,6 +129,7 @@ jobs:
             /tmp/2tbr-header-*.png
             /tmp/2tbr-product-seo-*.png
             /tmp/2tbr-shared-offer-*.png
+            /tmp/2tbr-admin-inventory-*.png
           if-no-files-found: ignore
           retention-days: 7
       - name: Stop disposable Supabase
