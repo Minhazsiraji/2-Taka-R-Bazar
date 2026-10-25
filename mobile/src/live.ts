@@ -1,5 +1,6 @@
 import type {Offer,Pool,Product} from './data';
 import {projectPublicSimpleOffers} from './public-simple-offers.mjs';
+import {nativeClient} from './auth/client';
 import {projectPublishedLaunchProducts} from './launch-catalog.mjs';
 
 // Public read-only launch listing. Never use service-role keys or mutate stock,
@@ -22,5 +23,16 @@ export async function loadPublicCatalog():Promise<{products:Product[];offers:Off
   rpc('get_public_launch_catalog',{p_product_id:null}),
   rpc('get_public_simple_offers',{})
  ]);
- return projectPublicSimpleOffers(offersPayload,projectPublishedLaunchProducts(catalogPayload));
+ let registeredArea:string|null=null;
+ const client=nativeClient();
+ if(client){
+  try{
+   const {data:{user}}=await client.auth.getUser();
+   if(user){
+    const {data}=await client.from('profiles').select('community_id').eq('id',user.id).maybeSingle();
+    registeredArea=data?.community_id??null;
+   }
+  }catch{/* Public catalog remains available to guests and offline auth errors. */}
+ }
+ return projectPublicSimpleOffers(offersPayload,projectPublishedLaunchProducts(catalogPayload),registeredArea);
 }
