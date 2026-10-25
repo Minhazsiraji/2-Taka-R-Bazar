@@ -82,8 +82,8 @@ test('real Deals and Pools require native verified identity before server-author
  assert.match(app,/const openPublishedOffer/);
  assert.match(app,/const openPublishedPool/);
  assert.match(app,/if\(!auth\.user\)\{setScreen\('signIn'\);return\}/);
- assert.match(app,/joinCustomerDeal\(id,o\.productId,null\)/);
- assert.match(app,/joinCustomerPool\(p\.id,lines,null\)/);
+ assert.match(app,/joinCustomerDeal\(id,o\.productId,o\.communityId\?\?null,o\.cycleId\)/);
+ assert.match(app,/joinCustomerPool\(p\.id,lines,p\.communityId\?\?null,p\.cycleId\)/);
  assert.match(app,/demo\?draftGroup\(offer\):openPublishedOffer\(offer\)/);
  assert.match(app,/demo\?draftPool\(pool,quantities\):openPublishedPool\(pool\)/);
  assert.match(api,/join_simple_sale_group_deal_quantified/);
