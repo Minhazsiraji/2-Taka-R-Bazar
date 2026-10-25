@@ -15,6 +15,6 @@ export function AdminShell({ children, variant = 'default' }: { children: React.
       </div>
     </header>
     <FinanceGlassParity />
-    <div className="mx-auto grid w-full max-w-6xl min-w-0 gap-4 px-3 py-4 sm:px-5 sm:py-5 lg:grid-cols-[236px_minmax(0,1fr)]"><aside className="card product-management-aside h-fit max-w-full lg:sticky lg:top-20"><AdminNavigation/></aside><main className={"w-full max-w-full min-w-0 overflow-x-hidden" + (isProduct ? " product-management-main" : "")}>{children}{isProduct && <footer className="product-management-footer mt-7 py-5 text-center text-xs"><span className="font-bold">2-TAKA-R-BAZAR</span> · {SITE_TAGLINE_EN} <span lang="bn" className="block sm:inline"> {SITE_TAGLINE_BN}</span></footer>}</main></div>
+    <div className="mx-auto grid w-full max-w-6xl min-w-0 gap-4 px-3 py-4 sm:px-5 sm:py-5 lg:grid-cols-[250px_minmax(0,1fr)]"><aside className="card product-management-aside h-fit max-w-full lg:sticky lg:top-20"><AdminNavigation/></aside><main className={"w-full max-w-full min-w-0 overflow-x-hidden" + (isProduct ? " product-management-main" : "")}>{children}{isProduct && <footer className="product-management-footer mt-7 py-5 text-center text-xs"><span className="font-bold">2-TAKA-R-BAZAR</span> · {SITE_TAGLINE_EN} <span lang="bn" className="block sm:inline"> {SITE_TAGLINE_BN}</span></footer>}</main></div>
   </div>
 }
