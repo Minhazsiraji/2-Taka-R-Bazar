@@ -17,7 +17,7 @@ begin
   raise exception 'Admin access required';
  end if;
  if p_kind not in ('SOLO','GROUP_DEAL','COMMUNITY_POOL') then raise exception 'Invalid sale type'; end if;
- if p_items is null or jsonb_typeof(p_items)<>'array' or jsonb_array_length(p_items) not between 1 and case when p_kind='COMMUNITY_POOL' then 20 else 6 end then
+ if p_items is null or jsonb_typeof(p_items)<>'array' or (jsonb_array_length(p_items)<1 or (p_kind='COMMUNITY_POOL' and jsonb_array_length(p_items)>20) or (p_kind<>'COMMUNITY_POOL' and jsonb_array_length(p_items)>6)) then
   raise exception 'Select 1–20 Pool products, or 1–6 products for other offers';
  end if;
  product_count:=jsonb_array_length(p_items);
