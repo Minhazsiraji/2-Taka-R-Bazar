@@ -31,7 +31,7 @@ test('hero uses original four website message pairs and permanent slogans',()=>{
 });
 test('savings and cart cannot silently behave like paid verified orders',()=>{
  assert.ok(app.includes("demo?money(demoSavings.thisMonth):homeVerifiedSavings?.this_month"));
- assert.ok(app.includes("client.rpc('store_home_savings')"));
+ assert.ok(app.includes("client.rpc('get_my_savings_summary')"));
  assert.ok(app.includes("homeVerifiedSavings?.community!=null"));
  assert.match(app,/No real order or savings transaction has been created/);
  assert.ok(app.includes('cartLineCount(cart)'));
