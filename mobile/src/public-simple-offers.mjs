@@ -24,6 +24,9 @@ export function projectPublicSimpleOffers(payload,catalog,selectedCommunityId=nu
      !UUID.test(String(row.id||''))||
      !['GROUP_DEAL','COMMUNITY_POOL'].includes(row.kind)||
      !Array.isArray(row.items)||row.items.length===0)continue;
+  const areas=Array.isArray(row.community_ids)?row.community_ids:[row.community_id];
+  // Do not show a different community's round to a signed-in shopper.
+  if(selectedCommunityId&&!areas.includes(selectedCommunityId))continue;
   const community=safeString(row.community_name)||'Community';
   const realItems=[];
   for(const item of row.items){
@@ -43,7 +46,7 @@ export function projectPublicSimpleOffers(payload,catalog,selectedCommunityId=nu
   }
   if(realItems.length!==row.items.length)continue; // never show incomplete published offer
   const progress=Array.isArray(row.community_progress)
-   ?row.community_progress.find(p=>p.community_id===(selectedCommunityId||row.community_id))??row.community_progress[0]
+   ?row.community_progress.find(p=>p.community_id===(selectedCommunityId||row.community_id))??null
    :null;
   // The public aggregate buyer_count can intentionally be zero across all areas.
   // The actual per-community open cycle is authoritative when published.
@@ -51,7 +54,7 @@ export function projectPublicSimpleOffers(payload,catalog,selectedCommunityId=nu
   const cycleId=UUID.test(String(progress?.cycle_id??''))?progress.cycle_id:undefined;
   const communityId=UUID.test(String(progress?.community_id??''))?progress.community_id:
    UUID.test(String(row.community_id??''))?row.community_id:undefined;
-  const remaining=daysRemaining(row.closes_at);
+  const remaining=daysRemaining(progress?.closes_at??row.closes_at);
   if(row.kind==='GROUP_DEAL'){
    if(realItems.length!==1)continue; // native Group Deal detail is single-product
    const item=realItems[0];
