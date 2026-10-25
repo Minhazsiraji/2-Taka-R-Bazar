@@ -810,7 +810,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  if(!demo&&['account','community','commitments','orders','savings','notifications','checkout'].includes(screen)){
   const pane=screen==='account'?'overview':screen as 'community'|'commitments'|'orders'|'savings'|'notifications'|'checkout';
   return <NativeCustomerWorkspace pane={pane} userId={auth.user?.id??null} lang={lang} theme={theme}
-   cart={cart} offers={offers} products={products} onSignIn={()=>setScreen('signIn')} onStartOnboarding={()=>setScreen('onboarding')} onCart={()=>setScreen('cart')}
+   cart={cart} offers={offers} products={products} onSignIn={()=>setScreen('signIn')} onStartOnboarding={()=>setScreen('onboarding')} onSignOut={()=>auth.signOut()} onCart={()=>setScreen('cart')}
    onClearCart={()=>setCart({})} onNavigate={dest=>setScreen(dest==='overview'?'account':dest)}/>;
  }
  switch(screen){
