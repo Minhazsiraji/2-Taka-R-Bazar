@@ -1,3 +1,46 @@
+-- Base persistence also validates basket size; update every layer.
+CREATE OR REPLACE FUNCTION public.admin_save_simple_offer(p_id uuid, p_kind text, p_community uuid, p_title text, p_items jsonb, p_published boolean, p_closes timestamp with time zone DEFAULT NULL::timestamp with time zone)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare u uuid:=auth.uid();oid uuid;r record;
+begin
+ if u is null or not(private.has_role(u,'admin') or private.has_role(u,'super_admin')) then raise exception 'Admin access required';end if;
+ if p_kind is null or p_kind not in ('SOLO','GROUP_DEAL','COMMUNITY_POOL') or char_length(btrim(coalesce(p_title,''))) not between 2 and 180 or not exists(select 1 from public.communities where id=p_community and active) then raise exception 'Choose a sale type, title and community';end if;
+ if p_items is null or jsonb_typeof(p_items)<>'array' or (jsonb_array_length(p_items)<1 or (p_kind='COMMUNITY_POOL' and jsonb_array_length(p_items)>20) or (p_kind<>'COMMUNITY_POOL' and jsonb_array_length(p_items)>6)) then raise exception 'Select 1–20 Pool products, or up to 6 other offer products';end if;
+ if (select count(distinct (x->>'product_id')::uuid) from jsonb_array_elements(p_items) x)<>jsonb_array_length(p_items) then raise exception 'Select each product once';end if;
+ if p_published and p_closes<=now() then raise exception 'Choose a future closing time or leave it empty';end if;
+ if p_id is not null then
+  select id into oid from public.simple_sale_offers where id=p_id for update;
+  if oid is null then raise exception 'Offer not found';end if;
+ end if;
+ -- Serialise all offer edits and checkouts by product in the same order.
+ for r in select (x->>'product_id')::uuid pid,(x->>'price')::numeric price,coalesce((x->>'old_price')::numeric,0) old_price,nullif(x->>'available_quantity','')::integer qty from jsonb_array_elements(p_items) x order by 1 loop
+  perform pg_advisory_xact_lock(hashtextextended(r.pid::text,71540));
+  if r.price is null or r.price::text in ('NaN','Infinity','-Infinity') or r.old_price::text in ('NaN','Infinity','-Infinity') or r.price<=0 or r.price<>round(r.price,2) or r.old_price<0 or r.old_price<>round(r.old_price,2) or r.qty<0 or not exists(select 1 from public.products where id=r.pid and active and not is_demo) then raise exception 'Choose an active product, positive price and nonnegative stock';end if;
+  if exists(select 1 from public.pilot_vendor_product_listings where product_id=r.pid and launch_enabled) then
+   if r.qty is not null then update public.pilot_vendor_product_listings set available_quantity=r.qty where product_id=r.pid;end if;
+  else
+   insert into public.launch_product_stock(product_id,available_quantity) values(r.pid,coalesce(r.qty,0)) on conflict(product_id) do nothing;
+   if r.qty is not null then update public.launch_product_stock set available_quantity=r.qty where product_id=r.pid;end if;
+  end if;
+ end loop;
+ if p_id is null then
+  insert into public.simple_sale_offers(kind,community_id,title,published,closes_at,created_by) values(p_kind,p_community,btrim(p_title),coalesce(p_published,false),p_closes,u) returning id into oid;
+ else
+  select id into oid from public.simple_sale_offers where id=p_id for update;
+  if oid is null then raise exception 'Offer not found';end if;
+  -- Preserve module/area in existing customer requests; create another offer to move it.
+  if exists(select 1 from public.launch_order_items where offer_id=oid) and exists(select 1 from public.simple_sale_offers where id=oid and (kind<>p_kind or community_id<>p_community)) then raise exception 'This offer has customer orders. Create another offer to change its type or area';end if;
+  update public.simple_sale_offers set kind=p_kind,community_id=p_community,title=btrim(p_title),published=coalesce(p_published,false),closes_at=p_closes,updated_at=now() where id=oid;
+  delete from public.simple_sale_offer_items where offer_id=oid;
+ end if;
+ insert into public.simple_sale_offer_items(offer_id,product_id,price,old_price) select oid,(x->>'product_id')::uuid,(x->>'price')::numeric,coalesce((x->>'old_price')::numeric,0) from jsonb_array_elements(p_items) x;
+ return oid;
+end $function$;
+
 -- Extend Pool size while preserving every other verified function check.
 -- The following complete function definitions match the current production
 -- implementations except for the explicitly documented Pool limits.
