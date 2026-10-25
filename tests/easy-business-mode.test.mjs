@@ -12,9 +12,10 @@ const publication=read('app/actions/storefront-publication.ts')
 const shell=read('components/admin-shell.tsx')
 const dash=read('app/admin/page.tsx')
 
-test('Easy Business is the visible default entry, without new branding or storefront UI',()=>{
- assert.match(shell,/\/admin\/easy-business','Easy Business'/)
- assert.match(dash,/Open Easy Business/)
+test('Easy Business remains accessible under advanced admin tools without changing storefront branding',()=>{
+ assert.match(shell,/AdminNavigation/)
+ assert.match(read('components/admin-navigation.tsx'),/\/admin\/easy-business/)
+ assert.match(dash,/\/admin\/products/)
  assert.match(page,/AdminShell/)
  assert.match(page,/card/g)
  assert.match(page,/btn-primary/)
