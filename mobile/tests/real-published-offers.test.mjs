@@ -91,3 +91,22 @@ test('real Deals and Pools require native verified identity before server-author
  assert.match(api,/await client\.auth\.getUser\(\)/);
  assert.doesNotMatch(api,/service_role|private\.has_role|admin_/);
 });
+
+test('native public projection separates community cycles and preserves each local deadline',()=>{
+ const areaA='c9808ad6-42aa-4574-b604-ff54258a2946';
+ const areaB='a14e2ef5-4325-4dca-8e14-8359076e2244';
+ const cycleA='694af490-9cba-4cb7-b6c3-062e88cea0ea';
+ const cycleB='741d446c-c47d-4e1b-9386-8c4501d4eb5c';
+ const offer={...published[0],community_id:areaA,community_ids:[areaA,areaB],
+  community_progress:[
+   {community_id:areaA,cycle_id:cycleA,buyer_count:2,closes_at:'2026-11-30T00:00:00Z'},
+   {community_id:areaB,cycle_id:cycleB,buyer_count:5,closes_at:'2026-11-29T00:00:00Z'}
+  ]};
+ const a=projectPublicSimpleOffers([offer],base,areaA);
+ const b=projectPublicSimpleOffers([offer],base,areaB);
+ assert.equal(a.offers.find(o=>o.mode==='GROUP_DEAL').joined,2);
+ assert.equal(a.offers.find(o=>o.mode==='GROUP_DEAL').cycleId,cycleA);
+ assert.equal(b.offers.find(o=>o.mode==='GROUP_DEAL').joined,5);
+ assert.equal(b.offers.find(o=>o.mode==='GROUP_DEAL').cycleId,cycleB);
+ assert.equal(projectPublicSimpleOffers([offer],base,'8905c604-e7e0-4539-9ab4-74b13ceec2e1').offers.filter(o=>o.mode==='GROUP_DEAL').length,0);
+});
