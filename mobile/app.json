@@ -9,10 +9,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.twotbr.marketplace",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
-      "edgeToEdgeEnabled": false,
       "package": "com.twotbr.marketplace",
       "versionCode": 1
     },
