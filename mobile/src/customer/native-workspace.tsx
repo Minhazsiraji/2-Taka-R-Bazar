@@ -19,9 +19,9 @@ const makeUuid=()=>{
  const hex=Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');
  return [hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');
 };
-export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,products,onSignIn,onStartOnboarding,onCart,onClearCart,onNavigate}:{
+export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,products,onSignIn,onStartOnboarding,onSignOut,onCart,onClearCart,onNavigate}:{
  pane:Pane;userId:string|null;lang:Language;theme:AppTheme;cart:Record<string,number>;offers:Offer[];products:Product[];
- onSignIn:()=>void;onStartOnboarding:()=>void;onCart:()=>void;onClearCart:()=>void;onNavigate:(pane:Pane)=>void
+ onSignIn:()=>void;onStartOnboarding:()=>void;onSignOut:()=>Promise<void>;onCart:()=>void;onClearCart:()=>void;onNavigate:(pane:Pane)=>void
 }){
  const [snapshot,setSnapshot]=useState<CustomerSnapshot|null>(null);
  const [loading,setLoading]=useState(false),[saving,setSaving]=useState(false);
@@ -112,6 +112,11 @@ export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,prod
    {!snapshot.communityId&&btn(t('Complete household & community setup','পরিবার ও কমিউনিটি সেটআপ সম্পন্ন করুন'),onStartOnboarding)}
    {btn(t('Community settings','কমিউনিটি সেটিংস'),()=>snapshot.communityId?onNavigate('community'):onStartOnboarding())}
    {btn(t('Privacy policy','গোপনীয়তা নীতি'),()=>void Linking.openURL('https://2takarbazar.com/privacy'))}
+   {btn(t('Sign out securely','নিরাপদে লগআউট'),()=>
+    Alert.alert(t('Sign out of 2TBR?','2TBR থেকে লগআউট করবেন?'),
+     t('This device will end your current session. Your orders stay safely in your account.','এই ডিভাইসে সেশন শেষ হবে। অর্ডার অ্যাকাউন্টেই থাকবে।'),
+     [{text:t('Stay signed in','লগইন থাকুন'),style:'cancel'},
+      {text:t('Sign out','লগআউট'),onPress:()=>void onSignOut().catch(()=>Alert.alert(t('Could not sign out','লগআউট হয়নি'),t('Check your connection and retry.','ইন্টারনেট দেখে আবার চেষ্টা করুন।')))}]))}
    {btn(t('Request permanent account deletion','অ্যাকাউন্ট স্থায়ীভাবে মুছতে অনুরোধ'),()=>
     Alert.alert(t('Delete your entire account?','আপনার অ্যাকাউন্ট মুছে ফেলবেন?'),
      t('Request permanent deletion of your account and personal data. Pending payments and records legally required to be kept will be reviewed. This does not immediately cancel orders.','সম্পূর্ণ অ্যাকাউন্ট ও ব্যক্তিগত তথ্য মুছে ফেলার অনুরোধ। অসম্পন্ন অর্ডার ও আইনি সংরক্ষণ যাচাই হবে।'),
