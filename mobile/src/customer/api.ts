@@ -143,3 +143,27 @@ export async function submitDirectOrderPayment(id:string,payeeId:string,referenc
 export async function requestCustomerAccountDeletion():Promise<string>{
  return rpc<string>('request_my_account_deletion',{});
 }
+
+/** Active community choices are public; updates are restricted by the existing DB move guard. */
+export async function getAvailableCommunities():Promise<{id:string;name:string}[]>{
+ const {client}=await signedIn();
+ const {data,error}=await client.from('communities').select('id,name').eq('active',true).order('name');
+ if(error)throw new Error(errorMessage(error));
+ return data??[];
+}
+export async function changeCustomerCommunity(communityId:string,newAddress:string){
+ if(newAddress.trim().length<5||newAddress.length>240)throw new Error('Enter your complete new residence before moving');
+ const {client,user}=await signedIn();
+ const {data:profile,error:profileError}=await client.from('profiles')
+  .select('community_id,onboarding_completed_at').eq('id',user.id).single();
+ if(profileError||!profile?.community_id||!profile.onboarding_completed_at)throw new Error('Complete your household profile first');
+ if(profile.community_id===safeId(communityId))throw new Error('Select a different community');
+ const {data:destination,error:destError}=await client.from('communities')
+  .select('id').eq('id',safeId(communityId)).eq('active',true).maybeSingle();
+ if(destError||!destination)throw new Error('Choose an active community');
+ const {data,error}=await client.from('profiles').update({
+  community_id:destination.id,address_hint:newAddress.trim(),pickup_point_id:null,google_maps_url:null
+ }).eq('id',user.id).eq('community_id',profile.community_id).select('community_id').maybeSingle();
+ if(error)throw new Error(error.message);
+ if(data?.community_id!==destination.id)throw new Error('Community changed in another session. Refresh and retry.');
+}
