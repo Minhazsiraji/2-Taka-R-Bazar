@@ -138,3 +138,8 @@ export async function submitDirectOrderPayment(id:string,payeeId:string,referenc
  if(reference.trim().length<6||reference.trim().length>80)throw new Error('Enter a valid payment reference');
  await rpc('launch_submit_payment',{p_order:safeId(id),p_recipient:safeId(payeeId),p_reference:reference.trim()});
 }
+
+/** Initiates an audited owner-only deletion request; never deletes pending orders or credentials instantly. */
+export async function requestCustomerAccountDeletion():Promise<string>{
+ return rpc<string>('request_my_account_deletion',{});
+}
