@@ -50,7 +50,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
   for(const r of mediaRes.data??[])mediaByProduct.set(r.product_id,[...(mediaByProduct.get(r.product_id)??[]),r])
   return <AdminShell variant="product"><div className="grid min-w-0 gap-5">
     <section><div className="card-title">Catalog</div><h1 className="text-2xl font-black sm:text-3xl">Products</h1><p className="muted mt-1">Each product has one master image. The same image follows the product into Pool, order and savings views.</p><p className="mt-2 text-sm"><a className="font-semibold text-teal-700 underline underline-offset-2" href="/docs/product-upload-guide.html" target="_blank" rel="noopener noreferrer" aria-label="Open Product Upload SEO AEO GEO guide and printable PDF instructions">Product Upload Guide (SEO / AEO / GEO) — View, Print or Save as PDF ↗</a></p></section>
-    <div className="card flex flex-wrap items-center justify-between gap-3"><div><b>Already added your product?</b><p className="muted text-sm">Next, choose Direct, Group Deal or Pool, select products and area, and enter prices.</p></div><a className="btn-primary" href="/admin/offers">Create offer →</a></div>
+    <div className="card flex flex-wrap items-center justify-between gap-3"><div><b>Already added your product?</b><p className="muted text-sm">Next, choose Direct, Group Deal or Pool, select products and area, and enter prices.</p></div><a className="btn-primary" href="/admin/offers">Create offer →</a><Link className="btn-secondary" href="/admin/inventory">Update inventory →</Link></div>
     <Flash {...sp}/>
 
     {!archived&&<AdminQuickProductForm key={user.id} userId={user.id}/>}
@@ -62,7 +62,7 @@ export default async function Page({searchParams}:{searchParams:Promise<{error?:
     </nav>
 
     <section className="grid gap-3">
-      {(rows??[]).map((r:any)=><details className="card min-w-0 p-0" key={r.id}>
+      {(rows??[]).map((r:any)=><details id={'product-'+r.id} className="card min-w-0 scroll-mt-24 p-0" key={r.id}>
         <summary className="cursor-pointer list-none p-3 sm:p-4">
           <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3 sm:gap-4">
             <ProductImage src={r.image_url} name={r.name} variant="thumb"/>
