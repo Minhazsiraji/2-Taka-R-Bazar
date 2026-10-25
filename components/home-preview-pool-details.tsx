@@ -173,14 +173,14 @@ export function HomePreviewPoolDetails({pool,initialLanguage,hasLanguageCookie,v
     <button type="button" disabled={joining||Boolean(view)&&!pool.launchOfferId||!units||selected.some(l=>(quantities[l.product.id]??0)>(l.product.stock??100))} onClick={async()=>{
       if(pool.launchOfferId){
        const chosen=selected.map(l=>({product_id:l.product.id,offer_id:pool.launchOfferId,quantity:quantities[l.product.id]}))
-       if(new Set([...readLaunchCart(),...chosen].map(x=>x.product_id)).size>6){
-        setStatus(t('Your cart can hold 6 different products. Review it first.','কার্টে ৬টি ভিন্ন পণ্য রাখা যায়। আগে কার্ট দেখুন।'));return
+       if(new Set([...readLaunchCart(),...chosen].map(x=>x.product_id)).size>20){
+        setStatus(t('Your cart can hold 20 different products. Review it first.','কার্টে ২০টি ভিন্ন পণ্য রাখা যায়। আগে কার্ট দেখুন।'));return
        }
        setJoining(true)
        try{
         const result=await joinSimpleSalePool(pool.launchOfferId,chosen.map(i=>({product_id:i.product_id,quantity:i.quantity})),pool.cycleId)
         if(!result.ok){setStatus(result.message);if(result.code==='SIGN_IN')router.push('/login?next=%2F');return}
-        const added=addLaunchItems(chosen)
+        const added=addLaunchItems(chosen,{replaceExisting:true})
         if(!added){setStatus(t('Review your cart before adding these products.','পণ্য যোগ করার আগে কার্ট দেখুন।'));return}
         window.dispatchEvent(new Event('2tbr-notifications-refresh'))
         router.refresh()
