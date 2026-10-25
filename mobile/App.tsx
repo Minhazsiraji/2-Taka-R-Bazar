@@ -474,16 +474,16 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     {sumRow(label('Current estimated Pool total','বর্তমান পুলের আনুমানিক মূল্য'),current,true)}
     {sumRow(label('Potential savings','সম্ভাব্য সাশ্রয়'),Math.max(0,retail-current))}
     {pool.nextTier?sumRow(label('Total at next tier','পরবর্তী স্তরে মোট মূল্য'),next):<Text style={{color:theme.muted,fontSize:11}}>Next-tier price not published</Text>}
-    <Text style={{fontSize:10,color:theme.muted,marginTop:9}}>{label('Excludes delivery fees. No real stock, booking or payment occurs in demo.','ডেলিভারি চার্জ বাদে। ডেমোতে আসল স্টক, বুকিং বা পেমেন্ট হয় না।')}</Text>
+    <Text style={{fontSize:10,color:theme.muted,marginTop:9}}>{demo?label('Excludes delivery fees. No real stock, booking or payment occurs in demo.','ডেলিভারি চার্জ বাদে। ডেমোতে আসল স্টক, বুকিং বা পেমেন্ট হয় না।'):label('Estimate excludes delivery. Joining is a commitment, not an order or payment.','ডেলিভারি ছাড়া আনুমানিক মূল্য। যোগদান মানেই অর্ডার বা পেমেন্ট নয়।')}</Text>
    </>)}
    {panel(<>
     <Text style={{fontSize:12,color:theme.text,fontWeight:'900'}}>{label('Before you join','যোগদানের আগে জানুন')}</Text>
     <Text style={{fontSize:11,lineHeight:17,color:theme.muted,marginTop:7}}>{label('Select only what you need. The final price, availability, deadline and delivery rules must be confirmed.','শুধু প্রয়োজনীয় পণ্য নিন। মূল্য, স্টক, সময় ও ডেলিভারি নিশ্চিত করতে হবে।')}</Text>
-    <Text style={{fontSize:11,lineHeight:17,color:theme.muted,marginTop:7}}>{label('No order, Pool commitment or payment is created from this preview.','ডেমোতে কোনো অর্ডার, পুলে যোগদান বা পেমেন্ট হয় না।')}</Text>
+    <Text style={{fontSize:11,lineHeight:17,color:theme.muted,marginTop:7}}>{demo?label('No order, Pool commitment or payment is created from this preview.','ডেমোতে কোনো অর্ডার, পুলে যোগদান বা পেমেন্ট হয় না।'):label('Join confirms your Pool commitment. Final total is accepted after the round closes.','পুলে যোগ দিলে আপনার অংশগ্রহণ নিশ্চিত হবে। বন্ধ হওয়ার পর চূড়ান্ত দাম মেনে নেবেন।')}</Text>
    </>)}
    <View style={{...glass.outer,borderRadius:12,padding:10,marginBottom:8,flexDirection:'row',alignItems:'center',gap:9}}>
     <View><Text style={{fontSize:10,color:theme.muted}}>{n(units)} {label('units selected','টি ইউনিট নির্বাচিত')}</Text><Text style={{fontSize:18,fontWeight:'900',color:theme.accent}}>{cash(current)}</Text></View>
-    <Pressable accessibilityRole="button" disabled={demo&&!units} onPress={()=>demo?draftPool(pool,quantities):openPublishedPool(pool)} style={{...glass.control,flex:1,paddingVertical:11,paddingHorizontal:7,borderRadius:10,backgroundColor:theme.accent,opacity:units||!demo?1:.35,alignItems:'center'}}><Text style={{fontSize:11,color:theme.onPrimary,fontWeight:'900'}}>{demo?label('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো'):label('Join Pool on Website','ওয়েবসাইটে পুলে যোগ দিন')} →</Text></Pressable>
+    <Pressable accessibilityRole="button" disabled={!units} onPress={()=>demo?draftPool(pool,quantities):openPublishedPool(pool)} style={{...glass.control,flex:1,paddingVertical:11,paddingHorizontal:7,borderRadius:10,backgroundColor:theme.accent,opacity:units?1:.35,alignItems:'center'}}><Text style={{fontSize:11,color:theme.onPrimary,fontWeight:'900'}}>{demo?label('Review Join Pool · Demo','পুলে যোগদান দেখুন · ডেমো'):label('Join Pool','পুলে যোগ দিন')} →</Text></Pressable>
    </View>
   </>;
  }
@@ -566,10 +566,10 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     <View style={styles.between}><Text style={{fontSize:11,color:theme.muted}}>{text('Direct subtotal','সরাসরি পণ্যের মূল্য')}</Text><Text style={{fontSize:19,fontWeight:'900',color:theme.accent}}>{demoMoney(subtotal)}</Text></View>
     <Text style={{fontSize:11,color:theme.muted,marginTop:9}}>{text('Delivery fee is determined after address confirmation.','ঠিকানা নিশ্চিতের পর ডেলিভারি চার্জ নির্ধারিত হবে।')}</Text>
     <Text style={{fontSize:10,color:theme.muted,marginTop:7}}>{text('Pending Group Deal and Pool totals are not payable or included in this amount.','গ্রুপ ডিল ও পুলের অপেক্ষমাণ মূল্য এই মোটে অন্তর্ভুক্ত নয়।')}</Text>
-    <Pressable accessibilityRole="button" disabled={!direct.length} onPress={()=>setScreen('checkout')} style={{...glass.control,backgroundColor:theme.accent,opacity:direct.length?1:0.38,borderRadius:10,padding:12,marginTop:12,alignItems:'center'}}><Text style={{color:theme.onPrimary,fontSize:12,fontWeight:'900'}}>{text('Review direct checkout · Demo','সরাসরি চেকআউট · ডেমো')} →</Text></Pressable>
+    <Pressable accessibilityRole="button" disabled={!direct.length} onPress={()=>setScreen('checkout')} style={{...glass.control,backgroundColor:theme.accent,opacity:direct.length?1:0.38,borderRadius:10,padding:12,marginTop:12,alignItems:'center'}}><Text style={{color:theme.onPrimary,fontSize:12,fontWeight:'900'}}>{demo?text('Review direct checkout · Demo','সরাসরি চেকআউট · ডেমো'):text('Review direct checkout','সরাসরি চেকআউট দেখুন')} →</Text></Pressable>
     {!direct.length&&<Text style={{fontSize:10,color:theme.muted,marginTop:7}}>{text('Add an Exclusive Product before checkout.','চেকআউটের আগে বিশেষ পণ্য যোগ করুন।')}</Text>}
    </>)}
-   <Text style={{fontSize:10,color:theme.muted,marginBottom:12}}>{t.notice} {text('No stock is held and no transaction is created.','কোনো স্টক সংরক্ষণ বা লেনদেন হয় না।')}</Text>
+   <Text style={{fontSize:10,color:theme.muted,marginBottom:12}}>{demo?t.notice+' '+text('No stock is held and no transaction is created.','কোনো স্টক সংরক্ষণ বা লেনদেন হয় না।'):text('Final product and delivery charges require confirmation. Deals and Pools are not payable while open.','পণ্য ও ডেলিভারি চার্জ নিশ্চিত হওয়ার আগে ডিল/পুলের মূল্য পরিশোধযোগ্য নয়।')}</Text>
   </>;
  }
  function Checkout(){
