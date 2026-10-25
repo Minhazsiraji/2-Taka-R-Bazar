@@ -106,7 +106,7 @@ test('Pool product selections, total and retail navigation are isolated from app
  for(const token of ['changePoolQty','poolQuantities','Potential savings','Current estimated Pool total','Total at next tier','Product Details','Review Join Pool · Demo']){
   assert.ok(app.includes(token),token);
  }
- assert.ok(app.includes("disabled={demo&&!units} onPress={()=>demo?draftPool(pool,quantities):openPublishedPool(pool)}"));
+ assert.ok(app.includes("disabled={!units} onPress={()=>demo?draftPool(pool,quantities):openPublishedPool(pool)}"));
  assert.ok(app.includes("offer.mode==='POOL'&&selectedPool?'pool'"));
  const home=app.slice(app.indexOf('function Home()'),app.indexOf('function Footer()'));
  assert.ok(home.includes('{Hero()}'));
