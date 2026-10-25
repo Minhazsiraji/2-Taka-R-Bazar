@@ -16,6 +16,7 @@ const daily:Item[]=[
  {href:'/admin/deliveries',label:'Deliveries'},
  {href:'/admin/pickup-points',label:'Pickup points'},
  {href:'/admin/communities',label:'Communities'},
+ {href:'/admin/community-ops',label:'Community Ops'},
  {href:'/admin/notifications',label:'Notifications'},
  {href:'/admin/pilot-bookings',label:'Pilot bookings'},
 ]
