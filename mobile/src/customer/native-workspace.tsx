@@ -7,7 +7,7 @@ import {glassSurfaces} from '../theme';
 import type {Offer,Product} from '../data';
 import {
  getCustomerSnapshot,setQuoteDelivery,decideCustomerQuote,getQuotePayees,submitCustomerPayment,
- submitDirectCustomerOrder,getDirectOrderPayees,submitDirectOrderPayment,markAllCustomerNotifications,
+ submitDirectCustomerOrder,getDirectOrderPayees,submitDirectOrderPayment,markAllCustomerNotifications,requestCustomerAccountDeletion,
  type CustomerSnapshot,type CustomerQuote,type CustomerOrder,type OfficialPayee
 } from './api';
 
@@ -104,6 +104,12 @@ export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,prod
    {btn(t('Notifications','নোটিফিকেশন')+' · '+snapshot.notifications.filter(n=>!n.read_at).length,()=>onNavigate('notifications'))}
    {btn(t('Community settings','কমিউনিটি সেটিংস'),()=>void Linking.openURL('https://2takarbazar.com/account/settings'))}
    {btn(t('Privacy policy','গোপনীয়তা নীতি'),()=>void Linking.openURL('https://2takarbazar.com/privacy'))}
+   {btn(t('Request permanent account deletion','অ্যাকাউন্ট স্থায়ীভাবে মুছতে অনুরোধ'),()=>
+    Alert.alert(t('Delete your entire account?','আপনার অ্যাকাউন্ট মুছে ফেলবেন?'),
+     t('Request permanent deletion of your account and personal data. Pending payments and records legally required to be kept will be reviewed. This does not immediately cancel orders.','সম্পূর্ণ অ্যাকাউন্ট ও ব্যক্তিগত তথ্য মুছে ফেলার অনুরোধ। অসম্পন্ন অর্ডার ও আইনি সংরক্ষণ যাচাই হবে।'),
+     [{text:t('Keep my account','অ্যাকাউন্ট রাখুন'),style:'cancel'},
+      {text:t('Request deletion','মুছে ফেলার অনুরোধ'),style:'destructive',onPress:()=>void action(requestCustomerAccountDeletion,t('Deletion request recorded. You will be notified of the result through your registered contact.','অ্যাকাউন্ট মোছার অনুরোধ জমা হয়েছে। ফলাফল জানানো হবে।'))}]))}
+   {btn(t('Account deletion information (web)','অ্যাকাউন্ট মোছার তথ্য (ওয়েব)'),()=>void Linking.openURL('https://2takarbazar.com/account/delete'))}
   </View>}
   {userId&&snapshot&&pane==='commitments'&&<View>
    <Text style={{color:theme.muted,fontSize:11,marginTop:7}}>{t('Commit first. At closure prices lock; choose delivery, accept the exact fee-inclusive total, then submit payment details. Only staff-verified payment creates an order.','প্রথমে যোগ দিন। ডিল বন্ধ হলে চূড়ান্ত দাম ও ডেলিভারি চার্জ মেনে পেমেন্ট রেফারেন্স দিন। যাচাইকৃত পেমেন্টেই অর্ডার হয়।')}</Text>
