@@ -77,7 +77,7 @@ begin
  end if;
  update public.simple_sale_offers set buyer_target=threshold_first where id=oid;
  return oid;
-end $function$
+end $function$;
 
 CREATE OR REPLACE FUNCTION private.join_simple_sale_cycle_impl(p_offer uuid, p_lines jsonb, p_area uuid, p_expected_cycle uuid DEFAULT NULL::uuid)
  RETURNS boolean
@@ -168,7 +168,7 @@ begin
   perform private.close_simple_sale_cycle_impl(c.id,true);
  end if;
  return new_member;
-end $function$
+end $function$;
 
 -- Atomic full-basket withdrawal while a Pool round is still OPEN.
 -- This does not modify a closed round's immutable quote or prior order.
