@@ -7,11 +7,11 @@ import {glassSurfaces} from '../theme';
 import type {Offer,Product} from '../data';
 import {
  getCustomerSnapshot,setQuoteDelivery,decideCustomerQuote,getQuotePayees,submitCustomerPayment,
- submitDirectCustomerOrder,getDirectOrderPayees,submitDirectOrderPayment,markAllCustomerNotifications,requestCustomerAccountDeletion,
+ submitDirectCustomerOrder,getDirectOrderPayees,submitDirectOrderPayment,markAllCustomerNotifications,requestCustomerAccountDeletion,getAvailableCommunities,changeCustomerCommunity,
  type CustomerSnapshot,type CustomerQuote,type CustomerOrder,type OfficialPayee
 } from './api';
 
-type Pane='overview'|'commitments'|'orders'|'savings'|'notifications'|'checkout';
+type Pane='overview'|'community'|'commitments'|'orders'|'savings'|'notifications'|'checkout';
 const taka=(n:number|null|undefined)=>n==null?'Pending':'৳'+Number(n).toLocaleString('en-BD',{maximumFractionDigits:2});
 const makeUuid=()=>{
  const a=new Uint8Array(16);
@@ -30,6 +30,8 @@ export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,prod
  const [fulfillment,setFulfillment]=useState<'pickup'|'home_delivery'>('pickup');
  const [pickup,setPickup]=useState(''),[address,setAddress]=useState('');
  const [name,setName]=useState(''),[phone,setPhone]=useState(''),[terms,setTerms]=useState(false);
+ const [communities,setCommunities]=useState<{id:string;name:string}[]>([]);
+ const [nextCommunity,setNextCommunity]=useState(''),[newResidence,setNewResidence]=useState('');
  const [reference,setReference]=useState(''),[recipient,setRecipient]=useState('');
  const [payees,setPayees]=useState<OfficialPayee[]>([]);
  const [deliveryMethod,setDeliveryMethod]=useState<'pickup'|'home_delivery'>('pickup');
@@ -39,7 +41,7 @@ export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,prod
  const loadedFor=useRef<string|null>(null);
  const t=(en:string,bn:string)=>lang==='bn'?bn:en;
  const surfaces=theme.background==='#0D1424'?glassSurfaces.dark:glassSurfaces.light;
- const paneTitle={overview:t('My account','আমার অ্যাকাউন্ট'),commitments:t('My Deals & Pools','আমার ডিল ও পুল'),
+ const paneTitle={overview:t('My account','আমার অ্যাকাউন্ট'),community:t('Your community','আপনার কমিউনিটি'),commitments:t('My Deals & Pools','আমার ডিল ও পুল'),
  orders:t('My orders','আমার অর্ডার'),savings:t('Verified savings','যাচাইকৃত সাশ্রয়'),
  notifications:t('Notifications','নোটিফিকেশন'),checkout:t('Direct checkout','সরাসরি চেকআউট')};
  const panel={...surfaces.outer,padding:14,borderRadius:17,marginTop:12};
@@ -54,6 +56,11 @@ export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,prod
  },[userId]);
  useEffect(()=>{if(loadedFor.current===userId)return;loadedFor.current=userId;void refresh()},[refresh,userId]);
  useEffect(()=>{if(userId)void refresh()},[pane,refresh,userId]);
+ useEffect(()=>{if(pane!=='community'||!userId)return;
+  let alive=true;
+  void getAvailableCommunities().then(rows=>{if(alive)setCommunities(rows)}).catch(()=>{if(alive)setError('Community options are temporarily unavailable')});
+  return()=>{alive=false};
+ },[pane,userId]);
  const action=async(work:()=>Promise<unknown>,success:string,after?:()=>void)=>{
   if(saving)return;
   setSaving(true);
@@ -102,7 +109,7 @@ export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,prod
    {btn(t('Orders','অর্ডার')+' · '+ownOrders.length,()=>onNavigate('orders'))}
    {btn(t('Verified savings','যাচাইকৃত সাশ্রয়'),()=>onNavigate('savings'))}
    {btn(t('Notifications','নোটিফিকেশন')+' · '+snapshot.notifications.filter(n=>!n.read_at).length,()=>onNavigate('notifications'))}
-   {btn(t('Community settings','কমিউনিটি সেটিংস'),()=>void Linking.openURL('https://2takarbazar.com/profile'))}
+   {btn(t('Community settings','কমিউনিটি সেটিংস'),()=>onNavigate('community'))}
    {btn(t('Privacy policy','গোপনীয়তা নীতি'),()=>void Linking.openURL('https://2takarbazar.com/privacy'))}
    {btn(t('Request permanent account deletion','অ্যাকাউন্ট স্থায়ীভাবে মুছতে অনুরোধ'),()=>
     Alert.alert(t('Delete your entire account?','আপনার অ্যাকাউন্ট মুছে ফেলবেন?'),
@@ -110,6 +117,18 @@ export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,prod
      [{text:t('Keep my account','অ্যাকাউন্ট রাখুন'),style:'cancel'},
       {text:t('Request deletion','মুছে ফেলার অনুরোধ'),style:'destructive',onPress:()=>void action(requestCustomerAccountDeletion,t('Deletion request recorded. You will be notified of the result through your registered contact.','অ্যাকাউন্ট মোছার অনুরোধ জমা হয়েছে। ফলাফল জানানো হবে।'))}]))}
    {btn(t('Account deletion information (web)','অ্যাকাউন্ট মোছার তথ্য (ওয়েব)'),()=>void Linking.openURL('https://2takarbazar.com/account/delete'))}
+  </View>}
+  {userId&&snapshot&&pane==='community'&&<View style={panel}>
+   <Text style={{color:theme.text,fontWeight:'800'}}>{t('Registered community','নিবন্ধিত কমিউনিটি')}: {communities.find(c=>c.id===snapshot.communityId)?.name??'—'}</Text>
+   <Text style={{color:theme.muted,fontSize:11,marginTop:8}}>{t('Moving home? You can change community only after open Deal/Pool commitments and outstanding quotes are resolved. Existing orders retain their original community.','বাসা পরিবর্তন করলে কমিউনিটি বদলান। চালু ডিল/পুল বা অসম্পন্ন চূড়ান্ত মূল্য থাকলে পরিবর্তন বন্ধ থাকবে।')}</Text>
+   {communities.filter(c=>c.id!==snapshot.communityId).map(c=>choose(c.name,nextCommunity===c.id,()=>setNextCommunity(c.id)))}
+   {input(t('New address (at least 5 characters)','নতুন বাসার ঠিকানা'),newResidence,setNewResidence,true)}
+   {btn(t('Confirm community move','কমিউনিটি পরিবর্তন নিশ্চিত করুন'),()=>Alert.alert(t('Move to the new community?','নতুন কমিউনিটিতে যাবেন?'),
+     t('Open commitments prevent moving. Existing orders are unchanged.','চলমান ডিল/পুল থাকলে পরিবর্তন হবে না। পুরোনো অর্ডার অপরিবর্তিত থাকবে।'),[
+      {text:t('Back','ফিরে যান'),style:'cancel'},
+      {text:t('Confirm move','নিশ্চিত করুন'),onPress:()=>void action(()=>changeCustomerCommunity(nextCommunity,newResidence),
+       t('Community changed. Choose a pickup point for your next order.','কমিউনিটি পরিবর্তন হয়েছে। পরবর্তী অর্ডারে নতুন পিকআপ পয়েন্ট বাছুন।'),()=>onNavigate('overview'))}
+     ]),!nextCommunity||newResidence.trim().length<5)}
   </View>}
   {userId&&snapshot&&pane==='commitments'&&<View>
    <Text style={{color:theme.muted,fontSize:11,marginTop:7}}>{t('Commit first. At closure prices lock; choose delivery, accept the exact fee-inclusive total, then submit payment details. Only staff-verified payment creates an order.','প্রথমে যোগ দিন। ডিল বন্ধ হলে চূড়ান্ত দাম ও ডেলিভারি চার্জ মেনে পেমেন্ট রেফারেন্স দিন। যাচাইকৃত পেমেন্টেই অর্ডার হয়।')}</Text>
