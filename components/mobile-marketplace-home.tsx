@@ -78,6 +78,10 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
  const livePreviewData={offers,pools,products,catalog:publishedProducts.items,vendorProducts}
  const hasLivePreview=previewCards
  const [slide,setSlide]=useState(0)
+ const heroVideoRef=useRef<HTMLVideoElement>(null)
+ const previousHeroVideoTime=useRef(0)
+ const [heroVideoPlaying,setHeroVideoPlaying]=useState(false)
+ const [heroVideoFailed,setHeroVideoFailed]=useState(false)
  const areaPickerRef=useRef<HTMLDetailsElement>(null)
  const [clockNow,setClockNow]=useState<number|null>(null)
  const endsLabel=(iso:string)=>{
@@ -91,11 +95,28 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
   const days=Math.ceil(remaining/86400000)
   return t('Ends in','শেষ হতে')+' '+days+' '+t(days===1?'day':'days','দিন')
  }
+ // The Expo hero advances its four unchanged messages only when its 8s video
+ // reaches the loop boundary. Preserve the original timed carousel as fallback.
  useEffect(()=>{
-  if(typeof window==='undefined'||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches||heroVideoPlaying&&!heroVideoFailed)return
   const timer=window.setInterval(()=>setSlide(i=>(i+1)%heroSlides.length),7200)
   return()=>window.clearInterval(timer)
- },[])
+ },[heroVideoPlaying,heroVideoFailed])
+ useEffect(()=>{
+  const motion=window.matchMedia('(prefers-reduced-motion: reduce)')
+  const update=()=>{
+   if(motion.matches)heroVideoRef.current?.pause()
+   else if(!heroVideoFailed)void heroVideoRef.current?.play().catch(()=>{})
+  }
+  update()
+  motion.addEventListener('change',update)
+  return()=>motion.removeEventListener('change',update)
+ },[heroVideoFailed])
+ const selectHeroSlide=(index:number)=>{
+  setSlide((index+heroSlides.length)%heroSlides.length)
+  previousHeroVideoTime.current=0
+  if(heroVideoRef.current)heroVideoRef.current.currentTime=0
+ }
  useEffect(()=>{
   setClockNow(Date.now())
   const timer=window.setInterval(()=>setClockNow(Date.now()),60000)
@@ -205,6 +226,20 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
    </details>
   </div>
   <section className="mhome-hero" aria-label={t('Featured shopping messages','ফিচারড বার্তা')} role="region" aria-roledescription="carousel">
+   {!heroVideoFailed&&<video ref={heroVideoRef} className="mhome-hero-video" src="/2TBR-hero.mp4"
+    autoPlay muted playsInline loop preload="auto" poster="/2tbr-app-hero.jpg"
+    aria-hidden="true" tabIndex={-1}
+    onPlaying={()=>setHeroVideoPlaying(true)}
+    onPause={()=>setHeroVideoPlaying(false)}
+    onError={()=>{setHeroVideoFailed(true);setHeroVideoPlaying(false)}}
+    onTimeUpdate={event=>{
+     const time=event.currentTarget.currentTime
+     if(time+1<previousHeroVideoTime.current&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      setSlide(i=>(i+1)%heroSlides.length)
+     }
+     previousHeroVideoTime.current=time
+    }}/>}
+   {!heroVideoFailed&&<span className="mhome-hero-video-tint" aria-hidden="true"/>}
    <div className="mhome-hero-copy" aria-live="off">
     <span className="mhome-hero-kicker">✦ SMART SHOPPING. REAL SAVINGS!</span>
     <h1 key={slide}>{t(activeSlide.en,activeSlide.bn)}</h1>
@@ -213,13 +248,13 @@ export function MobileMarketplaceHome({areas,selectedArea,onChooseArea,onDetectA
     <a href={activeSlide.href}>{t(activeSlide.action,activeSlide.actionBn)} <span aria-hidden="true">→</span></a>
     <div className="mhome-hero-controls" aria-label={t('Banner controls','ব্যানার নিয়ন্ত্রণ')}>
      <button className="mhome-hero-arrow mhome-prev" type="button" aria-label={t('Previous banner','আগের ব্যানার')}
-      onClick={()=>setSlide(i=>(i+heroSlides.length-1)%heroSlides.length)}>‹</button>
+      onClick={()=>selectHeroSlide(slide-1)}>‹</button>
      <div className="mhome-dots" aria-label={t('Choose banner','ব্যানার বাছুন')}>
       {heroSlides.map((_,i)=><button key={i} type="button" aria-current={i===slide?'true':undefined}
-       aria-label={t('Banner ','ব্যানার ')+(i+1)} onClick={()=>setSlide(i)}/>)}
+       aria-label={t('Banner ','ব্যানার ')+(i+1)} onClick={()=>selectHeroSlide(i)}/>)}
      </div>
      <button className="mhome-hero-arrow mhome-next" type="button" aria-label={t('Next banner','পরের ব্যানার')}
-      onClick={()=>setSlide(i=>(i+1)%heroSlides.length)}>›</button>
+      onClick={()=>selectHeroSlide(slide+1)}>›</button>
     </div>
    </div>
   </section>
