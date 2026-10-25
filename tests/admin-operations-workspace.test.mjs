@@ -45,6 +45,13 @@ test('quick product edit, allocation and order pages form a direct operator work
  assert.match(order,/const sharedOrderIds=new Set/)
  assert.match(order,/direct\.filter\(o=>!sharedOrderIds\.has\(o\.id\)\)/)
  assert.match(order,/\/admin\/offer-settlement/)
+ assert.ok(order.includes("'/admin/launch-orders?order='+q.order_id"),'Confirmed shared orders must link to admin inbox')
+ assert.ok(order.includes("'/admin/launch-orders?order='+o.id"),'Direct orders must link to admin inbox')
+ const inbox=read('app/admin/launch-orders/page.tsx')
+ assert.match(inbox,/requireAdmin\(\)/)
+ assert.ok(inbox.includes("selectedOrder?orderQuery.eq('id',selectedOrder)"),'An authorized admin can locate an exact order by UUID')
+ assert.match(inbox,/requestedOrder=.*\?\?''/)
+ assert.ok(read('app/admin/offer-settlement/page.tsx').includes("'/admin/launch-orders?order='+q.order_id"),'Settlement must not deep-link into a customer-only order page')
 })
 
 test('inventory is admin-only, audited, uses server validated optimistic concurrency',()=>{
