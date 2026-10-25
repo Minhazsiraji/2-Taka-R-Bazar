@@ -62,7 +62,7 @@ export default async function OrderTracking({searchParams}:{searchParams:Promise
    status,stage,guidance,productTotal,deliveryFee:fee,total:fee===null?null:productTotal+fee,
    cycle:'Round '+(c?.cycle_number??'?')+' · '+(communityById.get(c?.community_id??'')??'Community'),
    lines:q.simple_sale_cycle_quote_items.map(i=>(productsById.get(i.product_id)??'Product')+' × '+i.quantity+' @ '+money(Number(i.unit_price))),
-   href:status==='verified'&&q.order_id?'/launch-orders/'+q.order_id:'/admin/offer-settlement',
+   href:status==='verified'&&q.order_id?'/admin/launch-orders?order='+q.order_id:'/admin/offer-settlement',
    action:status==='verified'&&q.order_id?'View confirmed order':'Open settlement'}
  })
  // Verified shared quotes already correspond to launch orders. Do not count or
@@ -79,7 +79,7 @@ export default async function OrderTracking({searchParams}:{searchParams:Promise
     :stage==='customer'?'Waiting for customer action or payment.':stage==='complete'?'Payment verified.':'Cancelled',
    productTotal:Number(o.subtotal),deliveryFee:Number(o.delivery_fee),total:Number(o.total_amount),
    lines:o.launch_order_items.map(i=>i.product_name+' × '+i.quantity+' @ '+money(Number(i.unit_price))),
-   href:'/admin/launch-orders',action:'Open direct approvals'
+   href:'/admin/launch-orders?order='+o.id,action:'Open direct order'
   }
  })
  const all=[...shared,...directItems].sort((a,b)=>b.created_at.localeCompare(a.created_at))
