@@ -28,6 +28,8 @@ jobs:
         run: npm run typecheck
       - name: Store candidate preflight checks
         run: node scripts/store-candidate-preflight.mjs
+      - name: Store release preflight (no signing or submission)
+        run: node scripts/store-release-preflight.mjs
       - name: Expo native config static validation
         run: npx expo config --type public --json > /tmp/2tbr-expo-public-config.json
       - name: Build Android bundle without publishing
