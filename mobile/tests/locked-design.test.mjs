@@ -30,11 +30,11 @@ test('hero uses original four website message pairs and permanent slogans',()=>{
  assert.match(app,/একসাথে কিনি, কম দামে পাই!/);
 });
 test('savings and cart cannot silently behave like paid verified orders',()=>{
- assert.match(app,/demo\\?money\\(demoSavings.thisMonth\\):homeVerifiedSavings\\?\\.this_month/);
- assert.match(app,/client\\.rpc\\('store_home_savings'\\)/);
- assert.match(app,/homeVerifiedSavings\\?\\.community!=null/);
- assert.match(app,/No real order or savings transaction has been created/);
- assert.match(app,/cartLineCount\(cart\)/);
+ assert.ok(app.includes("demo?money(demoSavings.thisMonth):homeVerifiedSavings?.this_month"));
+ assert.ok(app.includes("client.rpc('store_home_savings')"));
+ assert.ok(app.includes('homeVerifiedSavings?.community!=null'));
+ assert.ok(app.includes('No real order or savings transaction has been created'));
+ assert.ok(app.includes('cartLineCount(cart)'));
 });
 
 test('Group Deal card visibly shows a people icon and deadline clock',()=>{
