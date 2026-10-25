@@ -1,0 +1,37 @@
+name: One-time patch of high-severity Zod audit finding
+on:
+  push:
+    branches:
+      - fix/pool-journey-20-items-exit-uat-oct25
+    paths:
+      - .github/workflows/pool-zod-lock-refresh-once.yml
+permissions:
+  contents: write
+jobs:
+  refresh-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/pool-journey-20-items-exit-uat-oct25
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+      - name: Regenerate lock at fixed patched Zod version
+        run: npm install zod@4.6.7 --save-exact --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Verify exact dependencies and high-severity audit
+        run: |
+          npm ci --no-audit --no-fund
+          npm audit --omit=dev --audit-level=high
+          node -e "if(require('./node_modules/zod/package.json').version!=='4.6.7')process.exit(1)"
+      - name: Commit only verified dependency metadata
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "fix(deps): patch high-severity Zod vulnerability"
+            git push origin HEAD:fix/pool-journey-20-items-exit-uat-oct25
+          fi
