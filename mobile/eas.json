@@ -31,7 +31,25 @@
         "EXPO_PUBLIC_DEMO_MODE": "false",
         "EXPO_PUBLIC_NATIVE_AUTH_ENABLED": "true",
         "EXPO_PUBLIC_NATIVE_GOOGLE_ENABLED": "false",
-        "EXPO_PUBLIC_SITE_URL": "https://2takarbazar.com"
+        "EXPO_PUBLIC_SITE_URL": "https://2takarbazar.com",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://sukabonfjcnaavjgjyuy.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_SGrWkKZ8eu8a31y9CyhrAw_Kl4x7pw9"
+      }
+    },
+    "2tbr-customer-qa": {
+      "distribution": "internal",
+      "channel": "2tbr-customer-qa",
+      "environment": "preview",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://sukabonfjcnaavjgjyuy.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_SGrWkKZ8eu8a31y9CyhrAw_Kl4x7pw9",
+        "EXPO_PUBLIC_SITE_URL": "https://2takarbazar.com",
+        "EXPO_PUBLIC_DEMO_MODE": "false",
+        "EXPO_PUBLIC_NATIVE_AUTH_ENABLED": "true",
+        "EXPO_PUBLIC_NATIVE_GOOGLE_ENABLED": "false"
       }
     }
   },
