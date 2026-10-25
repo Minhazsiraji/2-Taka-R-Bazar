@@ -16,9 +16,11 @@ import {loadPublicCatalog} from './src/live';
 import {productInfoSections,productMissing} from './src/product-content';
 import {useNativeAuth} from './src/auth/use-native-auth';
 import {NativeSignIn} from './src/auth/native-sign-in';
+import {NativeCustomerWorkspace} from './src/customer/native-workspace';
+import {joinCustomerDeal,joinCustomerPool} from './src/customer/api';
 
 type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
-type Screen=Tab|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'notifications'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
+type Screen=Tab|'commitments'|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'notifications'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
 type PreviewNotice={id:number;enTitle:string;bnTitle:string;enBody:string;bnBody:string;read:boolean};
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
@@ -79,7 +81,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     if(!alive)return;
     setProducts(result.products);setOffers(result.offers);setPools(result.pools);setDemo(false);
   }).catch(()=>{
-    if(alive){setProducts(demoProducts);setOffers(demoOffers);setPools(demoPools);setDemo(true);Alert.alert('Live catalog unavailable','Showing clearly labeled demo products. No purchases are enabled.')}
+    if(alive){setProducts([]);setOffers([]);setPools([]);setDemo(false);Alert.alert('Catalog unavailable','Connect to the internet; live mode never shows synthetic product prices.')}
   }).finally(()=>{if(alive)setBusy(false)});
   return()=>{alive=false};
  },[]);
@@ -112,7 +114,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   setNotices(old=>[{id,enTitle,bnTitle,enBody,bnBody,read:false},...old].slice(0,20));
  };
  const add=(offer:Offer)=>{
-  if(!demo){Alert.alert('Checkout not enabled','Live mobile purchasing requires separate qualification. Continue via the current website.');return}
+  if(!demo){updateCart(offer.id,1);setScreen('cart');return}
   updateCart(offer.id,1);
   const product=byId(offer.productId);
   pushDemoNotice(
@@ -296,7 +298,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
       </View>
       <Text style={{color:theme.muted,fontSize:11}}>{demo?'Qualified buyers and closing rules determine the final price. Below-minimum groups expire without payment.':'Only admin-confirmed orders count as joined. Cart items and pending requests do not advance progress.'}</Text>
     </>)}
-    <View style={{flexDirection:'row',gap:8,marginBottom:10}}>{button('Product Details',()=>setScreen('retail'),false)}{button(demo?'Join Deal · Preview':'Join via Website',()=>demo?draftGroup(offer):openPublishedOffer(offer))}</View>
+    <View style={{flexDirection:'row',gap:8,marginBottom:10}}>{button('Product Details',()=>setScreen('retail'),false)}{button(demo?'Join Deal · Preview':'Join Deal',()=>demo?draftGroup(offer):openPublishedOffer(offer))}</View>
     <Text style={{fontSize:10,color:theme.muted,marginBottom:8}}>{t.notice}</Text>
    </>;
  }
@@ -748,6 +750,12 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  </>}
  function Menu(){return <>{title('EXPLORE', '2TBR Menu')}{[['My Orders','orders'],['Savings','savings'],['My Account','account'],['Community Pools','pools'],['Group Deals','deals']].map(([text,destination])=><Pressable key={text} onPress={()=>setScreen(destination as Screen)} style={[styles.menuRow,glass.outer]}><Text style={{color:theme.text}}>{text}</Text></Pressable>)}<Footer/></>}
  function body(){
+ if(!demo&&['account','commitments','orders','savings','notifications','checkout'].includes(screen)){
+  const pane=screen==='account'?'overview':screen as 'commitments'|'orders'|'savings'|'notifications'|'checkout';
+  return <NativeCustomerWorkspace pane={pane} userId={auth.user?.id??null} lang={lang} theme={theme}
+   cart={cart} offers={offers} products={products} onSignIn={()=>setScreen('signIn')} onCart={()=>setScreen('cart')}
+   onClearCart={()=>setCart({})} onNavigate={dest=>setScreen(dest==='overview'?'account':dest)}/>;
+ }
  switch(screen){
  // Render these hook-free helpers directly so theme/slide changes do not remount the video.
  case 'home':return Home();
@@ -755,6 +763,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  case 'exclusive':return <>{title('CURATED FOR YOU',t.exclusive)}<View style={styles.twoCol}>{solo.map(o=><ExclusiveCard key={o.id} offer={o}/>)}</View></>;
  case 'pools':return <>{title('BUY TOGETHER',t.pools)}{pools.map(p=><PoolCard key={p.id} pool={p}/>)}</>;
  case 'cart':return <Cart/>;
+ case 'commitments':return <Account/>;
  case 'checkout':return <Checkout/>;
  case 'account':return <Account/>;
  case 'signIn':return <NativeSignIn auth={auth} lang={lang} theme={theme} onSuccess={()=>setScreen('account')}/>;
@@ -789,7 +798,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   </View>
   {busy&&<Text style={{textAlign:'center',color:theme.accent,fontSize:11}}>Loading public product catalog…</Text>}
   <ScrollView key={screen} style={{flex:1}} keyboardShouldPersistTaps="handled" contentContainerStyle={{paddingHorizontal:12,paddingTop:4,paddingBottom:screen==='pool'?110:30}}>
-   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='orderDetail'?setScreen('orders'):screen==='checkout'?setScreen('cart'):screen==='orders'||screen==='savings'||screen==='signIn'?setScreen('account'):screen==='notifications'?onTab('home'):screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
+   {!tabs.some(([tab])=>tab===screen)&&<Pressable onPress={()=>screen==='orderDetail'?setScreen('orders'):screen==='checkout'?setScreen('cart'):screen==='orders'||screen==='savings'||screen==='signIn'||screen==='commitments'?setScreen('account'):screen==='notifications'?onTab('home'):screen==='retail'&&selectedOffer?setScreen(selectedOffer.mode==='POOL'&&selectedPool?'pool':selectedOffer.mode==='GROUP_DEAL'?'group':'product'):onTab('home')} style={{marginTop:8,flexDirection:'row',gap:5,alignItems:'center'}}><Ionicons name="chevron-back" size={16} color={theme.text}/><Text style={{color:theme.text}}>{t.back}</Text></Pressable>}
    {body()}
   </ScrollView>
   <View style={[styles.bottom,{...glass.outer,borderTopWidth:1}]}>
