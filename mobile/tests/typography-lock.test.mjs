@@ -93,7 +93,7 @@ test('Approved hero image is bundled locally and has no older illustration or CD
 
 test('Android device edge safe area has one owner without lateral insets',()=>{
  const config=JSON.parse(readFileSync(new URL('../app.json',import.meta.url),'utf8'));
- assert.equal(config.expo.android.edgeToEdgeEnabled,false);
+ assert.equal(config.expo.android.edgeToEdgeEnabled,undefined,'Expo 57 rejects this legacy field; RN SafeAreaView owns the edge behavior');
  assert.ok(app.includes("edges={['top','bottom']}"));
  assert.ok(!app.includes("edges={['top','left','right','bottom']}"));
 });
