@@ -88,7 +88,8 @@ test('Admin has a live community reconciliation read model and officer assignmen
 test('Community Ops is reachable from officer and Admin navigation',()=>{
   assert.match(appShell,/href="\/community-ops"/i)
   assert.match(appShell,/Community Ops/i)
-  assert.match(adminShell,/\/admin\/community-ops/i)
+  assert.match(adminShell,/AdminNavigation/)
+  assert.match(fs.readFileSync('components/admin-navigation.tsx','utf8'),/\/admin\/community-ops/i)
 })
 
 test('server actions use guarded RPCs instead of direct financial table writes',()=>{

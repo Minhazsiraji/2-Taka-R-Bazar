@@ -73,7 +73,8 @@ test('own-product preview UX has clean encoding, readiness messaging and readabl
   assert.match(action,/Own Product storage is not configured in this environment/)
   assert.match(action,/bucket not found/i)
   assert.match(shell,/lg:grid-cols-\[250px_minmax\(0,1fr\)\]/)
-  assert.match(shell,/lg:whitespace-normal/)
+  assert.match(shell,/AdminNavigation/)
+  assert.match(readFileSync(new URL('../components/admin-navigation.tsx',import.meta.url),'utf8'),/\/admin\/own-products/)
 })
 
 
