@@ -210,3 +210,15 @@ $pool_leave$;
 revoke all on function public.leave_simple_sale_pool(uuid)
  from public,anon,authenticated,service_role;
 grant execute on function public.leave_simple_sale_pool(uuid) to authenticated;
+
+-- Read-only per-customer cancelled item pointers, without exposing private joins.
+create or replace function public.get_my_withdrawn_shared_items()
+returns table(offer_id uuid,product_id uuid)
+language sql stable security definer set search_path='' as $$
+ select j.offer_id,j.product_id from public.simple_sale_offer_joins j
+ where j.customer_id=auth.uid() and j.status='cancelled'
+ order by j.offer_id,j.product_id
+ limit 200
+$$;
+revoke all on function public.get_my_withdrawn_shared_items() from public,anon,authenticated,service_role;
+grant execute on function public.get_my_withdrawn_shared_items() to authenticated;
