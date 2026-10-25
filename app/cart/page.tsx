@@ -13,7 +13,7 @@ export default async function CartPage({searchParams}:{searchParams:Promise<{err
  user?db.from('simple_sale_commitment_delivery').select('offer_id,fulfillment,pickup_point_id,home_address').eq('customer_id',user.id):Promise.resolve({data:[]}),
  user?db.from('simple_sale_cycle_quotes').select('id,cycle_id,product_total,delivery_fee,status,simple_sale_cycle_quote_items(product_id,quantity,unit_price)').eq('customer_id',user.id).order('created_at',{ascending:false}).limit(75):Promise.resolve({data:[],error:null}),
  user?db.from('simple_sale_cycle_items').select('cycle_id,product_id,quantity').eq('customer_id',user.id).limit(100):Promise.resolve({data:[],error:null}),
- user?db.from('simple_sale_offer_joins').select('offer_id,product_id').eq('customer_id',user.id).eq('status','cancelled').limit(100):Promise.resolve({data:[],error:null})
+ user?db.rpc('get_my_withdrawn_shared_items'):Promise.resolve({data:[],error:null})
 ]);
 const quoteRows=(quotesResult.data??[]) as {id:string;cycle_id:string;status:string;product_total:number;delivery_fee:number|null;simple_sale_cycle_quote_items:{product_id:string;quantity:number;unit_price:number}[]}[]
 const openRows=(openItemsResult.data??[]) as {cycle_id:string;product_id:string;quantity:number}[]
