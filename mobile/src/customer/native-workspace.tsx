@@ -102,7 +102,7 @@ export function NativeCustomerWorkspace({pane,userId,lang,theme,cart,offers,prod
    {btn(t('Orders','অর্ডার')+' · '+ownOrders.length,()=>onNavigate('orders'))}
    {btn(t('Verified savings','যাচাইকৃত সাশ্রয়'),()=>onNavigate('savings'))}
    {btn(t('Notifications','নোটিফিকেশন')+' · '+snapshot.notifications.filter(n=>!n.read_at).length,()=>onNavigate('notifications'))}
-   {btn(t('Community settings','কমিউনিটি সেটিংস'),()=>void Linking.openURL('https://2takarbazar.com/account/settings'))}
+   {btn(t('Community settings','কমিউনিটি সেটিংস'),()=>void Linking.openURL('https://2takarbazar.com/profile'))}
    {btn(t('Privacy policy','গোপনীয়তা নীতি'),()=>void Linking.openURL('https://2takarbazar.com/privacy'))}
    {btn(t('Request permanent account deletion','অ্যাকাউন্ট স্থায়ীভাবে মুছতে অনুরোধ'),()=>
     Alert.alert(t('Delete your entire account?','আপনার অ্যাকাউন্ট মুছে ফেলবেন?'),
