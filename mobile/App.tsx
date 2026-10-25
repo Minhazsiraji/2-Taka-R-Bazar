@@ -21,7 +21,7 @@ import {NativeCustomerWorkspace} from './src/customer/native-workspace';
 import {joinCustomerDeal,joinCustomerPool} from './src/customer/api';
 
 type Tab='home'|'pools'|'deals'|'exclusive'|'cart';
-type Screen=Tab|'signUp'|'onboarding'|'commitments'|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'notifications'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
+type Screen=Tab|'signUp'|'onboarding'|'community'|'commitments'|'checkout'|'account'|'orders'|'orderDetail'|'savings'|'notifications'|'signIn'|'product'|'group'|'retail'|'pool'|'menu';
 type PreviewNotice={id:number;enTitle:string;bnTitle:string;enBody:string;bnBody:string;read:boolean};
 type IconName=React.ComponentProps<typeof Ionicons>['name'];
 const SITE=(process.env.EXPO_PUBLIC_SITE_URL || 'https://2takarbazar.com').replace(/\/$/,'');
@@ -765,8 +765,8 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  </>}
  function Menu(){return <>{title('EXPLORE', '2TBR Menu')}{[['My Orders','orders'],['Savings','savings'],['My Account','account'],['Community Pools','pools'],['Group Deals','deals']].map(([text,destination])=><Pressable key={text} onPress={()=>setScreen(destination as Screen)} style={[styles.menuRow,glass.outer]}><Text style={{color:theme.text}}>{text}</Text></Pressable>)}<Footer/></>}
  function body(){
- if(!demo&&['account','commitments','orders','savings','notifications','checkout'].includes(screen)){
-  const pane=screen==='account'?'overview':screen as 'commitments'|'orders'|'savings'|'notifications'|'checkout';
+ if(!demo&&['account','community','commitments','orders','savings','notifications','checkout'].includes(screen)){
+  const pane=screen==='account'?'overview':screen as 'community'|'commitments'|'orders'|'savings'|'notifications'|'checkout';
   return <NativeCustomerWorkspace pane={pane} userId={auth.user?.id??null} lang={lang} theme={theme}
    cart={cart} offers={offers} products={products} onSignIn={()=>setScreen('signIn')} onCart={()=>setScreen('cart')}
    onClearCart={()=>setCart({})} onNavigate={dest=>setScreen(dest==='overview'?'account':dest)}/>;
