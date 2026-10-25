@@ -67,9 +67,9 @@ export function AdminSimpleOfferForm({products,communities,offer}:{products:Prod
    </div>
    <p className="muted text-sm">The same offer and prices apply to every selected area. Save once for all of them.</p>
   </fieldset>
-  <fieldset className="grid min-w-0 gap-3"><legend className="mb-2 font-bold">Select products and set prices · up to 6</legend>
+  <fieldset className="grid min-w-0 gap-3"><legend className="mb-2 font-bold">Select products and set prices · {kind==='COMMUNITY_POOL'?'up to 20':'up to 6'}</legend>
    {products.map(p=>{const chosen=selected.includes(p.id),line=offer?.simple_sale_offer_items.find(i=>i.product_id===p.id);return <div className="rounded-2xl border p-3" key={p.id}>
-    <label className="flex items-center gap-3"><input type="checkbox" checked={chosen} disabled={!chosen&&selected.length>=6} onChange={()=>setSelected(ids=>chosen?ids.filter(id=>id!==p.id):[...ids,p.id])}/>
+    <label className="flex items-center gap-3"><input type="checkbox" checked={chosen} disabled={!chosen&&selected.length>=(kind==='COMMUNITY_POOL'?20:6)} onChange={()=>setSelected(ids=>chosen?ids.filter(id=>id!==p.id):[...ids,p.id])}/>
      {p.image_url&&<img src={p.image_url} width={48} height={48} className="rounded-lg object-contain" alt=""/>}<span><b>{p.name}</b> · {p.package_size}<small className="block muted">Shared available: {p.available_quantity}</small></span></label>
     {chosen&&<div className="mt-3 grid gap-3 sm:grid-cols-3">
      <label><span className="label">{kind==='SOLO'?'Selling price (৳)':'Starting price before unlock (৳)'}</span><input className="input" type="number" min="0.01" max="9999999999" step="0.01" name={'price:'+p.id} defaultValue={line?.price??p.price??''} required/></label>

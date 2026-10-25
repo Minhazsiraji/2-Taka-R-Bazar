@@ -1,5 +1,6 @@
 'use server'
 import {revalidatePath} from 'next/cache'
+import {redirect} from 'next/navigation'
 import {createClient} from '@/lib/supabase/server'
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 export type JoinResult={ok:boolean;joined?:boolean;code?:'SIGN_IN'|'AREA'|'UNAVAILABLE'|'SERVER';message:string}
@@ -21,7 +22,7 @@ export async function joinSimpleSaleDeal(offerId:string,productId:string,areaId=
 }
 export async function joinSimpleSalePool(offerId:string,lines:{product_id:string;quantity:number}[],cycleId?:string|null):Promise<JoinResult>{
  const productIds=lines.map(i=>i.product_id)
- if(!uuid.test(offerId)||cycleId&&!uuid.test(cycleId)||productIds.length<1||productIds.length>6||
+ if(!uuid.test(offerId)||cycleId&&!uuid.test(cycleId)||productIds.length<1||productIds.length>20||
     new Set(productIds).size!==productIds.length||productIds.some(id=>!uuid.test(id))||
     lines.some(i=>!Number.isInteger(i.quantity)||i.quantity<1||i.quantity>100))
   return failure('Selected products are not available in this Pool','Pool')
@@ -32,6 +33,18 @@ export async function joinSimpleSalePool(offerId:string,lines:{product_id:string
  if(error)return failure(error.message,'Pool')
  revalidatePath('/');revalidatePath('/notifications');revalidatePath('/preview-live/pool/'+offerId)
  return {ok:true,joined:Boolean(data),message:data?'Pool commitment saved. A finalized quote and your explicit acceptance are required before payment or an order.':'You are already counted in this Pool. No order has been placed.'}
+}
+export async function leavePoolCommitment(formData:FormData):Promise<void>{
+ const offerId=String(formData.get('offer_id')??'')
+ if(!uuid.test(offerId))redirect('/account/commitments?error=Invalid+Pool')
+ const db=await createClient()
+ const {data:{user}}=await db.auth.getUser()
+ if(!user)redirect('/login?next=%2Faccount%2Fcommitments')
+ const {error}=await db.rpc('leave_simple_sale_pool',{p_offer:offerId})
+ if(error)redirect('/account/commitments?error='+encodeURIComponent('Unable to leave open Pool. The cycle may already be closed; refresh your commitments.'))
+ revalidatePath('/');revalidatePath('/cart');revalidatePath('/notifications')
+ revalidatePath('/account/commitments')
+ redirect('/account/commitments?pool_left=1')
 }
 export async function setSimpleSaleCommitmentQuantity(offerId:string,productId:string,quantity:number):Promise<JoinResult>{
  if(!uuid.test(offerId)||!uuid.test(productId)||!Number.isInteger(quantity)||quantity<1||quantity>100)

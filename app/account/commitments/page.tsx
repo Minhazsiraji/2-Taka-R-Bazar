@@ -2,22 +2,26 @@ import Link from 'next/link'
 import {requireUser} from '@/lib/auth'
 import {CommerceFrame} from '@/components/commerce-frame'
 import {selectQuoteDelivery,decideQuote,submitQuotePayment} from '@/app/actions/simple-offer-settlement'
+import {leavePoolCommitment} from '@/app/actions/simple-offer-joins'
 export const dynamic='force-dynamic'
 type Item={product_id:string;quantity:number;unit_price:number;retail_reference:number|null}
 type Quote={id:string;cycle_id:string;product_total:number;delivery_fee:number|null;fulfillment:string|null;pickup_point_id:string|null;home_address:string|null;status:string;order_id:string|null;simple_sale_cycle_quote_items:Item[]}
 const money=(n:number|null|undefined)=>n==null?'Pending':'৳'+Number(n).toLocaleString('en-BD',{maximumFractionDigits:2})
-export default async function Commitments({searchParams}:{searchParams:Promise<{error?:string;delivery_saved?:string}>}){
+export default async function Commitments({searchParams}:{searchParams:Promise<{error?:string;delivery_saved?:string;pool_left?:string}>}){
  const {supabase:db,user}=await requireUser(),params=await searchParams
  const [qr,cr,pr,mr,rr]=await Promise.all([
   db.from('simple_sale_cycle_quotes').select('id,cycle_id,product_total,delivery_fee,fulfillment,pickup_point_id,home_address,status,order_id,simple_sale_cycle_quote_items(product_id,quantity,unit_price,retail_reference)').eq('customer_id',user.id).order('created_at',{ascending:false}).limit(75),
-  db.from('simple_sale_cycles').select('id,community_id,cycle_number,locked_threshold,status').order('opened_at',{ascending:false}).limit(120),
+  db.from('simple_sale_cycles').select('id,offer_id,community_id,cycle_number,locked_threshold,status').order('opened_at',{ascending:false}).limit(120),
   db.from('pickup_points').select('id,community_id,name,address').eq('active',true).limit(120),
   db.from('simple_sale_cycle_members').select('cycle_id').eq('customer_id',user.id).limit(120),
   db.from('simple_sale_payment_review_events').select('quote_id,reason,created_at').order('created_at',{ascending:false}).limit(120)
  ])
+ const {data:publicOffers,error:offersError}=await db.rpc('get_public_simple_offers')
+ const poolOffers=new Map(((publicOffers??[]) as {id:string;kind:string;title:string}[])
+  .filter(o=>o.kind==='COMMUNITY_POOL').map(o=>[o.id,o.title]))
  const quotes=(qr.data??[]) as Quote[]
  const corrections=(rr.data??[]) as {quote_id:string;reason:string;created_at:string}[]
- const cycles=(cr.data??[]) as {id:string;community_id:string;cycle_number:number;locked_threshold:number|null;status:string}[]
+ const cycles=(cr.data??[]) as {id:string;offer_id:string;community_id:string;cycle_number:number;locked_threshold:number|null;status:string}[]
  const points=(pr.data??[]) as {id:string;community_id:string;name:string;address:string}[]
  const accepted=quotes.filter(q=>q.status==='accepted')
  const paymentResults=await Promise.all(accepted.map(q=>db.rpc('simple_sale_quote_payment_options',{p_quote:q.id})))
@@ -34,10 +38,13 @@ export default async function Commitments({searchParams}:{searchParams:Promise<{
     <p className="font-bold">Complete final quote ready — accept or cancel</p>
     <p className="mt-1 text-sm">Review the product total plus delivery fee below. Only after you explicitly accept will official payment instructions appear.</p>
   </section>}
+  {params.pool_left==='1'&&<p className="glass-panel mb-4 rounded-xl border border-white/80 p-4" role="status">
+    Open Pool commitment withdrawn successfully / খোলা পুল থেকে আপনার অংশগ্রহণ বাতিল হয়েছে। No order or payment was created.
+  </p>}
   {params.delivery_saved==='1'&&<p className="glass-panel mb-4 rounded-xl border border-white/80 p-4" role="status">
     Delivery preference saved / ডেলিভারি পছন্দ সংরক্ষিত হয়েছে। Staff will now confirm the delivery charge. No payment or order yet.
   </p>}
-  {(params.error||qr.error||cr.error||pr.error||mr.error||rr.error||names.error)&&<p role="alert" className="mb-4 rounded-xl border p-4">{params.error??'Some commitment details could not load. Do not pay until the entire quote is visible.'}</p>}
+  {(params.error||qr.error||cr.error||pr.error||mr.error||rr.error||names.error||offersError)&&<p role="alert" className="mb-4 rounded-xl border p-4">{params.error??'Some commitment details could not load. Do not pay until the entire quote is visible.'}</p>}
   <div className="grid gap-4">
   {quotes.map(q=>{const c=cycles.find(row=>row.id===q.cycle_id);const paymentMethods=paymentOptions.get(q.id)??[]
    return <article className="glass-panel rounded-3xl border border-white/80 p-4 sm:p-5" key={q.id}>
@@ -83,7 +90,19 @@ export default async function Commitments({searchParams}:{searchParams:Promise<{
     {q.status==='cancelled'&&<p className="mt-3">Cancelled; no order exists for this quote.</p>}
    </article>})}
    {!quotes.length&&!qr.error&&<p className="glass-panel rounded-3xl p-5">No closed community commitments yet. Return after a Deal or Pool cycle finishes.</p>}
-   {((mr.data??[]) as {cycle_id:string}[]).filter(m=>cycles.some(c=>c.id===m.cycle_id&&c.status==='open')).map(m=><p key={m.cycle_id} className="glass-panel rounded-2xl p-3 text-sm">Open commitment in cycle {m.cycle_id.slice(0,8)}. A final quote will become available after closure.</p>)}
+   {((mr.data??[]) as {cycle_id:string}[]).filter(m=>cycles.some(c=>c.id===m.cycle_id&&c.status==='open')).map(m=>{
+     const c=cycles.find(c=>c.id===m.cycle_id)
+     const poolTitle=c&&poolOffers.get(c.offer_id)
+     return poolTitle?<section key={m.cycle_id} className="glass-panel rounded-2xl border border-white/80 p-4 text-sm">
+      <p className="font-bold">Open Community Pool · {poolTitle}</p>
+      <p className="mt-1">Round {c?.cycle_number} · {m.cycle_id.slice(0,8)}. You can withdraw while the Pool is open. Once it closes, use the locked quote to accept or cancel; old prices cannot be edited.</p>
+      <form action={leavePoolCommitment} className="mt-3">
+       <input type="hidden" name="offer_id" value={c?.offer_id??''}/>
+       <button className="btn-secondary" type="submit">Leave open Pool without order / পুল থেকে বের হোন</button>
+      </form>
+     </section>
+     :<p key={m.cycle_id} className="glass-panel rounded-2xl p-3 text-sm">Open commitment in cycle {m.cycle_id.slice(0,8)}. A final quote will become available after closure.</p>
+   })}
   </div>
  </CommerceFrame>
 }
