@@ -84,7 +84,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
     if(alive){setProducts([]);setOffers([]);setPools([]);setDemo(false);Alert.alert('Catalog unavailable','Connect to the internet; live mode never shows synthetic product prices.')}
   }).finally(()=>{if(alive)setBusy(false)});
   return()=>{alive=false};
- },[]);
+ },[auth.ready,auth.user?.id]);
  useEffect(()=>{
   if(requestedDemo)return;
   const subscription=AppState.addEventListener('change',state=>{
@@ -136,7 +136,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   if(!auth.user){setScreen('signIn');return}
   Alert.alert('Join this Group Deal?','This records a real commitment. Final price and delivery come after closure; no payment or order yet.',
    [{text:'Back',style:'cancel'},{text:'Join',onPress:()=>{void (async()=>{try{
-    await joinCustomerDeal(id,o.productId,null);
+    await joinCustomerDeal(id,o.productId,o.communityId??null,o.cycleId);
     Alert.alert('Commitment saved','Wait for the final tier and delivery quote; no payment or order has been created.');
     setScreen('commitments');
    }catch(err){Alert.alert('Unable to join',err instanceof Error?err.message:'Please retry.')}})()}}]);
@@ -148,7 +148,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
   if(!lines.length){Alert.alert('Select Pool items','Choose at least one product and quantity.');return}
   Alert.alert('Join this Community Pool?','A real commitment will be recorded. Accept the final price only after the round closes.',
    [{text:'Back',style:'cancel'},{text:'Join',onPress:()=>{void (async()=>{try{
-    await joinCustomerPool(p.id,lines,null);
+    await joinCustomerPool(p.id,lines,p.communityId??null,p.cycleId);
     Alert.alert('Pool commitment saved','No order or payment has been created.');
     setScreen('commitments');
    }catch(err){Alert.alert('Unable to join Pool',err instanceof Error?err.message:'Please retry.')}})()}}]);
@@ -239,7 +239,7 @@ function Shop({fontsReady}:{fontsReady:boolean}){
  }
  const Hero=()=><MotionHero lang={lang} dark={dark} small={small} frameStyle={styles.hero} onExplore={()=>onTab('deals')}/>;
  function Home(){return <>
-  <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>Savar DOHS⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
+  <View style={[styles.between,{marginVertical:10}]}><Text style={{color:theme.text,fontSize:12,fontWeight:'700'}}>⌖ {t.community} · <Text style={{fontWeight:'500',color:theme.muted}}>{group[0]?.community??solo[0]?.community??(demo?'Savar DOHS':'All areas')}⌄</Text></Text>{demo?pill(t.demo,true):pill('PUBLIC CATALOG')}</View>
   {Hero()}<View style={{marginTop:7}}><Savings home/></View>
   {title('',t.groups,()=>onTab('deals'))}{group.slice(0,2).map(o=><DealCard key={o.id} offer={o}/>)}
   {title('',t.exclusive,()=>onTab('exclusive'))}
