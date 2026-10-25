@@ -40,6 +40,8 @@ test('quick product edit, allocation and order pages form a direct operator work
  assert.match(order,/payment_submitted/)
  assert.match(order,/Customer must choose pickup or home delivery/)
  assert.match(order,/different staff member must check actual received funds/)
+ assert.match(order,/const sharedOrderIds=new Set/)
+ assert.match(order,/direct\.filter\(o=>!sharedOrderIds\.has\(o\.id\)\)/)
  assert.match(order,/\/admin\/offer-settlement/)
 })
 
